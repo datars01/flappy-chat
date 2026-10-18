@@ -65,9 +65,14 @@ function rankOf(key) {
   }
   return r;
 }
+// سكنات الطير: الرقم = أقل "أعلى نتيجة" لازم توصلها حتى تنفتح
+const SKIN_AT = { classic: 0, ruby: 15, ocean: 30, mint: 50, royal: 75, golden: 100 };
+const SKIN_NAMES = { ruby: 'الناري', ocean: 'المحيط', mint: 'النعناع', royal: 'الملكي', golden: 'الذهبي' };
 const userInfo = key => {
   const u = db.users[key];
-  return { name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key) };
+  const best = u.best || 0;
+  const skin = u.skin && SKIN_AT[u.skin] !== undefined && best >= SKIN_AT[u.skin] ? u.skin : 'classic';
+  return { name: u.name, best, games: u.games || 0, rank: rankOf(key), skin };
 };
 function newSession(key) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -124,6 +129,16 @@ app.post('/api/login', (req, res) => {
 
 app.get('/api/me', authMw, (req, res) => res.json(userInfo(req.key)));
 
+// تركيب سكن (لازم يكون مفتوح حسب أعلى نتيجة)
+app.post('/api/skin', authMw, (req, res) => {
+  const id = String((req.body && req.body.skin) || '');
+  if (SKIN_AT[id] === undefined) return res.status(400).json({ error: 'سكن غير موجود' });
+  const u = db.users[req.key];
+  if ((u.best || 0) < SKIN_AT[id]) return res.status(403).json({ error: 'السكن ما انفتح بعد' });
+  u.skin = id; save();
+  res.json({ skin: id });
+});
+
 app.get('/api/leaderboard', (req, res) => {
   const top = Object.values(db.users)
     .filter(u => u.best > 0)
@@ -152,16 +167,19 @@ app.post('/api/score', authMw, (req, res) => {
   if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed / 1.2) + 1)
     return res.status(400).json({ error: 'نتيجة غير صالحة' });
   const u = db.users[req.key];
+  const prevBest = u.best || 0;
   u.games = (u.games || 0) + 1;
-  const improved = score > (u.best || 0);
+  const improved = score > prevBest;
   if (improved) { u.best = score; u.bestAt = Date.now(); }
   save();
+  const unlocked = Object.keys(SKIN_AT).filter(k => SKIN_AT[k] > 0 && SKIN_AT[k] > prevBest && SKIN_AT[k] <= (u.best || 0));
   const info = userInfo(req.key);
-  res.json({ best: info.best, games: info.games, rank: info.rank, improved });
-  // إعلان النتيجة لغرف الشات
+  res.json({ best: info.best, games: info.games, rank: info.rank, improved, skin: info.skin, unlocked });
+  // إعلان النتيجة (وفتح السكنات) لغرف الشات
   for (const [code, set] of live) {
     for (const w of set) if (w.key === req.key) {
       bc(code, { t: 'score', name: u.name, score }, x => x.key !== req.key);
+      unlocked.forEach(id => bc(code, { t: 'sys', text: '🎁 ' + u.name + ' فتح سكن ' + SKIN_NAMES[id] }, x => x.key !== req.key));
       break;
     }
   }
@@ -170,9 +188,12 @@ app.post('/api/score', authMw, (req, res) => {
 /* ============ رفع الصور والفيديوهات ============ */
 const EXT = {
   'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
-  'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov'
+  'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
+  // رسائل صوتية (امتدادات مختلفة عن الفيديو حتى ما يلتبسون)
+  'audio/webm': 'weba', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3'
 };
-const MAX_IMG = 8 * 1024 * 1024, MAX_VID = 25 * 1024 * 1024;
+const MAX_IMG = 8 * 1024 * 1024, MAX_VID = 25 * 1024 * 1024, MAX_AUD = 6 * 1024 * 1024;
+const mediaKind = ext => /^(mp4|webm|mov)$/.test(ext) ? 'video' : /^(weba|ogg|m4a|mp3)$/.test(ext) ? 'audio' : 'image';
 
 app.post('/api/upload', authMw, (req, res, next) => {
   if (limited('up:' + req.key, 15, 60e3)) return res.status(429).json({ error: 'رفع كثير، انتظر شوي' });
@@ -183,9 +204,10 @@ app.post('/api/upload', authMw, (req, res, next) => {
   if (!ext) return res.status(400).json({ error: 'نوع الملف غير مدعوم' });
   const buf = req.body;
   if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'ملف فارغ' });
-  const kind = ct.startsWith('video/') ? 'video' : 'image';
-  if (buf.length > (kind === 'video' ? MAX_VID : MAX_IMG))
-    return res.status(413).json({ error: kind === 'video' ? 'الفيديو أكبر من 25 ميغا' : 'الصورة أكبر من 8 ميغا' });
+  const kind = mediaKind(ext);
+  const limit = kind === 'video' ? MAX_VID : kind === 'audio' ? MAX_AUD : MAX_IMG;
+  if (buf.length > limit)
+    return res.status(413).json({ error: kind === 'video' ? 'الفيديو أكبر من 25 ميغا' : kind === 'audio' ? 'التسجيل أكبر من 6 ميغا' : 'الصورة أكبر من 8 ميغا' });
   const name = crypto.randomBytes(12).toString('hex') + '.' + ext;
   fs.writeFile(path.join(UP_DIR, name), buf, err => {
     if (err) return res.status(500).json({ error: 'فشل حفظ الملف' });
@@ -209,7 +231,7 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 const live = new Map(); // code -> Set<ws>
-const MEDIA_RE = /^\/uploads\/([a-f0-9]{24}\.(jpg|png|gif|webp|mp4|webm|mov))$/;
+const MEDIA_RE = /^\/uploads\/([a-f0-9]{24}\.(jpg|png|gif|webp|mp4|webm|mov|weba|ogg|m4a|mp3))$/;
 const MAX_MSGS = 300;
 
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); };
@@ -276,7 +298,8 @@ function onMsg(ws, d) {
     if (d.media && typeof d.media === 'object') {
       const mm = MEDIA_RE.exec(String(d.media.url || ''));
       if (!mm || !fs.existsSync(path.join(UP_DIR, mm[1]))) return send(ws, { t: 'err', error: 'الملف غير موجود' });
-      media = { url: '/uploads/' + mm[1], type: /^(mp4|webm|mov)$/.test(mm[2]) ? 'video' : 'image' };
+      media = { url: '/uploads/' + mm[1], type: mediaKind(mm[2]) };
+      if (media.type === 'audio') media.dur = Math.max(0, Math.min(120, Number(d.media.dur) || 0));
     }
     if (!text && !media) return;
     const m = { id: crypto.randomBytes(8).toString('hex'), k: ws.key, name: me.name, text, media, ts: now, editedAt: 0, deleted: false, reactions: {}, hidden: [] };

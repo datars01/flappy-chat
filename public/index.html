@@ -145,6 +145,51 @@
   #menuCard .act { background: var(--card2); color: var(--text); border: 1px solid var(--line); text-align: start; font-weight: 600; }
   #menuCard .act.danger { color: #ff8d8d; }
   #menuCard .act.ghostAct { background: transparent; color: var(--muted); text-align: center; }
+
+  /* ===== المكافآت والسكنات ===== */
+  #rewards .rwTxt { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.7; }
+  .rwBar { height: 10px; border-radius: 6px; background: var(--card2); border: 1px solid var(--line); overflow: hidden; }
+  .rwBar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--teal), #ffd166); transition: width .5s; }
+  #skinGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .skin { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 6px 8px;
+    border-radius: 14px; background: var(--card2); border: 2px solid var(--line); text-align: center; }
+  .skin canvas { width: 72px; height: 56px; }
+  .skin .sn { font-weight: 700; font-size: 15px; }
+  .skin .sr { font-size: 11px; opacity: .85; }
+  .skin .sq { font-size: 12px; color: var(--muted); min-height: 18px; }
+  .skin button { padding: 6px 10px; font-size: 13px; width: 100%; }
+  .skin button:disabled { opacity: .75; }
+  .skin.t0 { border-color: #5d7889; } .skin.t0 .sr { color: #9db3bf; }
+  .skin.t1 { border-color: #4cd18a; } .skin.t1 .sr { color: #4cd18a; }
+  .skin.t2 { border-color: #4ea8ff; } .skin.t2 .sr { color: #4ea8ff; }
+  .skin.t3 { border-color: #b07cff; } .skin.t3 .sr { color: #b07cff; }
+  .skin.t4 { border-color: #ff9f43; } .skin.t4 .sr { color: #ff9f43; }
+  .skin.t5 { border-color: #ffd23f; box-shadow: 0 0 14px rgba(255,210,63,.3); } .skin.t5 .sr { color: #ffd23f; }
+  .skin.locked canvas { filter: brightness(0) opacity(.4); }
+  .skin.locked { opacity: .9; }
+  .skin.on { outline: 3px solid var(--teal); }
+  .skin.on::after { content: '✓'; position: absolute; top: 4px; inset-inline-start: 6px; color: var(--teal); font-weight: 700; }
+  #unlockPop { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.65); align-items: center; justify-content: center; }
+  #unlockPop.open { display: flex; }
+  #upCard { width: 82%; max-width: 320px; background: var(--card); border: 2px solid #ffd23f; border-radius: 20px; padding: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 0 30px rgba(255,210,63,.35); }
+  #upCard .upTitle { font-size: 20px; font-weight: 700; color: #ffd166; }
+  #upCanvas { width: 120px; height: 90px; }
+  #upName { font-size: 18px; font-weight: 700; }
+  #upCard .row { width: 100%; }
+  #upCard .row button { flex: 1; }
+
+  /* ===== الرسائل الصوتية ===== */
+  .bubble audio { display: block; width: 230px; max-width: 100%; height: 40px; }
+  .bubble .dur { display: block; font-size: 12px; opacity: .85; margin-bottom: 2px; }
+  #micBtn { width: 46px; padding: 0; font-size: 21px; background: var(--card2); border: 1px solid var(--line); }
+  #micBtn.on { background: #c0392b; border-color: #c0392b; }
+  #recBar { display: none; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(192,57,43,.18); border-top: 1px solid var(--line); font-size: 14px; }
+  #recBar .recDot { width: 10px; height: 10px; border-radius: 50%; background: #ff4d4d; animation: blink 1s infinite; flex: none; }
+  #recBar .recHint { flex: 1; color: var(--muted); }
+  #recBar button { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 17px; background: var(--card2); border: 1px solid var(--line); color: var(--text); }
+  #recSend { background: linear-gradient(135deg, var(--teal), #2d9aa5) !important; color: #fff !important; }
+  @keyframes blink { 50% { opacity: .25; } }
 </style>
 </head>
 <body>
@@ -176,6 +221,12 @@
   <div id="fullBar"><button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button></div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas></div>
 
+  <div class="card" id="rewards">
+    <div class="lbHead"><span>🎁 المكافآت والسكنات</span></div>
+    <div id="rwProg"></div>
+    <div id="skinGrid"></div>
+  </div>
+
   <div class="card" id="lb">
     <div class="lbHead"><span>🏆 أفضل 10 لاعبين</span><button id="lbRefresh" class="ghost" type="button">🔄 تحديث</button></div>
     <div id="lbBody"></div>
@@ -200,6 +251,12 @@
 <button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
+<div id="unlockPop"><div id="upCard">
+  <div class="upTitle">🎉 مكافأة جديدة!</div>
+  <canvas id="upCanvas" width="240" height="180"></canvas>
+  <div id="upName"></div>
+  <div class="row"><button id="upEquip" type="button">تركيب الآن</button><button id="upClose" class="ghost" type="button">لاحقاً</button></div>
+</div></div>
 
 <div id="sheet" aria-hidden="true">
   <div id="sheetHead">
@@ -210,9 +267,11 @@
   <div id="log"></div>
   <div id="emojiBox"></div>
   <div id="editBar"><span id="editTxt"></span><button id="editCancel" type="button" aria-label="إلغاء التعديل">✕</button></div>
+  <div id="recBar"><span class="recDot"></span><span id="recTime">0:00</span><span class="recHint">جاري التسجيل...</span><button id="recCancel" type="button" aria-label="إلغاء">🗑</button><button id="recSend" type="button" aria-label="إرسال">➤</button></div>
   <form id="chatForm">
     <button id="emojiBtn" type="button" aria-label="سمايلات">😊</button>
     <button id="attachBtn" type="button" aria-label="إرفاق صورة أو فيديو">📎</button>
+    <button id="micBtn" type="button" aria-label="تسجيل رسالة صوتية">🎤</button>
     <input id="msgIn" placeholder="اكتب رسالة..." autocomplete="off" maxlength="500" enterkeyhint="send">
     <button id="sendBtn" type="submit" aria-label="إرسال">➤</button>
   </form>
@@ -266,6 +325,7 @@ function renderAuth() {
     $('meStats').textContent = 'أعلى نتيجة: ' + (auth.best || 0) + '  •  المحاولات: ' + (auth.games || 0) + (auth.rank ? '  •  ترتيبك: #' + auth.rank : '');
   }
   lbRender(lbLast, true);
+  renderRewards();
 }
 $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -275,7 +335,7 @@ $('authForm').addEventListener('submit', async e => {
   try {
     auth = null;
     const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: { u, p } });
-    auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank };
+    auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
     saveAuth(); $('pIn').value = ''; authSay('');
     renderAuth(); lbRefresh();
   } catch (err) { authSay('❌ ' + err.message); }
@@ -286,7 +346,7 @@ async function loadMe() {
   if (!auth) return;
   try {
     const r = await api('/api/me');
-    auth.name = r.name; auth.best = r.best; auth.games = r.games; auth.rank = r.rank;
+    auth.name = r.name; auth.best = r.best; auth.games = r.games; auth.rank = r.rank; auth.skin = r.skin;
     saveAuth(); renderAuth();
   } catch (e) {
     if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
@@ -305,9 +365,107 @@ let bird, pipes, score, guestBest = 0, frames = 0, groundX = 0, deadTime = 0, cu
 try { guestBest = parseInt(localStorage.getItem('flappyBest') || '0', 10) || 0; } catch (e) {}
 function myBest() { return auth ? (auth.best || 0) : guestBest; }
 
+/* ===== السكنات ===== */
+const SKINS = [
+  { id: 'classic', name: 'الكلاسيكي', at: 0,   rar: 'عادي',     body: '#f8d030', edge: '#7a5a00', wing: '#e8a800', beak: '#f06030', acc: null },
+  { id: 'ruby',    name: 'الناري',    at: 15,  rar: 'نادر',     body: '#ff6a4d', edge: '#7a1d10', wing: '#d63a22', beak: '#ffc233', acc: 'tuft' },
+  { id: 'ocean',   name: 'المحيط',    at: 30,  rar: 'نادر جداً', body: '#4aa8ff', edge: '#12447a', wing: '#2a7fd6', beak: '#ffb02e', acc: 'shades' },
+  { id: 'mint',    name: 'النعناع',   at: 50,  rar: 'ملحمي',    body: '#46d6a4', edge: '#0c5a42', wing: '#24a67c', beak: '#ff8a3d', acc: 'cap' },
+  { id: 'royal',   name: 'الملكي',    at: 75,  rar: 'أسطوري',   body: '#a56bff', edge: '#3d1a7a', wing: '#7a3fe0', beak: '#ffd23f', acc: 'crown', crown: '#ffd23f' },
+  { id: 'golden',  name: 'الذهبي',    at: 100, rar: 'خرافي',    body: '#ffd23f', edge: '#8a5a00', wing: '#ffb300', beak: '#ff7a2e', acc: 'crown', crown: '#fff2b0', glow: true }
+];
+function curSkin() { const id = auth && auth.skin; return SKINS.find(k => k.id === id) || SKINS[0]; }
+function drawBirdSkin(c, x, y, rot, sk, fr) {
+  c.save(); c.translate(x, y); c.rotate(rot);
+  if (sk.glow) { c.shadowColor = 'rgba(255,215,64,.95)'; c.shadowBlur = 14; }
+  c.fillStyle = sk.body; c.beginPath(); c.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); c.fill();
+  c.shadowBlur = 0; c.shadowColor = 'transparent';
+  c.strokeStyle = sk.edge; c.lineWidth = 2; c.stroke();
+  const wy = Math.sin(fr / 2) * 3;
+  c.fillStyle = sk.wing; c.beginPath(); c.ellipse(-4, 2 + wy, 8, 5, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(7, -4, 5, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#000'; c.beginPath(); c.arc(9, -4, 2, 0, Math.PI * 2); c.fill();
+  c.fillStyle = sk.beak; c.beginPath(); c.moveTo(12, 0); c.lineTo(22, 3); c.lineTo(12, 7); c.closePath(); c.fill();
+  if (sk.acc === 'tuft') {
+    c.fillStyle = '#ffc233'; c.strokeStyle = sk.edge; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(-3, -10); c.lineTo(-1, -19); c.lineTo(3, -12); c.lineTo(6, -21); c.lineTo(9, -11); c.lineTo(12, -17); c.lineTo(13, -8); c.closePath(); c.fill(); c.stroke();
+  } else if (sk.acc === 'shades') {
+    c.fillStyle = '#111'; c.fillRect(1, -8, 13, 7);
+    c.strokeStyle = '#111'; c.lineWidth = 2; c.beginPath(); c.moveTo(1, -5); c.lineTo(-8, -7); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(3, -7, 3, 2);
+  } else if (sk.acc === 'cap') {
+    c.fillStyle = '#ff5a4d'; c.strokeStyle = '#5a0f0c'; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(4, -8, 10, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillRect(8, -9, 13, 3);
+  } else if (sk.acc === 'crown') {
+    c.fillStyle = sk.crown || '#ffd23f'; c.strokeStyle = '#8a5a00'; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(0, -10); c.lineTo(-1, -20); c.lineTo(4, -15); c.lineTo(8, -22); c.lineTo(12, -15); c.lineTo(17, -20); c.lineTo(15, -10); c.closePath(); c.fill(); c.stroke();
+  }
+  c.restore();
+}
+let banner = null; // رسالة فتح السكن داخل اللعبة
+function onScore() {
+  const k = SKINS.find(z => z.at > 0 && z.at === score);
+  if (!k) return;
+  if (auth) { if ((auth.best || 0) < score) banner = { text: '🎉 فتحت سكن ' + k.name, sub: 'ركّبه من قسم المكافآت', t: 160 }; }
+  else banner = { text: '🔒 سكن ' + k.name + ' جاهز', sub: 'سجّل دخول حتى تفتحه', t: 160 };
+}
+function renderRewards() {
+  const grid = $('skinGrid'); if (!grid) return;
+  const best = myBest();
+  const can = k => auth ? best >= k.at : k.at === 0;
+  const next = SKINS.find(k => k.at > best);
+  const prev = [...SKINS].reverse().find(k => k.at <= best) || SKINS[0];
+  const pg = $('rwProg'); pg.innerHTML = '';
+  const t = document.createElement('div'); t.className = 'rwTxt';
+  t.textContent = next ? 'أعلى نتيجة: ' + best + ' • باقي ' + (next.at - best) + ' للسكن الجاي: ' + next.name : '🏆 فتحت كل السكنات، أسطورة!';
+  const bar = document.createElement('div'); bar.className = 'rwBar';
+  const fill = document.createElement('i'); fill.style.width = (next ? Math.round(100 * (best - prev.at) / (next.at - prev.at)) : 100) + '%';
+  bar.appendChild(fill); pg.append(t, bar);
+  if (!auth) { const h = document.createElement('div'); h.className = 'help'; h.textContent = 'سجّل دخول حتى تنحفظ سكناتك ويكدر تفتحها'; pg.appendChild(h); }
+  grid.innerHTML = '';
+  const eq = curSkin().id;
+  SKINS.forEach((k, i) => {
+    const ok = can(k);
+    const card = document.createElement('div'); card.className = 'skin t' + i + (ok ? '' : ' locked') + (ok && eq === k.id ? ' on' : '');
+    const cvs = document.createElement('canvas'); cvs.width = 144; cvs.height = 112;
+    const c = cvs.getContext('2d'); c.scale(2, 2); drawBirdSkin(c, 36, 34, 0, k, 0);
+    const n = document.createElement('div'); n.className = 'sn'; n.textContent = k.name;
+    const r = document.createElement('div'); r.className = 'sr'; r.textContent = k.rar;
+    card.append(cvs, n, r);
+    if (ok) {
+      const b = document.createElement('button'); b.type = 'button';
+      b.textContent = eq === k.id ? 'مركّب ✓' : 'تركيب'; b.disabled = eq === k.id;
+      b.onclick = () => equipSkin(k.id);
+      card.appendChild(b);
+    } else {
+      const q = document.createElement('div'); q.className = 'sq';
+      q.textContent = (!auth && best >= k.at) ? '🔒 سجّل دخول' : '🔒 وصّل ' + k.at + ' نقطة';
+      card.appendChild(q);
+    }
+    grid.appendChild(card);
+  });
+}
+async function equipSkin(id) {
+  if (!auth) return;
+  try { const r = await api('/api/skin', { method: 'POST', body: { skin: id } }); auth.skin = r.skin; renderRewards(); }
+  catch (e) {
+    if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
+    else showToast('⚠️ ' + e.message);
+  }
+}
+function showUnlock(ids) {
+  const k = SKINS.find(z => z.id === ids[ids.length - 1]); if (!k) return;
+  $('upName').textContent = 'سكن ' + k.name + ' (' + k.rar + ')';
+  const c = $('upCanvas').getContext('2d'); c.clearRect(0, 0, 240, 180); c.save(); c.scale(4, 4); drawBirdSkin(c, 30, 26, 0, k, 0); c.restore();
+  $('upEquip').onclick = () => { $('unlockPop').classList.remove('open'); equipSkin(k.id); };
+  $('upClose').onclick = () => $('unlockPop').classList.remove('open');
+  $('unlockPop').classList.add('open');
+}
+
 function reset() {
   bird = { x: 80, y: H / 2 - 20, vy: 0, r: 12, rot: 0 };
-  pipes = []; score = 0; frames = 0;
+  pipes = []; score = 0; frames = 0; banner = null;
   for (let i = 0; i < 3; i++) addPipe(W + 60 + i * PIPE_SPACE);
 }
 function addPipe(x) {
@@ -331,6 +489,7 @@ function die() {
 
 function update(dt) {
   groundX = (groundX - SPEED * dt) % 24;
+  if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
   if (state === 'ready') { bird.y = H / 2 - 20 + Math.sin(frames / 10) * 6; frames += dt; return; }
   if (state === 'dead') {
     deadTime += dt;
@@ -342,7 +501,7 @@ function update(dt) {
   bird.rot = Math.max(-0.5, Math.min(1.3, bird.vy / 9));
   for (const p of pipes) {
     p.x -= SPEED * dt;
-    if (!p.passed && p.x + PIPE_W < bird.x) { p.passed = true; score++; }
+    if (!p.passed && p.x + PIPE_W < bird.x) { p.passed = true; score++; onScore(); }
   }
   if (pipes[0].x + PIPE_W < -5) { pipes.shift(); addPipe(pipes[pipes.length - 1].x + PIPE_SPACE); }
   if (bird.y + bird.r >= H - GROUND) { bird.y = H - GROUND - bird.r; die(); return; }
@@ -361,17 +520,7 @@ function drawPipe(p) {
   ctx.fillRect(p.x, by, PIPE_W, H - GROUND - by); ctx.strokeRect(p.x, by, PIPE_W, H - GROUND - by);
   ctx.fillRect(p.x - 3, by, PIPE_W + 6, 20); ctx.strokeRect(p.x - 3, by, PIPE_W + 6, 20);
 }
-function drawBird() {
-  ctx.save(); ctx.translate(bird.x, bird.y); ctx.rotate(bird.rot);
-  ctx.fillStyle = '#f8d030'; ctx.beginPath(); ctx.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 2; ctx.stroke();
-  const wy = Math.sin(frames / 2) * 3;
-  ctx.fillStyle = '#e8a800'; ctx.beginPath(); ctx.ellipse(-4, 2 + wy, 8, 5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(7, -4, 5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(9, -4, 2, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#f06030'; ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(22, 3); ctx.lineTo(12, 7); ctx.closePath(); ctx.fill();
-  ctx.restore();
-}
+function drawBird() { drawBirdSkin(ctx, bird.x, bird.y, bird.rot, curSkin(), frames); }
 function text(str, x, y, size, color) {
   ctx.font = 'bold ' + size + 'px Cairo, system-ui, Arial';
   ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#222';
@@ -397,6 +546,10 @@ function draw() {
   ctx.fillText('برعاية بابيتو ✨', W / 2, H - 20);
   drawBird();
   if (state !== 'ready') text(String(score), W / 2, 70, 44);
+  if (banner && state === 'play') {
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(24, 100, W - 48, 62);
+    text(banner.text, W / 2, 128, 21, '#ffd166'); text(banner.sub, W / 2, 152, 14, '#fff');
+  }
   if (state === 'ready') {
     text('اضغط للطيران', W / 2, 150, 28);
     text('Tap to flap', W / 2, 185, 18);
@@ -496,8 +649,9 @@ async function submitScore(sc) {
     const gid = await g;
     if (!gid) { lbSay('⚠️ ما انحفظت نتيجتك (مشكلة اتصال)'); return; }
     const r = await api('/api/score', { method: 'POST', body: { gid, score: sc } });
-    auth.best = r.best; auth.games = r.games; auth.rank = r.rank;
+    auth.best = r.best; auth.games = r.games; auth.rank = r.rank; if (r.skin) auth.skin = r.skin;
     renderAuth();
+    if (r.unlocked && r.unlocked.length) showUnlock(r.unlocked);
     if (r.improved && r.rank && r.rank <= 10) lbSay('🎉 رقمك الجديد! أنت الآن رقم ' + r.rank + ' بقائمة أفضل 10', true);
     else lbSay('');
     lbRefresh();
@@ -537,7 +691,7 @@ function openChat() {
 function closeChat() {
   chatOpen = false;
   $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true');
-  $('emojiBox').classList.remove('open'); closeMenu(); cancelEdit();
+  $('emojiBox').classList.remove('open'); closeMenu(); cancelEdit(); cancelRec();
   if (document.activeElement) document.activeElement.blur();
 }
 function updateBadge() {
@@ -575,7 +729,7 @@ const EMOJIS = ['😀','😂','🤣','😍','😎','🥳','😜','🤔','😅','
   });
 })();
 // الأزرار ما تسحب الفوكس من خانة الكتابة (حتى الكيبورد يبقى مفتوح)
-['sendBtn', 'emojiBtn', 'attachBtn', 'editCancel'].forEach(id => $(id).addEventListener('mousedown', e => e.preventDefault()));
+['sendBtn', 'emojiBtn', 'attachBtn', 'micBtn', 'recSend', 'recCancel', 'editCancel'].forEach(id => $(id).addEventListener('mousedown', e => e.preventDefault()));
 $('emojiBtn').onclick = () => { $('emojiBox').classList.toggle('open'); keepFocus(); };
 
 /* ---------- عرض الرسائل ---------- */
@@ -595,7 +749,12 @@ function buildBubble(m) {
   } else {
     if (m.media) {
       let el;
-      if (m.media.type === 'video') { el = document.createElement('video'); el.controls = true; el.playsInline = true; el.preload = 'metadata'; }
+      if (m.media.type === 'audio') {
+        const dl = document.createElement('span'); dl.className = 'dur';
+        dl.textContent = '🎤 رسالة صوتية' + (m.media.dur ? ' • ' + fmtDur(m.media.dur) : ''); d.appendChild(dl);
+        el = document.createElement('audio'); el.controls = true; el.preload = 'metadata';
+      }
+      else if (m.media.type === 'video') { el = document.createElement('video'); el.controls = true; el.playsInline = true; el.preload = 'metadata'; }
       else { el = document.createElement('img'); el.loading = 'lazy'; el.alt = 'صورة'; }
       el.src = m.media.url; d.appendChild(el);
     }
@@ -618,7 +777,7 @@ function buildBubble(m) {
     d.appendChild(rb);
   }
   d.addEventListener('click', ev => {
-    if (ev.target.tagName === 'VIDEO') return;
+    if (ev.target.tagName === 'VIDEO' || ev.target.tagName === 'AUDIO') return;
     const cur = msgs.get(m.id); openMenu(cur ? cur.m : m);
   });
   return d;
@@ -633,7 +792,7 @@ function putMsg(m, fresh) {
   if (stick && (!old || fresh)) logEl.scrollTop = logEl.scrollHeight;
   if (fresh && !old && m.k !== myKey() && !chatOpen) {
     unread++; updateBadge();
-    showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
+    showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
   }
 }
 function patchMsg(id, fn) {
@@ -662,7 +821,7 @@ function openMenu(m) {
     b.onclick = () => { closeMenu(); fn(); }; card.appendChild(b);
   };
   if (!m.deleted && m.text) act('📋 نسخ', () => { try { navigator.clipboard.writeText(m.text); showToast('تم النسخ'); } catch (e) {} });
-  if (!m.deleted && m.media) act('🔗 فتح', () => window.open(m.media.url, '_blank'));
+  if (!m.deleted && m.media && m.media.type !== 'audio') act('🔗 فتح', () => window.open(m.media.url, '_blank'));
   if (mine && !m.deleted && !m.media) act('✏️ تعديل', () => startEdit(m));
   act('🙈 حذف عندي فقط', () => wsend({ t: 'del', id: m.id, scope: 'me' }));
   if (mine && !m.deleted) act('🗑️ حذف للجميع', () => wsend({ t: 'del', id: m.id, scope: 'all' }), 'danger');
@@ -832,6 +991,66 @@ $('fileIn').addEventListener('change', () => {
   const f = $('fileIn').files[0]; $('fileIn').value = '';
   sendFile(f);
 });
+
+/* ---------- الرسائل الصوتية ---------- */
+let rec = null;
+function fmtDur(x) { x = Math.round(x); return Math.floor(x / 60) + ':' + String(x % 60).padStart(2, '0'); }
+function pickMime() {
+  if (!window.MediaRecorder) return null;
+  for (const t of ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm']) {
+    try { if (MediaRecorder.isTypeSupported(t)) return t; } catch (e) {}
+  }
+  return '';
+}
+function updRec() { if (rec) $('recTime').textContent = fmtDur((Date.now() - rec.t0) / 1000); }
+async function startRec() {
+  if (!joined) { showToast('ادخل غرفة أول'); return; }
+  if (rec) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { showToast('⚠️ متصفحك ما يدعم التسجيل الصوتي'); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { showToast('⚠️ لازم تسمح للموقع باستخدام المايك'); return; }
+  const mime = pickMime();
+  let mr;
+  try { mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
+  catch (e) { stream.getTracks().forEach(t => t.stop()); showToast('⚠️ ما قدرت أبدي التسجيل'); return; }
+  const r = { mr, chunks: [], stream, t0: Date.now(), cancelled: false, timer: null };
+  rec = r;
+  mr.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+  mr.onstop = () => {
+    clearInterval(r.timer); r.stream.getTracks().forEach(t => t.stop());
+    if (rec === r) rec = null;
+    $('recBar').style.display = 'none'; $('micBtn').classList.remove('on');
+    const dur = (Date.now() - r.t0) / 1000;
+    if (r.cancelled) return;
+    if (dur < 1) { showToast('التسجيل قصير'); return; }
+    const type = (mr.mimeType || mime || 'audio/webm').split(';')[0];
+    sendAudio(new Blob(r.chunks, { type }), type, Math.min(120, dur));
+  };
+  mr.start();
+  $('recBar').style.display = 'flex'; $('micBtn').classList.add('on'); updRec();
+  r.timer = setInterval(() => { updRec(); if ((Date.now() - r.t0) / 1000 >= 120) stopRec(true); }, 250);
+}
+function stopRec(send) {
+  if (!rec) return;
+  rec.cancelled = !send;
+  try { if (rec.mr.state !== 'inactive') rec.mr.stop(); } catch (e) {}
+}
+function cancelRec() { if (rec) stopRec(false); }
+async function sendAudio(blob, type, dur) {
+  if (!joined) return;
+  if (blob.size > 6 * 1024 * 1024) { showToast('⚠️ التسجيل كبير'); return; }
+  showToast('⏳ جاري رفع الصوت...');
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': type, Authorization: 'Bearer ' + auth.token }, body: blob });
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error((j && j.error) || 'فشل الرفع');
+    wsend({ t: 'msg', text: '', media: { url: j.url, type: j.kind, dur } });
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+$('micBtn').onclick = () => { if (rec) stopRec(true); else startRec(); };
+$('recSend').onclick = () => stopRec(true);
+$('recCancel').onclick = () => stopRec(false);
 </script>
 </body>
 </html>
