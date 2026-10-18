@@ -21,16 +21,13 @@
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
     font-family: 'Cairo', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif; }
   body { display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
-  #app { width: 100%; max-width: 420px; padding: 10px 12px 90px; display: flex; flex-direction: column; gap: 10px; }
-  h1 { font-size: 20px; margin: 4px 0 0; text-align: center; font-weight: 700; }
+  #app { width: 100%; max-width: 420px; padding: 10px 12px 100px; display: flex; flex-direction: column; gap: 10px; }
+  h1 { font-size: 22px; margin: 4px 0 0; text-align: center; font-weight: 700; }
+  #sponsor { align-self: center; font-size: 13px; font-weight: 600; color: #3a2a00; padding: 3px 16px; border-radius: 20px;
+    background: linear-gradient(135deg, #ffd166, #f5a623); box-shadow: 0 3px 10px rgba(245,166,35,.35); }
+  #sponsor b { font-weight: 700; }
 
-  #stage { position: relative; width: 100%; aspect-ratio: 320 / 480; max-height: 58vh; margin: 0 auto;
-    border-radius: 16px; overflow: hidden; touch-action: none; background: #4ec0ca;
-    border: 3px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
-  canvas { width: 100%; height: 100%; display: block; touch-action: none; direction: ltr; }
-
-  #panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px;
-    display: flex; flex-direction: column; gap: 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .row { display: flex; gap: 8px; }
   input { flex: 1; min-width: 0; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line);
     font-size: 16px; font-family: inherit; background: var(--card2); color: var(--text); outline: none; }
@@ -40,7 +37,27 @@
     font-family: inherit; cursor: pointer; background: var(--accent); color: #231800; }
   button:active { transform: scale(.97); }
   button:disabled { opacity: .5; }
-  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; padding: 7px 12px; font-size: 13px; }
+  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; padding: 6px 12px; font-size: 13px; }
+
+  #stage { position: relative; width: 100%; aspect-ratio: 320 / 480; max-height: 58vh; margin: 0 auto;
+    border-radius: 16px; overflow: hidden; touch-action: none; background: #4ec0ca;
+    border: 3px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  canvas { width: 100%; height: 100%; display: block; touch-action: none; direction: ltr; }
+
+  /* لوحة الصدارة */
+  .lbHead { display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 17px; }
+  .lbRow { display: grid; grid-template-columns: 38px 1fr 62px 62px; align-items: center; gap: 4px;
+    padding: 7px 8px; border-radius: 10px; font-size: 15px; }
+  .lbRow.h { font-size: 12px; color: var(--muted); padding-top: 0; padding-bottom: 2px; }
+  .lbRow.r:nth-child(odd) { background: rgba(255,255,255,.04); }
+  .lbRow.me { background: rgba(78,192,202,.22) !important; outline: 1px solid var(--teal); }
+  .lbRow .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lbRow .s { font-weight: 700; color: #ffd166; text-align: center; }
+  .lbRow .g { text-align: center; color: var(--muted); }
+  .lbRow .k { text-align: center; }
+  #lbMsg { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.7; }
+  #lbMsg.good { color: #6ee7a0; font-weight: 600; }
+
   #status { font-size: 14px; text-align: center; background: var(--card2); border-radius: 12px; padding: 9px; line-height: 1.6; }
   #help { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
 
@@ -57,7 +74,7 @@
   #toast.show { opacity: 1; transform: none; }
 
   /* نافذة الشات */
-  #sheet { position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 420px; height: 58vh; z-index: 30;
+  #sheet { position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 420px; height: 62vh; z-index: 30;
     transform: translate(-50%, 110%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
     background: var(--card); border: 2px solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0;
     display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,.5); }
@@ -75,28 +92,44 @@
   .me { align-self: flex-start; background: linear-gradient(135deg, var(--green1), var(--green2)); border-top-right-radius: 5px; color: #fff; }
   .them { align-self: flex-end; background: var(--them); border-top-left-radius: 5px; }
   .sys { align-self: center; font-size: 12px; color: var(--muted); background: rgba(255,255,255,.06); padding: 3px 12px; border-radius: 12px; }
+  #emojiBox { display: none; grid-template-columns: repeat(8, 1fr); gap: 2px; padding: 8px; max-height: 128px; overflow-y: auto;
+    border-top: 1px solid var(--line); background: var(--card); }
+  #emojiBox.open { display: grid; }
+  #emojiBox button { background: transparent; padding: 4px 0; font-size: 24px; line-height: 1.2; border-radius: 8px; }
+  #emojiBox button:active { background: rgba(255,255,255,.12); }
   #chatForm { display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  #emojiBtn { width: 46px; padding: 0; font-size: 22px; background: var(--card2); border: 1px solid var(--line); }
   #sendBtn { width: 48px; padding: 0; font-size: 20px; background: linear-gradient(135deg, var(--teal), #2d9aa5); color: #fff; }
 </style>
 </head>
 <body>
 <div id="app">
   <h1>🐦 فلابي شات</h1>
+  <div id="sponsor">برعاية <b>بابيتو</b> ✨</div>
+
+  <div class="card">
+    <div class="row"><input id="nameIn" placeholder="اكتب اسمك حتى تنحفظ نتيجتك" maxlength="16" autocomplete="off"></div>
+  </div>
 
   <div id="stage"><canvas id="c" width="320" height="480"></canvas></div>
 
-  <div id="panel">
+  <div class="card" id="lb">
+    <div class="lbHead"><span>🏆 أفضل 10 لاعبين</span><button id="lbRefresh" class="ghost">🔄 تحديث</button></div>
+    <div id="lbBody"></div>
+    <div id="lbMsg"></div>
+  </div>
+
+  <div class="card" id="panel">
     <div id="setup">
-      <div class="row"><input id="nameIn" placeholder="اسمك" maxlength="16"></div>
-      <div class="row" style="margin-top:8px">
+      <div class="row">
         <input id="codeIn" placeholder="كود الغرفة (4 أحرف أو أرقام فأكثر)" maxlength="20" autocomplete="off" autocapitalize="off">
       </div>
       <div class="row" style="margin-top:8px">
-        <button id="enterBtn" style="flex:1">دخول الغرفة 🚪</button>
+        <button id="enterBtn" style="flex:1">دخول غرفة الشات 🚪</button>
       </div>
       <div id="help">انتم الاثنين اكتبوا نفس الكود واضغطوا دخول. استخدموا كود صعب التخمين حتى ما يدخل عليكم أحد.</div>
     </div>
-    <div id="status">غير متصل</div>
+    <div id="status">غير متصل بالشات</div>
     <button id="leaveBtn" class="ghost" style="display:none">خروج من الغرفة</button>
   </div>
 </div>
@@ -111,15 +144,24 @@
     <button id="closeBtn" aria-label="إغلاق">✕</button>
   </div>
   <div id="log"></div>
+  <div id="emojiBox"></div>
   <form id="chatForm">
+    <button id="emojiBtn" type="button" aria-label="سمايلات">😊</button>
     <input id="msgIn" placeholder="اكتب رسالة..." autocomplete="off" maxlength="300">
     <button id="sendBtn" type="submit" aria-label="إرسال">➤</button>
   </form>
 </div>
 
 <script>
+/* ============================================================
+   إعداد لوحة الصدارة: ضع هنا رقم الـ blob (انظر التعليمات)
+   ============================================================ */
+const LB_ID = 'PUT_ID_HERE';
+
+const $ = id => document.getElementById(id);
+
 /* ================= اللعبة ================= */
-const cv = document.getElementById('c');
+const cv = $('c');
 const ctx = cv.getContext('2d');
 const W = 320, H = 480, GROUND = 60;
 const GAP = 135, PIPE_W = 52, PIPE_SPACE = 175, SPEED = 2;
@@ -128,6 +170,8 @@ const GRAVITY = 0.42, FLAP = -7.2;
 let state = 'ready'; // ready | play | dead
 let bird, pipes, score, best = 0, frames = 0, groundX = 0, deadTime = 0;
 try { best = parseInt(localStorage.getItem('flappyBest') || '0', 10) || 0; } catch (e) {}
+
+function getName() { return ($('nameIn').value || '').trim().slice(0, 16); }
 
 function reset() {
   bird = { x: 80, y: H / 2 - 20, vy: 0, r: 12, rot: 0 };
@@ -147,6 +191,7 @@ function die() {
   state = 'dead'; deadTime = 0;
   if (score > best) { best = score; try { localStorage.setItem('flappyBest', String(best)); } catch (e) {} }
   sendData({ type: 'score', score: score });
+  submitScore(score);
 }
 
 function update(dt) {
@@ -211,15 +256,25 @@ function draw() {
   ctx.fillStyle = '#73bf2e'; ctx.fillRect(0, H - GROUND, W, 12);
   ctx.fillStyle = '#5da024';
   for (let x = groundX - 24; x < W + 24; x += 24) ctx.fillRect(x, H - GROUND, 12, 12);
+  // الراعي على الأرض
+  ctx.font = 'bold 17px Cairo, system-ui, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7a5c12';
+  ctx.fillText('برعاية بابيتو ✨', W / 2, H - 20);
   drawBird();
   if (state !== 'ready') text(String(score), W / 2, 70, 44);
-  if (state === 'ready') { text('اضغط للطيران', W / 2, 150, 28); text('Tap to flap', W / 2, 185, 18); }
+  if (state === 'ready') {
+    text('اضغط للطيران', W / 2, 150, 28);
+    text('Tap to flap', W / 2, 185, 18);
+    text('برعاية بابيتو ✨', W / 2, 235, 20, '#ffd166');
+  }
   if (state === 'dead') {
-    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(40, 150, W - 80, 150);
-    text('خسرت!', W / 2, 195, 30, '#ff6b6b');
-    text('النتيجة: ' + score, W / 2, 235, 22);
-    text('الأفضل: ' + best, W / 2, 265, 22, '#ffd166');
-    if (deadTime > 25) text('اضغط للإعادة', W / 2, 330, 20);
+    ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(30, 140, W - 60, 190);
+    text('خسرت!', W / 2, 185, 30, '#ff6b6b');
+    text('النتيجة: ' + score, W / 2, 225, 22);
+    text('أفضل نتيجة لك: ' + best, W / 2, 255, 20, '#ffd166');
+    if (!getName()) text('اكتب اسمك لتنحفظ نتيجتك', W / 2, 290, 15, '#9be7ff');
+    if (deadTime > 25) text('اضغط للإعادة', W / 2, 365, 20);
   }
 }
 let last = performance.now();
@@ -229,15 +284,97 @@ function loop(t) {
 }
 reset(); requestAnimationFrame(loop);
 
-document.getElementById('stage').addEventListener('pointerdown', e => { e.preventDefault(); flap(); });
+$('stage').addEventListener('pointerdown', e => { e.preventDefault(); flap(); });
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
   if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
 });
 
+/* ================= لوحة الصدارة (JSONBlob) ================= */
+const LB_URL = 'https://jsonblob.com/api/jsonBlob/' + LB_ID;
+const LB_HEAD = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+const LB_KEEP = 200; // أقصى عدد لاعبين محفوظين
+let lbChain = Promise.resolve();
+
+try { $('nameIn').value = localStorage.getItem('flappyName') || ''; } catch (e) {}
+$('nameIn').addEventListener('change', () => { try { localStorage.setItem('flappyName', getName()); } catch (e) {} lbRender(lbLast); });
+
+function lbReady() { return LB_ID && LB_ID !== 'PUT_ID_HERE'; }
+function lbSay(msg, good) { const m = $('lbMsg'); m.textContent = msg || ''; m.className = good ? 'good' : ''; }
+
+async function lbFetch() {
+  const r = await fetch(LB_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  return Array.isArray(j.players) ? j.players : [];
+}
+function lbSort(list) {
+  list.sort((a, b) => (b.best || 0) - (a.best || 0) || (a.at || 0) - (b.at || 0));
+  return list;
+}
+
+let lbLast = [];
+function lbRender(list) {
+  lbLast = list || [];
+  const body = $('lbBody');
+  body.innerHTML = '';
+  if (!lbReady()) { lbSay('⚙️ لوحة الصدارة تحتاج تفعيل (ضع رقم الـ blob بالملف).'); return; }
+  const top = lbSort(lbLast.slice()).filter(p => (p.best || 0) > 0).slice(0, 10);
+  const head = document.createElement('div');
+  head.className = 'lbRow h';
+  ['#', 'الاسم', 'النقاط', 'المحاولات'].forEach((t, i) => { const s = document.createElement('span'); s.textContent = t; if (i > 1) s.style.textAlign = 'center'; head.appendChild(s); });
+  body.appendChild(head);
+  if (!top.length) { lbSay('ماكو نتائج بعد. كن أول واحد يسجل نتيجة! 🐦'); return; }
+  const mine = getName().toLowerCase();
+  const medals = ['🥇', '🥈', '🥉'];
+  top.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'lbRow r' + (mine && String(p.name).toLowerCase() === mine ? ' me' : '');
+    const k = document.createElement('span'); k.className = 'k'; k.textContent = medals[i] || String(i + 1);
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = String(p.name);
+    const s = document.createElement('span'); s.className = 's'; s.textContent = String(p.best || 0);
+    const g = document.createElement('span'); g.className = 'g'; g.textContent = String(p.games || 0);
+    row.append(k, n, s, g); body.appendChild(row);
+  });
+}
+
+async function lbRefresh() {
+  if (!lbReady()) { lbRender([]); return; }
+  try { lbRender(await lbFetch()); if ($('lbMsg').className !== 'good') lbSay(''); }
+  catch (e) { lbSay('⚠️ ما قدرت أحمّل القائمة. تأكد من الإنترنت وجرب تحديث.'); }
+}
+$('lbRefresh').onclick = lbRefresh;
+
+function submitScore(sc) {
+  const name = getName();
+  if (!name) { lbSay('✍️ اكتب اسمك بالأعلى حتى تنحفظ نتائجك بالقائمة'); return; }
+  try { localStorage.setItem('flappyName', name); } catch (e) {}
+  if (!lbReady()) return;
+  lbChain = lbChain.then(async () => {
+    let list = await lbFetch();
+    const key = name.toLowerCase();
+    let p = list.find(x => String(x.name).toLowerCase() === key);
+    let improved = false;
+    if (!p) { p = { name, best: 0, games: 0, total: 0, at: Date.now() }; list.push(p); }
+    p.name = name;
+    p.games = (p.games || 0) + 1;
+    p.total = (p.total || 0) + sc;
+    if (sc > (p.best || 0)) { p.best = sc; p.at = Date.now(); improved = sc > 0; }
+    lbSort(list);
+    list = list.slice(0, LB_KEEP);
+    const r = await fetch(LB_URL, { method: 'PUT', headers: LB_HEAD, body: JSON.stringify({ players: list }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lbRender(list);
+    const rank = list.filter(x => (x.best || 0) > 0).findIndex(x => String(x.name).toLowerCase() === key) + 1;
+    if (improved && rank > 0 && rank <= 10) lbSay('🎉 رقمك الجديد! أنت الآن رقم ' + rank + ' بقائمة أفضل 10', true);
+    else lbSay('');
+  }).catch(() => { lbSay('⚠️ ما انحفظت نتيجتك بالقائمة (مشكلة بالاتصال)'); });
+}
+lbRefresh();
+setInterval(() => { if (!document.hidden) lbRefresh(); }, 30000);
+
 /* ================= الشات (عبر خادم ntfy.sh العام) ================= */
-const $ = id => document.getElementById(id);
 const NTFY = 'https://ntfy.sh/';
 const logEl = $('log');
 const myId = Math.random().toString(36).slice(2, 10);
@@ -245,13 +382,10 @@ let topic = null, es = null, joined = false, friend = null;
 let myName = '', connTimer = null, hbTimer = null, watchTimer = null;
 let chatOpen = false, unread = 0, toastTimer = null;
 
-try {
-  $('nameIn').value = localStorage.getItem('flappyName') || '';
-  $('codeIn').value = localStorage.getItem('flappyCode') || '';
-} catch (e) {}
+try { $('codeIn').value = localStorage.getItem('flappyCode') || ''; } catch (e) {}
 
 function setStatus(s) { $('status').textContent = s; }
-function lockSetup(v) { ['enterBtn', 'codeIn', 'nameIn'].forEach(i => $(i).disabled = v); }
+function lockSetup(v) { ['enterBtn', 'codeIn'].forEach(i => $(i).disabled = v); }
 function timeNow() {
   const d = new Date();
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
@@ -265,6 +399,7 @@ function openChat() {
 function closeChat() {
   chatOpen = false;
   $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true');
+  $('emojiBox').classList.remove('open');
   if (document.activeElement) document.activeElement.blur();
 }
 function updateBadge() {
@@ -278,6 +413,29 @@ function showToast(str) {
 }
 $('fab').onclick = () => chatOpen ? closeChat() : openChat();
 $('closeBtn').onclick = closeChat;
+
+/* سمايلات */
+const EMOJIS = ['😀','😂','🤣','😍','😎','🥳','😜','🤔','😅','😭','😡','🥺','😴','🤯','🙄','😏',
+  '👍','👎','👏','🙏','💪','🔥','💯','❤️','💔','🎉','🏆','🥇','🥈','🥉','⭐','🐦',
+  '🎮','🕹️','😈','👀','💀','🤝','✌️','👌','🙌','😱','🥵','🥶','☕','🍕','😘','🤗',
+  '😇','🤩','😬','🤭','😤','😢','🤪','🫡','🫶','💥','✨','🚀','🎯','🍀','😹','🤡'];
+(function buildEmojis() {
+  const box = $('emojiBox');
+  EMOJIS.forEach(em => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = em;
+    b.addEventListener('click', () => {
+      const inp = $('msgIn');
+      const s = inp.selectionStart == null ? inp.value.length : inp.selectionStart;
+      const e = inp.selectionEnd == null ? s : inp.selectionEnd;
+      inp.value = inp.value.slice(0, s) + em + inp.value.slice(e);
+      const pos = s + em.length;
+      inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (x) {}
+    });
+    box.appendChild(b);
+  });
+})();
+$('emojiBtn').onclick = () => $('emojiBox').classList.toggle('open');
 
 function addMsg(str, cls, who) {
   const d = document.createElement('div');
@@ -304,7 +462,7 @@ function post(obj) {
   obj.id = myId;
   return fetch(NTFY + topic, { method: 'POST', body: JSON.stringify(obj) }).catch(() => {});
 }
-function sendData(obj) { if (joined) post(obj); }
+function sendData(obj) { if (joined) { obj.name = myName; post(obj); } }
 
 /* حالة الصديق */
 function friendOnline(name) {
@@ -351,9 +509,9 @@ function cleanup() {
 }
 
 function enterRoom() {
-  myName = ($('nameIn').value.trim() || 'لاعب').slice(0, 16);
+  myName = getName() || 'لاعب';
   const code = $('codeIn').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  try { localStorage.setItem('flappyName', myName); localStorage.setItem('flappyCode', code); } catch (e) {}
+  try { localStorage.setItem('flappyName', getName()); localStorage.setItem('flappyCode', code); } catch (e) {}
   if (code.length < 4) { setStatus('⚠️ اكتب كود من 4 أحرف أو أرقام على الأقل (أصعب أحسن)'); return; }
   topic = 'flappychat-' + code;
   lockSetup(true);
@@ -396,13 +554,13 @@ $('enterBtn').onclick = enterRoom;
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') enterRoom(); });
 
 function leaveRoom() {
-  if (joined) post({ type: 'bye' });
+  if (joined) post({ type: 'bye', name: myName });
   closeChat(); cleanup();
   $('fab').classList.remove('show');
   $('leaveBtn').style.display = 'none';
   $('setup').style.display = 'block';
   logEl.innerHTML = ''; unread = 0; updateBadge();
-  setStatus('غير متصل');
+  setStatus('غير متصل بالشات');
 }
 $('leaveBtn').onclick = leaveRoom;
 window.addEventListener('pagehide', () => {
