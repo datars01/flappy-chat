@@ -362,6 +362,7 @@ app.use('/uploads', express.static(UP_DIR, {
   maxAge: '7d', immutable: true, index: false, dotfiles: 'ignore',
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
 }));
+app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known')));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 /* ============ الشات (WebSocket) ============ */
