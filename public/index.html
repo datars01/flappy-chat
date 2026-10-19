@@ -219,6 +219,34 @@
   #bgCard .sl input { padding: 0; border: 0; background: none; accent-color: var(--teal); }
   #bgCard .act { background: var(--card2); color: var(--text); border: 1px solid var(--line); font-weight: 600; }
   #bgCard .act.danger { color: #ff8d8d; }
+
+  /* ===== رد + تكبير + خط + لوحة التخصيص ===== */
+  #sheet.big { max-width: none; height: 100vh; height: 100dvh; border-width: 0; border-radius: 0; }
+  #sheet.big #bgLayer, #sheet.big #menu, #sheet.big #bgPanel { border-radius: 0; }
+  #sheet.big .bubble { max-width: min(82%, 640px); }
+  #bigBtn { width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 17px; background: var(--card2); color: var(--text); border: 1px solid var(--line); }
+  #log .bubble { font-size: var(--cfs, 15px); }
+  #log .bubble .txt, #log .bubble .quote .qt { color: var(--cfc, inherit); }
+  .quote { border-inline-start: 3px solid var(--teal); background: rgba(0,0,0,.25); border-radius: 8px; padding: 3px 8px; margin-bottom: 5px; font-size: 12px; cursor: pointer; }
+  .quote .qn { font-weight: 700; color: var(--teal); display: block; }
+  .quote .qt { display: block; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; font-size: 12px !important; }
+  .bubble.flash { animation: flashb 1.2s; }
+  @keyframes flashb { 0%, 60% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 2px 6px rgba(0,0,0,.25); } }
+  #replyBar { display: none; position: relative; z-index: 1; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px;
+    background: rgba(245,166,35,.16); border-top: 1px solid var(--line); font-size: 13px; }
+  #replyTxt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+  #replyCancel { width: 28px; height: 28px; padding: 0; border-radius: 50%; background: var(--card2); color: var(--text); border: 1px solid var(--line); font-size: 13px; }
+  #bgCard .bgS { font-weight: 700; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+  #bgCard .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  #bgShared { flex: none; width: 20px; height: 20px; padding: 0; accent-color: var(--teal); }
+  #bgCard .row2 { display: flex; gap: 8px; }
+  #bgCard .row2 button { flex: 1; }
+  #fcRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fcb { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
+  .fcb.sel { outline: 2px solid var(--teal); }
+  #fcCustom { flex: none; width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); background: none; border-radius: 8px; }
+  #fontPrev { font-size: var(--cfs, 15px); color: var(--cfc, var(--text)); background: var(--card2); border-radius: 12px; padding: 8px 12px; text-align: center; }
+  #bgCard .help { margin: 0; }
 </style>
 </head>
 <body>
@@ -297,12 +325,14 @@
   <div id="sheetHead">
     <span id="dot"></span>
     <span id="sheetTitle">الشات</span>
-    <button id="bgBtn" aria-label="خلفية المحادثة" type="button">🎨</button>
+    <button id="bgBtn" aria-label="تخصيص المحادثة" type="button">🎨</button>
+    <button id="bigBtn" aria-label="تكبير المحادثة" type="button">⤢</button>
     <button id="closeBtn" aria-label="إغلاق" type="button">✕</button>
   </div>
   <div id="log"></div>
   <div id="emojiBox"></div>
   <div id="editBar"><span id="editTxt"></span><button id="editCancel" type="button" aria-label="إلغاء التعديل">✕</button></div>
+  <div id="replyBar"><span id="replyTxt"></span><button id="replyCancel" type="button" aria-label="إلغاء الرد">✕</button></div>
   <div id="recBar"><span class="recDot"></span><span id="recTime">0:00</span><span class="recHint">جاري التسجيل...</span><button id="recCancel" type="button" aria-label="إلغاء">🗑</button><button id="recSend" type="button" aria-label="إرسال">➤</button></div>
   <form id="chatForm">
     <button id="emojiBtn" type="button" aria-label="سمايلات">😊</button>
@@ -314,14 +344,26 @@
   <input type="file" id="fileIn" accept="image/*,video/*" hidden>
   <div id="menu"><div id="menuCard"></div></div>
   <div id="bgPanel"><div id="bgCard">
-    <div class="bgT">🎨 خلفية المحادثة</div>
+    <div class="bgT">🎨 تخصيص المحادثة</div>
     <div id="bgGrid"></div>
     <button id="bgPick" class="act" type="button">📷 اختار صورة من الجهاز</button>
     <input type="file" id="bgFile" accept="image/*" hidden>
+    <label class="chk"><input type="checkbox" id="bgShared" checked><span>تتغير الخلفية عند كل اللي بالغرفة</span></label>
     <label class="sl"><span>التعتيم</span><input id="bgDimR" type="range" min="0" max="0.8" step="0.05"></label>
     <label class="sl"><span>الطمس</span><input id="bgBlurR" type="range" min="0" max="8" step="1"></label>
-    <button id="bgSound" class="act" type="button"></button>
     <button id="bgClear" class="act danger" type="button">🗑️ إزالة الخلفية</button>
+
+    <div class="bgS">الخط</div>
+    <div id="fontPrev">هذا مثال على شكل الرسالة 🐦</div>
+    <label class="sl"><span>الحجم</span><input id="fsR" type="range" min="12" max="26" step="1"></label>
+    <div id="fcRow"></div>
+    <button id="fReset" class="act" type="button">↩️ رجّع الخط الافتراضي</button>
+
+    <div class="bgS">صوت الرسالة</div>
+    <button id="bgSound" class="act" type="button"></button>
+    <button id="babRec" class="act" type="button">🎙️ سجّل صوتك يقول "بابيتو"</button>
+    <div class="row2"><button id="babTest" class="act" type="button">▶️ جرّب الصوت</button><button id="babReset" class="act" type="button">↩️ الافتراضي</button></div>
+    <div class="help" id="babNote"></div>
     <button id="bgDone" type="button">تم</button>
   </div></div>
 </div>
@@ -510,14 +552,37 @@ function showUnlock(ids) {
   $('unlockPop').classList.add('open');
 }
 
+/* ===== المراحل (نهار / غروب / ليل / ثلج) كل 10 نقاط ===== */
+const STAGES = [
+  { name: '☀️ نهار', top: '#4ec0ca', bot: '#bfe9ee', cloud: .55, ground: '#ded895', grass: '#73bf2e', grass2: '#5da024', pipe: '#73bf2e', pipeEdge: '#33621a', txt: '#7a5c12', star: 0, snow: 0, sun: 1, sunY: 80,  sunC: '#ffe27a' },
+  { name: '🌇 غروب', top: '#5b3a8c', bot: '#ff9a6b', cloud: .35, ground: '#c79b6b', grass: '#6a9a35', grass2: '#55802b', pipe: '#5f9f2a', pipeEdge: '#2e4f17', txt: '#5a3a14', star: 0, snow: 0, sun: 1, sunY: 330, sunC: '#ffb347' },
+  { name: '🌙 ليل',  top: '#070b24', bot: '#27386e', cloud: .12, ground: '#4a4a66', grass: '#2f6b3a', grass2: '#255a30', pipe: '#2f8a4a', pipeEdge: '#123d22', txt: '#cfc9a8', star: 1, snow: 0, sun: 0, sunY: 330, sunC: '#ffb347' },
+  { name: '❄️ ثلج',  top: '#8fa9c9', bot: '#eef5fb', cloud: .75, ground: '#f4f8fb', grass: '#dbe8f2', grass2: '#c3d6e5', pipe: '#8fd3f0', pipeEdge: '#3a7ea1', txt: '#5b6f82', star: 0, snow: 1, sun: 0, sunY: 80,  sunC: '#ffe27a' }
+];
+const hx = (c, i) => parseInt(c.slice(1 + i * 2, 3 + i * 2), 16);
+const lerpN = (a, b, t) => a + (b - a) * t;
+function lerpC(a, b, t) { return 'rgb(' + [0, 1, 2].map(i => Math.round(lerpN(hx(a, i), hx(b, i), t))).join(',') + ')'; }
+let stFrom = 0, stTo = 0, stMix = 1;
+const stageFor = sc => Math.floor(sc / 10) % STAGES.length;
+function setStage(i) { if (i === stTo) return; stFrom = stTo; stTo = i; stMix = 0; }
+const flakes = Array.from({ length: 45 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 1 + Math.random() * 2.2, vy: .5 + Math.random() * 1, ph: Math.random() * 6.28 }));
+const stars = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: Math.random() * (H - GROUND - 120), r: .6 + Math.random() * 1.3, ph: Math.random() * 6.28 }));
+
+/* ===== القوى: درع + إبطاء الوقت ===== */
+let slowT = 0, inv = 0, pwCount = 0, floats = [];
+function useShield() { bird.shield = false; inv = 70; floats.push({ x: bird.x, y: bird.y - 22, text: 'انكسر الدرع 🛡️', t: 60 }); }
+
 function reset() {
-  bird = { x: 80, y: H / 2 - 20, vy: 0, r: 12, rot: 0 };
-  pipes = []; score = 0; frames = 0; banner = null;
+  bird = { x: 80, y: H / 2 - 20, vy: 0, r: 12, rot: 0, shield: false };
+  pipes = []; score = 0; frames = 0; banner = null; slowT = 0; inv = 0; pwCount = 0; floats = [];
+  setStage(0);
   for (let i = 0; i < 3; i++) addPipe(W + 60 + i * PIPE_SPACE);
 }
 function addPipe(x) {
   const min = 70, max = H - GROUND - GAP - 70;
-  pipes.push({ x, top: min + Math.random() * (max - min), passed: false });
+  let pw = null;
+  if (++pwCount > 3 && Math.random() < 0.22) pw = Math.random() < 0.5 ? 'shield' : 'slow';
+  pipes.push({ x, top: min + Math.random() * (max - min), passed: false, pw, got: false });
 }
 function startGame() {
   currentGame = auth ? api('/api/start', { method: 'POST' }).then(r => r.gid).catch(() => null) : null;
@@ -535,8 +600,18 @@ function die() {
 }
 
 function update(dt) {
-  groundX = (groundX - SPEED * dt) % 24;
+  const slow = slowT > 0 ? .6 : 1;
+  groundX = (groundX - SPEED * dt * slow) % 24;
   if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  if (stMix < 1) stMix = Math.min(1, stMix + dt / 50);
+  for (const f of floats) { f.t -= dt; f.y -= 0.5 * dt; }
+  floats = floats.filter(f => f.t > 0);
+  if (lerpN(STAGES[stFrom].snow, STAGES[stTo].snow, stMix) > .01) {
+    for (const f of flakes) {
+      f.y += f.vy * dt; f.x += Math.sin((frames + f.ph * 20) / 30) * .4 * dt;
+      if (f.y > H) { f.y = -4; f.x = Math.random() * W; }
+    }
+  }
   if (state === 'ready') { bird.y = H / 2 - 20 + Math.sin(frames / 10) * 6; frames += dt; return; }
   if (state === 'dead') {
     deadTime += dt;
@@ -544,55 +619,131 @@ function update(dt) {
     return;
   }
   frames += dt;
-  bird.vy += GRAVITY * dt; bird.y += bird.vy * dt;
+  if (slowT > 0) slowT -= dt;
+  if (inv > 0) inv -= dt;
+  const d = dt * slow;
+  bird.vy += GRAVITY * d; bird.y += bird.vy * d;
   bird.rot = Math.max(-0.5, Math.min(1.3, bird.vy / 9));
   for (const p of pipes) {
-    p.x -= SPEED * dt;
-    if (!p.passed && p.x + PIPE_W < bird.x) { p.passed = true; score++; onScore(); }
+    p.x -= SPEED * d;
+    if (!p.passed && p.x + PIPE_W < bird.x) {
+      p.passed = true; score++;
+      const prev = stTo; setStage(stageFor(score));
+      if (stTo !== prev && !banner) banner = { text: STAGES[stTo].name, sub: 'مرحلة جديدة!', t: 110 };
+      onScore();
+    }
+    if (p.pw && !p.got) {
+      const px = p.x + PIPE_W / 2, py = p.top + GAP / 2 + Math.sin(frames / 8) * 5;
+      if (Math.hypot(bird.x - px, bird.y - py) < bird.r + 13) {
+        p.got = true;
+        if (p.pw === 'shield') { bird.shield = true; floats.push({ x: px, y: py - 18, text: 'درع! 🛡️', t: 70 }); }
+        else { slowT = 300; floats.push({ x: px, y: py - 18, text: 'إبطاء الوقت ⏳', t: 70 }); }
+      }
+    }
   }
   if (pipes[0].x + PIPE_W < -5) { pipes.shift(); addPipe(pipes[pipes.length - 1].x + PIPE_SPACE); }
-  if (bird.y + bird.r >= H - GROUND) { bird.y = H - GROUND - bird.r; die(); return; }
+  if (bird.y + bird.r >= H - GROUND) {
+    if (bird.shield) { useShield(); bird.y = H - GROUND - bird.r - 2; bird.vy = FLAP; }
+    else { bird.y = H - GROUND - bird.r; die(); return; }
+  }
   if (bird.y - bird.r < -40) bird.y = -40 + bird.r;
   for (const p of pipes) {
     const inX = bird.x + bird.r - 2 > p.x && bird.x - bird.r + 2 < p.x + PIPE_W;
-    if (inX && (bird.y - bird.r + 2 < p.top || bird.y + bird.r - 2 > p.top + GAP)) { die(); return; }
+    if (inX && (bird.y - bird.r + 2 < p.top || bird.y + bird.r - 2 > p.top + GAP)) {
+      if (inv > 0) continue;
+      if (bird.shield) { useShield(); continue; }
+      die(); return;
+    }
   }
 }
 
-function drawPipe(p) {
-  ctx.fillStyle = '#73bf2e'; ctx.strokeStyle = '#33621a'; ctx.lineWidth = 2;
+function drawPipe(p, fill, edge) {
+  ctx.fillStyle = fill; ctx.strokeStyle = edge; ctx.lineWidth = 2;
   ctx.fillRect(p.x, 0, PIPE_W, p.top); ctx.strokeRect(p.x, -2, PIPE_W, p.top + 2);
   ctx.fillRect(p.x - 3, p.top - 20, PIPE_W + 6, 20); ctx.strokeRect(p.x - 3, p.top - 20, PIPE_W + 6, 20);
   const by = p.top + GAP;
   ctx.fillRect(p.x, by, PIPE_W, H - GROUND - by); ctx.strokeRect(p.x, by, PIPE_W, H - GROUND - by);
   ctx.fillRect(p.x - 3, by, PIPE_W + 6, 20); ctx.strokeRect(p.x - 3, by, PIPE_W + 6, 20);
 }
-function drawBird() { drawBirdSkin(ctx, bird.x, bird.y, bird.rot, curSkin(), frames); }
+function shieldPath(x, y, k) {
+  ctx.beginPath(); ctx.moveTo(x, y - 8 * k); ctx.lineTo(x + 7 * k, y - 5 * k); ctx.lineTo(x + 6 * k, y + 3 * k);
+  ctx.quadraticCurveTo(x, y + 10 * k, x - 6 * k, y + 3 * k); ctx.lineTo(x - 7 * k, y - 5 * k); ctx.closePath();
+}
+function drawOrb(p) {
+  if (!p.pw || p.got) return;
+  const x = p.x + PIPE_W / 2, y = p.top + GAP / 2 + Math.sin(frames / 8) * 5;
+  ctx.save();
+  ctx.shadowColor = p.pw === 'shield' ? '#4ea8ff' : '#ffd166'; ctx.shadowBlur = 12;
+  ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.beginPath(); ctx.arc(x, y, 13, 0, 7); ctx.fill();
+  ctx.shadowBlur = 0;
+  if (p.pw === 'shield') { ctx.fillStyle = '#2f86e8'; shieldPath(x, y, 1); ctx.fill(); }
+  else {
+    ctx.strokeStyle = '#e08a00'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 5); ctx.moveTo(x, y); ctx.lineTo(x + 4, y + 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawBird() {
+  if (inv > 0 && Math.floor(inv / 4) % 2 === 0) ctx.globalAlpha = .35;
+  drawBirdSkin(ctx, bird.x, bird.y, bird.rot, curSkin(), frames);
+  ctx.globalAlpha = 1;
+  if (bird.shield) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120,200,255,' + (.55 + .25 * Math.sin(frames / 6)).toFixed(2) + ')'; ctx.fillStyle = 'rgba(120,200,255,.18)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(bird.x + 2, bird.y, 24, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+}
 function text(str, x, y, size, color) {
   ctx.font = 'bold ' + size + 'px Cairo, system-ui, Arial';
   ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#222';
   ctx.strokeText(str, x, y); ctx.fillStyle = color || '#fff'; ctx.fillText(str, x, y);
 }
 function draw() {
+  const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#4ec0ca'); g.addColorStop(1, '#bfe9ee');
+  g.addColorStop(0, lerpC(a.top, b.top, t)); g.addColorStop(1, lerpC(a.bot, b.bot, t));
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  const starA = lerpN(a.star, b.star, t);
+  if (starA > .01) {
+    ctx.fillStyle = '#fff';
+    for (const st of stars) { ctx.globalAlpha = starA * (.5 + .5 * Math.sin(frames / 20 + st.ph)); ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = starA; ctx.fillStyle = '#f4f1d0'; ctx.beginPath(); ctx.arc(250, 90, 20, 0, 7); ctx.fill();
+    ctx.fillStyle = '#dcd8b0'; ctx.beginPath(); ctx.arc(243, 84, 4, 0, 7); ctx.arc(256, 98, 5, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  const sunA = lerpN(a.sun, b.sun, t);
+  if (sunA > .01) { ctx.globalAlpha = sunA; ctx.fillStyle = lerpC(a.sunC, b.sunC, t); ctx.beginPath(); ctx.arc(70, lerpN(a.sunY, b.sunY, t), 26, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+  ctx.fillStyle = 'rgba(255,255,255,' + lerpN(a.cloud, b.cloud, t).toFixed(2) + ')';
   for (let i = 0; i < 3; i++) {
     const cx = ((i * 140 - frames * 0.3) % (W + 80) + W + 80) % (W + 80) - 40;
     ctx.beginPath(); ctx.arc(cx, 90 + i * 55, 20, 0, 7); ctx.arc(cx + 22, 96 + i * 55, 16, 0, 7); ctx.arc(cx - 20, 98 + i * 55, 14, 0, 7); ctx.fill();
   }
-  pipes.forEach(drawPipe);
-  ctx.fillStyle = '#ded895'; ctx.fillRect(0, H - GROUND, W, GROUND);
-  ctx.fillStyle = '#73bf2e'; ctx.fillRect(0, H - GROUND, W, 12);
-  ctx.fillStyle = '#5da024';
+  const pf = lerpC(a.pipe, b.pipe, t), pe = lerpC(a.pipeEdge, b.pipeEdge, t);
+  pipes.forEach(p => drawPipe(p, pf, pe));
+  pipes.forEach(drawOrb);
+  ctx.fillStyle = lerpC(a.ground, b.ground, t); ctx.fillRect(0, H - GROUND, W, GROUND);
+  ctx.fillStyle = lerpC(a.grass, b.grass, t); ctx.fillRect(0, H - GROUND, W, 12);
+  ctx.fillStyle = lerpC(a.grass2, b.grass2, t);
   for (let x = groundX - 24; x < W + 24; x += 24) ctx.fillRect(x, H - GROUND, 12, 12);
   ctx.font = 'bold 17px Cairo, system-ui, Arial';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#7a5c12';
+  ctx.fillStyle = lerpC(a.txt, b.txt, t);
   ctx.fillText('برعاية بابيتو ✨', W / 2, H - 20);
   drawBird();
+  const snowA = lerpN(a.snow, b.snow, t);
+  if (snowA > .01) { ctx.fillStyle = '#fff'; ctx.globalAlpha = snowA * .9; for (const f of flakes) { ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
   if (state !== 'ready') text(String(score), W / 2, 70, 44);
+  if (state === 'play') {
+    if (bird.shield) { ctx.fillStyle = '#2f86e8'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; shieldPath(22, 28, 1.6); ctx.fill(); ctx.stroke(); }
+    if (slowT > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(10, 50, 60, 8);
+      ctx.fillStyle = '#ffd166'; ctx.fillRect(10, 50, 60 * Math.min(1, slowT / 300), 8);
+      ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.fillText('⏳ إبطاء', 10, 46); ctx.textAlign = 'center';
+    }
+  }
+  for (const f of floats) { ctx.globalAlpha = Math.min(1, f.t / 20); text(f.text, f.x, f.y, 14, '#fff'); }
+  ctx.globalAlpha = 1;
   if (banner && state === 'play') {
     ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(24, 100, W - 48, 62);
     text(banner.text, W / 2, 128, 21, '#ffd166'); text(banner.sub, W / 2, 152, 14, '#fff');
@@ -601,6 +752,7 @@ function draw() {
     text('اضغط للطيران', W / 2, 150, 28);
     text('Tap to flap', W / 2, 185, 18);
     text('برعاية بابيتو ✨', W / 2, 235, 20, '#ffd166');
+    text('🛡️ درع  •  ⏳ إبطاء الوقت', W / 2, 310, 14, '#fff');
     if (!auth) text('سجّل دخول لتنحفظ نتائجك', W / 2, 275, 15, '#fff');
   }
   if (state === 'dead') {
@@ -738,7 +890,7 @@ function openChat() {
 function closeChat() {
   chatOpen = false;
   $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true');
-  $('emojiBox').classList.remove('open'); closeMenu(); closeBg(); cancelEdit(); cancelRec();
+  $('emojiBox').classList.remove('open'); closeMenu(); closeBg(); cancelEdit(); cancelReply(); cancelRec();
   if (document.activeElement) document.activeElement.blur();
 }
 function updateBadge() {
@@ -777,7 +929,7 @@ const EMOJIS = ['😀','😂','🤣','😍','😎','🥳','😜','🤔','😅','
   });
 })();
 // الأزرار ما تسحب الفوكس من خانة الكتابة (حتى الكيبورد يبقى مفتوح)
-['sendBtn', 'emojiBtn', 'attachBtn', 'micBtn', 'recSend', 'recCancel', 'editCancel'].forEach(id => $(id).addEventListener('mousedown', e => e.preventDefault()));
+['sendBtn', 'emojiBtn', 'attachBtn', 'micBtn', 'recSend', 'recCancel', 'editCancel', 'replyCancel'].forEach(id => $(id).addEventListener('mousedown', e => e.preventDefault()));
 $('emojiBtn').onclick = () => { $('emojiBox').classList.toggle('open'); keepFocus(); };
 
 /* ---------- عرض الرسائل ---------- */
@@ -792,6 +944,15 @@ function buildBubble(m) {
   const d = document.createElement('div');
   d.className = 'bubble ' + (mine ? 'me' : 'them') + (m.deleted ? ' del' : '');
   d.dataset.id = m.id;
+  if (m.reply && !m.deleted) {
+    const q = document.createElement('div'); q.className = 'quote';
+    const qn = document.createElement('span'); qn.className = 'qn'; qn.textContent = m.reply.name || '';
+    const qt = document.createElement('span'); qt.className = 'qt';
+    qt.textContent = m.reply.text || (m.reply.media === 'audio' ? '🎤 رسالة صوتية' : m.reply.media === 'video' ? '🎬 فيديو' : m.reply.media ? '🖼️ صورة' : '🚫 رسالة محذوفة');
+    q.append(qn, qt);
+    q.addEventListener('click', ev => { ev.stopPropagation(); jumpTo(m.reply.id); });
+    d.appendChild(q);
+  }
   if (m.deleted) {
     const t = document.createElement('span'); t.className = 'txt'; t.textContent = '🚫 تم حذف هذه الرسالة'; d.appendChild(t);
   } else {
@@ -838,8 +999,9 @@ function putMsg(m, fresh) {
   if (old) old.el.replaceWith(el); else logEl.appendChild(el);
   msgs.set(m.id, { m, el });
   if (stick && (!old || fresh)) logEl.scrollTop = logEl.scrollHeight;
+  if (fresh && !old && m.k !== myKey()) ding();
   if (fresh && !old && m.k !== myKey() && !chatOpen) {
-    unread++; updateBadge(); ding();
+    unread++; updateBadge();
     showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
   }
 }
@@ -868,6 +1030,7 @@ function openMenu(m) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'act' + (cls ? ' ' + cls : ''); b.textContent = label;
     b.onclick = () => { closeMenu(); fn(); }; card.appendChild(b);
   };
+  if (!m.deleted) act('↩️ رد', () => startReply(m));
   if (!m.deleted && m.text) act('📋 نسخ', () => { try { navigator.clipboard.writeText(m.text); showToast('تم النسخ'); } catch (e) {} });
   if (!m.deleted && m.media && m.media.type !== 'audio') act('🔗 فتح', () => window.open(m.media.url, '_blank'));
   if (mine && !m.deleted && !m.media) act('✏️ تعديل', () => startEdit(m));
@@ -879,6 +1042,7 @@ function openMenu(m) {
 $('menu').addEventListener('click', e => { if (e.target === $('menu')) closeMenu(); });
 
 function startEdit(m) {
+  cancelReply();
   editingId = m.id;
   $('editTxt').textContent = 'تعديل: ' + m.text.slice(0, 40);
   $('editBar').style.display = 'flex';
@@ -890,6 +1054,25 @@ function cancelEdit() {
   editingId = null; $('editBar').style.display = 'none';
 }
 $('editCancel').onclick = () => { cancelEdit(); keepFocus(); };
+
+/* ---------- الرد على رسالة ---------- */
+let replyTo = null;
+function startReply(m) {
+  replyTo = { id: m.id, name: m.k === myKey() ? 'نفسك' : m.name };
+  const label = m.text ? m.text.slice(0, 40) : (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : '');
+  $('replyTxt').textContent = '↩️ رد على ' + replyTo.name + (label ? ': ' + label : '');
+  $('replyBar').style.display = 'flex';
+  if (editingId) cancelEdit();
+  keepFocus();
+}
+function cancelReply() { replyTo = null; $('replyBar').style.display = 'none'; }
+$('replyCancel').onclick = () => { cancelReply(); keepFocus(); };
+function jumpTo(id) {
+  const o = msgs.get(id);
+  if (!o) { showToast('الرسالة الأصلية ما موجودة'); return; }
+  try { o.el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+  o.el.classList.add('flash'); setTimeout(() => o.el.classList.remove('flash'), 1300);
+}
 
 /* ---------- الاتصال بالسيرفر ---------- */
 function wsend(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
@@ -918,6 +1101,7 @@ function onServer(d) {
     (d.msgs || []).forEach(m => putMsg(m, false));
     logEl.scrollTop = logEl.scrollHeight;
     setMembers(d.members);
+    if (d.bg) applyRemoteBg(d.bg, '');
     if (!announced) { announced = true; addSys('دخلت الغرفة 🎮'); }
   } else if (d.t === 'msg') putMsg(d.m, true);
   else if (d.t === 'edit') patchMsg(d.id, m => { m.text = d.text; m.editedAt = d.editedAt; });
@@ -926,6 +1110,7 @@ function onServer(d) {
     if (d.scope === 'all') patchMsg(d.id, m => { m.deleted = true; m.text = ''; m.media = null; m.reactions = {}; });
     else { const o = msgs.get(d.id); if (o) { o.el.remove(); msgs.delete(d.id); } }
   }
+  else if (d.t === 'bg') applyRemoteBg(d.bg, d.by);
   else if (d.t === 'presence') setMembers(d.members);
   else if (d.t === 'sys') addSys(d.text);
   else if (d.t === 'score') addSys(d.name + ' لعب وجاب ' + (parseInt(d.score, 10) || 0) + ' 🐦');
@@ -993,24 +1178,25 @@ $('chatForm').addEventListener('submit', e => {
     wsend({ t: 'edit', id: editingId, text: v });
     editingId = null; $('editBar').style.display = 'none';
   } else {
-    wsend({ t: 'msg', text: v });
+    wsend({ t: 'msg', text: v, reply: replyTo ? replyTo.id : undefined });
+    cancelReply();
   }
   $('msgIn').value = '';
   keepFocus(); // الكيبورد يبقى مفتوح
 });
 
 /* ---------- الصور والفيديوهات ---------- */
-function shrinkImage(file) {
+function shrinkImage(file, maxSide, q) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const max = 1280, k = Math.min(1, max / Math.max(img.width, img.height));
+      const max = maxSide || 1280, k = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement('canvas');
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      c.toBlob(b => b ? resolve(b) : reject(new Error('x')), 'image/jpeg', 0.82);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('x')), 'image/jpeg', q || 0.82);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('x')); };
     img.src = url;
@@ -1029,7 +1215,7 @@ async function sendFile(file) {
     let j = null; try { j = await r.json(); } catch (e) {}
     if (!r.ok) throw new Error((j && j.error) || 'فشل الرفع');
     const caption = $('msgIn').value.trim();
-    wsend({ t: 'msg', text: editingId ? '' : caption, media: { url: j.url, type: j.kind } });
+    wsend({ t: 'msg', text: editingId ? '' : caption, media: { url: j.url, type: j.kind }, reply: replyTo ? replyTo.id : undefined }); cancelReply();
     if (!editingId) $('msgIn').value = '';
     showToast('✅ انرسل');
   } catch (e) { showToast('⚠️ ' + e.message); }
@@ -1093,14 +1279,14 @@ async function sendAudio(blob, type, dur) {
     const r = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': type, Authorization: 'Bearer ' + auth.token }, body: blob });
     let j = null; try { j = await r.json(); } catch (e) {}
     if (!r.ok) throw new Error((j && j.error) || 'فشل الرفع');
-    wsend({ t: 'msg', text: '', media: { url: j.url, type: j.kind, dur } });
+    wsend({ t: 'msg', text: '', media: { url: j.url, type: j.kind, dur }, reply: replyTo ? replyTo.id : undefined }); cancelReply();
   } catch (e) { showToast('⚠️ ' + e.message); }
 }
 $('micBtn').onclick = () => { if (rec) stopRec(true); else startRec(); };
 $('recSend').onclick = () => stopRec(true);
 $('recCancel').onclick = () => stopRec(false);
 
-/* ================= خلفية المحادثة ================= */
+/* ================= تخصيص المحادثة: خلفية + خط + صوت + تكبير ================= */
 const BG_PRESETS = [
   { id: 'night',  name: 'ليل',    css: 'linear-gradient(160deg,#0f2027,#203a43,#2c5364)' },
   { id: 'sunset', name: 'غروب',   css: 'linear-gradient(160deg,#ff9966,#ff5e62 55%,#6a3093)' },
@@ -1111,15 +1297,21 @@ const BG_PRESETS = [
   { id: 'dots',   name: 'نقاط',   css: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,.18) 1.5px, transparent 0) 0 0/18px 18px, #1a2b38' },
   { id: 'grid',   name: 'شبكة',   css: 'linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px) 0 0/22px 22px, linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px) 0 0/22px 22px, #16232d' }
 ];
-let bgOpt = { mode: 'none', id: '', dim: 0.25, blur: 0 }, bgSession = '', soundOn = true;
-try { const o = JSON.parse(localStorage.getItem('flappyBg') || 'null'); if (o) bgOpt = Object.assign(bgOpt, o); soundOn = localStorage.getItem('flappyMute') !== '1'; } catch (e) {}
+const BG_URL_RE = /^\/uploads\/[a-f0-9]{24}\.(jpg|png|webp)$/;
+let bgOpt = { mode: 'none', id: '', url: '', dim: 0.25, blur: 0 }, bgSession = '', soundOn = true;
+try {
+  const o = JSON.parse(localStorage.getItem('flappyBg') || 'null');
+  if (o && typeof o === 'object') bgOpt = Object.assign(bgOpt, o);
+  soundOn = localStorage.getItem('flappyMute') !== '1';
+} catch (e) {}
 function saveBg() { try { localStorage.setItem('flappyBg', JSON.stringify(bgOpt)); } catch (e) {} }
 function applyBg() {
   let css = '';
   if (bgOpt.mode === 'preset') { const p = BG_PRESETS.find(x => x.id === bgOpt.id); if (p) css = p.css; }
   else if (bgOpt.mode === 'img') {
-    let u = ''; try { u = localStorage.getItem('flappyBgImg') || ''; } catch (e) {}
-    u = u || bgSession; if (u) css = 'url("' + u + '") center/cover no-repeat';
+    let u = BG_URL_RE.test(bgOpt.url || '') ? bgOpt.url : '';
+    if (!u) { try { u = localStorage.getItem('flappyBgImg') || ''; } catch (e) {} u = u || bgSession; }
+    if (u) css = 'url("' + u + '") center/cover no-repeat';
   }
   const im = $('bgImg');
   im.style.background = css;
@@ -1127,46 +1319,139 @@ function applyBg() {
   im.style.transform = bgOpt.blur > 0 ? 'scale(1.15)' : '';
   $('bgDim').style.opacity = css ? String(bgOpt.dim) : '0';
 }
+/* مزامنة الخلفية مع كل اللي بالغرفة */
+function shareBg() {
+  if (!$('bgShared').checked || !joined) return;
+  if (bgOpt.mode === 'img' && !bgOpt.url) return; // صورة محلية فقط
+  wsend({ t: 'bg', bg: { mode: bgOpt.mode, id: bgOpt.id, url: bgOpt.url, dim: bgOpt.dim, blur: bgOpt.blur } });
+}
+let shT = null;
+function shareBgSoon() { clearTimeout(shT); shT = setTimeout(shareBg, 400); }
+function applyRemoteBg(b, by) {
+  if (!b || typeof b !== 'object') return;
+  if (by && String(by).toLowerCase() === myKey()) return;
+  const n = { mode: 'none', id: '', url: '', dim: Math.max(0, Math.min(.8, Number(b.dim) || 0)), blur: Math.max(0, Math.min(8, Math.round(Number(b.blur) || 0))) };
+  if (b.mode === 'preset' && BG_PRESETS.some(p => p.id === b.id)) { n.mode = 'preset'; n.id = b.id; }
+  else if (b.mode === 'img' && BG_URL_RE.test(String(b.url))) { n.mode = 'img'; n.url = b.url; }
+  bgOpt = n; saveBg(); applyBg();
+  if ($('bgPanel').classList.contains('open')) { buildBgGrid(); syncControls(); }
+  if (by) showToast('🎨 ' + by + ' غيّر خلفية المحادثة');
+}
 function buildBgGrid() {
   const g = $('bgGrid'); g.innerHTML = '';
   BG_PRESETS.forEach(p => {
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', p.name); b.title = p.name;
     b.style.background = p.css; if (bgOpt.mode === 'preset' && bgOpt.id === p.id) b.className = 'sel';
-    b.onclick = () => { bgOpt.mode = 'preset'; bgOpt.id = p.id; saveBg(); applyBg(); buildBgGrid(); };
+    b.onclick = () => { bgOpt.mode = 'preset'; bgOpt.id = p.id; bgOpt.url = ''; saveBg(); applyBg(); buildBgGrid(); shareBgSoon(); };
     g.appendChild(b);
   });
 }
-function soundLabel() { $('bgSound').textContent = soundOn ? '🔔 صوت التنبيه: شغّال' : '🔕 صوت التنبيه: مطفي'; }
-function openBg() { buildBgGrid(); $('bgDimR').value = bgOpt.dim; $('bgBlurR').value = bgOpt.blur; soundLabel(); $('bgPanel').classList.add('open'); }
+function soundLabel() { $('bgSound').textContent = soundOn ? '🔔 صوت الرسائل: شغّال' : '🔕 صوت الرسائل: مطفي'; }
+function syncControls() {
+  $('bgDimR').value = bgOpt.dim; $('bgBlurR').value = bgOpt.blur; $('fsR').value = chatFont.size;
+  soundLabel(); updBabNote(); buildFontColors();
+}
+function openBg() { buildBgGrid(); syncControls(); $('bgPanel').classList.add('open'); }
 function closeBg() { $('bgPanel').classList.remove('open'); }
 $('bgBtn').onclick = openBg;
 $('bgDone').onclick = closeBg;
 $('bgPanel').addEventListener('click', e => { if (e.target === $('bgPanel')) closeBg(); });
-$('bgDimR').oninput = () => { bgOpt.dim = parseFloat($('bgDimR').value); saveBg(); applyBg(); };
-$('bgBlurR').oninput = () => { bgOpt.blur = parseInt($('bgBlurR').value, 10); saveBg(); applyBg(); };
-$('bgClear').onclick = () => { bgOpt.mode = 'none'; bgOpt.id = ''; bgSession = ''; try { localStorage.removeItem('flappyBgImg'); } catch (e) {} saveBg(); applyBg(); buildBgGrid(); };
+$('bgDimR').oninput = () => { bgOpt.dim = parseFloat($('bgDimR').value); saveBg(); applyBg(); shareBgSoon(); };
+$('bgBlurR').oninput = () => { bgOpt.blur = parseInt($('bgBlurR').value, 10); saveBg(); applyBg(); shareBgSoon(); };
+$('bgClear').onclick = () => {
+  bgOpt.mode = 'none'; bgOpt.id = ''; bgOpt.url = ''; bgSession = '';
+  try { localStorage.removeItem('flappyBgImg'); } catch (e) {}
+  saveBg(); applyBg(); buildBgGrid(); shareBg();
+};
 $('bgSound').onclick = () => { soundOn = !soundOn; try { localStorage.setItem('flappyMute', soundOn ? '0' : '1'); } catch (e) {} soundLabel(); };
 $('bgPick').onclick = () => $('bgFile').click();
 $('bgFile').addEventListener('change', async () => {
   const f = $('bgFile').files[0]; $('bgFile').value = '';
   if (!f || !f.type.startsWith('image/')) return;
   try {
-    const blob = await shrinkImage(f);
-    const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
-    bgSession = url; bgOpt.mode = 'img';
-    try { localStorage.setItem('flappyBgImg', url); } catch (e) { showToast('⚠️ الصورة كبيرة، تبقى لهذي الجلسة فقط'); }
-    saveBg(); applyBg(); buildBgGrid();
-  } catch (e) { showToast('⚠️ ما قدرت أفتح الصورة'); }
+    const share = $('bgShared').checked && joined && auth;
+    const blob = await shrinkImage(f, share ? 960 : 1080, .7);
+    if (share) {
+      showToast('⏳ جاري رفع الخلفية...');
+      const r = await fetch('/api/roombg', { method: 'POST', headers: { 'Content-Type': 'image/jpeg', Authorization: 'Bearer ' + auth.token }, body: blob });
+      let j = null; try { j = await r.json(); } catch (e) {}
+      if (!r.ok) throw new Error((j && j.error) || 'فشل الرفع');
+      bgOpt.mode = 'img'; bgOpt.url = j.url; saveBg(); applyBg(); buildBgGrid(); shareBg();
+      showToast('✅ انغيّرت الخلفية عند الكل');
+    } else {
+      const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+      bgSession = url; bgOpt.mode = 'img'; bgOpt.url = '';
+      try { localStorage.setItem('flappyBgImg', url); } catch (e) { showToast('⚠️ الصورة كبيرة، تبقى لهذي الجلسة فقط'); }
+      saveBg(); applyBg(); buildBgGrid();
+    }
+  } catch (e) { showToast('⚠️ ' + (e.message && e.message !== 'x' ? e.message : 'ما قدرت أفتح الصورة')); }
 });
-applyBg();
 
-/* ================= صوت التنبيه ================= */
-let actx = null;
-function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+/* ---------- الخط (حجم + لون) ---------- */
+const FONT_COLORS = ['#ffffff', '#ffd166', '#7fe3ea', '#ff9ec7', '#8cf0b4', '#111111'];
+let chatFont = { size: 15, color: '' };
+try {
+  const o = JSON.parse(localStorage.getItem('flappyFont') || 'null');
+  if (o) { chatFont.size = Math.max(12, Math.min(26, parseInt(o.size, 10) || 15)); chatFont.color = /^#[0-9a-f]{6}$/i.test(o.color || '') ? o.color : ''; }
+} catch (e) {}
+function applyFont() {
+  const sh = $('sheet');
+  sh.style.setProperty('--cfs', chatFont.size + 'px');
+  if (chatFont.color) sh.style.setProperty('--cfc', chatFont.color); else sh.style.removeProperty('--cfc');
+  try { localStorage.setItem('flappyFont', JSON.stringify(chatFont)); } catch (e) {}
+}
+function buildFontColors() {
+  const row = $('fcRow'); row.innerHTML = '';
+  const mk = (col) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'fcb' + ((chatFont.color || '') === col ? ' sel' : '');
+    if (col) b.style.background = col; else { b.textContent = 'A'; b.style.background = 'var(--card2)'; b.style.color = 'var(--text)'; b.style.fontSize = '13px'; b.title = 'اللون الافتراضي'; }
+    b.onclick = () => { chatFont.color = col; applyFont(); buildFontColors(); };
+    row.appendChild(b);
+  };
+  mk(''); FONT_COLORS.forEach(mk);
+  const ci = document.createElement('input'); ci.type = 'color'; ci.id = 'fcCustom'; ci.value = chatFont.color || '#ffffff'; ci.title = 'لون مخصص';
+  ci.oninput = () => { chatFont.color = ci.value; applyFont(); };
+  row.appendChild(ci);
+}
+$('fsR').oninput = () => { chatFont.size = parseInt($('fsR').value, 10); applyFont(); };
+$('fReset').onclick = () => { chatFont = { size: 15, color: '' }; applyFont(); syncControls(); };
+
+/* ---------- تكبير المحادثة لحجم الشاشة ---------- */
+let bigChat = false;
+try { bigChat = localStorage.getItem('flappyBig') === '1'; } catch (e) {}
+function applyBig() {
+  $('sheet').classList.toggle('big', bigChat);
+  $('bigBtn').textContent = bigChat ? '⤡' : '⤢';
+  $('bigBtn').setAttribute('aria-label', bigChat ? 'تصغير المحادثة' : 'تكبير المحادثة');
+  try { localStorage.setItem('flappyBig', bigChat ? '1' : '0'); } catch (e) {}
+}
+$('bigBtn').onclick = () => { bigChat = !bigChat; applyBig(); setTimeout(() => { logEl.scrollTop = logEl.scrollHeight; }, 60); };
+
+/* ================= صوت الرسالة: "بابيتو" ================= */
+let actx = null, babitoAudio = null, audUnlocked = false;
+function loadBabito() {
+  babitoAudio = null; audUnlocked = false;
+  let u = '';
+  try { u = localStorage.getItem('flappyBabito') || ''; } catch (e) {}
+  try {
+    // صوتك المسجّل أولاً، وإذا ماكو نجرّب ملف public/babito.mp3 (يسمعه كل اللاعبين)
+    const a = new Audio(u || '/babito.mp3'); a.preload = 'auto';
+    if (!u) a.addEventListener('error', () => { if (babitoAudio === a) babitoAudio = null; });
+    babitoAudio = a;
+  } catch (e) {}
+}
+function unlockAudio() {
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+  try { if ('speechSynthesis' in window) speechSynthesis.getVoices(); } catch (e) {}
+  if (!audUnlocked && babitoAudio) {
+    audUnlocked = true; const a = babitoAudio;
+    try { a.muted = true; const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); else a.muted = false; } catch (e) { a.muted = false; }
+  }
+}
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { passive: true }));
-function ding() {
-  try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
-  if (!soundOn || !actx) return;
+function tone() {
+  if (!actx) return;
   try {
     const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
     o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1175, t + 0.09);
@@ -1174,6 +1459,72 @@ function ding() {
     o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.32);
   } catch (e) {}
 }
+function speakBabito() {
+  if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) return false;
+  try {
+    const vs = speechSynthesis.getVoices() || [];
+    const ar = vs.find(v => /^ar/i.test(v.lang));
+    const u = new SpeechSynthesisUtterance(ar || !vs.length ? 'بابيتو' : 'Babito');
+    u.lang = ar ? ar.lang : (!vs.length ? 'ar-SA' : 'en-US');
+    if (ar) u.voice = ar;
+    u.rate = 1; u.pitch = 1.15; u.volume = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    return true;
+  } catch (e) { return false; }
+}
+function ding(force) {
+  if (!force) { try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} }
+  if (!soundOn && !force) return;
+  if (babitoAudio) {
+    try {
+      babitoAudio.currentTime = 0;
+      const p = babitoAudio.play();
+      if (p && p.catch) p.catch(() => { if (!speakBabito()) tone(); });
+      return;
+    } catch (e) {}
+  }
+  if (!speakBabito()) tone();
+}
+function updBabNote() {
+  let custom = false; try { custom = !!localStorage.getItem('flappyBabito'); } catch (e) {}
+  $('babNote').textContent = custom ? 'يستخدم صوتك المسجّل لكلمة «بابيتو».' : 'الصوت الحالي: «بابيتو» بصوت الجهاز. تكدر تسجّل صوتك (أو صوت صديقك) بدله.';
+}
+let brec = null;
+$('babRec').onclick = async () => {
+  if (brec) { try { brec.mr.stop(); } catch (e) {} return; }
+  if (rec) { showToast('أوقف تسجيل الرسالة أول'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { showToast('⚠️ متصفحك ما يدعم التسجيل'); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { showToast('⚠️ لازم تسمح للموقع باستخدام المايك'); return; }
+  const mime = pickMime(); let mr;
+  try { mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
+  catch (e) { stream.getTracks().forEach(t => t.stop()); showToast('⚠️ ما قدرت أبدي التسجيل'); return; }
+  const chunks = [], t0 = Date.now(); let tmo = null;
+  brec = { mr };
+  $('babRec').textContent = '⏺️ جاري التسجيل... قل «بابيتو» (اضغط للإيقاف)';
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => {
+    clearTimeout(tmo); stream.getTracks().forEach(t => t.stop()); brec = null;
+    $('babRec').textContent = '🎙️ سجّل صوتك يقول "بابيتو"';
+    const type = (mr.mimeType || mime || 'audio/webm').split(';')[0];
+    const blob = new Blob(chunks, { type });
+    if (Date.now() - t0 < 400 || !blob.size) { showToast('التسجيل قصير'); return; }
+    if (blob.size > 400 * 1024) { showToast('⚠️ التسجيل كبير، سجّل جملة أقصر'); return; }
+    const fr = new FileReader();
+    fr.onload = () => {
+      try { localStorage.setItem('flappyBabito', fr.result); loadBabito(); showToast('✅ انحفظ صوتك'); ding(true); }
+      catch (e) { showToast('⚠️ ما قدرت أحفظ الصوت'); }
+      updBabNote();
+    };
+    fr.readAsDataURL(blob);
+  };
+  mr.start();
+  tmo = setTimeout(() => { try { if (mr.state !== 'inactive') mr.stop(); } catch (e) {} }, 3000);
+};
+$('babTest').onclick = () => { unlockAudio(); ding(true); };
+$('babReset').onclick = () => { try { localStorage.removeItem('flappyBabito'); } catch (e) {} loadBabito(); updBabNote(); showToast('رجع الصوت الافتراضي'); };
+loadBabito(); applyBg(); applyFont(); applyBig();
 
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {

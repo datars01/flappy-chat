@@ -325,6 +325,27 @@ app.delete('/api/avatar', authMw, (req, res) => {
   res.json({ avatar: '' });
 });
 
+// صورة خلفية المحادثة (تنحفظ دائم حتى ما تنحذف بالتنظيف، وتنحذف لما تتبدل)
+const pendingBg = new Map(); // key -> رابط صورة انرفعت وما انطبقت بعد
+app.post('/api/roombg', authMw, (req, res, next) => {
+  if (limited('rbg:' + req.key, 15, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
+  next();
+}, express.raw({ type: () => true, limit: '1200kb' }), async (req, res) => {
+  const ct = ctypeOf(req);
+  const ext = own(AV_TYPES, ct) ? AV_TYPES[ct] : null;
+  if (!ext) return res.status(400).json({ error: 'الصورة لازم JPG أو PNG أو WebP' });
+  const buf = req.body;
+  if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'ملف فارغ' });
+  if (buf.length > 1100 * 1024) return res.status(413).json({ error: 'الصورة كبيرة' });
+  const name = crypto.randomBytes(12).toString('hex') + '.' + ext;
+  try { await mediaPut(name, ct, buf, true); }
+  catch (e) { console.error('roombg failed:', e.message); return res.status(500).json({ error: 'فشل حفظ الصورة' }); }
+  const url = '/uploads/' + name;
+  const prev = pendingBg.get(req.key); if (prev) mediaDelUrl(prev);
+  pendingBg.set(req.key, url);
+  res.json({ url });
+});
+
 app.use((err, req, res, next) => {
   if (err && err.type === 'entity.too.large') return res.status(413).json({ error: 'الملف كبير' });
   if (err) { console.error(err.message); return res.status(400).json({ error: 'طلب غير صالح' }); }
@@ -362,7 +383,7 @@ app.use('/uploads', express.static(UP_DIR, {
   maxAge: '7d', immutable: true, index: false, dotfiles: 'ignore',
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
 }));
-app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known')));
+app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 /* ============ الشات (WebSocket) ============ */
@@ -370,6 +391,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 const live = new Map(); // code -> Set<ws>
 const MAX_MSGS = 300;
+const BG_IDS = ['night', 'sunset', 'forest', 'violet', 'sand', 'sky', 'dots', 'grid']; // خلفيات الغرفة الجاهزة
 
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); };
 function bc(code, o, filter) {
@@ -414,7 +436,7 @@ function onMsg(ws, d) {
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
     const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-150).map(pub);
-    send(ws, { t: 'joined', code, msgs, members: membersOf(code) });
+    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
     return;
@@ -444,6 +466,22 @@ function onMsg(ws, d) {
     while (room.msgs.length > MAX_MSGS) delMedia(room.msgs.shift());
     save();
     bc(code, { t: 'msg', m: pub(m), cid: d.cid || null });
+  } else if (d.t === 'bg') {
+    const b = d.bg && typeof d.bg === 'object' ? d.bg : {};
+    const nb = { mode: 'none', id: '', url: '', dim: Math.max(0, Math.min(0.8, Number(b.dim) || 0)), blur: Math.max(0, Math.min(8, Math.round(Number(b.blur) || 0))) };
+    if (b.mode === 'preset') {
+      if (!BG_IDS.includes(String(b.id))) return;
+      nb.mode = 'preset'; nb.id = String(b.id);
+    } else if (b.mode === 'img') {
+      const u = String(b.url || '');
+      const cur = room.bg && room.bg.mode === 'img' ? room.bg.url : null;
+      if (!MEDIA_RE.test(u) || !(u === cur || u === pendingBg.get(ws.key))) return send(ws, { t: 'err', error: 'الخلفية غير صالحة' });
+      nb.mode = 'img'; nb.url = u;
+    }
+    if (room.bg && room.bg.mode === 'img' && room.bg.url !== nb.url) mediaDelUrl(room.bg.url);
+    if (nb.url && pendingBg.get(ws.key) === nb.url) pendingBg.delete(ws.key);
+    room.bg = nb; room.bgAt = now; save();
+    bc(code, { t: 'bg', bg: nb, by: me.name }, w => w.key !== ws.key);
   } else if (d.t === 'typing') {
     bc(code, { t: 'typing', name: me.name }, w => w.key !== ws.key);
   } else if (d.t === 'edit') {
@@ -497,7 +535,10 @@ function cleanup() {
   for (const code in db.rooms) {
     const r = db.rooms[code];
     r.msgs = r.msgs.filter(m => { if (m.ts < cut) { delMedia(m); return false; } return true; });
-    if (!r.msgs.length && !live.has(code)) delete db.rooms[code];
+    if (!r.msgs.length && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {
+      if (r.bg && r.bg.mode === 'img') mediaDelUrl(r.bg.url);
+      delete db.rooms[code];
+    }
   }
   for (const h in db.sessions) if (db.sessions[h].t < Date.now() - 90 * 24 * 3600e3) delete db.sessions[h];
   if (pool) {
