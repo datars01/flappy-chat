@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="فلابي شات">
 <meta name="theme-color" content="#16232d">
 <title>فلابي شات</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -190,6 +192,33 @@
   #recBar button { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 17px; background: var(--card2); border: 1px solid var(--line); color: var(--text); }
   #recSend { background: linear-gradient(135deg, var(--teal), #2d9aa5) !important; color: #fff !important; }
   @keyframes blink { 50% { opacity: .25; } }
+
+  /* ===== الوضع الفاتح + أزرار الأعلى ===== */
+  :root[data-theme="light"] { --bg:#eef4f7; --card:#ffffff; --card2:#f1f6f9; --line:#cdd9e0; --them:#dfe9ef; --text:#17232b; --muted:#5b7280; }
+  #fullBar { gap: 6px; flex-wrap: wrap; }
+  .sys { background: rgba(0,0,0,.4) !important; color: #fff !important; }
+
+  /* ===== خلفية المحادثة ===== */
+  #bgLayer { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: 20px 20px 0 0; background: var(--card2); }
+  #bgImg, #bgDim { position: absolute; inset: 0; }
+  #bgDim { background: #000; opacity: 0; }
+  #sheetHead, #chatForm, #emojiBox, #editBar, #recBar { position: relative; z-index: 1; }
+  #sheetHead, #chatForm { background: var(--card); }
+  #log { position: relative; z-index: 1; background: transparent; }
+  #bgBtn { width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 17px; background: var(--card2); color: var(--text); border: 1px solid var(--line); }
+  #bgPanel { display: none; position: absolute; inset: 0; z-index: 6; background: rgba(0,0,0,.55); align-items: center; justify-content: center; border-radius: 22px 22px 0 0; }
+  #bgPanel.open { display: flex; }
+  #bgCard { width: 88%; max-width: 340px; max-height: 92%; overflow-y: auto; background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  #bgCard .bgT { font-weight: 700; font-size: 16px; }
+  #bgGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  #bgGrid button { height: 52px; padding: 0; border-radius: 12px; border: 2px solid var(--line); }
+  #bgGrid button.sel { border-color: var(--teal); outline: 2px solid var(--teal); }
+  #bgCard .sl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  #bgCard .sl span { width: 54px; flex: none; }
+  #bgCard .sl input { padding: 0; border: 0; background: none; accent-color: var(--teal); }
+  #bgCard .act { background: var(--card2); color: var(--text); border: 1px solid var(--line); font-weight: 600; }
+  #bgCard .act.danger { color: #ff8d8d; }
 </style>
 </head>
 <body>
@@ -218,7 +247,12 @@
     </div>
   </div>
 
-  <div id="fullBar"><button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button></div>
+  <div id="fullBar">
+    <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
+    <button id="shareBtn" class="ghost" type="button">📤 شارك نتيجتك</button>
+    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
+    <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
+  </div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas></div>
 
   <div class="card" id="rewards">
@@ -259,9 +293,11 @@
 </div></div>
 
 <div id="sheet" aria-hidden="true">
+  <div id="bgLayer"><div id="bgImg"></div><div id="bgDim"></div></div>
   <div id="sheetHead">
     <span id="dot"></span>
     <span id="sheetTitle">الشات</span>
+    <button id="bgBtn" aria-label="خلفية المحادثة" type="button">🎨</button>
     <button id="closeBtn" aria-label="إغلاق" type="button">✕</button>
   </div>
   <div id="log"></div>
@@ -277,6 +313,17 @@
   </form>
   <input type="file" id="fileIn" accept="image/*,video/*" hidden>
   <div id="menu"><div id="menuCard"></div></div>
+  <div id="bgPanel"><div id="bgCard">
+    <div class="bgT">🎨 خلفية المحادثة</div>
+    <div id="bgGrid"></div>
+    <button id="bgPick" class="act" type="button">📷 اختار صورة من الجهاز</button>
+    <input type="file" id="bgFile" accept="image/*" hidden>
+    <label class="sl"><span>التعتيم</span><input id="bgDimR" type="range" min="0" max="0.8" step="0.05"></label>
+    <label class="sl"><span>الطمس</span><input id="bgBlurR" type="range" min="0" max="8" step="1"></label>
+    <button id="bgSound" class="act" type="button"></button>
+    <button id="bgClear" class="act danger" type="button">🗑️ إزالة الخلفية</button>
+    <button id="bgDone" type="button">تم</button>
+  </div></div>
 </div>
 
 <script>
@@ -691,13 +738,14 @@ function openChat() {
 function closeChat() {
   chatOpen = false;
   $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true');
-  $('emojiBox').classList.remove('open'); closeMenu(); cancelEdit(); cancelRec();
+  $('emojiBox').classList.remove('open'); closeMenu(); closeBg(); cancelEdit(); cancelRec();
   if (document.activeElement) document.activeElement.blur();
 }
 function updateBadge() {
   const b = $('badge');
   b.textContent = unread > 99 ? '99+' : String(unread);
   b.style.display = unread > 0 ? 'flex' : 'none';
+  document.title = (unread > 0 ? '(' + unread + ') ' : '') + 'فلابي شات';
 }
 function showToast(str) {
   const t = $('toast'); t.textContent = str; t.classList.add('show');
@@ -791,7 +839,7 @@ function putMsg(m, fresh) {
   msgs.set(m.id, { m, el });
   if (stick && (!old || fresh)) logEl.scrollTop = logEl.scrollHeight;
   if (fresh && !old && m.k !== myKey() && !chatOpen) {
-    unread++; updateBadge();
+    unread++; updateBadge(); ding();
     showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
   }
 }
@@ -1051,6 +1099,110 @@ async function sendAudio(blob, type, dur) {
 $('micBtn').onclick = () => { if (rec) stopRec(true); else startRec(); };
 $('recSend').onclick = () => stopRec(true);
 $('recCancel').onclick = () => stopRec(false);
+
+/* ================= خلفية المحادثة ================= */
+const BG_PRESETS = [
+  { id: 'night',  name: 'ليل',    css: 'linear-gradient(160deg,#0f2027,#203a43,#2c5364)' },
+  { id: 'sunset', name: 'غروب',   css: 'linear-gradient(160deg,#ff9966,#ff5e62 55%,#6a3093)' },
+  { id: 'forest', name: 'غابة',   css: 'linear-gradient(160deg,#0f9b8e,#1e6f5c 60%,#0b3d2e)' },
+  { id: 'violet', name: 'بنفسجي', css: 'linear-gradient(160deg,#41295a,#2f0743)' },
+  { id: 'sand',   name: 'رمل',    css: 'linear-gradient(160deg,#f5e6c8,#d9b98a)' },
+  { id: 'sky',    name: 'سماء',   css: 'linear-gradient(180deg,#4ec0ca,#bfe9ee)' },
+  { id: 'dots',   name: 'نقاط',   css: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,.18) 1.5px, transparent 0) 0 0/18px 18px, #1a2b38' },
+  { id: 'grid',   name: 'شبكة',   css: 'linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px) 0 0/22px 22px, linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px) 0 0/22px 22px, #16232d' }
+];
+let bgOpt = { mode: 'none', id: '', dim: 0.25, blur: 0 }, bgSession = '', soundOn = true;
+try { const o = JSON.parse(localStorage.getItem('flappyBg') || 'null'); if (o) bgOpt = Object.assign(bgOpt, o); soundOn = localStorage.getItem('flappyMute') !== '1'; } catch (e) {}
+function saveBg() { try { localStorage.setItem('flappyBg', JSON.stringify(bgOpt)); } catch (e) {} }
+function applyBg() {
+  let css = '';
+  if (bgOpt.mode === 'preset') { const p = BG_PRESETS.find(x => x.id === bgOpt.id); if (p) css = p.css; }
+  else if (bgOpt.mode === 'img') {
+    let u = ''; try { u = localStorage.getItem('flappyBgImg') || ''; } catch (e) {}
+    u = u || bgSession; if (u) css = 'url("' + u + '") center/cover no-repeat';
+  }
+  const im = $('bgImg');
+  im.style.background = css;
+  im.style.filter = bgOpt.blur > 0 ? 'blur(' + bgOpt.blur + 'px)' : '';
+  im.style.transform = bgOpt.blur > 0 ? 'scale(1.15)' : '';
+  $('bgDim').style.opacity = css ? String(bgOpt.dim) : '0';
+}
+function buildBgGrid() {
+  const g = $('bgGrid'); g.innerHTML = '';
+  BG_PRESETS.forEach(p => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', p.name); b.title = p.name;
+    b.style.background = p.css; if (bgOpt.mode === 'preset' && bgOpt.id === p.id) b.className = 'sel';
+    b.onclick = () => { bgOpt.mode = 'preset'; bgOpt.id = p.id; saveBg(); applyBg(); buildBgGrid(); };
+    g.appendChild(b);
+  });
+}
+function soundLabel() { $('bgSound').textContent = soundOn ? '🔔 صوت التنبيه: شغّال' : '🔕 صوت التنبيه: مطفي'; }
+function openBg() { buildBgGrid(); $('bgDimR').value = bgOpt.dim; $('bgBlurR').value = bgOpt.blur; soundLabel(); $('bgPanel').classList.add('open'); }
+function closeBg() { $('bgPanel').classList.remove('open'); }
+$('bgBtn').onclick = openBg;
+$('bgDone').onclick = closeBg;
+$('bgPanel').addEventListener('click', e => { if (e.target === $('bgPanel')) closeBg(); });
+$('bgDimR').oninput = () => { bgOpt.dim = parseFloat($('bgDimR').value); saveBg(); applyBg(); };
+$('bgBlurR').oninput = () => { bgOpt.blur = parseInt($('bgBlurR').value, 10); saveBg(); applyBg(); };
+$('bgClear').onclick = () => { bgOpt.mode = 'none'; bgOpt.id = ''; bgSession = ''; try { localStorage.removeItem('flappyBgImg'); } catch (e) {} saveBg(); applyBg(); buildBgGrid(); };
+$('bgSound').onclick = () => { soundOn = !soundOn; try { localStorage.setItem('flappyMute', soundOn ? '0' : '1'); } catch (e) {} soundLabel(); };
+$('bgPick').onclick = () => $('bgFile').click();
+$('bgFile').addEventListener('change', async () => {
+  const f = $('bgFile').files[0]; $('bgFile').value = '';
+  if (!f || !f.type.startsWith('image/')) return;
+  try {
+    const blob = await shrinkImage(f);
+    const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+    bgSession = url; bgOpt.mode = 'img';
+    try { localStorage.setItem('flappyBgImg', url); } catch (e) { showToast('⚠️ الصورة كبيرة، تبقى لهذي الجلسة فقط'); }
+    saveBg(); applyBg(); buildBgGrid();
+  } catch (e) { showToast('⚠️ ما قدرت أفتح الصورة'); }
+});
+applyBg();
+
+/* ================= صوت التنبيه ================= */
+let actx = null;
+function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { passive: true }));
+function ding() {
+  try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
+  if (!soundOn || !actx) return;
+  try {
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1175, t + 0.09);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.15, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.32);
+  } catch (e) {}
+}
+
+/* ================= الوضع الفاتح/الداكن ================= */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('themeBtn').textContent = t === 'light' ? '🌙 داكن' : '☀️ فاتح';
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#eef4f7' : '#16232d';
+  try { localStorage.setItem('flappyTheme', t); } catch (e) {}
+}
+let theme = 'dark'; try { theme = localStorage.getItem('flappyTheme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+applyTheme(theme);
+$('themeBtn').onclick = () => { theme = theme === 'light' ? 'dark' : 'light'; applyTheme(theme); };
+
+/* ================= مشاركة النتيجة + التثبيت كتطبيق ================= */
+$('shareBtn').onclick = async () => {
+  const txt = '🐦 جبت ' + myBest() + ' نقطة بفلابي شات! تكدر تغلبني؟', url = location.origin;
+  try {
+    if (navigator.share) await navigator.share({ title: 'فلابي شات', text: txt, url });
+    else { await navigator.clipboard.writeText(txt + ' ' + url); showToast('تم نسخ رابط التحدي'); }
+  } catch (e) {}
+};
+let installEv = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('installBtn').style.display = ''; });
+window.addEventListener('appinstalled', () => { $('installBtn').style.display = 'none'; });
+$('installBtn').onclick = async () => {
+  if (!installEv) return;
+  installEv.prompt(); try { await installEv.userChoice; } catch (e) {}
+  installEv = null; $('installBtn').style.display = 'none';
+};
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 </script>
 </body>
 </html>
