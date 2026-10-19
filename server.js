@@ -5,30 +5,95 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
+let PgPool = null;
+try { PgPool = require('pg').Pool; } catch (e) {}
 
 const PORT = process.env.PORT || 3000;
-// مجلد حفظ البيانات (حسابات + رسائل + صور). على Render لازم يكون على Disk دائم
+// وضع الملفات: مجلد حفظ البيانات (على Render لازم Disk دائم)
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const UP_DIR = path.join(DATA_DIR, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
-fs.mkdirSync(UP_DIR, { recursive: true });
+// وضع قاعدة البيانات (Postgres): إذا حطيت DATABASE_URL كل شي ينحفظ هناك ويبقى دائم
+const DATABASE_URL = process.env.DATABASE_URL || '';
 
-/* ============ قاعدة البيانات (ملف JSON) ============ */
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ============ التخزين ============ */
 let db = { users: {}, sessions: {}, rooms: {} };
-try { db = Object.assign(db, JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))); } catch (e) {}
-let saveTimer = null;
-function writeNow() {
-  const tmp = DB_FILE + '.tmp';
-  try { fs.writeFileSync(tmp, JSON.stringify(db)); fs.renameSync(tmp, DB_FILE); }
-  catch (e) { console.error('save failed:', e.message); }
+let pool = null;
+const mediaSet = new Set(); // أسماء الملفات الموجودة (وضع Postgres)
+
+async function initStorage() {
+  if (DATABASE_URL) {
+    if (!PgPool) throw new Error('DATABASE_URL موجود بس مكتبة pg مو منصّبة (شغّل npm install)');
+    pool = new PgPool({
+      connectionString: DATABASE_URL, max: 4,
+      ssl: process.env.PGSSL === 'off' ? false : { rejectUnauthorized: false }
+    });
+    await pool.query('CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+    await pool.query('CREATE TABLE IF NOT EXISTS media (name TEXT PRIMARY KEY, ctype TEXT NOT NULL, data BYTEA NOT NULL, ts BIGINT NOT NULL)');
+    const r = await pool.query("SELECT value FROM kv WHERE key = 'db'");
+    if (r.rows[0]) db = Object.assign(db, JSON.parse(r.rows[0].value)); // إذا خربان نوقف حتى ما نمسحه
+    const m = await pool.query('SELECT name FROM media');
+    m.rows.forEach(x => mediaSet.add(x.name));
+    console.log('storage: postgres | users: ' + Object.keys(db.users).length + ' | files: ' + mediaSet.size);
+  } else {
+    fs.mkdirSync(UP_DIR, { recursive: true });
+    try { db = Object.assign(db, JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))); } catch (e) {}
+    console.log('storage: files at ' + DATA_DIR + ' | users: ' + Object.keys(db.users).length);
+  }
+}
+
+let saveTimer = null, writing = false, dirty = false;
+async function writeNow() {
+  if (writing) { dirty = true; return; }
+  writing = true;
+  try {
+    const json = JSON.stringify(db);
+    if (pool) {
+      await pool.query("INSERT INTO kv (key, value) VALUES ('db', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [json]);
+    } else {
+      const tmp = DB_FILE + '.tmp';
+      fs.writeFileSync(tmp, json); fs.renameSync(tmp, DB_FILE);
+    }
+  } catch (e) { console.error('save failed:', e.message); }
+  writing = false;
+  if (dirty) { dirty = false; await writeNow(); }
 }
 function save() {
   if (saveTimer) return;
   saveTimer = setTimeout(() => { saveTimer = null; writeNow(); }, 500);
 }
-function flushAndExit() { if (saveTimer) clearTimeout(saveTimer); writeNow(); process.exit(0); }
+async function flushAndExit() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  const t0 = Date.now();
+  await writeNow();
+  while ((writing || dirty) && Date.now() - t0 < 5000) await sleep(50);
+  process.exit(0);
+}
 process.on('SIGTERM', flushAndExit);
 process.on('SIGINT', flushAndExit);
+
+/* ---- الملفات (صور/فيديو/صوت/أفاتار) ---- */
+const KEEP_FOREVER = 4102444800000; // سنة 2100 (للأفاتار حتى ما ينحذف بالتنظيف)
+const mediaPath = name => path.join(UP_DIR, name);
+function mediaExists(name) { return pool ? mediaSet.has(name) : fs.existsSync(mediaPath(name)); }
+async function mediaPut(name, ctype, buf, forever) {
+  if (pool) {
+    await pool.query('INSERT INTO media (name, ctype, data, ts) VALUES ($1, $2, $3, $4)', [name, ctype, buf, forever ? KEEP_FOREVER : Date.now()]);
+    mediaSet.add(name);
+  } else {
+    await fs.promises.writeFile(mediaPath(name), buf);
+  }
+}
+function mediaDel(name) {
+  if (!name) return;
+  if (pool) { mediaSet.delete(name); pool.query('DELETE FROM media WHERE name = $1', [name]).catch(() => {}); }
+  else fs.unlink(mediaPath(name), () => {});
+}
+const MEDIA_RE = /^\/uploads\/([a-f0-9]{24}\.(jpg|png|gif|webp|mp4|webm|mov|weba|ogg|m4a|mp3))$/;
+function mediaDelUrl(url) { const mm = MEDIA_RE.exec(String(url || '')); if (mm) mediaDel(mm[1]); }
 
 /* ============ أدوات ============ */
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
@@ -41,16 +106,17 @@ const NAME_RE = /^[\p{L}\p{N}_.\- ]+$/u;
 function cleanName(u) {
   u = String(u || '').trim().replace(/\s+/g, ' ');
   if (u.length < 2 || u.length > 16 || !NAME_RE.test(u)) return null;
+  if (/^(__proto__|constructor|prototype|hasownproperty|tostring|valueof)$/i.test(u)) return null;
   return u;
 }
 
-// تحديد محاولات (لكل IP)
+// تحديد محاولات (لكل IP أو مستخدم)
 const hits = new Map();
-function limited(ip, max, ms) {
+function limited(id, max, ms) {
   const now = Date.now();
-  let h = hits.get(ip);
+  let h = hits.get(id);
   if (!h || now - h.t > ms) h = { n: 0, t: now };
-  h.n++; hits.set(ip, h);
+  h.n++; hits.set(id, h);
   return h.n > max;
 }
 setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (now - h.t > 3600e3) hits.delete(k); }, 600e3);
@@ -71,8 +137,8 @@ const SKIN_NAMES = { ruby: 'الناري', ocean: 'المحيط', mint: 'الن�
 const userInfo = key => {
   const u = db.users[key];
   const best = u.best || 0;
-  const skin = u.skin && SKIN_AT[u.skin] !== undefined && best >= SKIN_AT[u.skin] ? u.skin : 'classic';
-  return { name: u.name, best, games: u.games || 0, rank: rankOf(key), skin };
+  const skin = u.skin && own(SKIN_AT, u.skin) && best >= SKIN_AT[u.skin] ? u.skin : 'classic';
+  return { name: u.name, best, games: u.games || 0, rank: rankOf(key), skin, avatar: u.avatar || '' };
 };
 function newSession(key) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -83,7 +149,7 @@ function newSession(key) {
 function keyFromToken(token) {
   if (!token) return null;
   const s = db.sessions[sha(token)];
-  return s && db.users[s.k] ? s.k : null;
+  return s && own(db.users, s.k) ? s.k : null;
 }
 
 /* ============ Express ============ */
@@ -94,9 +160,10 @@ app.use(express.json({ limit: '10kb' }));
 
 function authMw(req, res, next) {
   const h = req.headers.authorization || '';
-  const key = keyFromToken(h.startsWith('Bearer ') ? h.slice(7) : '');
+  const token = h.startsWith('Bearer ') ? h.slice(7) : '';
+  const key = keyFromToken(token);
   if (!key) return res.status(401).json({ error: 'سجّل دخول من جديد' });
-  req.key = key;
+  req.key = key; req.th = sha(token);
   next();
 }
 
@@ -109,7 +176,7 @@ app.post('/api/register', (req, res) => {
   if (!name) return res.status(400).json({ error: 'الاسم لازم 2-16 حرف (حروف وأرقام ونقطة وشرطة فقط)' });
   if (p.length < 4 || p.length > 64) return res.status(400).json({ error: 'كلمة السر لازم 4 أحرف على الأقل' });
   const key = name.toLowerCase();
-  if (db.users[key]) return res.status(409).json({ error: 'هذا الاسم مستخدم، اختار اسم ثاني' });
+  if (own(db.users, key)) return res.status(409).json({ error: 'هذا الاسم مستخدم، اختار اسم ثاني' });
   const salt = crypto.randomBytes(16).toString('hex');
   db.users[key] = { name, salt, hash: hashPw(p, salt), best: 0, games: 0, bestAt: 0, created: Date.now() };
   const token = newSession(key);
@@ -122,17 +189,32 @@ app.post('/api/login', (req, res) => {
   const name = String((req.body && req.body.u) || '').trim();
   const p = String((req.body && req.body.p) || '');
   const key = name.toLowerCase();
-  const u = db.users[key];
+  const u = own(db.users, key) ? db.users[key] : null;
   if (!u || !safeEq(hashPw(p, u.salt), u.hash)) return res.status(401).json({ error: 'اسم المستخدم أو كلمة السر غلط' });
   res.json({ token: newSession(key), user: userInfo(key) });
 });
 
 app.get('/api/me', authMw, (req, res) => res.json(userInfo(req.key)));
 
+// تغيير كلمة السر (يطلّع باقي الأجهزة)
+app.post('/api/password', authMw, (req, res) => {
+  if (limited('pw:' + req.key, 10, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
+  const oldp = String((req.body && req.body.old) || '');
+  const np = String((req.body && req.body.new) || '');
+  const u = db.users[req.key];
+  if (!safeEq(hashPw(oldp, u.salt), u.hash)) return res.status(400).json({ error: 'كلمة السر الحالية غلط' });
+  if (np.length < 4 || np.length > 64) return res.status(400).json({ error: 'كلمة السر الجديدة لازم 4 أحرف على الأقل' });
+  u.salt = crypto.randomBytes(16).toString('hex');
+  u.hash = hashPw(np, u.salt);
+  for (const h in db.sessions) if (db.sessions[h].k === req.key && h !== req.th) delete db.sessions[h];
+  save();
+  res.json({ ok: true });
+});
+
 // تركيب سكن (لازم يكون مفتوح حسب أعلى نتيجة)
 app.post('/api/skin', authMw, (req, res) => {
   const id = String((req.body && req.body.skin) || '');
-  if (SKIN_AT[id] === undefined) return res.status(400).json({ error: 'سكن غير موجود' });
+  if (!own(SKIN_AT, id)) return res.status(400).json({ error: 'سكن غير موجود' });
   const u = db.users[req.key];
   if ((u.best || 0) < SKIN_AT[id]) return res.status(403).json({ error: 'السكن ما انفتح بعد' });
   u.skin = id; save();
@@ -144,7 +226,7 @@ app.get('/api/leaderboard', (req, res) => {
     .filter(u => u.best > 0)
     .sort((a, b) => b.best - a.best || (a.bestAt || 0) - (b.bestAt || 0))
     .slice(0, 10)
-    .map(u => ({ name: u.name, best: u.best, games: u.games || 0 }));
+    .map(u => ({ name: u.name, best: u.best, games: u.games || 0, avatar: u.avatar || '' }));
   res.json({ top });
 });
 
@@ -164,7 +246,8 @@ app.post('/api/score', authMw, (req, res) => {
   if (!g || g.k !== req.key) return res.status(400).json({ error: 'لعبة غير صالحة' });
   games.delete(gid);
   const elapsed = (Date.now() - g.t) / 1000;
-  if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed / 1.2) + 1)
+  // أسرع سرعة باللعبة تعدّي أنبوب كل ~1.04 ثانية، فنسمح بهامش واسع
+  if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed / 0.8) + 2)
     return res.status(400).json({ error: 'نتيجة غير صالحة' });
   const u = db.users[req.key];
   const prevBest = u.best || 0;
@@ -185,22 +268,24 @@ app.post('/api/score', authMw, (req, res) => {
   }
 });
 
-/* ============ رفع الصور والفيديوهات ============ */
+/* ============ رفع الملفات ============ */
 const EXT = {
   'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
   'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
   // رسائل صوتية (امتدادات مختلفة عن الفيديو حتى ما يلتبسون)
   'audio/webm': 'weba', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3'
 };
-const MAX_IMG = 8 * 1024 * 1024, MAX_VID = 25 * 1024 * 1024, MAX_AUD = 6 * 1024 * 1024;
+const AV_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const MAX_IMG = 8 * 1024 * 1024, MAX_VID = 25 * 1024 * 1024, MAX_AUD = 6 * 1024 * 1024, MAX_AV = 300 * 1024;
 const mediaKind = ext => /^(mp4|webm|mov)$/.test(ext) ? 'video' : /^(weba|ogg|m4a|mp3)$/.test(ext) ? 'audio' : 'image';
+const ctypeOf = req => String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
 
 app.post('/api/upload', authMw, (req, res, next) => {
   if (limited('up:' + req.key, 15, 60e3)) return res.status(429).json({ error: 'رفع كثير، انتظر شوي' });
   next();
-}, express.raw({ type: () => true, limit: '26mb' }), (req, res) => {
-  const ct = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
-  const ext = EXT[ct];
+}, express.raw({ type: () => true, limit: '26mb' }), async (req, res) => {
+  const ct = ctypeOf(req);
+  const ext = own(EXT, ct) ? EXT[ct] : null;
   if (!ext) return res.status(400).json({ error: 'نوع الملف غير مدعوم' });
   const buf = req.body;
   if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'ملف فارغ' });
@@ -209,10 +294,35 @@ app.post('/api/upload', authMw, (req, res, next) => {
   if (buf.length > limit)
     return res.status(413).json({ error: kind === 'video' ? 'الفيديو أكبر من 25 ميغا' : kind === 'audio' ? 'التسجيل أكبر من 6 ميغا' : 'الصورة أكبر من 8 ميغا' });
   const name = crypto.randomBytes(12).toString('hex') + '.' + ext;
-  fs.writeFile(path.join(UP_DIR, name), buf, err => {
-    if (err) return res.status(500).json({ error: 'فشل حفظ الملف' });
-    res.json({ url: '/uploads/' + name, kind });
-  });
+  try { await mediaPut(name, ct, buf, false); }
+  catch (e) { console.error('upload failed:', e.message); return res.status(500).json({ error: 'فشل حفظ الملف' }); }
+  res.json({ url: '/uploads/' + name, kind });
+});
+
+// صورة البروفايل
+app.post('/api/avatar', authMw, (req, res, next) => {
+  if (limited('av:' + req.key, 20, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
+  next();
+}, express.raw({ type: () => true, limit: '400kb' }), async (req, res) => {
+  const ct = ctypeOf(req);
+  const ext = own(AV_TYPES, ct) ? AV_TYPES[ct] : null;
+  if (!ext) return res.status(400).json({ error: 'الصورة لازم JPG أو PNG أو WebP' });
+  const buf = req.body;
+  if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: 'ملف فارغ' });
+  if (buf.length > MAX_AV) return res.status(413).json({ error: 'الصورة كبيرة' });
+  const name = crypto.randomBytes(12).toString('hex') + '.' + ext;
+  try { await mediaPut(name, ct, buf, true); }
+  catch (e) { console.error('avatar failed:', e.message); return res.status(500).json({ error: 'فشل حفظ الصورة' }); }
+  const u = db.users[req.key];
+  mediaDelUrl(u.avatar);
+  u.avatar = '/uploads/' + name; save();
+  res.json({ avatar: u.avatar });
+});
+app.delete('/api/avatar', authMw, (req, res) => {
+  const u = db.users[req.key];
+  mediaDelUrl(u.avatar);
+  u.avatar = ''; save();
+  res.json({ avatar: '' });
 });
 
 app.use((err, req, res, next) => {
@@ -221,6 +331,33 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// عرض الملفات: وضع Postgres (مع دعم Range حتى يشتغل الصوت والفيديو على آيفون)
+app.get('/uploads/:name', async (req, res, next) => {
+  if (!pool) return next();
+  const name = req.params.name;
+  if (!MEDIA_RE.test('/uploads/' + name) || !mediaSet.has(name)) return res.status(404).end();
+  try {
+    const r = await pool.query('SELECT ctype, data FROM media WHERE name = $1', [name]);
+    if (!r.rows[0]) return res.status(404).end();
+    const data = r.rows[0].data, total = data.length;
+    res.set({
+      'Content-Type': r.rows[0].ctype, 'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'public, max-age=604800, immutable', 'Accept-Ranges': 'bytes'
+    });
+    const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (m && (m[1] || m[2])) {
+      let start, end;
+      if (m[1] === '') { start = Math.max(0, total - parseInt(m[2], 10)); end = total - 1; }
+      else { start = parseInt(m[1], 10); end = m[2] === '' ? total - 1 : Math.min(parseInt(m[2], 10), total - 1); }
+      if (start > end || start >= total) return res.status(416).set('Content-Range', 'bytes */' + total).end();
+      res.status(206).set({ 'Content-Range': 'bytes ' + start + '-' + end + '/' + total, 'Content-Length': end - start + 1 });
+      return res.end(data.subarray(start, end + 1));
+    }
+    res.set('Content-Length', total);
+    res.end(data);
+  } catch (e) { console.error('serve failed:', e.message); res.status(500).end(); }
+});
+// وضع الملفات
 app.use('/uploads', express.static(UP_DIR, {
   maxAge: '7d', immutable: true, index: false, dotfiles: 'ignore',
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
@@ -231,7 +368,6 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 const live = new Map(); // code -> Set<ws>
-const MEDIA_RE = /^\/uploads\/([a-f0-9]{24}\.(jpg|png|gif|webp|mp4|webm|mov|weba|ogg|m4a|mp3))$/;
 const MAX_MSGS = 300;
 
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); };
@@ -245,14 +381,9 @@ function membersOf(code) {
   if (set) for (const w of set) names.set(w.key, db.users[w.key].name);
   return [...names.values()];
 }
-function delMedia(m) {
-  if (m && m.media) {
-    const mm = MEDIA_RE.exec(m.media.url);
-    if (mm) fs.unlink(path.join(UP_DIR, mm[1]), () => {});
-  }
-}
+function delMedia(m) { if (m && m.media) mediaDelUrl(m.media.url); }
 const pub = m => { const { hidden, ...r } = m; return r; };
-function roomOf(code) { return db.rooms[code] || (db.rooms[code] = { msgs: [] }); }
+function roomOf(code) { return own(db.rooms, code) ? db.rooms[code] : (db.rooms[code] = { msgs: [] }); }
 
 function leave(ws) {
   const code = ws.room; if (!code) return;
@@ -297,16 +428,23 @@ function onMsg(ws, d) {
     let media = null;
     if (d.media && typeof d.media === 'object') {
       const mm = MEDIA_RE.exec(String(d.media.url || ''));
-      if (!mm || !fs.existsSync(path.join(UP_DIR, mm[1]))) return send(ws, { t: 'err', error: 'الملف غير موجود' });
+      if (!mm || !mediaExists(mm[1])) return send(ws, { t: 'err', error: 'الملف غير موجود' });
       media = { url: '/uploads/' + mm[1], type: mediaKind(mm[2]) };
       if (media.type === 'audio') media.dur = Math.max(0, Math.min(120, Number(d.media.dur) || 0));
     }
     if (!text && !media) return;
-    const m = { id: crypto.randomBytes(8).toString('hex'), k: ws.key, name: me.name, text, media, ts: now, editedAt: 0, deleted: false, reactions: {}, hidden: [] };
+    let reply = null;
+    if (d.reply) {
+      const o = find(d.reply);
+      if (o) reply = { id: o.id, name: o.name, text: o.deleted ? '' : String(o.text || '').slice(0, 80), media: o.deleted || !o.media ? null : o.media.type };
+    }
+    const m = { id: crypto.randomBytes(8).toString('hex'), k: ws.key, name: me.name, av: me.avatar || '', text, media, reply, ts: now, editedAt: 0, deleted: false, reactions: {}, hidden: [] };
     room.msgs.push(m);
     while (room.msgs.length > MAX_MSGS) delMedia(room.msgs.shift());
     save();
     bc(code, { t: 'msg', m: pub(m), cid: d.cid || null });
+  } else if (d.t === 'typing') {
+    bc(code, { t: 'typing', name: me.name }, w => w.key !== ws.key);
   } else if (d.t === 'edit') {
     const m = find(d.id); const text = String(d.text || '').trim().slice(0, 500);
     if (!m || m.k !== ws.key || m.deleted || !text) return;
@@ -325,7 +463,7 @@ function onMsg(ws, d) {
     }
   } else if (d.t === 'react') {
     const m = find(d.id); const emoji = String(d.emoji || '').slice(0, 8);
-    if (!m || m.deleted || !emoji) return;
+    if (!m || m.deleted || !emoji || /^\w+$/.test(emoji)) return;
     const had = (m.reactions[emoji] || []).includes(ws.key);
     for (const e of Object.keys(m.reactions)) {
       m.reactions[e] = m.reactions[e].filter(k => k !== ws.key);
@@ -361,8 +499,15 @@ function cleanup() {
     if (!r.msgs.length && !live.has(code)) delete db.rooms[code];
   }
   for (const h in db.sessions) if (db.sessions[h].t < Date.now() - 90 * 24 * 3600e3) delete db.sessions[h];
+  if (pool) {
+    // ملفات الشات اللي عمرها أكثر من 15 يوم (الأفاتار ما ينحذف)
+    pool.query('DELETE FROM media WHERE ts < $1 RETURNING name', [Date.now() - 15 * 24 * 3600e3])
+      .then(r => r.rows.forEach(x => mediaSet.delete(x.name))).catch(() => {});
+  }
   save();
 }
 setInterval(cleanup, 3600e3);
 
-server.listen(PORT, () => console.log('Flappy server on :' + PORT + ' | data: ' + DATA_DIR));
+initStorage()
+  .then(() => server.listen(PORT, () => console.log('Flappy server on :' + PORT)))
+  .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
