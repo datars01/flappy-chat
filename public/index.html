@@ -96,11 +96,12 @@
   #toast.show { opacity: 1; transform: none; }
 
   /* نافذة الشات */
-  #sheet { position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 420px; height: 62vh; z-index: 50;
+  #sheet { position: fixed; left: 50%; bottom: var(--kb, 0px); width: 100%; max-width: 420px; height: 62vh; z-index: 50;
     transform: translate(-50%, 110%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
     background: var(--card); border: 2px solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0;
     display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,.5); }
   #sheet.open { transform: translate(-50%, 0); }
+  #sheet.kb { height: var(--sh) !important; max-height: none; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
   #sheetHead { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
   #dot { width: 11px; height: 11px; border-radius: 50%; background: #777; flex: none; }
   #dot.on { background: #35e08a; box-shadow: 0 0 8px #35e08a; }
@@ -2643,6 +2644,23 @@ $('dmInvDuo').onclick = async () => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) { if (!fws || fws.readyState > 1) { fRetry = 0; presenceSync(); } else loadFriends(); } });
 renderFriends();
+
+/* ===== ملاءمة المحادثة مع الكيبورد: نقيس المساحة المرئية فعلاً ونرفع المحادثة فوق الكيبورد ===== */
+function fitSheet() {
+  const vv = window.visualViewport, sh = $('sheet'); if (!vv || !sh) return;
+  const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  const ae = document.activeElement, typing = !!(ae && sh.contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName));
+  const open = kb > 80 || (typing && vv.height < Math.max(screen.height || 0, 0) * 0.8);
+  const was = sh.classList.contains('kb');
+  if (open) {
+    sh.classList.add('kb'); sh.style.setProperty('--kb', kb + 'px'); sh.style.setProperty('--sh', Math.max(180, Math.round(vv.height - 6)) + 'px');
+  } else { sh.classList.remove('kb'); sh.style.removeProperty('--kb'); sh.style.removeProperty('--sh'); }
+  if (open !== was && chatOpen) { setTimeout(() => { logEl.scrollTop = logEl.scrollHeight; }, 60); }
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', fitSheet); visualViewport.addEventListener('scroll', fitSheet); }
+window.addEventListener('orientationchange', () => setTimeout(fitSheet, 300));
+document.addEventListener('focusin', () => setTimeout(fitSheet, 250));
+document.addEventListener('focusout', () => setTimeout(fitSheet, 250));
 
 /* ================= أيقونة اللعبة العايمة داخل الشات (تنسحب وتضغط عليها ترجعك للعبة) ================= */
 (function () {
