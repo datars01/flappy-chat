@@ -368,6 +368,11 @@
   .pgBody { width: 100%; max-width: 420px; flex: 1; overflow-y: auto; padding: 10px 12px 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
   #pg-more #fullBar { flex-wrap: wrap; justify-content: center; gap: 8px; }
   #pg-more #fullBar button { padding: 12px 16px; font-size: 15px; }
+
+  #gameFab { position: absolute; z-index: 8; left: 78%; top: 22%; width: 54px; height: 54px; border-radius: 50%; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 22px; line-height: 1; background: linear-gradient(135deg, #ffd166, #f5a623); color: #3a2a00; box-shadow: 0 4px 14px rgba(0,0,0,.5); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+  #gameFab span { font-size: 9px; font-weight: 700; margin-top: 1px; }
+  #gameFab.drag { cursor: grabbing; transform: scale(1.12); }
 </style>
 </head>
 <body>
@@ -530,6 +535,7 @@
 </div></div>
 
 <div id="sheet" aria-hidden="true">
+  <button id="gameFab" type="button" aria-label="الرجوع للعبة">🎮<span>اللعبة</span></button>
   <div id="bgLayer"><div id="bgImg"></div><div id="bgDim"></div></div>
   <div id="sheetHead">
     <span id="dot"></span>
@@ -2637,6 +2643,39 @@ $('dmInvDuo').onclick = async () => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) { if (!fws || fws.readyState > 1) { fRetry = 0; presenceSync(); } else loadFriends(); } });
 renderFriends();
+
+/* ================= أيقونة اللعبة العايمة داخل الشات (تنسحب وتضغط عليها ترجعك للعبة) ================= */
+(function () {
+  const f = $('gameFab'), sh = $('sheet'); if (!f) return;
+  try { const p = JSON.parse(localStorage.getItem('flappyGameFab') || 'null'); if (p && isFinite(p.x) && isFinite(p.y)) { f.style.left = p.x + '%'; f.style.top = p.y + '%'; } } catch (e) {}
+  let st = null;
+  f.addEventListener('pointerdown', e => {
+    const r = sh.getBoundingClientRect(), fr = f.getBoundingClientRect();
+    st = { id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: fr.left - r.left, oy: fr.top - r.top, moved: false };
+    try { f.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  f.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const dx = e.clientX - st.sx, dy = e.clientY - st.sy;
+    if (!st.moved && Math.hypot(dx, dy) < 7) return;
+    st.moved = true; f.classList.add('drag');
+    const r = sh.getBoundingClientRect();
+    const x = Math.max(0, Math.min(r.width - f.offsetWidth, st.ox + dx)), y = Math.max(0, Math.min(r.height - f.offsetHeight, st.oy + dy));
+    f.style.left = (x / r.width * 100) + '%'; f.style.top = (y / r.height * 100) + '%';
+  });
+  const end = e => {
+    if (!st || e.pointerId !== st.id) return;
+    const moved = st.moved; st = null; f.classList.remove('drag');
+    if (moved) { try { localStorage.setItem('flappyGameFab', JSON.stringify({ x: parseFloat(f.style.left), y: parseFloat(f.style.top) })); } catch (x) {} return; }
+    if (e.type === 'pointerup') goToGame();
+  };
+  f.addEventListener('pointerup', end); f.addEventListener('pointercancel', end);
+})();
+function goToGame() {
+  closeChat(); closePage();
+  $('dmPop').classList.remove('open'); dmWith = null;
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+}
 
 /* ================= الصفحات (القائمة الرئيسية) ================= */
 var curPage = null;
