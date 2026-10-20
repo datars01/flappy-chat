@@ -2579,9 +2579,6 @@ renderFriends();
 /* ================= شاشة البداية ================= */
 (function () {
   const sp = $('splash'); if (!sp) return;
-  let seen = false; try { seen = sessionStorage.getItem('flappySplash') === '1'; } catch (e) {}
-  if (seen) { sp.remove(); return; }
-  try { sessionStorage.setItem('flappySplash', '1'); } catch (e) {}
   const cv = $('spConf'), c = cv.getContext('2d'), num = $('spNum');
   let parts = [], raf = 0, done = false, timers = [];
   const cols = ['#ff4d6d', '#ffd166', '#3ddc84', '#3da5ff', '#a855f7', '#ff9f1c', '#ffffff'];
