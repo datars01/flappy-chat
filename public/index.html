@@ -349,6 +349,25 @@
   @keyframes spBeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.22); } 60% { transform: scale(1); } }
   #spSkip { position: absolute; bottom: 24px; z-index: 2; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 8px 20px; border-radius: 20px; font-size: 14px; }
   @media (prefers-reduced-motion: reduce) { #spNum.pop, #spReveal.show, #spBird, #spBab, #spHeart { animation: none; } }
+
+  /* ===== الواجهة الرئيسية: اللعبة بالنص + قائمة أزرار ===== */
+  #app { padding-bottom: 90px; gap: 8px; }
+  h1 { font-size: 20px; margin: 2px 0 0; }
+  #homeBar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  #hbAcc { background: transparent; color: var(--text); padding: 4px 6px; font-size: 15px; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #hbCoins { font-weight: 700; color: #ffd166; font-size: 15px; }
+  #hub { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px 8px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 14px; font-weight: 600; }
+  .tile .ti { font-size: 26px; line-height: 1.1; } .tile .tl { font-size: 12px; }
+  .tile .tb { position: absolute; top: 4px; inset-inline-end: 6px; background: #ff4d4d; color: #fff; border-radius: 10px; padding: 0 6px; font-size: 11px; font-weight: 700; }
+  .page { display: none; position: fixed; inset: 0; z-index: 30; background: var(--bg); flex-direction: column; align-items: center; }
+  .page.open { display: flex; }
+  .pgHead { width: 100%; max-width: 420px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; box-sizing: border-box; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .pgBack { background: var(--card2); color: var(--text); border: 1px solid var(--line); padding: 7px 14px; font-size: 14px; }
+  .pgTtl { font-size: 18px; font-weight: 700; }
+  .pgBody { width: 100%; max-width: 420px; flex: 1; overflow-y: auto; padding: 10px 12px 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+  #pg-more #fullBar { flex-wrap: wrap; justify-content: center; gap: 8px; }
+  #pg-more #fullBar button { padding: 12px 16px; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -356,6 +375,37 @@
   <h1>🐦 فلابي شات</h1>
   <div id="sponsor"><b>بابيتو</b> ❤️</div>
 
+  <div id="homeBar">
+    <button id="hbAcc" type="button"><span id="hbName">👤 سجّل دخول</span></button>
+    <span id="hbCoins">🪙 0</span>
+  </div>
+
+  <div id="modeBar" class="tabs">
+    <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
+    <button id="modeDuo" class="tab" type="button">👥 زوجي أونلاين</button>
+  </div>
+  <div class="card" id="duoBox" style="display:none">
+    <div class="help">ادخل نفس كود غرفة الشات، وصديقك يدخل نفس الكود، وتلعبون سوا بنفس الوقت. اللي يموت أول يتفرج على الثاني، ولما تخلص الجولة الاثنين يضغطون «جاهز» حتى تبدي جولة جديدة.</div>
+    <div class="row"><input id="duoCode" placeholder="كود الغرفة (نفس كود الشات)" maxlength="20" autocomplete="off" autocapitalize="off"><button id="duoEnter" type="button">دخول</button></div>
+    <div id="duoMsg" class="help"></div>
+  </div>
+  <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
+
+  <div id="hub">
+    <button class="tile" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
+    <button class="tile" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
+    <button class="tile" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button>
+    <button class="tile" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button>
+    <button class="tile" data-pg="friends" type="button"><span class="ti">👥</span><span class="tl">الأصدقاء</span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
+    <button class="tile" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
+    <button class="tile" data-pg="chat" type="button"><span class="ti">💬</span><span class="tl">غرفة الشات</span></button>
+    <button class="tile" data-pg="more" type="button"><span class="ti">⚙️</span><span class="tl">المزيد</span></button>
+  </div>
+
+</div>
+
+<button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
+<div class="page" id="pg-account"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">👤 حسابي</span></div><div class="pgBody">
   <!-- الحساب -->
   <div class="card" id="authCard">
     <div id="authOut">
@@ -377,37 +427,18 @@
     </div>
   </div>
 
-  <div id="fullBar">
-    <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
-    <button id="shareBtn" class="ghost" type="button">📤 شارك نتيجتك</button>
-    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
-    <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
-  </div>
-  <div id="modeBar" class="tabs">
-    <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
-    <button id="modeDuo" class="tab" type="button">👥 زوجي أونلاين</button>
-  </div>
-  <div class="card" id="duoBox" style="display:none">
-    <div class="help">ادخل نفس كود غرفة الشات، وصديقك يدخل نفس الكود، وتلعبون سوا بنفس الوقت. اللي يموت أول يتفرج على الثاني، ولما تخلص الجولة الاثنين يضغطون «جاهز» حتى تبدي جولة جديدة.</div>
-    <div class="row"><input id="duoCode" placeholder="كود الغرفة (نفس كود الشات)" maxlength="20" autocomplete="off" autocapitalize="off"><button id="duoEnter" type="button">دخول</button></div>
-    <div id="duoMsg" class="help"></div>
-  </div>
-  <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
+</div></div>
+<div class="page" id="pg-skins"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🎒 السكنات</span></div><div class="pgBody">
   <div class="card" id="rewards">
     <div class="lbHead"><span>🎁 المكافآت والسكنات</span></div>
     <div id="rwProg"></div>
     <div id="skinGrid"></div>
   </div>
 
-  <div class="card" id="friends">
-    <div class="lbHead" id="frHead"><span>👥 الأصدقاء<span class="badge" id="frBadge" style="display:none"></span></span><button id="frRefresh" class="ghost" type="button">🔄</button></div>
-    <div class="row"><input id="frName" placeholder="اكتب يوزر صديقك" maxlength="16" autocomplete="off" autocapitalize="off"><button id="frAdd" type="button">➕ إضافة</button></div>
-    <div id="frMsg" class="help"></div>
-    <div id="frReq"></div>
-    <div id="frList"></div>
-  </div>
 
+</div></div>
+<div class="page" id="pg-shop"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🛍️ المتجر</span></div><div class="pgBody">
   <div class="card" id="shop">
     <div class="lbHead"><span>🪙 العملات والمتجر</span><span id="coinBal" class="coinBal">🪙 0</span></div>
     <div id="dailyBox"></div>
@@ -415,6 +446,9 @@
     <div id="shopGrid"></div>
   </div>
 
+
+</div></div>
+<div class="page" id="pg-earn"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">💰 اكسب عملات</span></div><div class="pgBody">
   <div class="card" id="earn">
     <div class="lbHead"><span>💰 اكسب عملات أكثر</span></div>
     <div class="help" id="playInfo"></div>
@@ -428,12 +462,29 @@
     <button id="refShare" class="act" type="button">📤 شارك رابط الدعوة</button>
   </div>
 
+
+</div></div>
+<div class="page" id="pg-friends"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">👥 الأصدقاء</span></div><div class="pgBody">
+  <div class="card" id="friends">
+    <div class="lbHead" id="frHead"><span>👥 الأصدقاء<span class="badge" id="frBadge" style="display:none"></span></span><button id="frRefresh" class="ghost" type="button">🔄</button></div>
+    <div class="row"><input id="frName" placeholder="اكتب يوزر صديقك" maxlength="16" autocomplete="off" autocapitalize="off"><button id="frAdd" type="button">➕ إضافة</button></div>
+    <div id="frMsg" class="help"></div>
+    <div id="frReq"></div>
+    <div id="frList"></div>
+  </div>
+
+
+</div></div>
+<div class="page" id="pg-lb"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏆 الصدارة</span></div><div class="pgBody">
   <div class="card" id="lb">
     <div class="lbHead"><span>🏆 أفضل 10 لاعبين</span><button id="lbRefresh" class="ghost" type="button">🔄 تحديث</button></div>
     <div id="lbBody"></div>
     <div id="lbMsg"></div>
   </div>
 
+
+</div></div>
+<div class="page" id="pg-chat"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">💬 غرفة الشات</span></div><div class="pgBody">
   <div class="card" id="panel">
     <div id="setup">
       <div class="row">
@@ -447,9 +498,17 @@
     <div id="status">غير متصل بالشات</div>
     <button id="leaveBtn" class="ghost" style="display:none" type="button">خروج من الغرفة</button>
   </div>
-</div>
 
-<button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
+</div></div>
+<div class="page" id="pg-more"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">⚙️ المزيد</span></div><div class="pgBody">
+  <div id="fullBar">
+    <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
+    <button id="shareBtn" class="ghost" type="button">📤 شارك نتيجتك</button>
+    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
+    <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
+  </div>
+
+</div></div>
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
 <div id="splash"><canvas id="spConf"></canvas>
@@ -574,6 +633,7 @@ function renderAuth() {
   renderRewards();
   renderShop();
   presenceSync();
+  renderHome();
 }
 $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -588,7 +648,7 @@ $('authForm').addEventListener('submit', async e => {
     auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
     syncUser(r.user);
     saveAuth(); $('pIn').value = ''; authSay('');
-    renderAuth(); lbRefresh();
+    renderAuth(); lbRefresh(); closePage();
   } catch (err) { authSay('❌ ' + err.message); }
   $('authBtn').disabled = false;
 });
@@ -2457,6 +2517,7 @@ async function frAct(path, name, okMsg) {
 }
 function frMk(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function joinFromInvite(code, duoMode) {
+  closePage();
   $('dmPop').classList.remove('open');
   if (duoMode) { setGameMode('duo'); $('duoCode').value = code; duoEnter(); }
   else { if (gameMode !== 'solo') setGameMode('solo'); $('codeIn').value = code; enterRoom(); openChat(); }
@@ -2503,6 +2564,7 @@ function renderFriends() {
   });
   const b = $('frBadge'); const n = total + fData.inc.length;
   b.textContent = String(n); b.style.display = n ? '' : 'none';
+  const mb = $('mnFrBadge'); if (mb) { mb.textContent = String(n); mb.style.display = n ? '' : 'none'; }
 }
 
 /* ---- المحادثة الخاصة ---- */
@@ -2575,6 +2637,31 @@ $('dmInvDuo').onclick = async () => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) { if (!fws || fws.readyState > 1) { fRetry = 0; presenceSync(); } else loadFriends(); } });
 renderFriends();
+
+/* ================= الصفحات (القائمة الرئيسية) ================= */
+var curPage = null;
+function renderHome() {
+  const n = $('hbName'), c = $('hbCoins'); if (!n) return;
+  n.textContent = auth ? '👤 ' + auth.name : '👤 سجّل دخول / حساب جديد';
+  c.textContent = auth ? '🪙 ' + (auth.coins || 0) : '';
+}
+function openPage(id) {
+  const el = $('pg-' + id); if (!el) return;
+  document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open'));
+  el.classList.add('open'); el.querySelector('.pgBody').scrollTop = 0;
+  if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
+  curPage = id;
+  try {
+    if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+  } catch (e) {}
+}
+function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
+function closePage() { if (!curPage) return; let ok = false; try { if (history.state && history.state.pg) { history.back(); ok = true; } } catch (e) {} if (!ok) hidePage(); }
+window.addEventListener('popstate', () => { if (curPage) hidePage(); });
+document.querySelectorAll('.tile').forEach(t => t.onclick = () => openPage(t.dataset.pg));
+document.querySelectorAll('.pgBack').forEach(b => b.onclick = closePage);
+$('hbAcc').onclick = () => openPage('account');
+renderHome();
 
 /* ================= شاشة البداية ================= */
 (function () {
