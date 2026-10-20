@@ -417,6 +417,7 @@
 
     <div class="bgS">صوت الرسالة</div>
     <button id="bgSound" class="act" type="button"></button>
+    <button id="sfxBtn" class="act" type="button"></button>
     <button id="babRec" class="act" type="button">🎙️ سجّل صوتك يقول "بابيتو"</button>
     <div class="row2"><button id="babTest" class="act" type="button">▶️ جرّب الصوت</button><button id="babReset" class="act" type="button">↩️ الافتراضي</button></div>
     <div class="help" id="babNote"></div>
@@ -875,11 +876,11 @@ function startGame() {
 function flap() {
   if (gameMode === 'duo') { duoFlap(); return; }
   if (state === 'ready') { state = 'play'; startGame(); }
-  if (state === 'play') bird.vy = FLAP;
+  if (state === 'play') { bird.vy = FLAP; sfx('flap'); }
   else if (state === 'dead' && deadTime > 25) { reset(); state = 'ready'; }
 }
 function die() {
-  state = 'dead'; deadTime = 0;
+  state = 'dead'; deadTime = 0; sfx('die');
   if (auth) { if (score > (auth.best || 0)) auth.best = score; }
   else if (score > guestBest) { guestBest = score; try { localStorage.setItem('flappyBest', String(guestBest)); } catch (e) {} }
   submitScore(score);
@@ -1731,7 +1732,9 @@ function buildBgGrid() {
     g.appendChild(b);
   });
 }
-function soundLabel() { $('bgSound').textContent = soundOn ? '🔔 صوت الرسائل: شغّال' : '🔕 صوت الرسائل: مطفي'; }
+function sfxLabel() { $('sfxBtn').textContent = sfxOn ? '🎮 أصوات اللعبة (قفز/موت): شغّالة' : '🎮 أصوات اللعبة (قفز/موت): مطفية'; }
+$('sfxBtn').onclick = () => { sfxOn = !sfxOn; try { localStorage.setItem('flappySfx', sfxOn ? '1' : '0'); } catch (e) {} sfxLabel(); sfx('flap'); };
+function soundLabel() { sfxLabel(); $('bgSound').textContent = soundOn ? '🔔 صوت الرسائل: شغّال' : '🔕 صوت الرسائل: مطفي'; }
 function syncControls() {
   $('bgDimR').value = bgOpt.dim; $('bgBlurR').value = bgOpt.blur; $('fsR').value = chatFont.size;
   soundLabel(); updBabNote(); buildFontColors();
@@ -1835,6 +1838,28 @@ function unlockAudio() {
   }
 }
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { passive: true }));
+let sfxOn = true; try { sfxOn = localStorage.getItem('flappySfx') !== '0'; } catch (e) {}
+let lastFlapSfx = 0;
+function sfx(kind) {
+  if (!sfxOn || !actx) return;
+  try {
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    if (kind === 'flap') {
+      const n = performance.now(); if (n - lastFlapSfx < 60) return; lastFlapSfx = n;
+      o.type = 'square'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.09);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.start(t); o.stop(t + 0.14);
+    } else {
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(380, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.45);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.start(t); o.stop(t + 0.52);
+      const o2 = actx.createOscillator(), g2 = actx.createGain(); o2.type = 'square'; o2.connect(g2); g2.connect(actx.destination);
+      o2.frequency.setValueAtTime(140, t); o2.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+      g2.gain.setValueAtTime(0.12, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o2.start(t); o2.stop(t + 0.24);
+    }
+  } catch (e) {}
+}
 function tone() {
   if (!actx) return;
   try {
@@ -2020,9 +2045,10 @@ function duoOnErr(d) {
 function duoReady(v) { if (joined) wsend({ t: 'duo_ready', ready: !!v }); }
 
 /* ---- المحاكاة (خطوة ثابتة 60/ثانية) ---- */
-function duoFlap() { if (duo.phase === 'play' && duo.alive) duo.bird.vy = FLAP; }
+function duoFlap() { if (duo.phase === 'play' && duo.alive) { duo.bird.vy = FLAP; sfx('flap'); } }
 function duoDie() {
   if (!duo.alive) return;
+  sfx('die');
   duo.alive = false; duo.lastDeadSend = performance.now();
   wsend({ t: 'duo_dead', score: duo.score });
   const o = duo.opp;
