@@ -177,7 +177,7 @@ const ACH = [
 ];
 function dayOf(u) {
   const d = dayNum(Date.now());
-  if (!u.day || u.day.d !== d) u.day = { d, games: 0, max: 0, duo: 0, play: 0, duoR: 0, claimed: [] };
+  if (!u.day || u.day.d !== d) u.day = { d, games: 0, max: 0, duo: 0, play: 0, duoR: 0, bricks: 0, claimed: [] };
   return u.day;
 }
 function tasksOf(u) {
@@ -205,11 +205,45 @@ function notifyUser(key, msg) {
   const str = JSON.stringify(msg);
   for (const set of live.values()) for (const w of set) if (w.key === key && w.readyState === 1) w.send(str);
 }
+
+/* ====== البيت والحديقة: عملة «مواد البناء 🧱» تنكسب من إنهاء المراحل بالفردي ====== */
+const BRICK_DAY_CAP = 600;
+const HOUSE_DEF = [
+  ['home', 'home', 'شكل البيت', [['h1', 'كوخ', '🛖', 0], ['h2', 'بيت صغير', '🏠', 80], ['h3', 'بيت واسع', '🏡', 250], ['h4', 'فيلا', '🏰', 600]]],
+  ['home', 'walls', 'لون الجدران', [['w1', 'أبيض', '#f4efe6', 0], ['w2', 'سماوي', '#bfe3f5', 25], ['w3', 'وردي', '#f7c6d6', 25], ['w4', 'ليموني', '#e4f0a8', 25]]],
+  ['home', 'roof', 'لون السقف', [['r1', 'أحمر', '#c9483c', 0], ['r2', 'بني', '#7a4a2a', 20], ['r3', 'أزرق', '#3f6fb5', 20], ['r4', 'أخضر', '#3f8f55', 20]]],
+  ['inside', 'seat', 'الجلوس', [['se1', 'كرسي', '🪑', 15], ['se2', 'قنفة', '🛋️', 45], ['se3', 'سرير', '🛏️', 90]]],
+  ['inside', 'tv', 'الجدار', [['tv1', 'لوحة', '🖼️', 20], ['tv2', 'تلفزيون', '📺', 60], ['tv3', 'ساعة', '🕰️', 35]]],
+  ['inside', 'lamp', 'الإضاءة', [['la1', 'شمعة', '🕯️', 10], ['la2', 'مصباح', '💡', 25], ['la3', 'ثريا', '🪔', 55]]],
+  ['inside', 'shelf', 'التخزين', [['sh1', 'كتب', '📚', 30], ['sh2', 'خزانة', '🗄️', 50], ['sh3', 'صندوق كنز', '🧰', 80]]],
+  ['inside', 'pet', 'حيوان أليف', [['pe1', 'سمكة', '🐠', 30], ['pe2', 'قطة', '🐈', 60], ['pe3', 'كلب', '🐕', 75]]],
+  ['inside', 'plant', 'نبتة', [['pl1', 'صبّار', '🌵', 10], ['pl2', 'نبتة', '🪴', 20], ['pl3', 'بامبو', '🎍', 30]]],
+  ['inside', 'rug', 'السجادة', [['ru1', 'أحمر', '#b3422f', 20], ['ru2', 'أزرق', '#356fa8', 20], ['ru3', 'أخضر', '#3c8a58', 20], ['ru4', 'ذهبي', '#d4a437', 40]]],
+  ['garden', 'tree', 'شجرة', [['tr1', 'شجرة', '🌳', 20], ['tr2', 'نخلة', '🌴', 35], ['tr3', 'صنوبر', '🌲', 45]]],
+  ['garden', 'flowers', 'ورد', [['fl1', 'خزامى', '🌷', 10], ['fl2', 'دوار الشمس', '🌻', 15], ['fl3', 'ورد', '🌹', 25]]],
+  ['garden', 'feature', 'ركن الحديقة', [['fe1', 'نافورة', '⛲', 90], ['fe2', 'خيمة', '⛺', 50], ['fe3', 'تلة', '⛰️', 120]]],
+  ['garden', 'play', 'ألعاب', [['pa1', 'زحليقة', '🛝', 70], ['pa2', 'دوّامة', '🎠', 120], ['pa3', 'بالون', '🎈', 40]]],
+  ['garden', 'car', 'السيارة', [['ca1', 'دراجة', '🚲', 50], ['ca2', 'سيارة', '🚗', 150], ['ca3', 'جيب', '🚙', 220]]],
+  ['garden', 'fence', 'السياج', [['fn1', 'خشب', '#a77a45', 20], ['fn2', 'أبيض', '#f2f2f2', 35], ['fn3', 'حجر', '#8c949c', 55]]],
+  ['garden', 'lantern', 'فانوس', [['lt1', 'فانوس', '🏮', 15], ['lt2', 'نجمة', '⭐', 30], ['lt3', 'قمر', '🌙', 50]]]
+];
+const HOUSE = HOUSE_DEF.map(r => ({ g: r[0], slot: r[1], name: r[2], items: r[3].map(i => ({ id: i[0], slot: r[1], name: i[1], v: i[2], price: i[3] })) }));
+const HOUSE_ITEM = {}; HOUSE.forEach(sl => sl.items.forEach(i => { HOUSE_ITEM[i.id] = i; }));
+function houseOf(u) {
+  if (!u.house || typeof u.house !== 'object') u.house = { own: [], set: {} };
+  if (!Array.isArray(u.house.own)) u.house.own = [];
+  if (!u.house.set || typeof u.house.set !== 'object') u.house.set = {};
+  const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0) own.add(i.id); }));
+  const set = {};
+  HOUSE.forEach(sl => { const cur = u.house.set[sl.slot]; if (cur && own.has(cur) && HOUSE_ITEM[cur] && HOUSE_ITEM[cur].slot === sl.slot) set[sl.slot] = cur; else { const d = sl.items.find(i => i.price === 0); if (d) set[sl.slot] = d.id; } });
+  return { own: [...own], set };
+}
 const userInfo = key => {
   const u = db.users[key], dy = dayOf(u);
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
+    bricks: u.bricks || 0, zones: u.zones || 1, house: houseOf(u),
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
     ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
     ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
@@ -365,8 +399,51 @@ setInterval(() => { const now = Date.now(); for (const [g, v] of games) if (now 
 
 app.post('/api/start', authMw, (req, res) => {
   const gid = crypto.randomBytes(12).toString('hex');
-  games.set(gid, { k: req.key, t: Date.now() });
-  res.json({ gid });
+  const u = db.users[req.key];
+  let sl = Math.floor(Number(req.body && req.body.startLevel)) || 1;
+  if (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1)) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
+  games.set(gid, { k: req.key, t: Date.now(), last: sl - 1, lt: Date.now() });
+  res.json({ gid, start: sl });
+});
+
+// إنهاء مرحلة بالفردي: يكسب مواد بناء، وكل 7 مراحل تنفتح منطقة جديدة
+app.post('/api/level', authMw, (req, res) => {
+  const g = games.get(String((req.body && req.body.gid) || ''));
+  const lv = Math.floor(Number(req.body && req.body.level));
+  if (!g || g.k !== req.key || !Number.isFinite(lv)) return res.status(400).json({ error: 'لعبة غير صالحة' });
+  if (lv !== g.last + 1 || lv > 500) return res.status(400).json({ error: 'مرحلة غير صالحة' });
+  const minSec = (34 + 8 * lv) * 0.045;                       // أقل وقت معقول لتفجير كل كرات المرحلة
+  if ((Date.now() - g.lt) / 1000 < minSec) return res.status(400).json({ error: 'سريع بشكل غير طبيعي' });
+  g.last = lv; g.lt = Date.now();
+  const u = db.users[req.key], dy = dayOf(u);
+  let want = 10 + 2 * lv; const zoneDone = lv % 7 === 0; if (zoneDone) want += 50;
+  const gained = Math.max(0, Math.min(want, BRICK_DAY_CAP - (dy.bricks || 0)));
+  dy.bricks = (dy.bricks || 0) + gained; u.bricks = (u.bricks || 0) + gained;
+  let newZone = false;
+  if (zoneDone && (u.zones || 1) < Math.min(4, lv / 7 + 1)) { u.zones = Math.min(4, lv / 7 + 1); newZone = true; }   // 4 فصول
+  save();
+  res.json({ gained, capped: gained < want, newZone, user: userInfo(req.key) });
+});
+
+app.get('/api/house', authMw, (req, res) => res.json({ catalog: HOUSE, user: userInfo(req.key) }));
+app.post('/api/house/buy', authMw, (req, res) => {
+  const it = HOUSE_ITEM[String((req.body && req.body.id) || '')]; const u = db.users[req.key];
+  if (!it) return res.status(400).json({ error: 'غرض غير موجود' });
+  const h = houseOf(u);
+  if (h.own.includes(it.id)) return res.status(400).json({ error: 'تملكه من قبل' });
+  if ((u.bricks || 0) < it.price) return res.status(400).json({ error: 'مواد البناء ما تكفي' });
+  u.bricks -= it.price; u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0).concat(it.id), set: Object.assign({}, h.set, { [it.slot]: it.id }) };
+  save(); res.json({ user: userInfo(req.key) });
+});
+app.post('/api/house/set', authMw, (req, res) => {
+  const slot = String((req.body && req.body.slot) || ''), id = req.body && req.body.id ? String(req.body.id) : '';
+  const u = db.users[req.key], h = houseOf(u), sl = HOUSE.find(x => x.slot === slot);
+  if (!sl) return res.status(400).json({ error: 'خانة غير صحيحة' });
+  const set = Object.assign({}, h.set);
+  if (!id) { if (sl.items.some(i => i.price === 0)) return res.status(400).json({ error: 'هذي الخانة ما تنشال' }); delete set[slot]; }
+  else { const it = HOUSE_ITEM[id]; if (!it || it.slot !== slot || !h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' }); set[slot] = id; }
+  u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set };
+  save(); res.json({ user: userInfo(req.key) });
 });
 
 app.post('/api/score', authMw, (req, res) => {
@@ -725,6 +802,8 @@ function zPopC(g, lo, hi, join, owner) {
   const mp = zPos(ch[(lo + hi) >> 1].s), mx = Math.round(mp.x), my = Math.round(mp.y), bl = [];
   for (let i = lo; i <= hi; i++) { const q = zPos(ch[i].s); bl.push([Math.round(q.x), Math.round(q.y), ch[i].c]); }
   ch.splice(lo, cnt); g.sc[owner] += pts;
+  if (!join && g.freeze < 60) g.freeze = 60;   // توقف ثانية فقط لما أحد يجيب ضربة
+  zFixC(g);
   g.ev.push({ e: 'p', x: mx, y: my, n: pts, o: owner, j: join ? 1 : 0, cb: g.combo, b: bl });
 }
 function zInsertC(g, sh, hit) {
@@ -745,6 +824,7 @@ function zStep(g) {
   for (const p of g.pl) if (p.cool > 0) p.cool--;
   const ch = g.chain;
   if (g.dead) { for (const b of ch) b.s = Math.min(ZPATH.L, b.s + 6); return; }
+  if (g.intro || ch.length < 8) zFixC(g);
   const frozen = g.freeze > 0 && !g.intro; if (g.freeze > 0) g.freeze--;   // أي رمية توقف سير الكرات ثانية
   while (!frozen && g.queue > 0 && (ch.length === 0 || ch[0].s >= ZD)) {
     const s = ch.length && ch[0].s < 2 * ZD ? ch[0].s - ZD : 0;
@@ -785,11 +865,18 @@ function zStep(g) {
     zStartLevel(g);
   }
 }
+function zFixC(g) {
+  const ch = g.chain; if (!ch.length) return;
+  const has = new Set(); for (const b of ch) has.add(b.c);
+  const list = [...has];
+  for (const p of g.pl) { if (!has.has(p.cur)) p.cur = list[Math.floor(p.rB() * list.length)]; if (!has.has(p.next)) p.next = list[Math.floor(p.rB() * list.length)]; }
+}
 function zFireC(g, slot, ang) {
   const p = g.pl[slot]; if (!p || g.dead || p.cool > 0) return false;
+  zFixC(g);
   p.ang = ang; const S = ZSHOOT[slot];
   g.shots.push({ x: S.x + Math.cos(ang) * 30, y: S.y + Math.sin(ang) * 30, vx: Math.cos(ang) * ZSHOT_V, vy: Math.sin(ang) * ZSHOT_V, c: p.cur, o: slot, a: ang });
-  p.cur = p.next; p.next = zShotColor(g, p); p.cool = ZCOOL; g.freeze = 60;
+  p.cur = p.next; p.next = zShotColor(g, p); p.cool = ZCOOL; zFixC(g);
   g.ev.push({ e: 's', o: slot });
   return true;
 }

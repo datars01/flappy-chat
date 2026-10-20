@@ -358,6 +358,20 @@
   #homeBar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
   #hbAcc { background: transparent; color: var(--text); padding: 4px 6px; font-size: 15px; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #hbCoins { font-weight: 700; color: #ffd166; font-size: 15px; }
+  #houseCv { width: 100%; border-radius: 14px; border: 2px solid var(--line); display: block; background: #8fd3ff; }
+  .hSlot { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); }
+  .hSlot .hn { font-weight: 700; font-size: 13px; }
+  .hRow { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .hItem { flex: 0 0 auto; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); color: var(--text); font-size: 11px; }
+  .hItem.on { border-color: #3ddc84; box-shadow: 0 0 8px rgba(61,220,132,.4); }
+  .hItem .sw { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid rgba(0,0,0,.25); }
+  .hItem .pr { font-weight: 700; color: #ffb347; }
+  .hItem.cant { opacity: .55; }
+  .hItem.confirm { border-color: #ffd166; }
+  .zCard { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); }
+  .zCard .ze { font-size: 30px; } .zCard .zi { flex: 1; font-weight: 700; } .zCard .zi small { display: block; font-weight: 400; color: var(--muted); }
+  .zCard.lock { opacity: .55; }
+  .hTabs .tab { padding: 8px; font-size: 13px; }
   #hub { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px 8px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 14px; font-weight: 600; }
   .tile .ti { font-size: 26px; line-height: 1.1; } .tile .tl { font-size: 12px; }
@@ -403,6 +417,9 @@
     <button class="tile" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
     <button class="tile" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
     <button class="tile" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button>
+    <button class="tile" data-pg="house" type="button"><span class="ti">🏠</span><span class="tl">بيتي</span></button>
+    <button class="tile" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
+    <button class="tile" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
     <button class="tile" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button>
     <button class="tile" data-pg="friends" type="button"><span class="ti">👥</span><span class="tl">الأصدقاء</span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
     <button class="tile" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
@@ -516,6 +533,38 @@
     <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
   </div>
 
+</div></div>
+<div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
+  <div class="card">
+    <div class="lbHead"><span>🏠 بيتك وحديقتك</span><span id="brickBal" class="coinBal">🧱 0</span></div>
+    <canvas id="houseCv" width="640" height="500"></canvas>
+    <div class="help">تكسب مواد البناء 🧱 كل ما تخلّص مرحلة بالوضع الفردي (وأكثر كل ما تتقدم)، وبعد كل 7 مراحل تاخذ مكافأة كبيرة. اشتر وركّب الأثاث والحديقة بكيفك.</div>
+    <div class="tabs hTabs" id="hTabs">
+      <button class="tab on" data-t="home" type="button">🏠 البيت</button>
+      <button class="tab" data-t="inside" type="button">🛋️ الأثاث</button>
+      <button class="tab" data-t="garden" type="button">🌳 الحديقة</button>
+    </div>
+    <div id="hList" class="col"></div>
+  </div>
+</div></div>
+<div class="page" id="pg-zones"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🗺️ المناطق</span></div><div class="pgBody">
+  <div class="card">
+    <div class="help">المناطق هي الفصول الأربعة بالترتيب: الصيف ثم الخريف ثم الشتاء ثم الربيع، وكل فصل 7 مراحل بخلفية خاصة به. لما تخلّص المرحلة السابعة ينفتح الفصل اللي بعده وتكدر تبدي منه مباشرة، وبعد الربيع ترجع الدورة للصيف.</div>
+    <div id="zList" class="col"></div>
+  </div>
+</div></div>
+<div class="page" id="pg-help"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">📖 الدليل</span></div><div class="pgBody">
+  <div class="card">
+    <div class="lbHead"><span>🔮 الكرات السحرية</span></div>
+    <div class="help" style="line-height:2">كرة عليها رمز وتلمع تطلع بالسلسلة بالوضع الفردي. فجّرها مع كرات لونها حتى تنحفظ عندك (تحمل لين 3 قوى)، واستخدمها وقت ما تريد من الدوائر تحت يسار اللعبة، أو من مفاتيح 1 2 3.<br>
+    ❄️ <b>تجميد</b>: تتوقف السلسلة 5 ثواني<br>
+    🐢 <b>تباطؤ</b>: تبطّأ السلسلة 8 ثواني<br>
+    💣 <b>قنبلة</b>: الرمية الجاية تفجّر كل الكرات اللي حولها<br>
+    ⚡ <b>صاعقة</b>: تفجّر كل الكرات اللي بلون كرتك الحالية<br>
+    🌈 <b>سحرية</b>: الرمية الجاية تأخذ لون الكرة اللي تضربها وتفجّرها</div>
+    <div class="lbHead"><span>🗺️ المراحل</span></div>
+    <div class="help" style="line-height:2">لما تخلّص مرحلة تطلع خريطة وتاخذ 🧱 مواد بناء. كل 7 مراحل = فصل جديد بخلفية جديدة (صيف، خريف، شتاء، ربيع).<br>⏸ زر الإيقاف (أو P) يوقف اللعبة، وتوقف لحالها إذا طلعت من التطبيق أو فتحت قائمة.<br>🔄 زر التبديل يبدّل كرتك مع اللي وراها.</div>
+  </div>
 </div></div>
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
@@ -667,6 +716,7 @@ function syncUser(u) {
   if (!auth || !u) return;
   auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
+  auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; if (u.house) auth.house = u.house;
   if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
   if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
   if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
@@ -686,7 +736,8 @@ async function loadMe() {
 const cv = $('c');
 const ctx = cv.getContext('2d');
 const W = 320, H = 480;
-let state = 'ready'; // ready | play | dead
+let state = 'ready'; // ready | play | map | dead
+let paused = false, resumeAt = 0, mapT = 0, mapInfo = null, selZone = 0;
 let gameMode = 'solo'; // solo | duo
 let score = 0, guestBest = 0, frames = 0, deadTime = 0, currentGame = null, Z = null, zacc = 0;
 
@@ -1082,6 +1133,16 @@ const R = 12, D = 24, CX = 160, CY = 255, SHOT_V = 9, COOLDOWN = 12;
 const BCOL = ['#ff4d6d', '#ffd23f', '#3ddc84', '#3da5ff', '#b36bff', '#ff9f1c'];
 const BDARK = ['#a3122f', '#a07d00', '#117a43', '#14548f', '#5a1fa8', '#a35a00'];
 const THEMES = [['#1d4f63', '#0a1e2b'], ['#3b2a6e', '#120c2a'], ['#6b3a2a', '#201008'], ['#1f5a3a', '#07180f']];
+const ZONES = [   // الفصول الأربعة بترتيب الطبيعة، وبعد الربيع ترجع الدورة للصيف
+  { n: 'الصيف', th: ['#d98a2b', '#4a2208'], deco: ['☀️', '🏖️', '🌴', '🍉'] },
+  { n: 'الخريف', th: ['#9a4f1f', '#2a1206'], deco: ['🍂', '🍁', '🎃', '🌰'] },
+  { n: 'الشتاء', th: ['#4a7fa6', '#0c1c2e'], deco: ['❄️', '⛄', '🌨️', '🧣'] },
+  { n: 'الربيع', th: ['#3f8f55', '#0a2414'], deco: ['🌸', '🌷', '🦋', '🐝'] }
+];
+const zoneOf = l => Math.floor((Math.max(1, l) - 1) / 7);
+const ZDECO = [[40, 120], [272, 92], [286, 340], [34, 392], [150, 62], [200, 446]];
+const MAG = { freeze: { em: '❄️', name: 'تجميد' }, bomb: { em: '💣', name: 'قنبلة' }, light: { em: '⚡', name: 'صاعقة' }, slow: { em: '🐢', name: 'تباطؤ' }, wild: { em: '🌈', name: 'سحرية' } };
+const MAGK = Object.keys(MAG);
 const DUO_TICKS = 7200; // الجولة الزوجية دقيقتين
 
 // الطريق: يطلع من تحت يسار الشاشة ويلف حلزونياً لين الحفرة قرب الشخصية
@@ -1126,9 +1187,9 @@ function trackCanvas() {
 const zLevelN = l => 34 + 8 * l;
 const zSpeed = l => 20 + 3.5 * Math.min(l, 12);          // px بالثانية
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
-function newZ(seed) {
+function newZ(seed, startLv) {
   seed = (seed || 1) >>> 0;
-  const g = { rA: mulberry32(seed), rB: mulberry32(seed ^ 0x5bd1e995), level: 1, score: 0, chain: [], queue: 0, last: [-1, -1], shots: [], parts: [], floats: [],
+  const g = { rA: mulberry32(seed), rB: mulberry32(seed ^ 0x5bd1e995), rM: mulberry32(seed ^ 0x9e3779b9), level: startLv || 1, inv: [], armed: null, slow: 0, fzMax: 60, pending: false, pendT: 0, spawned: 0, score: 0, chain: [], queue: 0, last: [-1, -1], shots: [], parts: [], floats: [],
     ang: -Math.PI / 2, tgt: -Math.PI / 2, cur: 0, next: 0, cool: 0, combo: 0, intro: true, freeze: 0, tick: 0, dead: false, dyingT: 0, lvlT: 0, pops: 0, clears: 0 };
   zStartLevel(g); g.cur = zShotColor(g); g.next = zShotColor(g);
   return g;
@@ -1145,6 +1206,14 @@ function zShotColor(g) {
   const list = []; for (let i = 0; i < n; i++) if (!any || has[i]) list.push(i);
   return list[Math.floor(g.rB() * list.length)];
 }
+// كرات الشخصية لازم تكون من ألوان موجودة بالسلسلة (حتى لما تقل الكرات)
+function zFixShooter(g) {
+  const ch = g.chain; if (!ch.length) return;
+  const has = new Set(); for (const b of ch) has.add(b.c);
+  const list = [...has];
+  if (!has.has(g.cur)) g.cur = list[Math.floor(g.rB() * list.length)];
+  if (!has.has(g.next)) g.next = list[Math.floor(g.rB() * list.length)];
+}
 const zLinked = (ch, i) => i >= 0 && i < ch.length - 1 && ch[i + 1].s - ch[i].s <= D + 1.5;
 function zRun(ch, i) {
   let lo = i, hi = i; const c = ch[i].c;
@@ -1159,9 +1228,12 @@ function zPop(g, lo, hi, join) {
   const mp = zPos(ch[(lo + hi) >> 1].s), mx = mp.x, my = mp.y; g.popC = ch[lo].c;
   for (let i = lo; i <= hi; i++) {
     const q = zPos(ch[i].s);
+    if (ch[i].m) zCollect(g, ch[i].m, q.x, q.y);
     for (let k = 0; k < 5; k++) g.parts.push({ x: q.x, y: q.y, vx: (Math.random() - .5) * 5, vy: (Math.random() - .5) * 5 - 1, c: ch[i].c, t: 24 + Math.random() * 12 });
   }
   ch.splice(lo, cnt); g.score += pts; g.pops++;
+  if (!join && g.freeze < 60) { g.freeze = 60; g.fzMax = 60; }   // توقف ثانية فقط لما تجيب ضربة
+  zFixShooter(g);
   fxPop(mx, my, cnt, g.combo, join, g.popC); sfx('pop', { n: cnt, cb: g.combo, j: join });
   g.floats.push({ x: mx, y: my - 10, text: '+' + pts, t: 46, c: '#fff' });
   if (join && g.combo > 0) g.floats.push({ x: mx, y: my - 28, text: 'كومبو ×' + (g.combo + 1), t: 56, c: '#ffd166' });
@@ -1178,6 +1250,7 @@ function zInsert(g, sh, hit) {
   g.combo = 0; sfx('stick');
   const r = zRun(ch, j);
   if (r.hi - r.lo + 1 >= 3) zPop(g, r.lo, r.hi, false);
+  return j;
 }
 function zWrap(a) { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; }
 function zStep(g) {
@@ -1189,7 +1262,10 @@ function zStep(g) {
   for (const f of g.floats) { f.t--; f.y -= 0.5; }
   if (g.floats.length) g.floats = g.floats.filter(f => f.t > 0);
   if (g.lvlT > 0) g.lvlT--;
+  if (g.pending) { g.pendT++; return; }
+  if (g.slow > 0) g.slow--;
   const ch = g.chain;
+  if (g.intro || g.chain.length < 8) zFixShooter(g);
   if (g.dead) {   // الكرات تنسحب للحفرة
     g.dyingT++;
     for (const b of ch) b.s = Math.min(PATH.L, b.s + 6);
@@ -1199,7 +1275,10 @@ function zStep(g) {
   const frozen = g.freeze > 0 && !g.intro; if (g.freeze > 0) g.freeze--;   // أي رمية توقف سير الكرات ثانية
   while (!frozen && g.queue > 0 && (ch.length === 0 || ch[0].s >= D)) {
     const s = ch.length && ch[0].s < 2 * D ? ch[0].s - D : 0;
-    ch.unshift({ c: zSpawnColor(g), s, fx: 0, fy: 0 }); g.queue--;
+    const nb = { c: zSpawnColor(g), s, fx: 0, fy: 0 };
+    g.spawned++;
+    if (g.spawned > 10 && g.rM() < 0.075 && !ch.some(b => b.m)) nb.m = MAGK[Math.floor(g.rM() * MAGK.length)];   // كرة سحرية
+    ch.unshift(nb); g.queue--;
   }
   // ---- حركة السلسلة: الجزء الأخير (الذيل) هو اللي يتحرك ويدفع اللي قدامه؛ إذا صار فراغ يركض يسد الفراغ ----
   let join = -1;
@@ -1208,7 +1287,7 @@ function zStep(g) {
     let e = 0; while (e < n - 1 && ch[e + 1].s - ch[e].s <= D + 1.5) e++;
     const gapAbove = e < n - 1, head = ch[n - 1].s;
     if (g.intro && head >= PATH.L * 0.3) g.intro = false;
-    const sp = (g.intro ? 300 : gapAbove ? 340 : zSpeed(g.level)) / 60;
+    const sp = (g.intro ? 300 : gapAbove ? 340 : zSpeed(g.level) * (g.slow > 0 ? 0.35 : 1)) / 60;
     for (let i = 0; i <= e; i++) ch[i].s += sp;
     if (gapAbove) {
       const over = ch[e].s - (ch[e + 1].s - D);
@@ -1227,7 +1306,10 @@ function zStep(g) {
       sh.x += sh.vx; sh.y += sh.vy;
       let hit = -1, bd = (R * 2 - 3) * (R * 2 - 3);
       for (let i = 0; i < ch.length; i++) { const dx = sh.x - ch[i].px, dy = sh.y - ch[i].py, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; hit = i; } }
-      if (hit >= 0) { zInsert(g, sh, hit); sh.dead = true; for (const b of ch) { const p = zPos(b.s); b.px = p.x; b.py = p.y; } }
+      if (hit >= 0) {
+        if (sh.k === 'bomb') zBomb(g, hit);
+        else { if (sh.k === 'wild') sh.c = ch[hit].c; const pb = g.pops, j = zInsert(g, sh, hit); if (sh.k === 'wild' && g.pops === pb) { const r = zRun(ch, j); zPop(g, r.lo, r.hi, false); } }
+        sh.dead = true; for (const b of ch) { const p = zPos(b.s); b.px = p.x; b.py = p.y; } }
       else if (sh.x < -30 || sh.x > W + 30 || sh.y < -30 || sh.y > H + 30) sh.dead = true;
     }
     g.shots = g.shots.filter(s => !s.dead);
@@ -1237,15 +1319,59 @@ function zStep(g) {
   // ---- المرحلة خلصت ----
   if (g.queue === 0 && ch.length === 0) {
     g.level++; g.score += 50; g.clears++;
-    g.floats.push({ x: CX, y: 150, text: '+50', t: 70, c: '#ffd166' }); fxLevel(g.level);
-    zStartLevel(g);
+    g.floats.push({ x: CX, y: 150, text: '+50', t: 70, c: '#ffd166' }); fxLevel(g.level, '🎉 أنهيت المرحلة ' + (g.level - 1));
+    g.pending = true; g.pendT = 0; g.shots = [];
   }
 }
 function zFire(g) {
   if (g.dead || g.cool > 0) return false;
+  zFixShooter(g);
   g.ang = g.tgt; const a = g.ang;
-  g.shots.push({ x: CX + Math.cos(a) * 30, y: CY + Math.sin(a) * 30, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, c: g.cur });
-  g.cur = g.next; g.next = zShotColor(g); g.cool = COOLDOWN; g.freeze = 60;
+  g.shots.push({ x: CX + Math.cos(a) * 30, y: CY + Math.sin(a) * 30, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, c: g.cur, k: g.armed });
+  g.armed = null;
+  g.cur = g.next; g.next = zShotColor(g); g.cool = COOLDOWN; zFixShooter(g);
+  return true;
+}
+function zCollect(g, m, x, y) {
+  if (g.inv.length < 3) { g.inv.push(m); g.floats.push({ x, y: y - 14, text: MAG[m].em + ' ' + MAG[m].name, t: 70, c: '#fff3a0' }); sfx('magic'); FX.rings.push({ x, y, r: 6, max: 50, t: 0, col: '#ffe066' }); }
+  else { g.score += 20; g.floats.push({ x, y: y - 14, text: '+20', t: 50, c: '#ffe066' }); }
+}
+function zRemoveSet(g, idxs, col) {
+  if (!idxs.length) return;
+  const ch = g.chain; idxs.sort((a, b) => b - a);
+  let cx = 0, cy = 0;
+  for (const i of idxs) {
+    const q = zPos(ch[i].s); cx += q.x; cy += q.y;
+    for (let k = 0; k < 4; k++) g.parts.push({ x: q.x, y: q.y, vx: (Math.random() - .5) * 6, vy: (Math.random() - .5) * 6 - 1, c: ch[i].c, t: 24 + Math.random() * 14 });
+    if (ch[i].m) zCollect(g, ch[i].m, q.x, q.y);
+  }
+  for (const i of idxs) ch.splice(i, 1);
+  const n = idxs.length, pts = n * 2; g.score += pts; g.pops++; g.combo = 0;
+  if (g.freeze < 60) { g.freeze = 60; g.fzMax = 60; }
+  zFixShooter(g);
+  g.floats.push({ x: cx / n, y: cy / n - 10, text: '+' + pts, t: 50, c: '#fff' });
+  fxPop(cx / n, cy / n, Math.max(5, n), 0, false, col); sfx('pop', { n: Math.min(n, 8), cb: 0, j: false });
+}
+function zBomb(g, hit) {
+  const ch = g.chain, c0 = zPos(ch[hit].s), bx = c0.x, by = c0.y, idx = [], col = ch[hit].c;
+  for (let i = 0; i < ch.length; i++) { const q = zPos(ch[i].s); if (Math.hypot(q.x - bx, q.y - by) < 62) idx.push(i); }
+  FX.rings.push({ x: bx, y: by, r: 6, max: 95, t: 0, col: '#ff9a3d' }); FX.flash = 0.28; FX.flashC = '255,150,60';
+  zRemoveSet(g, idx, col); FX.shake = Math.max(FX.shake, 9); sfx('bomb');
+}
+function zUse(g, i) {
+  const m = g.inv[i]; if (!m || g.dead || g.pending) return false;
+  if ((m === 'bomb' || m === 'wild') && g.armed) { showToast('عندك قوة جاهزة للرمية، ارمي بيها أول'); return false; }
+  let idx = null;
+  if (m === 'light') { idx = []; g.chain.forEach((b, k) => { if (b.c === g.cur && b.s > 10) idx.push(k); }); if (!idx.length) { showToast('⚡ ما اكو كرات بلون كرتك الحالية'); return false; } }
+  g.inv.splice(i, 1); sfx('use');
+  if (m === 'freeze') { g.freeze = 300; g.fzMax = 300; FX.flash = 0.3; FX.flashC = '120,220,255'; g.floats.push({ x: CX, y: 150, text: '❄️ تجميد!', t: 60, c: '#9fe8ff' }); }
+  else if (m === 'slow') { g.slow = 480; g.floats.push({ x: CX, y: 150, text: '🐢 تباطؤ!', t: 60, c: '#9ff3b5' }); }
+  else if (m === 'bomb' || m === 'wild') { g.armed = m; g.floats.push({ x: CX, y: 150, text: MAG[m].em + ' ارمي!', t: 50, c: '#ffe066' }); }
+  else if (m === 'light') {
+    FX.flash = 0.4; FX.flashC = '255,255,170'; sfx('bolt');
+    for (const k of idx.slice(0, 14)) { const q = zPos(g.chain[k].s); FX.rings.push({ x: q.x, y: q.y, r: 4, max: 34, t: 0, col: '#fff7a0' }); }
+    zRemoveSet(g, idx, g.cur);
+  }
   return true;
 }
 function zSwap(g) { const t = g.cur; g.cur = g.next; g.next = t; }
@@ -1280,11 +1406,12 @@ function drawShooter(x, y, ang, skin, cur, next, aimLine) {
   if (cur != null) drawBall(x + ca * 34, y + sa * 34, cur, 10);
 }
 function drawBoard(g, lvl, hole) {
-  const th = THEMES[((lvl || 1) - 1) % THEMES.length];
+  const zi = zoneOf(lvl || 1) % ZONES.length, th = ZONES[zi].th;
   const bg = ctx.createRadialGradient(CX, CY, 20, CX, CY, 330); bg.addColorStop(0, th[0]); bg.addColorStop(1, th[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 2;
   for (let r = 40; r < 300; r += 46) { ctx.beginPath(); ctx.arc(CX, CY, r, 0, 6.2832); ctx.stroke(); }
+  ctx.globalAlpha = 0.15; ctx.font = '34px system-ui, Arial'; ctx.textAlign = 'center'; ZDECO.forEach((p, i) => ctx.fillText(ZONES[zi].deco[i % 4], p[0], p[1])); ctx.globalAlpha = 1;
   ctx.drawImage(trackCanvas(), 0, 0);
   const hp = zPos(PATH.L), hx0 = hp.x, hy0 = hp.y, prog = zProg(g), danger = Math.max(0, (prog - 0.78) / 0.22);
   ctx.save();
@@ -1296,9 +1423,18 @@ function drawBoard(g, lvl, hole) {
   for (const b of g.chain) {
     const p = zPos(b.s); if (b.s >= PATH.L - 1) continue;
     const near = Math.max(0, 1 - (PATH.L - b.s) / 40);
-    drawBall(p.x + (b.fx || 0), p.y + (b.fy || 0), b.c, R * (1 - 0.5 * near));
+    const bx = p.x + (b.fx || 0), by = p.y + (b.fy || 0);
+    drawBall(bx, by, b.c, R * (1 - 0.5 * near));
+    if (b.m) {
+      const a = 0.5 + 0.5 * Math.sin(frames / 6); ctx.strokeStyle = 'rgba(255,240,150,' + (0.55 + 0.45 * a) + ')'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(bx, by, R + 2.5 + a * 1.5, 0, 6.2832); ctx.stroke();
+      ctx.font = '13px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(MAG[b.m].em, bx, by + 5);
+    }
   }
-  for (const s of g.shots) drawBall(s.x, s.y, s.c, 11);
+  for (const s of g.shots) {
+    drawBall(s.x, s.y, s.c, 11);
+    if (s.k) { ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(s.x, s.y, 14, 0, 6.2832); ctx.stroke(); ctx.font = '15px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(MAG[s.k].em, s.x, s.y + 5); }
+  }
   for (const p of g.parts) { ctx.globalAlpha = Math.max(0, Math.min(1, p.t / 14)); ctx.fillStyle = BCOL[p.c]; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 6.2832); ctx.fill(); }
   ctx.globalAlpha = 1;
   for (const f of g.floats) { ctx.globalAlpha = Math.min(1, f.t / 20); text(f.text, f.x, f.y, 15, f.c); }
@@ -1311,10 +1447,10 @@ function drawSwapBtn() {
   ctx.font = '20px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🔄', SWX, SWY + 7);
   ctx.font = 'bold 9px Cairo, system-ui, Arial'; ctx.fillText('بدّل', SWX, SWY + 19);
 }
-function drawFreeze(fz) {
-  if (!(fz > 0)) return;
+function drawFreeze(fz, mx) {
+  if (!(fz > 0)) return; mx = mx || 60;
   ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(W / 2 - 40, 70, 80, 6);
-  ctx.fillStyle = '#6ee7ff'; ctx.fillRect(W / 2 - 40, 70, 80 * Math.min(1, fz / 60), 6);
+  ctx.fillStyle = '#6ee7ff'; ctx.fillRect(W / 2 - 40, 70, 80 * Math.min(1, fz / mx), 6);
   ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#bff3ff'; ctx.fillText('❄️', W / 2, 66);
 }
 function drawHud(g, label) {
@@ -1324,8 +1460,11 @@ function drawHud(g, label) {
 }
 
 /* ---------- حالة اللعب الفردي ---------- */
-function reset() { Z = newZ(Math.floor(Math.random() * 2147483647) + 1); score = 0; zacc = 0; deadTime = 0; }
-function startGame() { currentGame = auth ? api('/api/start', { method: 'POST' }).then(r => r.gid).catch(() => null) : null; }
+function reset() {
+  const zs = Math.max(0, Math.min(selZone, Math.min(ZONES.length, auth && auth.zones || 1) - 1)); selZone = zs;
+  Z = newZ(Math.floor(Math.random() * 2147483647) + 1, zs * 7 + 1); score = 0; zacc = 0; deadTime = 0; paused = false; resumeAt = 0; mapInfo = null;
+}
+function startGame() { const sl = Z.level; currentGame = auth ? api('/api/start', { method: 'POST', body: { startLevel: sl } }).then(r => r.gid).catch(() => null) : null; }
 function die() {
   state = 'dead'; deadTime = 0; sfx('die'); score = Z.score;
   if (auth) { if (score > (auth.best || 0)) auth.best = score; }
@@ -1336,13 +1475,102 @@ function zSounds(g) {}
 function soloUpdate(raw) {
   frames += raw / 16.667;
   if (state === 'play') {
+    if (paused || performance.now() < resumeAt) { zacc = 0; return; }
     zacc += Math.min(raw, 100); let n = 0;
-    while (zacc >= 16.667 && n < 6) { zacc -= 16.667; n++; zStep(Z); if (Z.dead) { die(); break; } }
+    while (zacc >= 16.667 && n < 6) {
+      zacc -= 16.667; n++; zStep(Z);
+      if (Z.dead) { die(); break; }
+      if (Z.pending && Z.pendT > 70) { enterMap(); break; }
+    }
     score = Z.score; zSounds(Z);
-  } else if (state === 'dead') { deadTime++; zStep(Z); }
+  } else if (state === 'map') { mapT++; }
+  else if (state === 'dead') { deadTime++; zStep(Z); }
   else Z.ang += zWrap(Z.tgt - Z.ang) * 0.3;
 }
+/* ---- إيقاف مؤقت ---- */
+function pauseGame() { if (gameMode === 'solo' && state === 'play' && !paused && !Z.pending) { paused = true; } }
+function resumeGame() { if (paused) { paused = false; resumeAt = performance.now() + 1500; } }
+function autoPause() { if (gameMode === 'solo' && state === 'play' && !paused && !Z.pending && !Z.dead) paused = true; }
+document.addEventListener('visibilitychange', () => { if (document.hidden) autoPause(); });
+window.addEventListener('blur', autoPause);
+/* ---- خريطة المراحل ---- */
+function enterMap() {
+  state = 'map'; mapT = 0; sfx('level');
+  const cl = Z.level - 1, zoneDone = cl % 7 === 0;
+  mapInfo = { cl, zoneDone, bricks: 10 + 2 * cl + (zoneDone ? 50 : 0), got: false, capped: false };
+  if (auth && currentGame) {
+    const mi = mapInfo;
+    Promise.resolve(currentGame).then(gid => gid ? api('/api/level', { method: 'POST', body: { gid, level: cl } }) : null).then(r => {
+      if (!r) return; mi.got = true; mi.bricks = r.gained; mi.capped = r.capped; if (r.user) syncUser(r.user); renderHome();
+      if (r.newZone) showToast('🗺️ انفتح فصل جديد! تختاره من «المناطق»');
+    }).catch(() => { mi.got = true; mi.bricks = 0; mi.err = true; });
+  }
+}
+function nextLevel() {
+  Z.pending = false; zStartLevel(Z); Z.freeze = 0; Z.slow = 0; Z.armed = null; Z.shots = []; state = 'play'; mapInfo = null; zacc = 0; resumeAt = performance.now() + 600;
+}
+const mapPt = i => ({ x: 160 + Math.sin(i * 1.25) * 88, y: 394 - i * 46 });
+function drawMap() {
+  const mi = mapInfo; if (!mi) return;
+  const cl = mi.cl, zi = zoneOf(cl) % ZONES.length, zn = ZONES[zi];
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, zn.th[0]); bg.addColorStop(1, zn.th[1]); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 0.22; ctx.font = '40px system-ui, Arial'; ctx.textAlign = 'center';
+  [[40, 130, 0], [280, 150, 1], [270, 300, 2], [40, 330, 3], [60, 230, 1], [290, 230, 0]].forEach(p => ctx.fillText(zn.deco[p[2]], p[0], p[1])); ctx.globalAlpha = 1;
+  text('🗺️ خريطة المراحل', W / 2, 34, 22);
+  text('فصل ' + zn.n + ' — المنطقة ' + ((zoneOf(cl) % ZONES.length) + 1), W / 2, 58, 15, '#ffd166');
+  const idx = (cl - 1) % 7;
+  // الطريق
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); for (let i = 0; i < 7; i++) { const p = mapPt(i); if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y); }
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 14; ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 4; ctx.setLineDash([3, 9]); ctx.stroke(); ctx.setLineDash([]);
+  for (let i = 0; i < 7; i++) {
+    const p = mapPt(i), lvl = zoneOf(cl) * 7 + i + 1, done = lvl <= cl, cur = !mi.zoneDone && lvl === cl + 1;
+    const pulse = cur ? 1 + 0.12 * Math.sin(frames / 6) : 1;
+    ctx.fillStyle = done ? '#3ddc84' : cur ? '#ffd166' : 'rgba(120,130,150,.7)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 17 * pulse, 0, 6.2832); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3; ctx.stroke();
+    text(done ? '✓' : String(lvl), p.x, p.y + 6, done ? 19 : 15, done ? '#0a3a1f' : cur ? '#4a3200' : '#dfe6ee');
+    if (i === 6) { ctx.font = '20px system-ui'; ctx.fillText('🏁', p.x + 26, p.y + 7); }
+  }
+  // الشخصية تنتقل من العقدة الحالية للجاية
+  const a = mapPt(idx), b = mi.zoneDone ? a : mapPt(Math.min(6, idx + 1)), t = Math.max(0, Math.min(1, (mapT - 25) / 40)), e = t * t * (3 - 2 * t);
+  const cx = a.x + (b.x - a.x) * e, cy = a.y + (b.y - a.y) * e - Math.abs(Math.sin(t * Math.PI)) * 16 - 24;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(0.95, 0.95); drawBirdSkin(ctx, 0, 0, 0, curSkin(), frames); ctx.restore();
+  if (mi.zoneDone) {
+    const nz = ZONES[(zoneOf(cl) + 1) % ZONES.length];
+    text('🎉 فتحت فصل جديد: ' + nz.n, W / 2, 452, 15, '#9ff3b5');
+  }
+  // المكافأة
+  const rb = !auth ? '✍️ سجّل حساب حتى تكسب 🧱' : !mi.got ? '⏳ ...' : mi.err ? 'ما انحسبت المكافأة (مشكلة اتصال)' : mi.bricks > 0 ? '+' + mi.bricks + ' 🧱 مواد بناء' + (mi.capped ? ' (وصلت الحد اليومي)' : '') : 'وصلت الحد اليومي لمواد البناء 🧱';
+  text(rb, W / 2, 430, 15, '#ffe9a8');
+  if (mapT > 45) { ctx.globalAlpha = 0.6 + 0.4 * Math.sin(frames / 8); text('▶ اضغط للمتابعة — المستوى ' + (cl + 1), W / 2, 474, 14, '#9ff3b5'); ctx.globalAlpha = 1; }
+}
+/* ---- واجهة اللعب (قوى + إيقاف) ---- */
+const PSX = 296, PSY = 56, INVX = i => 28 + i * 44, INVY = 446;
+function drawSoloUi() {
+  for (let i = 0; i < 3; i++) {
+    const x = INVX(i), m = Z.inv[i];
+    ctx.fillStyle = m ? 'rgba(20,30,55,.8)' : 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(x, INVY, 19, 0, 6.2832); ctx.fill();
+    ctx.save(); if (!m) ctx.setLineDash([3, 4]); ctx.strokeStyle = m ? 'rgba(255,224,102,' + (0.7 + 0.3 * Math.sin(frames / 8)) + ')' : 'rgba(255,255,255,.22)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+    if (m) { ctx.font = '20px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(MAG[m].em, x, INVY + 7); }
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(PSX, PSY, 15, 0, 6.2832); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = '14px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('⏸', PSX, PSY + 5);
+  if (Z.slow > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(W / 2 - 40, 84, 80, 6); ctx.fillStyle = '#7fe08a'; ctx.fillRect(W / 2 - 40, 84, 80 * Math.min(1, Z.slow / 480), 6);
+    ctx.font = '11px system-ui'; ctx.fillStyle = '#d8ffe0'; ctx.fillText('🐢', W / 2, 80);
+  }
+  if (Z.armed) text(MAG[Z.armed].em + ' ارمي الكرة الجاية!', W / 2, 112, 14, '#ffe066');
+}
+function drawPause() {
+  ctx.fillStyle = 'rgba(5,10,20,.75)'; ctx.fillRect(0, 0, W, H);
+  text('⏸ اللعبة متوقفة', W / 2, 180, 26);
+  text('خذ راحتك، ما راح يصير شي', W / 2, 210, 13, '#ffd166');
+  ctx.fillStyle = '#2fbf71'; ctx.fillRect(80, 240, 160, 50); ctx.strokeStyle = '#0a3a1f'; ctx.lineWidth = 3; ctx.strokeRect(80, 240, 160, 50);
+  text('▶ كمّل', W / 2, 273, 22);
+  text('أو اضغط P', W / 2, 318, 11, 'rgba(255,255,255,.6)');
+}
 function drawSolo() {
+  if (state === 'map') { drawMap(); return; }
   drawBoard(Z, Z.level);
   drawShooter(CX, CY, Z.ang, curSkin(), state === 'dead' ? null : Z.cur, state === 'dead' ? null : Z.next, state === 'play');
   if (state === 'ready') {
@@ -1351,9 +1579,12 @@ function drawSolo() {
     text('حرّك بإصبعك للتصويب واضغط للإطلاق', W / 2, 124, 13, '#ffd166');
     text('3 كرات بنفس اللون = انفجار • لا تخلي السلسلة توصل الحفرة', W / 2, 146, 11);
     text('اضغط للبدء', W / 2, 168, 15, '#9ff3b5');
+    text('🗺️ المنطقة: ' + ZONES[zoneOf(Z.level) % ZONES.length].n + (Z.level > 1 ? ' (من المرحلة ' + Z.level + ')' : ''), W / 2, 196, 12, 'rgba(255,255,255,.75)');
   } else {
     drawHud(Z, myBest() ? 'الأفضل ' + Math.max(myBest(), score) : '');
-    if (state === 'play') { drawFreeze(Z.freeze); drawSwapBtn(); }
+    if (state === 'play') { drawFreeze(Z.freeze, Z.fzMax); drawSwapBtn(); drawSoloUi(); }
+    if (state === 'play' && performance.now() < resumeAt && !paused) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 150, W, 90); text(String(Math.max(1, Math.ceil((resumeAt - performance.now()) / 500))), W / 2, 215, 56, '#ffd166'); }
+    if (state === 'play' && paused) drawPause();
     if (state === 'dead') {
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(20, 150, W - 40, 150);
       text('💀 وصلت الكرات للحفرة', W / 2, 184, 20, '#ff9b9b');
@@ -1376,15 +1607,15 @@ function fxPop(x, y, cnt, cb, join, c) {
     FX.stars.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.6, t: 26 + Math.random() * 18, T: 44, sz: 2 + Math.random() * (big ? 4 : 3), col: Math.random() < .5 ? '#fff' : col }); }
   if (big || join) FX.shake = Math.max(FX.shake, Math.min(7, 2 + (cnt - 3) * 0.9 + (join ? cb : 0)));
 }
-function fxLevel(lv) {
-  sfx('level'); FX.flash = 0.55; FX.shake = Math.max(FX.shake, 6); FX.banner = '🎉 المرحلة ' + lv; FX.bannerT = 110;
+function fxLevel(lv, label) {
+  sfx('level'); FX.flash = 0.55; FX.flashC = '255,220,120'; FX.shake = Math.max(FX.shake, 6); FX.banner = label || ('🎉 المرحلة ' + lv); FX.bannerT = 110;
   const cols = ['#ffd166', '#ff6b6b', '#6ee7ff', '#9ff3b5', '#c084fc', '#fff'];
   for (let i = 0; i < 90; i++) FX.conf.push({ x: Math.random() * W, y: -10 - Math.random() * 120, vx: (Math.random() - .5) * 2.4, vy: 1.6 + Math.random() * 3, w: 4 + Math.random() * 5, h: 3 + Math.random() * 5, r: Math.random() * 6, vr: (Math.random() - .5) * .4, col: cols[i % cols.length], t: 140 });
   FX.rings.push({ x: CX, y: CY, r: 10, max: 300, t: 0, col: '#ffd166' }, { x: CX, y: CY, r: 4, max: 220, t: -6, col: '#fff' });
 }
 function fxDanger() {
   if (gameMode === 'duo') { if (duo.phase !== 'play' || duo.dead || !duo.chain.length) return 0; return duo.chain[duo.chain.length - 1].to / PATH.L; }
-  if (state !== 'play' || Z.dead || !Z.chain.length) return 0; return Z.chain[Z.chain.length - 1].s / PATH.L;
+  if (state !== 'play' || paused || Z.dead || Z.pending || !Z.chain.length) return 0; return Z.chain[Z.chain.length - 1].s / PATH.L;
 }
 function fxUpdate(raw) {
   const k = Math.min(3, raw / 16.667);
@@ -1450,8 +1681,13 @@ function onTap(x, y) {
     duoAim(x, y); duoFire();
     return;
   }
+  if (state === 'map') { if (mapT > 45) nextLevel(); return; }
   if (state === 'ready') { state = 'play'; startGame(); zAim(Z, x, y); return; }
   if (state === 'play') {
+    if (paused) { if (x > 70 && x < 250 && y > 232 && y < 300) resumeGame(); return; }
+    if (performance.now() < resumeAt) return;
+    if (Math.hypot(x - PSX, y - PSY) < 22) { pauseGame(); return; }
+    for (let i = 0; i < 3; i++) if (Math.hypot(x - INVX(i), y - INVY) < 24) { if (Z.inv[i]) zUse(Z, i); return; }
     if (Math.hypot(x - CX, y - CY) < 26 || Math.hypot(x - SWX, y - SWY) < 26) { zSwap(Z); sfx('swap'); return; }
     zAim(Z, x, y); playFire(Z);
   } else if (state === 'dead' && deadTime > 40) { reset(); state = 'ready'; }
@@ -1466,6 +1702,11 @@ function typing(e) { const t = (e.target.tagName || '').toLowerCase(); return t 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.body.classList.contains('full')) { exitFull(); return; }
   if (typing(e)) return;
+  if (gameMode === 'solo' && state === 'play') {
+    if (e.code === 'KeyP') { e.preventDefault(); if (paused) resumeGame(); else pauseGame(); return; }
+    if (!paused && ['Digit1', 'Digit2', 'Digit3'].includes(e.code)) { zUse(Z, +e.code.slice(5) - 1); return; }
+    if (paused) return;
+  }
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyX'].includes(e.code)) {
     e.preventDefault();
     const g = inputGame() || (gameMode === 'solo' ? Z : null); if (!g) return;
@@ -1577,7 +1818,7 @@ function timeOf(ts) {
 function keepFocus() { try { $('msgIn').focus(); } catch (e) {} }
 
 function openChat() {
-  chatOpen = true; unread = 0; updateBadge();
+  autoPause(); chatOpen = true; unread = 0; updateBadge();
   $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false');
   logEl.scrollTop = logEl.scrollHeight;
   sendRead();
@@ -2252,6 +2493,14 @@ function sfx(kind, a) {
     if (kind === 'shoot' || kind === 'flap') {            // رمي كرة: ويييش قصير
       if (n - lastFlapSfx < 50) return; lastFlapSfx = n; const v = (a && a.v) || 1;
       blip('sine', 900, 260, 0.11, 0.1 * v); blip('triangle', 1400, 500, 0.07, 0.04 * v); burst(0.07, 0.035 * v, 0, 3000);
+    } else if (kind === 'magic') {
+      [0, 4, 7, 9].forEach((k, i) => blip('sine', nt(k + 5), nt(k + 5), 0.18, 0.09, i * 0.06)); blip('sine', 3000, 4200, 0.12, 0.03, 0.2);
+    } else if (kind === 'use') {
+      blip('triangle', 400, 1100, 0.18, 0.12); blip('sine', 800, 1600, 0.2, 0.06, 0.05);
+    } else if (kind === 'bomb') {
+      burst(0.5, 0.2, 0, 200); blip('sine', 160, 38, 0.5, 0.25); blip('sawtooth', 90, 30, 0.35, 0.1);
+    } else if (kind === 'bolt') {
+      burst(0.3, 0.12, 0, 3500); blip('sawtooth', 1800, 120, 0.3, 0.1); blip('square', 2400, 200, 0.2, 0.05, 0.03);
     } else if (kind === 'swap') {
       blip('sine', 500, 900, 0.07, 0.09); blip('sine', 900, 600, 0.07, 0.06, 0.07);
     } else if (kind === 'stick') {                          // كرة التصقت بالسلسلة
@@ -2869,21 +3118,113 @@ var curPage = null;
 function renderHome() {
   const n = $('hbName'), c = $('hbCoins'); if (!n) return;
   n.textContent = auth ? '👤 ' + auth.name : '👤 سجّل دخول / حساب جديد';
-  c.textContent = auth ? '🪙 ' + (auth.coins || 0) : '';
+  c.textContent = auth ? '🪙 ' + (auth.coins || 0) + '   🧱 ' + (auth.bricks || 0) : '';
 }
 function openPage(id) {
   const el = $('pg-' + id); if (!el) return;
+  autoPause();
   document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open'));
   el.classList.add('open'); el.querySelector('.pgBody').scrollTop = 0;
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') houseLoad(); else if (id === 'zones') renderZones(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
 function closePage() { if (!curPage) return; let ok = false; try { if (history.state && history.state.pg) { history.back(); ok = true; } } catch (e) {} if (!ok) hidePage(); }
 window.addEventListener('popstate', () => { if (curPage) hidePage(); });
+
+/* ================= البيت والحديقة ================= */
+var houseCat = null, houseTab = 'home', houseArm = null;
+const hmap = () => { const m = {}; (houseCat || []).forEach(sl => sl.items.forEach(i => { m[i.id] = i; })); return m; };
+async function houseLoad() {
+  if (!auth) { renderHouse(); return; }
+  try { const r = await api('/api/house'); houseCat = r.catalog; syncUser(r.user); renderHome(); } catch (e) { showToast('⚠️ ما قدرت أحمّل البيت'); }
+  renderHouse();
+}
+function houseVal(slot) { const hm = hmap(), id = auth && auth.house && auth.house.set[slot]; return id && hm[id] ? hm[id].v : null; }
+function drawHouseScene() {
+  const cv = $('houseCv'); if (!cv) return;
+  const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 320, 250);
+  const V = houseVal, em = (t, x, y, sz) => { if (!t || t[0] === '#') return; c.font = sz + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(t, x, y); };
+  const sky = c.createLinearGradient(0, 0, 0, 205); sky.addColorStop(0, '#7ec8ff'); sky.addColorStop(1, '#e9f8ff'); c.fillStyle = sky; c.fillRect(0, 0, 320, 250);
+  c.fillStyle = '#ffe27a'; c.beginPath(); c.arc(285, 34, 18, 0, 7); c.fill(); em('☁️', 60, 40, 30); em('☁️', 200, 28, 24);
+  c.fillStyle = '#62bf5e'; c.fillRect(0, 205, 320, 45); c.fillStyle = '#54ad52'; c.fillRect(0, 232, 320, 18);
+  const tier = ['🛖', '🏠', '🏡', '🏰'].indexOf(V('home')), t = tier < 0 ? 0 : tier;
+  const top = [125, 118, 98, 84][t], wall = V('walls') || '#f4efe6', roof = V('roof') || '#c9483c', x0 = 60, x1 = 260;
+  // السياج خلف الأغراض
+  const fc = V('fence'); if (fc) { c.fillStyle = fc; c.fillRect(0, 240, 320, 3); for (let x = 2; x < 320; x += 9) c.fillRect(x, 232, 5, 18); }
+  // جسم البيت
+  c.fillStyle = wall; c.fillRect(x0, top, x1 - x0, 205 - top); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 2; c.strokeRect(x0, top, x1 - x0, 205 - top);
+  if (t >= 1) { c.fillStyle = '#8a5a3a'; c.fillRect(214, top - 46, 15, 34); }
+  c.fillStyle = roof; c.beginPath(); c.moveTo(x0 - 14, top); c.lineTo(160, top - 52); c.lineTo(x1 + 14, top); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.35)'; c.stroke();
+  if (t === 3) { em('🚩', 160, top - 46, 18); c.fillStyle = roof; c.fillRect(x0 - 6, top - 24, 22, 24); c.beginPath(); c.moveTo(x0 - 10, top - 24); c.lineTo(x0 + 5, top - 42); c.lineTo(x0 + 20, top - 24); c.fill(); }
+  // نوافذ
+  c.fillStyle = '#bfe8ff'; c.strokeStyle = '#5a6b7a'; c.lineWidth = 2;
+  const wy = top + 10; [[80, wy], [124, wy], [172, wy], [216, wy]].forEach(w => { if (w[0] > 120 && w[0] < 172 && t < 2) return; c.fillRect(w[0], w[1], 22, 20); c.strokeRect(w[0], w[1], 22, 20); });
+  if (t >= 2) { [[80, wy + 30], [216, wy + 30]].forEach(w => { if (w[1] + 20 < 158) { c.fillRect(w[0], w[1], 22, 20); c.strokeRect(w[0], w[1], 22, 20); } }); }
+  // داخل البيت (مقطع)
+  c.fillStyle = '#fff3dc'; c.fillRect(74, 162, 172, 43); c.fillStyle = '#a9825a'; c.fillRect(74, 199, 172, 6);
+  const rg = V('rug'); if (rg) { c.fillStyle = rg; c.beginPath(); c.ellipse(160, 199, 42, 5, 0, 0, 7); c.fill(); }
+  em(V('tv'), 160, 186, 24); em(V('seat'), 104, 199, 28); em(V('lamp'), 214, 198, 22); em(V('shelf'), 234, 199, 28); em(V('pet'), 140, 199, 20); em(V('plant'), 86, 199, 22);
+  // الحديقة
+  em(V('tree'), 26, 207, 52); const fl = V('flowers'); if (fl) [34, 62, 90].forEach(x => em(fl, x, 238, 16));
+  em(V('feature'), 150, 243, 32); em(V('car'), 214, 246, 28); em(V('play'), 292, 214, 34);
+  em(V('lantern'), 40, 172, 20); em(V('lantern'), 280, 168, 20);
+  // الباب
+  c.fillStyle = '#7a4a2a'; c.fillRect(252, 178, 8, 27);
+}
+function renderHouse() {
+  const bal = $('brickBal'); if (bal) bal.textContent = auth ? '🧱 ' + (auth.bricks || 0) : '🧱 —';
+  drawHouseScene();
+  document.querySelectorAll('#hTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.t === houseTab));
+  const L = $('hList'); if (!L) return; L.innerHTML = '';
+  if (!auth) { const d = document.createElement('div'); d.className = 'help'; d.textContent = '✍️ سجّل دخول حتى تبني بيتك وتكسب مواد البناء'; L.appendChild(d); return; }
+  if (!houseCat) { const d = document.createElement('div'); d.className = 'help'; d.textContent = '⏳ جاري التحميل...'; L.appendChild(d); return; }
+  const own = new Set(auth.house && auth.house.own || []), set = auth.house && auth.house.set || {}, bricks = auth.bricks || 0;
+  houseCat.filter(sl => sl.g === houseTab).forEach(sl => {
+    const box = document.createElement('div'); box.className = 'hSlot';
+    const n = document.createElement('div'); n.className = 'hn'; n.textContent = sl.name; box.appendChild(n);
+    const row = document.createElement('div'); row.className = 'hRow';
+    const mkBtn = (cls, swTxt, swCol, name, sub, fn) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'hItem ' + cls;
+      const sw = document.createElement('div'); sw.className = 'sw'; if (swCol) sw.style.background = swCol; else sw.textContent = swTxt;
+      const a = document.createElement('div'); a.textContent = name; const p = document.createElement('div'); p.className = 'pr'; p.textContent = sub;
+      b.append(sw, a, p); b.onclick = fn; return b;
+    };
+    if (!sl.items.some(i => i.price === 0)) row.appendChild(mkBtn(!set[sl.slot] ? 'on' : '', '✕', null, 'بدون', !set[sl.slot] ? '✓' : 'إزالة', () => houseSet(sl.slot, '')));
+    sl.items.forEach(it => {
+      const has = own.has(it.id), on = set[sl.slot] === it.id, col = it.v[0] === '#' ? it.v : null;
+      let cls = on ? 'on' : '', sub = on ? '✓ مركّب' : has ? 'تركيب' : '🧱 ' + it.price, fn;
+      if (has) fn = () => houseSet(sl.slot, it.id);
+      else if (bricks >= it.price) { if (houseArm === it.id) { cls = 'confirm'; sub = 'تأكيد؟'; } fn = () => { if (houseArm === it.id) houseBuy(it); else { houseArm = it.id; setTimeout(() => { if (houseArm === it.id) { houseArm = null; renderHouse(); } }, 4000); renderHouse(); } }; }
+      else { cls = 'cant'; fn = () => showToast('مواد البناء ما تكفي، ينقصك ' + (it.price - bricks) + ' 🧱'); }
+      row.appendChild(mkBtn(cls, it.v, col, it.name, sub, fn));
+    });
+    box.appendChild(row); L.appendChild(box);
+  });
+}
+async function houseBuy(it) { houseArm = null; try { const r = await api('/api/house/buy', { method: 'POST', body: { id: it.id } }); syncUser(r.user); renderHome(); sfx('magic'); showToast('🏠 اشتريت ' + it.name); } catch (e) { showToast('⚠️ ' + e.message); } renderHouse(); }
+async function houseSet(slot, id) { try { const r = await api('/api/house/set', { method: 'POST', body: { slot, id } }); syncUser(r.user); } catch (e) { showToast('⚠️ ' + e.message); } renderHouse(); }
+document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { houseTab = b.dataset.t; renderHouse(); });
+
+/* ================= المناطق ================= */
+function renderZones() {
+  const L = $('zList'); if (!L) return; L.innerHTML = '';
+  const open = auth ? Math.min(ZONES.length, auth.zones || 1) : 1;
+  ZONES.forEach((z, i) => {
+    const d = document.createElement('div'); d.className = 'zCard' + (i < open ? '' : ' lock');
+    const e = document.createElement('div'); e.className = 'ze'; e.textContent = i < open ? z.deco[0] : '🔒';
+    const t = document.createElement('div'); t.className = 'zi'; t.textContent = (i + 1) + '. ' + z.n;
+    const sm = document.createElement('small'); sm.textContent = 'المراحل ' + (i * 7 + 1) + ' – ' + (i * 7 + 7) + (i === selZone && i < open ? ' • المختارة' : ''); t.appendChild(sm);
+    d.append(e, t);
+    if (i < open) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '▶ ابدأ'; b.onclick = () => { selZone = i; closePage(); reset(); state = 'ready'; }; d.appendChild(b); }
+    L.appendChild(d);
+  });
+  if (!auth) { const h = document.createElement('div'); h.className = 'help'; h.textContent = '✍️ سجّل دخول حتى تنحفظ المناطق اللي تفتحها'; L.appendChild(h); }
+}
+
 document.querySelectorAll('.tile').forEach(t => t.onclick = () => openPage(t.dataset.pg));
 document.querySelectorAll('.pgBack').forEach(b => b.onclick = closePage);
 $('hbAcc').onclick = () => openPage('account');
