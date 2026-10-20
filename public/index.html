@@ -727,7 +727,7 @@ function syncUser(u) {
   if (!auth || !u) return;
   auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
-  auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; if (u.house) auth.house = u.house;
+  auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
   if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
   if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
   if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
@@ -748,6 +748,9 @@ const cv = $('c');
 const ctx = cv.getContext('2d');
 const W = 320, H = 480;
 let state = 'ready'; // ready | play | map | dead
+let startFresh = false;
+function cpGet() { if (auth) return Math.max(1, auth.cp || 1); try { return Math.max(1, parseInt(localStorage.getItem('flappyCp')) || 1); } catch (e) { return 1; } }
+function cpSave(l) { if (auth) { if (l > (auth.cp || 1)) auth.cp = l; } else { try { if (l > cpGet()) localStorage.setItem('flappyCp', String(l)); } catch (e) {} } }
 let paused = false, resumeAt = 0, mapT = 0, mapInfo = null, selZone = 0;
 let gameMode = 'solo'; // solo | duo
 let score = 0, guestBest = 0, frames = 0, deadTime = 0, currentGame = null, Z = null, zacc = 0;
@@ -1478,7 +1481,8 @@ function drawHud(g, label) {
 /* ---------- حالة اللعب الفردي ---------- */
 function reset() {
   const zs = Math.max(0, Math.min(selZone, Math.min(ZONES.length, auth && auth.zones || 1) - 1)); selZone = zs;
-  Z = newZ(Math.floor(Math.random() * 2147483647) + 1, zs * 7 + 1); score = 0; zacc = 0; deadTime = 0; paused = false; resumeAt = 0; mapInfo = null;
+  const cp = cpGet(), sl0 = (!startFresh && cp > 1) ? cp : zs * 7 + 1; startFresh = false;
+  Z = newZ(Math.floor(Math.random() * 2147483647) + 1, sl0); score = 0; zacc = 0; deadTime = 0; paused = false; resumeAt = 0; mapInfo = null;
 }
 function startGame() { const sl = Z.level; currentGame = auth ? api('/api/start', { method: 'POST', body: { startLevel: sl } }).then(r => r.gid).catch(() => null) : null; }
 function die() {
@@ -1512,7 +1516,8 @@ window.addEventListener('blur', autoPause);
 /* ---- خريطة المراحل ---- */
 function enterMap() {
   state = 'map'; mapT = 0; sfx('level');
-  const cl = Z.level - 1, zoneDone = cl % 7 === 0;
+  const cl = Z.level - 1; cpSave(Z.level);
+  const _z = 0, zoneDone = cl % 7 === 0;
   mapInfo = { cl, zoneDone, bricks: 10 + 2 * cl + (zoneDone ? 50 : 0), got: false, capped: false };
   if (auth && currentGame) {
     const mi = mapInfo;
@@ -3445,7 +3450,7 @@ function renderZones() {
     const t = document.createElement('div'); t.className = 'zi'; t.textContent = (i + 1) + '. ' + z.n;
     const sm = document.createElement('small'); sm.textContent = 'المراحل ' + (i * 7 + 1) + ' – ' + (i * 7 + 7) + (i === selZone && i < open ? ' • المختارة' : ''); t.appendChild(sm);
     d.append(e, t);
-    if (i < open) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '▶ ابدأ'; b.onclick = () => { selZone = i; closePage(); reset(); state = 'ready'; }; d.appendChild(b); }
+    if (i < open) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '▶ ابدأ'; b.onclick = () => { selZone = i; startFresh = true; closePage(); reset(); state = 'ready'; }; d.appendChild(b); }
     L.appendChild(d);
   });
   if (!auth) { const h = document.createElement('div'); h.className = 'help'; h.textContent = '✍️ سجّل دخول حتى تنحفظ المناطق اللي تفتحها'; L.appendChild(h); }

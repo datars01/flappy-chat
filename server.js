@@ -232,6 +232,7 @@ const HOUSE_DEF = [
   ['garden', 'lantern', 'فانوس', [['lt1', 'فانوس', '🏮', 15], ['lt2', 'نجمة', '⭐', 30], ['lt3', 'قمر', '🌙', 50]]]
 ];
 const HOUSE = HOUSE_DEF.map(r => ({ g: r[0], slot: r[1], name: r[2], items: r[3].map(i => ({ id: i[0], slot: r[1], name: i[1], v: i[2], price: i[3] })) }));
+const HOUSE_MOVABLE = ['tv', 'shelf', 'lamp', 'seat', 'pet', 'plant', 'rug', 'tree', 'flowers', 'feature', 'play', 'car', 'lantern'];
 const HOUSE_ITEM = {}; HOUSE.forEach(sl => sl.items.forEach(i => { HOUSE_ITEM[i.id] = i; }));
 function houseOf(u) {
   if (!u.house || typeof u.house !== 'object') u.house = { own: [], set: {} };
@@ -240,14 +241,18 @@ function houseOf(u) {
   const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0) own.add(i.id); }));
   const set = {};
   HOUSE.forEach(sl => { const cur = u.house.set[sl.slot]; if (cur && own.has(cur) && HOUSE_ITEM[cur] && HOUSE_ITEM[cur].slot === sl.slot) set[sl.slot] = cur; else { const d = sl.items.find(i => i.price === 0); if (d) set[sl.slot] = d.id; } });
-  return { own: [...own], set };
+  const pos = {};
+  if (u.house.pos && typeof u.house.pos === 'object') for (const k of Object.keys(u.house.pos)) {
+    const v = u.house.pos[k]; if (HOUSE_MOVABLE.includes(k) && Array.isArray(v) && v.length === 2 && Number.isFinite(v[0]) && Number.isFinite(v[1])) pos[k] = [Math.max(-320, Math.min(320, Math.round(v[0]))), Math.max(-320, Math.min(320, Math.round(v[1])))];
+  }
+  return { own: [...own], set, pos };
 }
 const userInfo = key => {
   const u = db.users[key], dy = dayOf(u);
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
-    bricks: u.bricks || 0, zones: u.zones || 1, house: houseOf(u),
+    bricks: u.bricks || 0, zones: u.zones || 1, cp: u.cp || 1, house: houseOf(u),
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
     ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
     ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
@@ -405,8 +410,8 @@ app.post('/api/start', authMw, (req, res) => {
   const gid = crypto.randomBytes(12).toString('hex');
   const u = db.users[req.key];
   let sl = Math.floor(Number(req.body && req.body.startLevel)) || 1;
-  if (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1)) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
-  games.set(gid, { k: req.key, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
+  if (sl !== (u.cp || 1) && (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1))) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
+  games.set(gid, { k: req.key, sl, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
   res.json({ gid, start: sl });
 });
 
@@ -420,6 +425,7 @@ app.post('/api/level', authMw, (req, res) => {
   if ((Date.now() - g.lt) / 1000 < minSec) return res.status(400).json({ error: 'سريع بشكل غير طبيعي' });
   g.last = lv; g.lt = Date.now();
   const u = db.users[req.key], dy = dayOf(u);
+  if (lv + 1 > (u.cp || 1) || g.sl === (u.cp || 1)) u.cp = Math.min(500, lv + 1);   // نقطة الحفظ: المرحلة اللي توصلها
   let want = 10 + 2 * lv; const zoneDone = lv % 7 === 0; if (zoneDone) want += 50;
   const gained = Math.max(0, Math.min(want, BRICK_DAY_CAP - (dy.bricks || 0)));
   dy.bricks = (dy.bricks || 0) + gained; u.bricks = (u.bricks || 0) + gained;
@@ -448,8 +454,20 @@ app.post('/api/house/buy', authMw, (req, res) => {
   const h = houseOf(u);
   if (h.own.includes(it.id)) return res.status(400).json({ error: 'تملكه من قبل' });
   if ((u.bricks || 0) < it.price) return res.status(400).json({ error: 'مواد البناء ما تكفي' });
-  u.bricks -= it.price; u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0).concat(it.id), set: Object.assign({}, h.set, { [it.slot]: it.id }) };
+  u.bricks -= it.price; u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0).concat(it.id), set: Object.assign({}, h.set, { [it.slot]: it.id }), pos: h.pos };
   save(); res.json({ user: userInfo(req.key) });
+});
+// حفظ أماكن الأغراض (إزاحة عن الترتيب التلقائي)؛ القيمة null ترجع الغرض لمكانه الأصلي
+app.post('/api/house/pos', authMw, (req, res) => {
+  const u = db.users[req.key], h = houseOf(u), inp = (req.body && req.body.pos) || {};
+  if (typeof inp !== 'object') return res.status(400).json({ error: 'بيانات غلط' });
+  const pos = Object.assign({}, h.pos);
+  for (const k of Object.keys(inp)) {
+    if (!HOUSE_MOVABLE.includes(k)) continue; const v = inp[k];
+    if (v === null) delete pos[k]; else if (Array.isArray(v) && v.length === 2 && Number.isFinite(+v[0]) && Number.isFinite(+v[1])) pos[k] = [Math.max(-320, Math.min(320, Math.round(+v[0]))), Math.max(-320, Math.min(320, Math.round(+v[1])))];
+  }
+  u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set: h.set, pos }; save();
+  res.json({ user: userInfo(req.key) });
 });
 app.post('/api/house/set', authMw, (req, res) => {
   const slot = String((req.body && req.body.slot) || ''), id = req.body && req.body.id ? String(req.body.id) : '';
@@ -458,7 +476,7 @@ app.post('/api/house/set', authMw, (req, res) => {
   const set = Object.assign({}, h.set);
   if (!id) { if (sl.items.some(i => i.price === 0)) return res.status(400).json({ error: 'هذي الخانة ما تنشال' }); delete set[slot]; }
   else { const it = HOUSE_ITEM[id]; if (!it || it.slot !== slot || !h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' }); set[slot] = id; }
-  u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set };
+  u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set, pos: h.pos };
   save(); res.json({ user: userInfo(req.key) });
 });
 
