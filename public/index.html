@@ -247,6 +247,13 @@
   #fcCustom { flex: none; width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); background: none; border-radius: 8px; }
   #fontPrev { font-size: var(--cfs, 15px); color: var(--cfc, var(--text)); background: var(--card2); border-radius: 12px; padding: 8px 12px; text-align: center; }
   #bgCard .help { margin: 0; }
+
+  /* ===== يكتب الآن + علامات القراءة ===== */
+  #typingBar { display: none; position: relative; z-index: 1; padding: 4px 14px; font-size: 12px; color: var(--muted); background: var(--card); border-top: 1px solid var(--line); }
+  #typingBar.on { display: block; animation: pulseT 1.4s infinite; }
+  @keyframes pulseT { 50% { opacity: .45; } }
+  .tick { font-size: 14px; letter-spacing: -3px; opacity: .85; line-height: 1; }
+  .tick.read { color: #8fe3ff; opacity: 1; text-shadow: 0 0 1px rgba(0,0,0,.45); }
 </style>
 </head>
 <body>
@@ -330,6 +337,7 @@
     <button id="closeBtn" aria-label="إغلاق" type="button">✕</button>
   </div>
   <div id="log"></div>
+  <div id="typingBar"></div>
   <div id="emojiBox"></div>
   <div id="editBar"><span id="editTxt"></span><button id="editCancel" type="button" aria-label="إلغاء التعديل">✕</button></div>
   <div id="replyBar"><span id="replyTxt"></span><button id="replyCancel" type="button" aria-label="إلغاء الرد">✕</button></div>
@@ -874,7 +882,9 @@ let members = [];
 try { $('codeIn').value = localStorage.getItem('flappyCode') || ''; } catch (e) {}
 
 const myKey = () => auth ? auth.name.toLowerCase() : '';
-function setStatus(s) { $('status').textContent = s; }
+let statusBase = '';
+function setStatus(s) { statusBase = s; renderStatus(); }
+function renderStatus() { const t = typingText(); $('status').textContent = statusBase + (joined && t ? ' • ✍️ ' + t : ''); }
 function lockSetup(v) { ['enterBtn', 'codeIn'].forEach(i => $(i).disabled = v); }
 function timeOf(ts) {
   const d = new Date(ts || Date.now());
@@ -886,6 +896,7 @@ function openChat() {
   chatOpen = true; unread = 0; updateBadge();
   $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false');
   logEl.scrollTop = logEl.scrollHeight;
+  sendRead();
 }
 function closeChat() {
   chatOpen = false;
@@ -972,6 +983,12 @@ function buildBubble(m) {
   const meta = document.createElement('span'); meta.className = 'meta';
   const n = document.createElement('span'); n.textContent = (mine ? 'أنت' : m.name) + (m.editedAt && !m.deleted ? ' • معدّلة' : '');
   const tm = document.createElement('span'); tm.textContent = timeOf(m.ts);
+  if (mine && !m.deleted) {
+    const rd = readers(m);
+    const tk = document.createElement('span'); tk.className = 'tick' + (rd.length ? ' read' : '');
+    tk.textContent = rd.length ? '✓✓' : '✓'; tk.title = rd.join('، ');
+    tm.append(' ', tk);
+  }
   meta.append(n, tm); d.appendChild(meta);
   const rs = m.reactions || {};
   const keys = Object.keys(rs).filter(e => rs[e] && rs[e].length);
@@ -999,7 +1016,7 @@ function putMsg(m, fresh) {
   if (old) old.el.replaceWith(el); else logEl.appendChild(el);
   msgs.set(m.id, { m, el });
   if (stick && (!old || fresh)) logEl.scrollTop = logEl.scrollHeight;
-  if (fresh && !old && m.k !== myKey()) ding();
+  if (fresh && !old && m.k !== myKey()) { ding(); typers.delete(m.name); renderTyping(); if (chatOpen) sendRead(); }
   if (fresh && !old && m.k !== myKey() && !chatOpen) {
     unread++; updateBadge();
     showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
@@ -1036,6 +1053,7 @@ function openMenu(m) {
   if (mine && !m.deleted && !m.media) act('✏️ تعديل', () => startEdit(m));
   act('🙈 حذف عندي فقط', () => wsend({ t: 'del', id: m.id, scope: 'me' }));
   if (mine && !m.deleted) act('🗑️ حذف للجميع', () => wsend({ t: 'del', id: m.id, scope: 'all' }), 'danger');
+  if (mine && !m.deleted) { const rd = readers(m); act(rd.length ? '👁️ قرأها: ' + rd.join('، ') : '✓ انرسلت ولسه ما انقرت', () => {}, 'ghostAct'); }
   act('إغلاق', () => {}, 'ghostAct');
   $('menu').classList.add('open');
 }
@@ -1074,6 +1092,64 @@ function jumpTo(id) {
   o.el.classList.add('flash'); setTimeout(() => o.el.classList.remove('flash'), 1300);
 }
 
+/* ---------- يكتب الآن + علامات القراءة ---------- */
+const typers = new Map();   // اسم -> { until, kind }
+let reads = {};             // مفتاح العضو -> { name, ts } آخر رسالة قراها
+let lastTypeSent = 0, lastReadSent = 0;
+function typingText() {
+  const now = Date.now(), tx = [], rc = [];
+  for (const [name, v] of typers) { if (v.until <= now) { typers.delete(name); continue; } (v.kind === 'rec' ? rc : tx).push(name); }
+  const parts = [];
+  if (tx.length) parts.push(tx.join('، ') + (tx.length > 1 ? ' يكتبون الآن...' : ' يكتب الآن...'));
+  if (rc.length) parts.push(rc.join('، ') + ' يسجّل رسالة صوتية...');
+  return parts.join('  •  ');
+}
+let typT = null;
+function renderTyping() {
+  const t = typingText(), bar = $('typingBar');
+  bar.textContent = t ? '✍️ ' + t : '';
+  bar.classList.toggle('on', !!t);
+  renderStatus();
+  clearTimeout(typT);
+  if (typers.size) typT = setTimeout(renderTyping, 1000);
+}
+function onTyping(d) {
+  if (!d || !d.name) return;
+  typers.set(String(d.name), { until: Date.now() + 3500, kind: d.kind === 'rec' ? 'rec' : 'txt' });
+  renderTyping();
+  if (chatOpen && nearBottom()) logEl.scrollTop = logEl.scrollHeight;
+}
+$('msgIn').addEventListener('input', () => {
+  if (!joined || !$('msgIn').value.trim()) return;
+  const n = Date.now();
+  if (n - lastTypeSent > 2500) { lastTypeSent = n; wsend({ t: 'typing' }); }
+});
+function readers(m) {
+  const me = myKey(), out = [];
+  for (const k in reads) if (k !== me && reads[k] && reads[k].ts >= m.ts) out.push(reads[k].name || k);
+  return out;
+}
+function refreshTicks() {
+  for (const o of msgs.values()) {
+    if (o.m.k !== myKey() || o.m.deleted) continue;
+    const tk = o.el.querySelector('.tick'); if (!tk) continue;
+    const rd = readers(o.m);
+    tk.textContent = rd.length ? '✓✓' : '✓'; tk.classList.toggle('read', rd.length > 0); tk.title = rd.join('، ');
+  }
+}
+function onRead(d) {
+  if (!d || !d.k) return;
+  reads[d.k] = { name: d.name, ts: Number(d.ts) || 0 };
+  refreshTicks();
+}
+function sendRead() {
+  if (!joined || !chatOpen || document.hidden) return;
+  let mx = 0;
+  for (const o of msgs.values()) if (o.m.k !== myKey() && o.m.ts > mx) mx = o.m.ts;
+  if (mx > lastReadSent) { lastReadSent = mx; wsend({ t: 'read', ts: mx }); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sendRead(); });
+
 /* ---------- الاتصال بالسيرفر ---------- */
 function wsend(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
 function wsUrl() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?token=' + encodeURIComponent(auth.token); }
@@ -1102,6 +1178,7 @@ function onServer(d) {
     logEl.scrollTop = logEl.scrollHeight;
     setMembers(d.members);
     if (d.bg) applyRemoteBg(d.bg, '');
+    reads = d.reads || {}; lastReadSent = 0; refreshTicks(); sendRead();
     if (!announced) { announced = true; addSys('دخلت الغرفة 🎮'); }
   } else if (d.t === 'msg') putMsg(d.m, true);
   else if (d.t === 'edit') patchMsg(d.id, m => { m.text = d.text; m.editedAt = d.editedAt; });
@@ -1111,6 +1188,8 @@ function onServer(d) {
     else { const o = msgs.get(d.id); if (o) { o.el.remove(); msgs.delete(d.id); } }
   }
   else if (d.t === 'bg') applyRemoteBg(d.bg, d.by);
+  else if (d.t === 'typing') onTyping(d);
+  else if (d.t === 'read') onRead(d);
   else if (d.t === 'presence') setMembers(d.members);
   else if (d.t === 'sys') addSys(d.text);
   else if (d.t === 'score') addSys(d.name + ' لعب وجاب ' + (parseInt(d.score, 10) || 0) + ' 🐦');
@@ -1162,6 +1241,7 @@ function fullLeave() {
   $('leaveBtn').style.display = 'none';
   $('setup').style.display = 'block';
   logEl.innerHTML = ''; msgs.clear(); unread = 0; updateBadge(); members = [];
+  typers.clear(); reads = {}; lastReadSent = 0; renderTyping();
   lockSetup(false);
   setStatus('غير متصل بالشات');
 }
@@ -1263,7 +1343,11 @@ async function startRec() {
   };
   mr.start();
   $('recBar').style.display = 'flex'; $('micBtn').classList.add('on'); updRec();
-  r.timer = setInterval(() => { updRec(); if ((Date.now() - r.t0) / 1000 >= 120) stopRec(true); }, 250);
+  r.timer = setInterval(() => {
+    updRec();
+    if (Date.now() - (r.lastTyp || 0) > 2500) { r.lastTyp = Date.now(); wsend({ t: 'typing', kind: 'rec' }); }
+    if ((Date.now() - r.t0) / 1000 >= 120) stopRec(true);
+  }, 250);
 }
 function stopRec(send) {
   if (!rec) return;

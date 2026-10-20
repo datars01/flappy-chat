@@ -436,7 +436,7 @@ function onMsg(ws, d) {
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
     const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-150).map(pub);
-    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null });
+    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {} });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
     return;
@@ -483,7 +483,15 @@ function onMsg(ws, d) {
     room.bg = nb; room.bgAt = now; save();
     bc(code, { t: 'bg', bg: nb, by: me.name }, w => w.key !== ws.key);
   } else if (d.t === 'typing') {
-    bc(code, { t: 'typing', name: me.name }, w => w.key !== ws.key);
+    bc(code, { t: 'typing', name: me.name, kind: d.kind === 'rec' ? 'rec' : 'txt' }, w => w.key !== ws.key);
+  } else if (d.t === 'read') {
+    // آخر رسالة قراها هذا العضو (توقيت الرسالة)
+    const ts = Math.min(Number(d.ts) || 0, now);
+    room.reads = room.reads || {};
+    if (ts > ((room.reads[ws.key] || {}).ts || 0)) {
+      room.reads[ws.key] = { name: me.name, ts }; save();
+      bc(code, { t: 'read', k: ws.key, name: me.name, ts }, w => w.key !== ws.key);
+    }
   } else if (d.t === 'edit') {
     const m = find(d.id); const text = String(d.text || '').trim().slice(0, 500);
     if (!m || m.k !== ws.key || m.deleted || !text) return;
