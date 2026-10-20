@@ -326,12 +326,35 @@
   .dmm button { margin-top: 4px; width: 100%; padding: 7px; font-size: 13px; }
   #dmInv { padding: 6px 10px 0; } #dmInv button { font-size: 12px; padding: 7px 4px; }
   #dmForm { padding: 8px 10px 10px; }
+
+  /* ===== شاشة البداية (عدّ تنازلي + كونفيتي + بابيتو) ===== */
+  #splash { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    background: radial-gradient(circle at 50% 40%, #2a1d6e, #0b1020 70%); color: #fff; text-align: center; transition: opacity .5s; overflow: hidden; }
+  #splash.out { opacity: 0; pointer-events: none; }
+  #spConf { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #spNum { font-size: 150px; font-weight: 900; line-height: 1; color: #ffd166; text-shadow: 0 0 40px rgba(255,209,102,.7); height: 160px; }
+  #spNum.pop { animation: spPop .6s ease-out; }
+  @keyframes spPop { 0% { transform: scale(.2); opacity: 0; } 55% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  #spReveal { display: none; flex-direction: column; align-items: center; gap: 6px; position: relative; z-index: 1; }
+  #spReveal.show { display: flex; animation: spIn .7s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes spIn { 0% { transform: scale(.3) translateY(40px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  #spBird { width: 150px; height: 112px; animation: spBob 1.2s ease-in-out infinite; }
+  @keyframes spBob { 50% { transform: translateY(-10px) rotate(-4deg); } }
+  #spTitle { font-size: 38px; font-weight: 900; }
+  #spBab { font-size: 54px; font-weight: 900; background: linear-gradient(90deg, #ff4d6d, #ffd166, #3ddc84, #3da5ff, #a855f7, #ff4d6d); background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: spShine 2s linear infinite; filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
+  @keyframes spShine { to { background-position: 300% 0; } }
+  #spBabRow { display: flex; align-items: center; gap: 10px; }
+  #spHeart { font-size: 48px; animation: spBeat 1s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(255,60,100,.8)); }
+  @keyframes spBeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.22); } 60% { transform: scale(1); } }
+  #spSkip { position: absolute; bottom: 24px; z-index: 2; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 8px 20px; border-radius: 20px; font-size: 14px; }
+  @media (prefers-reduced-motion: reduce) { #spNum.pop, #spReveal.show, #spBird, #spBab, #spHeart { animation: none; } }
 </style>
 </head>
 <body>
 <div id="app">
   <h1>🐦 فلابي شات</h1>
-  <div id="sponsor">برعاية <b>بابيتو</b> ✨</div>
+  <div id="sponsor"><b>بابيتو</b> ❤️</div>
 
   <!-- الحساب -->
   <div class="card" id="authCard">
@@ -429,6 +452,11 @@
 <button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
+<div id="splash"><canvas id="spConf"></canvas>
+  <div id="spNum"></div>
+  <div id="spReveal"><canvas id="spBird" width="300" height="224"></canvas><div id="spTitle">فلابي شات</div><div id="spBabRow"><span id="spBab">بابيتو</span><span id="spHeart">❤️</span></div></div>
+  <button id="spSkip" type="button">تخطي ⏭</button>
+</div>
 <div id="dmPop"><div id="dmCard">
   <div id="dmHead"><button id="dmClose" class="ghost" type="button">✕</button><div><div id="dmName"></div><div id="dmSub"></div></div></div>
   <div id="dmLog"></div>
@@ -1149,7 +1177,7 @@ function drawGround() {
   ctx.font = 'bold 17px Cairo, system-ui, Arial';
   ctx.textAlign = 'center';
   ctx.fillStyle = lerpC(a.txt, b.txt, t);
-  ctx.fillText('برعاية بابيتو ✨', W / 2, H - 20);
+  ctx.fillText('بابيتو ❤️', W / 2, H - 20);
 }
 function drawSnow() {
   const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
@@ -1183,7 +1211,7 @@ function draw() {
   if (state === 'ready') {
     text('اضغط للطيران', W / 2, 150, 28);
     text('Tap to flap', W / 2, 185, 18);
-    text('برعاية بابيتو ✨', W / 2, 235, 20, '#ffd166');
+    text('بابيتو ❤️', W / 2, 235, 22, '#ffd166');
     text('🛡️ درع  •  ⏳ إبطاء الوقت', W / 2, 310, 14, '#fff');
     if (!auth) text('سجّل دخول لتنحفظ نتائجك', W / 2, 275, 15, '#fff');
   }
@@ -2547,6 +2575,51 @@ $('dmInvDuo').onclick = async () => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) { if (!fws || fws.readyState > 1) { fRetry = 0; presenceSync(); } else loadFriends(); } });
 renderFriends();
+
+/* ================= شاشة البداية ================= */
+(function () {
+  const sp = $('splash'); if (!sp) return;
+  let seen = false; try { seen = sessionStorage.getItem('flappySplash') === '1'; } catch (e) {}
+  if (seen) { sp.remove(); return; }
+  try { sessionStorage.setItem('flappySplash', '1'); } catch (e) {}
+  const cv = $('spConf'), c = cv.getContext('2d'), num = $('spNum');
+  let parts = [], raf = 0, done = false, timers = [];
+  const cols = ['#ff4d6d', '#ffd166', '#3ddc84', '#3da5ff', '#a855f7', '#ff9f1c', '#ffffff'];
+  function fit() { const r = window.devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; c.setTransform(r, 0, 0, r, 0, 0); }
+  fit();
+  function burst(n) {
+    const cx = innerWidth / 2, cy = innerHeight * 0.42;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 11;
+      parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5, w: 6 + Math.random() * 7, h: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - .5) * .4, col: cols[i % cols.length], life: 140 + Math.random() * 60 });
+    }
+  }
+  function tick() {
+    c.clearRect(0, 0, innerWidth, innerHeight);
+    parts.forEach(p => { p.vy += .28; p.vx *= .992; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--; c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.globalAlpha = Math.max(0, Math.min(1, p.life / 40)); c.fillStyle = p.col; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.restore(); });
+    parts = parts.filter(p => p.life > 0 && p.y < innerHeight + 40);
+    if (!done || parts.length) raf = requestAnimationFrame(tick); else c.clearRect(0, 0, innerWidth, innerHeight);
+  }
+  function finish() {
+    if (done) return; done = true; timers.forEach(clearTimeout);
+    sp.classList.add('out'); setTimeout(() => sp.remove(), 600);
+  }
+  $('spSkip').onclick = finish; sp.addEventListener('pointerdown', finish);
+  function drawBird() {
+    try { const b = $('spBird').getContext('2d'); b.clearRect(0, 0, 300, 224); b.save(); b.scale(3, 3); drawBirdSkin(b, 50, 37, 0, curSkin(), 0); b.restore(); } catch (e) {}
+  }
+  let n = 3;
+  function step() {
+    if (done) return;
+    if (n > 0) { num.textContent = String(n); num.classList.remove('pop'); void num.offsetWidth; num.classList.add('pop'); n--; timers.push(setTimeout(step, 650)); return; }
+    num.style.display = 'none'; drawBird(); $('spReveal').classList.add('show');
+    burst(170); timers.push(setTimeout(() => burst(90), 350));
+    timers.push(setTimeout(finish, 2300));
+  }
+  raf = requestAnimationFrame(tick);
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { n = 0; }
+  setTimeout(step, 150);
+})();
 
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {
