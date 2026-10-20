@@ -254,6 +254,38 @@
   @keyframes pulseT { 50% { opacity: .45; } }
   .tick { font-size: 14px; letter-spacing: -3px; opacity: .85; line-height: 1; }
   .tick.read { color: #8fe3ff; opacity: 1; text-shadow: 0 0 1px rgba(0,0,0,.45); }
+
+  /* ===== الطور الزوجي + العملات والمتجر ===== */
+  #modeBar .tab { padding: 9px; font-size: 14px; }
+  #duoBox .row { align-items: stretch; }
+  #duoMsg { min-height: 18px; }
+  #duoOv { display: none; position: absolute; inset: 0; z-index: 5; align-items: center; justify-content: center; background: rgba(6,14,22,.62); padding: 10px; }
+  #duoCard { width: 100%; max-width: 300px; max-height: 100%; overflow-y: auto; background: var(--card); color: var(--text); border: 2px solid var(--line);
+    border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.5); text-align: center; touch-action: auto; }
+  #duoCard .dT { font-size: 19px; font-weight: 700; }
+  #duoCard .dS { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .dpl { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px;
+    background: var(--card2); border: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+  .dpl .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dpl .st { font-size: 12px; white-space: nowrap; color: var(--muted); }
+  .dpl .st.ok { color: #6ee7a0; }
+  .dpl.empty { opacity: .75; border-style: dashed; }
+  .dpl.win { border-color: #ffd23f; box-shadow: 0 0 10px rgba(255,210,63,.35); }
+  #duoCard button.big { padding: 12px; font-size: 16px; }
+  #duoCard button.rdy { background: linear-gradient(135deg, var(--green1), var(--green2)); color: #fff; }
+  .coinBal { font-size: 16px; font-weight: 700; color: #ffd166; }
+  #dailyBox { display: flex; flex-direction: column; gap: 6px; text-align: center; }
+  #dailyBox .dl { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  #dailyBox button { background: linear-gradient(135deg, #ffd166, #f5a623); color: #3a2a00; }
+  #shopGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #shopGrid .skin { padding: 6px 4px; gap: 2px; }
+  #shopGrid .skin canvas { width: 66px; height: 52px; }
+  #shopGrid .skin .sn { font-size: 13px; }
+  #shopGrid .skin .sr { font-size: 10px; }
+  #shopGrid .skin .price { font-size: 12px; font-weight: 700; color: #ffd166; }
+  #shopGrid .skin button { font-size: 12px; padding: 5px 4px; }
+  #shopGrid .skin button.cant { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  #shopGrid .skin button.confirm { background: #35c27a; color: #fff; }
 </style>
 </head>
 <body>
@@ -288,12 +320,28 @@
     <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
     <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
   </div>
-  <div id="stage"><canvas id="c" width="320" height="480"></canvas></div>
+  <div id="modeBar" class="tabs">
+    <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
+    <button id="modeDuo" class="tab" type="button">👥 زوجي أونلاين</button>
+  </div>
+  <div class="card" id="duoBox" style="display:none">
+    <div class="help">ادخل نفس كود غرفة الشات، وصديقك يدخل نفس الكود، وتلعبون سوا بنفس الوقت. اللي يموت أول يتفرج على الثاني، ولما تخلص الجولة الاثنين يضغطون «جاهز» حتى تبدي جولة جديدة.</div>
+    <div class="row"><input id="duoCode" placeholder="كود الغرفة (نفس كود الشات)" maxlength="20" autocomplete="off" autocapitalize="off"><button id="duoEnter" type="button">دخول</button></div>
+    <div id="duoMsg" class="help"></div>
+  </div>
+  <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
   <div class="card" id="rewards">
     <div class="lbHead"><span>🎁 المكافآت والسكنات</span></div>
     <div id="rwProg"></div>
     <div id="skinGrid"></div>
+  </div>
+
+  <div class="card" id="shop">
+    <div class="lbHead"><span>🪙 العملات والمتجر</span><span id="coinBal" class="coinBal">🪙 0</span></div>
+    <div id="dailyBox"></div>
+    <div class="help">كل يوم تدخل وتستلم عملات، وكل ما تداوم أكثر تزيد المكافأة. اشتر سكنات حسب سعرها: أرخص سكن 40 عملة، وكل سكن بعده يزيد 20 لين 420.</div>
+    <div id="shopGrid"></div>
   </div>
 
   <div class="card" id="lb">
@@ -321,7 +369,7 @@
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
 <div id="unlockPop"><div id="upCard">
-  <div class="upTitle">🎉 مكافأة جديدة!</div>
+  <div class="upTitle" id="upTitle">🎉 مكافأة جديدة!</div>
   <canvas id="upCanvas" width="240" height="180"></canvas>
   <div id="upName"></div>
   <div class="row"><button id="upEquip" type="button">تركيب الآن</button><button id="upClose" class="ghost" type="button">لاحقاً</button></div>
@@ -419,10 +467,11 @@ function renderAuth() {
   $('authIn').style.display = auth ? 'block' : 'none';
   if (auth) {
     $('meName').textContent = '👤 ' + auth.name;
-    $('meStats').textContent = 'أعلى نتيجة: ' + (auth.best || 0) + '  •  المحاولات: ' + (auth.games || 0) + (auth.rank ? '  •  ترتيبك: #' + auth.rank : '');
+    $('meStats').textContent = 'أعلى نتيجة: ' + (auth.best || 0) + '  •  المحاولات: ' + (auth.games || 0) + (auth.rank ? '  •  ترتيبك: #' + auth.rank : '') + '  •  🪙 ' + (auth.coins || 0);
   }
   lbRender(lbLast, true);
   renderRewards();
+  renderShop();
 }
 $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -433,17 +482,26 @@ $('authForm').addEventListener('submit', async e => {
     auth = null;
     const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: { u, p } });
     auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
+    syncUser(r.user);
     saveAuth(); $('pIn').value = ''; authSay('');
     renderAuth(); lbRefresh();
   } catch (err) { authSay('❌ ' + err.message); }
   $('authBtn').disabled = false;
 });
 $('logoutBtn').onclick = () => { auth = null; saveAuth(); renderAuth(); lbSay(''); };
+let dailyToastShown = false;
+function syncUser(u) {
+  if (!auth || !u) return;
+  auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
+  auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
+  if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
+  if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
+}
 async function loadMe() {
   if (!auth) return;
   try {
     const r = await api('/api/me');
-    auth.name = r.name; auth.best = r.best; auth.games = r.games; auth.rank = r.rank; auth.skin = r.skin;
+    syncUser(r);
     saveAuth(); renderAuth();
   } catch (e) {
     if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
@@ -458,6 +516,7 @@ const GAP = 135, PIPE_W = 52, PIPE_SPACE = 175, SPEED = 2;
 const GRAVITY = 0.42, FLAP = -7.2;
 
 let state = 'ready'; // ready | play | dead
+let gameMode = 'solo'; // solo | duo
 let bird, pipes, score, guestBest = 0, frames = 0, groundX = 0, deadTime = 0, currentGame = null;
 try { guestBest = parseInt(localStorage.getItem('flappyBest') || '0', 10) || 0; } catch (e) {}
 function myBest() { return auth ? (auth.best || 0) : guestBest; }
@@ -471,32 +530,172 @@ const SKINS = [
   { id: 'royal',   name: 'الملكي',    at: 75,  rar: 'أسطوري',   body: '#a56bff', edge: '#3d1a7a', wing: '#7a3fe0', beak: '#ffd23f', acc: 'crown', crown: '#ffd23f' },
   { id: 'golden',  name: 'الذهبي',    at: 100, rar: 'خرافي',    body: '#ffd23f', edge: '#8a5a00', wing: '#ffb300', beak: '#ff7a2e', acc: 'crown', crown: '#fff2b0', glow: true }
 ];
-function curSkin() { const id = auth && auth.skin; return SKINS.find(k => k.id === id) || SKINS[0]; }
+/* ===== سكنات المتجر: 20 سكن، الأرخص 40 عملة وكل سكن بعده +20 (لين 420) ===== */
+const RARS = ['عادي', 'نادر', 'نادر جداً', 'ملحمي', 'أسطوري', 'خرافي'];
+const SHOP_DEF = [
+  { name: 'الوردي',   body: '#ff8fc2', edge: '#8a2a5a', wing: '#e0559a', beak: '#ffd23f', acc: 'bow' },
+  { name: 'السماوي',  body: '#7fd6ff', edge: '#1d5f86', wing: '#4fb3e8', beak: '#ff9f43', acc: 'beanie', hat: '#ff5a5a' },
+  { name: 'الليموني', body: '#c8f23f', edge: '#5d7a0a', wing: '#9ccc1f', beak: '#ff7a2e', acc: 'leaf' },
+  { name: 'الغروب',   body: '#ff9a3d', edge: '#8a4300', wing: '#ff7a00', beak: '#ffe066', acc: 'headband', hat: '#ffffff' },
+  { name: 'الثلجي',   body: '#f4fbff', edge: '#6d8aa0', wing: '#cfe4f2', beak: '#ff9f43', acc: 'scarf', hat: '#e54848' },
+  { name: 'النينجا',  body: '#3a3f4a', edge: '#0c0e12', wing: '#232730', beak: '#ffb02e', acc: 'ninja' },
+  { name: 'القرصان',  body: '#b8743a', edge: '#4a2a10', wing: '#8f5526', beak: '#ffd23f', acc: 'pirate' },
+  { name: 'الساحر',   body: '#8e63ff', edge: '#2f1a73', wing: '#6a3fe0', beak: '#ffd23f', acc: 'wizard' },
+  { name: 'الفضائي',  body: '#7be05a', edge: '#245f12', wing: '#4fb23a', beak: '#ffe066', acc: 'antenna' },
+  { name: 'الملاك',   body: '#fff6dc', edge: '#b89a4a', wing: '#ffffff', beak: '#ffc233', acc: 'halo', glow: 'rgba(255,240,170,.95)' },
+  { name: 'الشيطان',  body: '#d8322b', edge: '#4d0b08', wing: '#9a1a14', beak: '#ffb02e', acc: 'horns' },
+  { name: 'المهرّج',  body: '#ffe14d', edge: '#8a6a00', wing: '#ff5ac8', beak: '#ff3d3d', acc: 'party' },
+  { name: 'الروبوت',  body: '#aab6c4', edge: '#3a4654', wing: '#76869a', beak: '#ffb02e', acc: 'robot' },
+  { name: 'الفارس',   body: '#cdd5df', edge: '#4a5666', wing: '#9aa8b8', beak: '#ffb02e', acc: 'helmet' },
+  { name: 'اللهب',    body: '#ff7a1a', grad: ['#ffd23f', '#ff4d1a'], edge: '#7a2000', wing: '#ffcf33', beak: '#ffe066', acc: null, fx: 'fire', glow: 'rgba(255,140,40,.9)' },
+  { name: 'الجليد',   body: '#9fe6ff', edge: '#2a7aa0', wing: '#e6fbff', beak: '#ffb02e', acc: 'icicles', fx: 'sparkle', glow: 'rgba(140,220,255,.9)' },
+  { name: 'قوس قزح',  body: '#ff4d6d', edge: '#4a2a5a', wing: '#ffffff', beak: '#ffd23f', acc: null, fx: 'rainbow' },
+  { name: 'المجرّة',  body: '#2b1a7a', grad: ['#1b1464', '#7a35c8'], edge: '#0b0636', wing: '#6a2bb8', beak: '#ffd23f', acc: 'starpin', fx: 'galaxy', glow: 'rgba(150,110,255,.9)' },
+  { name: 'الألماس',  body: '#8ff4ff', grad: ['#c9fbff', '#4fd8f0'], edge: '#1b8fa6', wing: '#e8ffff', beak: '#ffffff', acc: 'gems', fx: 'diamond', glow: 'rgba(120,240,255,.95)' },
+  { name: 'العنقاء',  body: '#ffd23f', grad: ['#ffe36b', '#ff4f3a'], edge: '#7a1f00', wing: '#fff4d0', beak: '#ffffff', acc: 'crown', crown: '#ffffff', fx: 'legend', glow: 'rgba(255,150,60,.95)' }
+];
+const shopTier = i => i < 4 ? 0 : i < 8 ? 1 : i < 12 ? 2 : i < 16 ? 3 : i < 19 ? 4 : 5;
+const SHOP = SHOP_DEF.map((d, i) => Object.assign({ id: 's' + String(i + 1).padStart(2, '0'), at: 0, price: 40 + i * 20, shop: true, tier: shopTier(i), rar: RARS[shopTier(i)] }, d));
+const ALL_SKINS = SKINS.concat(SHOP);
+function curSkin() { const id = auth && auth.skin; return ALL_SKINS.find(k => k.id === id) || SKINS[0]; }
+
 function drawBirdSkin(c, x, y, rot, sk, fr) {
+  const RB = ['#ff3b3b', '#ff9f1c', '#ffe14d', '#3ddc84', '#3da5ff', '#a855f7'];
+  const star5 = (sx, sy, r) => { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; c.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); } c.closePath(); };
+  const spark = (sx, sy, k) => { c.beginPath(); c.moveTo(sx, sy - k); c.lineTo(sx + k * .3, sy - k * .3); c.lineTo(sx + k, sy); c.lineTo(sx + k * .3, sy + k * .3); c.lineTo(sx, sy + k); c.lineTo(sx - k * .3, sy + k * .3); c.lineTo(sx - k, sy); c.lineTo(sx - k * .3, sy - k * .3); c.closePath(); c.fill(); };
+  const clipBody = () => { c.beginPath(); c.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); c.clip(); };
   c.save(); c.translate(x, y); c.rotate(rot);
-  if (sk.glow) { c.shadowColor = 'rgba(255,215,64,.95)'; c.shadowBlur = 14; }
-  c.fillStyle = sk.body; c.beginPath(); c.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); c.fill();
+  const glow = sk.glow ? (typeof sk.glow === 'string' ? sk.glow : 'rgba(255,215,64,.95)') : null;
+  // ---- مؤثرات خلف الطير ----
+  if (sk.fx === 'fire') {
+    const fc = ['#ffd23f', '#ff9a1f', '#ff5a1a', 'rgba(255,60,20,.55)'];
+    for (let i = 0; i < 4; i++) { c.fillStyle = fc[i]; c.beginPath(); c.arc(-19 - i * 6, Math.sin(fr / 3 + i * 1.7) * 3, 7 - i * 1.3, 0, Math.PI * 2); c.fill(); }
+  } else if (sk.fx === 'rainbow') {
+    RB.forEach((col, i) => { c.strokeStyle = col; c.lineWidth = 2.4; c.beginPath(); const yy = -6.5 + i * 2.6; c.moveTo(-13, yy); for (let k = 1; k <= 4; k++) c.lineTo(-13 - k * 6, yy + Math.sin(fr / 4 + k + i * .5) * 2.2); c.stroke(); });
+  } else if (sk.fx === 'legend') {
+    c.save(); c.rotate(fr / 40);
+    for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); c.fillStyle = i % 2 ? 'rgba(255,230,120,.3)' : 'rgba(255,110,80,.25)'; c.beginPath(); c.moveTo(0, 0); c.lineTo(36, -5); c.lineTo(36, 5); c.closePath(); c.fill(); }
+    c.restore();
+  }
+  // ---- الجسم ----
+  if (glow) { c.shadowColor = glow; c.shadowBlur = 14; }
+  let fill = sk.body;
+  if (sk.fx === 'rainbow') { const g = c.createLinearGradient(-16, 0, 16, 0); RB.forEach((col, i) => g.addColorStop(i / 5, col)); fill = g; }
+  else if (sk.grad) { const g = c.createLinearGradient(-14, -12, 14, 12); g.addColorStop(0, sk.grad[0]); g.addColorStop(1, sk.grad[1]); fill = g; }
+  c.fillStyle = fill; c.beginPath(); c.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); c.fill();
   c.shadowBlur = 0; c.shadowColor = 'transparent';
   c.strokeStyle = sk.edge; c.lineWidth = 2; c.stroke();
+  if (sk.fx === 'galaxy') {
+    c.fillStyle = '#fff';
+    [[-6, -3, 1], [-2, 5, .9], [3, 2, 1.1], [-10, 2, .8], [1, -7, .9], [8, 6, .7]].forEach(p => { c.globalAlpha = .6 + .4 * Math.sin(fr / 6 + p[0]); c.beginPath(); c.arc(p[0], p[1], p[2], 0, 7); c.fill(); });
+    c.globalAlpha = 1;
+  }
+  if (sk.fx === 'diamond') {
+    c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1; c.beginPath();
+    c.moveTo(-14, -2); c.lineTo(0, -10); c.lineTo(14, -2); c.lineTo(0, 11); c.closePath();
+    c.moveTo(-14, -2); c.lineTo(14, -2); c.moveTo(0, -10); c.lineTo(-5, -2); c.lineTo(0, 11); c.moveTo(0, -10); c.lineTo(5, -2); c.lineTo(0, 11); c.stroke();
+  }
+  // ---- جناح + عين + منقار ----
   const wy = Math.sin(fr / 2) * 3;
   c.fillStyle = sk.wing; c.beginPath(); c.ellipse(-4, 2 + wy, 8, 5, 0, 0, Math.PI * 2); c.fill();
   c.fillStyle = '#fff'; c.beginPath(); c.arc(7, -4, 5, 0, Math.PI * 2); c.fill();
   c.fillStyle = '#000'; c.beginPath(); c.arc(9, -4, 2, 0, Math.PI * 2); c.fill();
   c.fillStyle = sk.beak; c.beginPath(); c.moveTo(12, 0); c.lineTo(22, 3); c.lineTo(12, 7); c.closePath(); c.fill();
-  if (sk.acc === 'tuft') {
-    c.fillStyle = '#ffc233'; c.strokeStyle = sk.edge; c.lineWidth = 1.5;
+  // ---- الإكسسوار ----
+  const A = sk.acc, hat = sk.hat;
+  if (A === 'tuft') {
+    c.fillStyle = sk.tuft || '#ffc233'; c.strokeStyle = sk.edge; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(-3, -10); c.lineTo(-1, -19); c.lineTo(3, -12); c.lineTo(6, -21); c.lineTo(9, -11); c.lineTo(12, -17); c.lineTo(13, -8); c.closePath(); c.fill(); c.stroke();
-  } else if (sk.acc === 'shades') {
+  } else if (A === 'shades') {
     c.fillStyle = '#111'; c.fillRect(1, -8, 13, 7);
     c.strokeStyle = '#111'; c.lineWidth = 2; c.beginPath(); c.moveTo(1, -5); c.lineTo(-8, -7); c.stroke();
     c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(3, -7, 3, 2);
-  } else if (sk.acc === 'cap') {
+  } else if (A === 'cap') {
     c.fillStyle = '#ff5a4d'; c.strokeStyle = '#5a0f0c'; c.lineWidth = 1.5;
     c.beginPath(); c.arc(4, -8, 10, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
     c.fillRect(8, -9, 13, 3);
-  } else if (sk.acc === 'crown') {
+  } else if (A === 'crown') {
     c.fillStyle = sk.crown || '#ffd23f'; c.strokeStyle = '#8a5a00'; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, -10); c.lineTo(-1, -20); c.lineTo(4, -15); c.lineTo(8, -22); c.lineTo(12, -15); c.lineTo(17, -20); c.lineTo(15, -10); c.closePath(); c.fill(); c.stroke();
+  } else if (A === 'bow') {
+    c.fillStyle = hat || '#ff4d8d'; c.strokeStyle = '#7a1a44'; c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(2, -12); c.lineTo(-7, -19); c.lineTo(-7, -8); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(2, -12); c.lineTo(11, -19); c.lineTo(11, -8); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#c2185b'; c.beginPath(); c.arc(2, -12, 2.7, 0, 7); c.fill(); c.stroke();
+  } else if (A === 'beanie') {
+    c.fillStyle = hat || '#ff5a5a'; c.strokeStyle = '#4a1414'; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(3, -8, 11, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#fff'; c.fillRect(-8, -10, 22, 4); c.beginPath(); c.arc(3, -20, 3.2, 0, 7); c.fill();
+  } else if (A === 'leaf') {
+    c.save(); c.translate(3, -12); c.rotate(-.5);
+    c.strokeStyle = '#1d6b24'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -15); c.stroke();
+    c.fillStyle = '#3fb54a'; c.beginPath(); c.ellipse(0, -8, 4.2, 8, 0, 0, 7); c.fill(); c.stroke();
+    c.restore();
+  } else if (A === 'headband') {
+    c.fillStyle = hat || '#fff'; c.strokeStyle = '#8a4300'; c.lineWidth = 1;
+    c.fillRect(-11, -9, 20, 3.6);
+    c.beginPath(); c.moveTo(-11, -8); c.lineTo(-23, -12); c.lineTo(-20, -6); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(-11, -7); c.lineTo(-22, -3); c.lineTo(-17, -2); c.closePath(); c.fill(); c.stroke();
+  } else if (A === 'scarf') {
+    c.fillStyle = hat || '#e54848'; c.strokeStyle = '#7a1a1a'; c.lineWidth = 1.2;
+    c.beginPath(); c.ellipse(1, 8, 12, 3.6, -.1, 0, 7); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(-6, 9); c.lineTo(-10, 20); c.lineTo(-3, 19); c.lineTo(-1, 10); c.closePath(); c.fill(); c.stroke();
+  } else if (A === 'ninja') {
+    c.save(); clipBody(); c.fillStyle = '#16181d'; c.fillRect(-17, -13, 34, 12); c.restore();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(7, -4, 4.4, 0, 7); c.fill(); c.fillStyle = '#000'; c.beginPath(); c.arc(8.6, -4, 1.9, 0, 7); c.fill();
+    c.fillStyle = '#e03a3a'; c.fillRect(-14, -7, 5, 3);
+    c.beginPath(); c.moveTo(-14, -6); c.lineTo(-25, -2); c.lineTo(-22, -10); c.closePath(); c.fill();
+  } else if (A === 'pirate') {
+    c.save(); clipBody(); c.fillStyle = '#d8322b'; c.fillRect(-17, -13, 34, 7.5);
+    c.fillStyle = '#fff'; [[-9, -10], [-2, -9], [5, -11], [11, -8]].forEach(p => { c.beginPath(); c.arc(p[0], p[1], 1, 0, 7); c.fill(); }); c.restore();
+    c.fillStyle = '#d8322b'; c.beginPath(); c.moveTo(-14, -8); c.lineTo(-25, -5); c.lineTo(-22, -12); c.closePath(); c.fill();
+    c.fillStyle = '#111'; c.beginPath(); c.arc(7, -4, 5.6, 0, 7); c.fill();
+    c.strokeStyle = '#111'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(2, -7); c.lineTo(-11, -9); c.stroke();
+  } else if (A === 'wizard') {
+    c.fillStyle = '#4b2fc9'; c.strokeStyle = '#1d1060'; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(-6, -10); c.lineTo(14, -10); c.lineTo(5, -34); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.ellipse(4, -10, 15, 3.6, 0, 0, 7); c.fill(); c.stroke();
+    c.fillStyle = '#ffd23f'; star5(6, -21, 3.6); c.fill();
+  } else if (A === 'antenna') {
+    c.strokeStyle = '#245f12'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(0, -11); c.quadraticCurveTo(-6, -20, -5, -27); c.moveTo(8, -11.5); c.quadraticCurveTo(13, -20, 13, -27); c.stroke();
+    c.fillStyle = '#ff4dd8'; c.beginPath(); c.arc(-5, -27.5, 3, 0, 7); c.arc(13, -27.5, 3, 0, 7); c.fill();
+    c.fillStyle = '#10200a'; c.beginPath(); c.ellipse(7, -4, 6.6, 5.2, -.2, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(9, -6, 1.7, 0, 7); c.fill();
+  } else if (A === 'halo') {
+    c.save(); c.shadowColor = 'rgba(255,220,80,.9)'; c.shadowBlur = 8; c.strokeStyle = '#ffd23f'; c.lineWidth = 2.6;
+    c.beginPath(); c.ellipse(3, -21 + Math.sin(fr / 8) * 1.2, 9, 3, 0, 0, 7); c.stroke(); c.restore();
+  } else if (A === 'horns') {
+    c.fillStyle = '#6b0d0a'; c.strokeStyle = '#2a0403'; c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(-5, -9); c.quadraticCurveTo(-9, -16, -5, -23); c.quadraticCurveTo(-1, -15, 1, -11); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(7, -11.5); c.quadraticCurveTo(10, -18, 15, -23); c.quadraticCurveTo(15, -15, 12, -9.5); c.closePath(); c.fill(); c.stroke();
+  } else if (A === 'party') {
+    c.fillStyle = '#ff5ac8'; c.strokeStyle = '#7a1a5e'; c.lineWidth = 1.3;
+    c.beginPath(); c.moveTo(-3, -10); c.lineTo(11, -10); c.lineTo(4, -31); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-1, -15); c.lineTo(9, -15); c.moveTo(1.6, -22); c.lineTo(6.4, -22); c.stroke();
+    c.fillStyle = '#ffe14d'; c.beginPath(); c.arc(4, -31.5, 3, 0, 7); c.fill();
+  } else if (A === 'robot') {
+    c.save(); clipBody(); c.fillStyle = '#16222e'; c.fillRect(-2, -10, 18, 10); c.restore();
+    c.fillStyle = '#4de8ff'; c.fillRect(5, -6.5, 8, 3);
+    c.strokeStyle = '#3a4654'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(4, -12); c.lineTo(4, -21); c.stroke();
+    c.fillStyle = '#ff4040'; c.beginPath(); c.arc(4, -22, 2.7, 0, 7); c.fill();
+    c.fillStyle = '#3a4654'; c.beginPath(); c.arc(-9, 3, 1.3, 0, 7); c.arc(-4, 8, 1.3, 0, 7); c.fill();
+  } else if (A === 'helmet') {
+    c.fillStyle = '#b8c2d0'; c.strokeStyle = '#3a4654'; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(1, -7, 13.5, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#1b2430'; c.fillRect(-4, -9.5, 16, 2.6);
+    c.fillStyle = '#e03a3a'; c.beginPath(); c.ellipse(1, -22, 2.6, 6, .3, 0, 7); c.fill();
+  } else if (A === 'icicles') {
+    c.fillStyle = '#dff7ff'; c.strokeStyle = '#4fa3c7'; c.lineWidth = 1;
+    [[-6, 10], [0, 15], [6, 12], [12, 9]].forEach(p => { c.beginPath(); c.moveTo(p[0] - 2.7, -10); c.lineTo(p[0] + 2.7, -10); c.lineTo(p[0], -10 - p[1]); c.closePath(); c.fill(); c.stroke(); });
+  } else if (A === 'starpin') {
+    c.fillStyle = '#ffd23f'; c.strokeStyle = '#8a5a00'; c.lineWidth = 1; star5(3, -17, 5.5); c.fill(); c.stroke();
+  } else if (A === 'gems') {
+    [[-3, -15, '#ffffff'], [4, -18, '#9ff3ff'], [11, -15, '#ffffff']].forEach(g => { c.fillStyle = g[2]; c.strokeStyle = '#1b8fa6'; c.lineWidth = 1; c.beginPath(); c.moveTo(g[0], g[1] - 4.5); c.lineTo(g[0] + 3.5, g[1]); c.lineTo(g[0], g[1] + 4.5); c.lineTo(g[0] - 3.5, g[1]); c.closePath(); c.fill(); c.stroke(); });
+  }
+  // ---- لمعان ----
+  if (sk.fx === 'sparkle' || sk.fx === 'diamond' || sk.fx === 'legend') {
+    c.fillStyle = sk.fx === 'legend' ? '#fff6b0' : '#fff';
+    for (let i = 0; i < 3; i++) { const a = fr / 14 + i * 2.1, rr = 25 + Math.sin(fr / 5 + i) * 2; spark(Math.cos(a) * rr * .95, Math.sin(a) * rr * .7, 2.4 + 1.6 * Math.abs(Math.sin(fr / 7 + i * 2))); }
   }
   c.restore();
 }
@@ -545,19 +744,97 @@ function renderRewards() {
 }
 async function equipSkin(id) {
   if (!auth) return;
-  try { const r = await api('/api/skin', { method: 'POST', body: { skin: id } }); auth.skin = r.skin; renderRewards(); }
+  try { const r = await api('/api/skin', { method: 'POST', body: { skin: id } }); auth.skin = r.skin; renderRewards(); renderShop(); }
   catch (e) {
     if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
     else showToast('⚠️ ' + e.message);
   }
 }
-function showUnlock(ids) {
-  const k = SKINS.find(z => z.id === ids[ids.length - 1]); if (!k) return;
+function showUnlock(ids, title) {
+  const k = ALL_SKINS.find(z => z.id === ids[ids.length - 1]); if (!k) return;
+  $('upTitle').textContent = title || '🎉 مكافأة جديدة!';
   $('upName').textContent = 'سكن ' + k.name + ' (' + k.rar + ')';
-  const c = $('upCanvas').getContext('2d'); c.clearRect(0, 0, 240, 180); c.save(); c.scale(4, 4); drawBirdSkin(c, 30, 26, 0, k, 0); c.restore();
+  const c = $('upCanvas').getContext('2d'); c.clearRect(0, 0, 240, 180); c.save(); c.scale(3, 3); drawBirdSkin(c, 40, 38, 0, k, 0); c.restore();
   $('upEquip').onclick = () => { $('unlockPop').classList.remove('open'); equipSkin(k.id); };
   $('upClose').onclick = () => $('unlockPop').classList.remove('open');
   $('unlockPop').classList.add('open');
+}
+
+/* ================= العملات والمتجر ================= */
+let buyArm = null, buyArmT = null, lastDailyPoll = 0;
+function fmtHMS(ms) { const t = Math.ceil(ms / 1000); return [Math.floor(t / 3600), Math.floor(t % 3600 / 60), t % 60].map(n => String(n).padStart(2, '0')).join(':'); }
+function renderDaily() {
+  const box = $('dailyBox'); if (!box) return;
+  box.innerHTML = '';
+  if (!auth) { const h = document.createElement('div'); h.className = 'help'; h.textContent = 'سجّل دخول حتى تستلم عملات كل يوم وتشتري سكنات'; box.appendChild(h); return; }
+  const d = auth.daily; if (!d) return;
+  const line = document.createElement('div'); line.className = 'dl';
+  if (d.can) {
+    line.textContent = (d.streak > 0 ? '🔥 ' + d.streak + (d.streak > 1 ? ' أيام متتالية — ' : ' يوم متتالي — ') : '') + 'مكافأتك اليوم جاهزة!';
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'dailyBtn'; b.textContent = '🎁 استلم ' + d.amount + ' عملة'; b.onclick = claimDaily;
+    box.append(line, b);
+  } else {
+    const left = Math.max(0, (auth.dailyAt || 0) - Date.now());
+    line.id = 'dailyLeft';
+    line.textContent = '✅ استلمت مكافأة اليوم (' + d.streak + (d.streak > 1 ? ' أيام متتالية' : ' يوم') + '). الجاية بعد ' + fmtHMS(left) + ' وتكون ' + d.amount + ' عملة';
+    box.appendChild(line);
+  }
+}
+setInterval(() => {
+  if (!auth || !auth.daily || auth.daily.can) return;
+  if (Date.now() >= auth.dailyAt) { if (Date.now() - lastDailyPoll > 5000) { lastDailyPoll = Date.now(); loadMe(); } return; }
+  renderDaily();
+}, 1000);
+async function claimDaily() {
+  try {
+    const r = await api('/api/daily', { method: 'POST' });
+    auth.coins = r.coins; auth.daily = r.daily; auth.dailyAt = Date.now() + r.daily.msLeft;
+    renderAuth(); showToast('🪙 +' + r.got + ' عملة! رصيدك ' + r.coins);
+  } catch (e) {
+    if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
+    else { showToast('⚠️ ' + e.message); loadMe(); }
+  }
+}
+async function buySkin(k) {
+  if (!auth) { showToast('سجّل دخول أول'); return; }
+  if (buyArm !== k.id) { buyArm = k.id; clearTimeout(buyArmT); buyArmT = setTimeout(() => { buyArm = null; renderShop(); }, 3500); renderShop(); return; }
+  buyArm = null; clearTimeout(buyArmT);
+  try {
+    const r = await api('/api/buy', { method: 'POST', body: { skin: k.id } });
+    auth.coins = r.coins; auth.owned = r.owned;
+    renderAuth(); showUnlock([k.id], '🛍️ اشتريت سكن جديد!');
+  } catch (e) {
+    if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
+    else { showToast('⚠️ ' + e.message); loadMe(); }
+  }
+}
+function renderShop() {
+  const g = $('shopGrid'); if (!g) return;
+  $('coinBal').textContent = auth ? '🪙 ' + (auth.coins || 0) : '🪙 —';
+  renderDaily();
+  g.innerHTML = '';
+  const owned = new Set(auth && auth.owned || []), eq = curSkin().id, coins = auth ? (auth.coins || 0) : 0;
+  SHOP.forEach(k => {
+    const has = owned.has(k.id);
+    const card = document.createElement('div'); card.className = 'skin t' + k.tier + (has && eq === k.id ? ' on' : '');
+    const cvs = document.createElement('canvas'); cvs.width = 144; cvs.height = 112;
+    const c = cvs.getContext('2d'); c.scale(2, 2); drawBirdSkin(c, 36, 37, 0, k, 0);
+    const n = document.createElement('div'); n.className = 'sn'; n.textContent = k.name;
+    const r = document.createElement('div'); r.className = 'sr'; r.textContent = k.rar;
+    card.append(cvs, n, r);
+    const b = document.createElement('button'); b.type = 'button';
+    if (has) {
+      b.textContent = eq === k.id ? 'مركّب ✓' : 'تركيب'; b.disabled = eq === k.id; b.onclick = () => equipSkin(k.id); card.appendChild(b);
+    } else {
+      const p = document.createElement('div'); p.className = 'price'; p.textContent = '🪙 ' + k.price; card.appendChild(p);
+      if (!auth) { b.textContent = '🔒 سجّل دخول'; b.className = 'cant'; b.disabled = true; }
+      else if (buyArm === k.id) { b.textContent = 'تأكيد الشراء؟'; b.className = 'confirm'; b.onclick = () => buySkin(k); }
+      else if (coins >= k.price) { b.textContent = '🛒 شراء'; b.onclick = () => buySkin(k); }
+      else { b.textContent = 'ينقصك ' + (k.price - coins); b.className = 'cant'; b.onclick = () => showToast('عملاتك ما تكفي، ينقصك ' + (k.price - coins) + ' 🪙'); }
+      card.appendChild(b);
+    }
+    g.appendChild(card);
+  });
 }
 
 /* ===== المراحل (نهار / غروب / ليل / ثلج) كل 10 نقاط ===== */
@@ -596,6 +873,7 @@ function startGame() {
   currentGame = auth ? api('/api/start', { method: 'POST' }).then(r => r.gid).catch(() => null) : null;
 }
 function flap() {
+  if (gameMode === 'duo') { duoFlap(); return; }
   if (state === 'ready') { state = 'play'; startGame(); }
   if (state === 'play') bird.vy = FLAP;
   else if (state === 'dead' && deadTime > 25) { reset(); state = 'ready'; }
@@ -707,7 +985,7 @@ function text(str, x, y, size, color) {
   ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#222';
   ctx.strokeText(str, x, y); ctx.fillStyle = color || '#fff'; ctx.fillText(str, x, y);
 }
-function draw() {
+function drawSky() {
   const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, lerpC(a.top, b.top, t)); g.addColorStop(1, lerpC(a.bot, b.bot, t));
@@ -727,9 +1005,9 @@ function draw() {
     const cx = ((i * 140 - frames * 0.3) % (W + 80) + W + 80) % (W + 80) - 40;
     ctx.beginPath(); ctx.arc(cx, 90 + i * 55, 20, 0, 7); ctx.arc(cx + 22, 96 + i * 55, 16, 0, 7); ctx.arc(cx - 20, 98 + i * 55, 14, 0, 7); ctx.fill();
   }
-  const pf = lerpC(a.pipe, b.pipe, t), pe = lerpC(a.pipeEdge, b.pipeEdge, t);
-  pipes.forEach(p => drawPipe(p, pf, pe));
-  pipes.forEach(drawOrb);
+}
+function drawGround() {
+  const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
   ctx.fillStyle = lerpC(a.ground, b.ground, t); ctx.fillRect(0, H - GROUND, W, GROUND);
   ctx.fillStyle = lerpC(a.grass, b.grass, t); ctx.fillRect(0, H - GROUND, W, 12);
   ctx.fillStyle = lerpC(a.grass2, b.grass2, t);
@@ -738,9 +1016,21 @@ function draw() {
   ctx.textAlign = 'center';
   ctx.fillStyle = lerpC(a.txt, b.txt, t);
   ctx.fillText('برعاية بابيتو ✨', W / 2, H - 20);
-  drawBird();
+}
+function drawSnow() {
+  const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
   const snowA = lerpN(a.snow, b.snow, t);
   if (snowA > .01) { ctx.fillStyle = '#fff'; ctx.globalAlpha = snowA * .9; for (const f of flakes) { ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
+}
+function draw() {
+  const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
+  drawSky();
+  const pf = lerpC(a.pipe, b.pipe, t), pe = lerpC(a.pipeEdge, b.pipeEdge, t);
+  pipes.forEach(p => drawPipe(p, pf, pe));
+  pipes.forEach(drawOrb);
+  drawGround();
+  drawBird();
+  drawSnow();
   if (state !== 'ready') text(String(score), W / 2, 70, 44);
   if (state === 'play') {
     if (bird.shield) { ctx.fillStyle = '#2f86e8'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; shieldPath(22, 28, 1.6); ctx.fill(); ctx.stroke(); }
@@ -774,8 +1064,10 @@ function draw() {
 }
 let last = performance.now();
 function loop(t) {
-  const dt = Math.min((t - last) / 16.667, 2.5); last = t;
-  update(dt); draw(); requestAnimationFrame(loop);
+  const raw = Math.max(0, t - last); last = t;
+  if (gameMode === 'duo') { duoUpdate(raw); drawDuo(); }
+  else { const dt = Math.min(raw / 16.667, 2.5); update(dt); draw(); }
+  requestAnimationFrame(loop);
 }
 reset(); requestAnimationFrame(loop);
 
@@ -1178,6 +1470,8 @@ function onServer(d) {
     logEl.scrollTop = logEl.scrollHeight;
     setMembers(d.members);
     if (d.bg) applyRemoteBg(d.bg, '');
+    if (d.duo) duoSync(d.duo);
+    if (duo.want) wsend({ t: 'duo_join' });
     reads = d.reads || {}; lastReadSent = 0; refreshTicks(); sendRead();
     if (!announced) { announced = true; addSys('دخلت الغرفة 🎮'); }
   } else if (d.t === 'msg') putMsg(d.m, true);
@@ -1190,6 +1484,12 @@ function onServer(d) {
   else if (d.t === 'bg') applyRemoteBg(d.bg, d.by);
   else if (d.t === 'typing') onTyping(d);
   else if (d.t === 'read') onRead(d);
+  else if (d.t === 'duo') duoSync(d);
+  else if (d.t === 'duo_go') duoOnGo(d);
+  else if (d.t === 'duo_state') duoOnState(d);
+  else if (d.t === 'duo_dead') duoOnDead(d);
+  else if (d.t === 'duo_over') duoOnOver(d);
+  else if (d.t === 'duo_err') duoOnErr(d);
   else if (d.t === 'presence') setMembers(d.members);
   else if (d.t === 'sys') addSys(d.text);
   else if (d.t === 'score') addSys(d.name + ' لعب وجاب ' + (parseInt(d.score, 10) || 0) + ' 🐦');
@@ -1233,6 +1533,7 @@ $('enterBtn').onclick = enterRoom;
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') enterRoom(); });
 
 function fullLeave() {
+  if (duo.want) { if (joined) wsend({ t: 'duo_leave' }); duoReset(); }
   wantRoom = null; joined = false;
   clearTimeout(connTimer); clearTimeout(reconnT);
   if (ws) { const s = ws; ws = null; try { s.close(); } catch (e) {} }
@@ -1609,6 +1910,291 @@ $('babRec').onclick = async () => {
 $('babTest').onclick = () => { unlockAudio(); ding(true); };
 $('babReset').onclick = () => { try { localStorage.removeItem('flappyBabito'); } catch (e) {} loadBabito(); updBabNote(); showToast('رجع الصوت الافتراضي'); };
 loadBabito(); applyBg(); applyFont(); applyBig();
+
+/* ================= الطور الزوجي (أونلاين) ================= */
+// كل لاعب يشغّل اللعبة عنده بخطوة ثابتة (60 بالثانية) ونفس الـ seed، فالأنابيب نفسها عند الاثنين بالضبط.
+// ونرسل لقطات الطير (15 بالثانية) حتى الثاني يشوفك، واللي يموت أول يتفرج على عالم الثاني.
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const duo = { want: false, code: '', phase: 'off', players: [], opp: null, oppInfo: null, round: 0, rnd: null, tops: [], tick: 0, view: 0, acc: 0,
+  bird: null, alive: false, score: 0, countEnd: 0, lastN: -1, result: null, deadAck: false, lastDeadSend: 0, lastFriendReady: false, hideT: null };
+const duoName = () => (duo.oppInfo && duo.oppInfo.name) || 'صديقك';
+function duoTop(i) { const min = 70, max = H - GROUND - GAP - 70; while (duo.tops.length <= i) duo.tops.push(min + duo.rnd() * (max - min)); return duo.tops[i]; }
+const duoPipeX = (i, T) => W + 60 + i * PIPE_SPACE - SPEED * T;
+function oppSkin() { const id = duo.oppInfo && duo.oppInfo.skin; return ALL_SKINS.find(k => k.id === id) || SKINS[0]; }
+function mkOpp() { return { y: H / 2 - 20, ty: H / 2 - 20, tvy: 0, tick: 0, recv: performance.now(), score: 0, alive: true, rot: 0, fvy: 0, seen: false }; }
+function duoSay(m) { $('duoMsg').textContent = m || ''; }
+function duoRenderBox() {
+  const inRoom = duo.want && duo.phase !== 'off';
+  $('duoEnter').textContent = inRoom ? '🚪 خروج' : 'دخول';
+  $('duoCode').disabled = inRoom;
+}
+function duoReset() {
+  duo.want = false; duo.phase = 'off'; duo.players = []; duo.opp = null; duo.oppInfo = null; duo.alive = false; duo.result = null; duo.lastFriendReady = false;
+  clearTimeout(duo.hideT);
+  duoRenderBox(); duoRenderOverlay();
+}
+function duoEnter() {
+  if (!auth) { duoSay('⚠️ سجّل دخول أول حتى تلعب زوجي'); return; }
+  const code = $('duoCode').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (code.length < 4) { duoSay('⚠️ اكتب كود من 4 أحرف أو أرقام على الأقل'); return; }
+  duoSay('');
+  if (joined && wantRoom !== code) fullLeave();
+  duo.want = true; duo.code = code; duo.phase = 'connecting'; duo.players = []; duo.opp = null; duo.oppInfo = null; duo.result = null; duo.lastFriendReady = false;
+  $('codeIn').value = code;
+  try { localStorage.setItem('flappyCode', code); } catch (e) {}
+  if (joined && wantRoom === code) wsend({ t: 'duo_join' }); else enterRoom();
+  duoRenderBox(); duoRenderOverlay();
+}
+function duoLeave() {
+  if (joined && duo.want) wsend({ t: 'duo_leave' });
+  duoReset(); duoSay('');
+}
+$('duoEnter').onclick = () => { if (duo.want) duoLeave(); else duoEnter(); };
+$('duoCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('duoEnter').click(); });
+function setGameMode(m) {
+  if (m === gameMode) return;
+  gameMode = m;
+  $('modeSolo').classList.toggle('on', m === 'solo'); $('modeDuo').classList.toggle('on', m === 'duo');
+  $('duoBox').style.display = m === 'duo' ? '' : 'none';
+  if (m === 'duo') {
+    state = 'ready'; reset(); stFrom = 0; stTo = 0; stMix = 1;
+    if (joined && wantRoom) $('duoCode').value = wantRoom; else if (!$('duoCode').value) $('duoCode').value = $('codeIn').value || '';
+  } else { duoLeave(); reset(); state = 'ready'; }
+  duoRenderOverlay();
+}
+$('modeSolo').onclick = () => setGameMode('solo');
+$('modeDuo').onclick = () => setGameMode('duo');
+
+/* ---- رسائل السيرفر ---- */
+function duoSync(d) {
+  if (!d) return;
+  const mine = myKey();
+  duo.players = d.players || [];
+  const me = duo.players.find(p => p.k === mine), fr = duo.players.find(p => p.k !== mine) || null;
+  if (fr && !duo.lastFriendReady && fr.ready && me && !me.ready && (duo.phase === 'lobby' || duo.phase === 'over')) showToast('✅ ' + fr.name + ' جاهز، اضغط جاهز حتى تبدون');
+  duo.lastFriendReady = fr ? !!fr.ready : false;
+  duo.oppInfo = fr;
+  if (!me) {
+    if (duo.want && duo.phase !== 'off' && duo.phase !== 'connecting') duo.phase = 'off';
+    duoRenderBox(); duoRenderOverlay(); return;
+  }
+  const ph = duo.phase;
+  if (d.state === 'lobby') { if (ph !== 'lobby') { duo.phase = 'lobby'; duo.alive = false; } }
+  else if (d.state === 'over') { if (ph === 'off' || ph === 'connecting') duo.phase = 'lobby'; }
+  else if (ph === 'off' || ph === 'connecting') duo.phase = 'lobby'; // جولة شغالة قبل ما ندخل: ننتظر نهايتها
+  if (me.dead && duo.alive && duo.phase === 'play') { duo.alive = false; duo.deadAck = true; duo.phase = 'spec'; duo.view = duo.opp ? duo.opp.tick : duo.tick; } // السيرفر يعتبرني خسرت
+  duoRenderBox(); duoRenderOverlay();
+}
+function duoOnGo(d) {
+  const mine = myKey();
+  if (!duo.want || !duo.players.some(p => p.k === mine)) return;
+  duo.round = d.round; duo.rnd = mulberry32(d.seed >>> 0); duo.tops = [];
+  duo.tick = 0; duo.view = 0; duo.acc = 0; duo.score = 0; duo.alive = true; duo.deadAck = false; duo.result = null;
+  duo.bird = { y: H / 2 - 20, vy: 0, rot: 0 };
+  duo.opp = mkOpp(); duo.lastN = -1;
+  stFrom = 0; stTo = 0; stMix = 1;
+  duo.phase = 'count'; duo.countEnd = performance.now() + (d.ms || 3000);
+  duoRenderOverlay();
+}
+function duoOnState(d) {
+  const o = duo.opp; if (!o || d.k === myKey() || d.tick < o.tick) return;
+  o.ty = d.y; o.tvy = d.vy; o.tick = d.tick; o.recv = performance.now(); o.score = d.score; o.alive = true;
+  if (!o.seen) { o.seen = true; o.y = d.y; }
+}
+function duoOnDead(d) {
+  if (d.k === myKey()) { duo.deadAck = true; return; }
+  const o = duo.opp; if (o) { o.alive = false; o.score = d.score; o.fvy = 0; }
+  if (duo.phase === 'play') showToast('💀 ' + d.name + ' خسر بنتيجة ' + d.score + '، كمّل!');
+}
+function duoOnOver(d) {
+  duo.result = { winner: d.winner, results: d.results || [] };
+  duo.phase = 'over'; duo.alive = false;
+  if (duo.opp) duo.opp.alive = false;
+  duoRenderOverlay();
+}
+function duoOnErr(d) {
+  duoSay('⚠️ ' + (d.error || 'ما قدرت أدخل'));
+  duo.want = false; duo.phase = 'off'; duo.players = [];
+  duoRenderBox(); duoRenderOverlay();
+}
+function duoReady(v) { if (joined) wsend({ t: 'duo_ready', ready: !!v }); }
+
+/* ---- المحاكاة (خطوة ثابتة 60/ثانية) ---- */
+function duoFlap() { if (duo.phase === 'play' && duo.alive) duo.bird.vy = FLAP; }
+function duoDie() {
+  if (!duo.alive) return;
+  duo.alive = false; duo.lastDeadSend = performance.now();
+  wsend({ t: 'duo_dead', score: duo.score });
+  const o = duo.opp;
+  duo.view = o ? o.tick + Math.min(12, (performance.now() - o.recv) / 16.667) : duo.tick;
+  duo.phase = 'spec';
+}
+function oppEstimate() {
+  const o = duo.opp; if (!o) return;
+  const ground = H - GROUND - 12;
+  if (!o.alive) { if (o.y < ground) { o.fvy += GRAVITY; o.y = Math.min(ground, o.y + o.fvy); o.rot = Math.min(o.rot + .1, 1.5); } return; }
+  const k = Math.min(10, Math.floor((performance.now() - o.recv) / 16.667));
+  let y = o.ty, vy = o.tvy;
+  for (let i = 0; i < k; i++) { vy += GRAVITY; y += vy; }
+  o.y += (y - o.y) * .5; o.rot = Math.max(-.5, Math.min(1.3, vy / 9));
+}
+function duoStep() {
+  if (stMix < 1) stMix = Math.min(1, stMix + 1 / 50);
+  for (const f of flakes) { f.y += f.vy; f.x += Math.sin((frames + f.ph * 20) / 30) * .4; if (f.y > H) { f.y = -4; f.x = Math.random() * W; } }
+  const o = duo.opp;
+  if (duo.phase === 'play' && duo.alive) {
+    const b = duo.bird;
+    b.vy += GRAVITY; b.y += b.vy; b.rot = Math.max(-.5, Math.min(1.3, b.vy / 9));
+    duo.tick++;
+    const T = duo.tick, v = (SPEED * T + 80 - PIPE_W - (W + 60)) / PIPE_SPACE;
+    duo.score = v > 0 ? Math.ceil(v) : 0;
+    let dead = false;
+    if (b.y + 12 >= H - GROUND) { b.y = H - GROUND - 12; dead = true; }
+    if (b.y - 12 < -40) b.y = -40 + 12;
+    const i0 = Math.max(0, Math.floor((SPEED * T + 80 - (W + 60)) / PIPE_SPACE));
+    for (let i = Math.max(0, i0 - 1); i <= i0 + 1 && !dead; i++) {
+      const x = duoPipeX(i, T), top = duoTop(i);
+      if (80 + 12 - 2 > x && 80 - 12 + 2 < x + PIPE_W && (b.y - 12 + 2 < top || b.y + 12 - 2 > top + GAP)) dead = true;
+    }
+    if (duo.tick % 4 === 0) wsend({ t: 'duo_state', tick: duo.tick, y: b.y, vy: b.vy, score: duo.score });
+    if (dead) duoDie();
+  } else if (duo.phase === 'spec') {
+    duo.view += 1;
+    if (o) { const target = o.tick + Math.min(12, (performance.now() - o.recv) / 16.667), diff = target - duo.view; if (Math.abs(diff) > 40) duo.view = target; else duo.view += diff * .15; }
+  }
+  oppEstimate();
+  setStage(stageFor(duo.phase === 'spec' && o ? o.score : duo.score));
+}
+function duoUpdate(raw) {
+  frames += raw / 16.667;
+  const now = performance.now();
+  if (duo.phase === 'count') {
+    if (now < duo.countEnd) return;
+    duo.phase = 'play'; duo.acc = 0; duo.bird.vy = FLAP; // دفعة أولى حتى ما يسقط الطير قبل أول لمسة
+  }
+  if (duo.phase !== 'play' && duo.phase !== 'spec') return;
+  if (duo.phase === 'spec' && !duo.deadAck && now - duo.lastDeadSend > 2000) { duo.lastDeadSend = now; wsend({ t: 'duo_dead', score: duo.score }); }
+  duo.acc += Math.min(raw, 100);
+  let n = 0;
+  while (duo.acc >= 16.667 && n < 8) { duo.acc -= 16.667; n++; duoStep(); }
+}
+
+/* ---- الرسم ---- */
+function nameTag(str, x, y, color) {
+  ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.65)';
+  ctx.strokeText(str, x, y); ctx.fillStyle = color || '#fff'; ctx.fillText(str, x, y);
+}
+function chip(str, x, align) {
+  ctx.font = 'bold 13px Cairo, system-ui, Arial';
+  const w = Math.max(60, ctx.measureText(str).width + 16), x0 = align === 'right' ? x - w : x;
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(x0, 8, w, 22);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(str, x0 + w / 2, 24);
+}
+function drawDuo() {
+  const ph = duo.phase, live = ph === 'count' || ph === 'play' || ph === 'spec';
+  const T = live ? (ph === 'spec' ? duo.view : duo.tick) : 0;
+  drawSky();
+  const a = STAGES[stFrom], b = STAGES[stTo], t = stMix;
+  if (live && duo.rnd) {
+    const pf = lerpC(a.pipe, b.pipe, t), pe = lerpC(a.pipeEdge, b.pipeEdge, t);
+    for (let i = Math.max(0, Math.floor((SPEED * T - 500 - (W + 60)) / PIPE_SPACE)); ; i++) {
+      const x = duoPipeX(i, T); if (x > W + 10) break; if (x < -70) continue;
+      drawPipe({ x, top: duoTop(i) }, pf, pe);
+    }
+  }
+  groundX = -((SPEED * T) % 24);
+  drawGround();
+  const meSk = curSkin(), oSk = oppSkin(), o = duo.opp, fn = duoName();
+  if (live) {
+    if (ph === 'spec') {
+      if (o) { drawBirdSkin(ctx, 80, o.y, o.rot || 0, oSk, frames); nameTag(fn, 80, o.y - 28); }
+    } else {
+      const bob = ph === 'count' ? H / 2 - 20 + Math.sin(frames / 10) * 6 : null;
+      if (o && (ph === 'count' || o.alive || o.y < H - GROUND - 14)) {
+        ctx.globalAlpha = .5; drawBirdSkin(ctx, 80, bob != null ? bob : o.y, o.rot || 0, oSk, frames); ctx.globalAlpha = 1;
+        nameTag(fn, 80, (bob != null ? bob : o.y) - 28, '#ffe9a8');
+      }
+      drawBirdSkin(ctx, 80, bob != null ? bob : duo.bird.y, duo.bird.rot, meSk, frames);
+    }
+  } else {
+    const bob = H / 2 - 20 + Math.sin(frames / 10) * 6;
+    drawBirdSkin(ctx, 110, bob, 0, meSk, frames);
+    if (duo.oppInfo) { drawBirdSkin(ctx, 50, bob + Math.sin(frames / 9) * 3, 0, oSk, frames); nameTag(fn, 50, bob - 28, '#ffe9a8'); }
+  }
+  drawSnow();
+  // ---- الواجهة فوق اللعبة ----
+  if (ph === 'count') {
+    const n = Math.ceil((duo.countEnd - performance.now()) / 1000);
+    if (n !== duo.lastN) { duo.lastN = n; if (soundOn) tone(); }
+    text(n > 0 ? String(n) : 'انطلق!', W / 2, 210, n > 0 ? 80 : 46, '#ffd166');
+    text('استعد...', W / 2, 150, 22);
+  } else if (ph === 'play' || ph === 'spec') {
+    const shown = ph === 'spec' && o ? o.score : duo.score;
+    text(String(shown), W / 2, 70, 44);
+    chip('أنت: ' + duo.score, 8, 'left');
+    chip(fn + ': ' + (o ? o.score : 0), W - 8, 'right');
+    if (ph === 'spec') {
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(20, 92, W - 40, 46);
+      text('💀 خسرت بنتيجة ' + duo.score, W / 2, 113, 16, '#ff9b9b');
+      text('تتفرج على ' + fn, W / 2, 131, 14, '#fff');
+    }
+  } else if (ph === 'off' || ph === 'connecting') {
+    text('👥 اللعب الزوجي', W / 2, 150, 26);
+    text(ph === 'connecting' ? '⏳ جاري الدخول...' : 'ادخل كود الغرفة تحت 👇', W / 2, 190, 18, '#ffd166');
+    text('وخلي صديقك يدخل نفس الكود', W / 2, 220, 15);
+  }
+}
+
+/* ---- نافذة الاستعداد والنتائج ---- */
+function duoRenderOverlay() {
+  const ov = $('duoOv'); if (!ov) return;
+  const ph = duo.phase;
+  const show = gameMode === 'duo' && (ph === 'lobby' || ph === 'over');
+  ov.style.display = show ? 'flex' : 'none';
+  if (!show) return;
+  const card = $('duoCard'); card.innerHTML = '';
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const mineK = myKey();
+  const me = duo.players.find(p => p.k === mineK), fr = duo.players.find(p => p.k !== mineK) || null;
+  const res = ph === 'over' ? duo.result : null;
+  let title = '👥 اللعب الزوجي', sub = 'الغرفة: ' + duo.code;
+  if (res) {
+    const iWon = res.winner && res.winner.toLowerCase() === mineK;
+    title = !res.winner ? '🤝 تعادل!' : iWon ? '🏆 فزت!' : '💔 خسرت';
+    sub = res.results.some(x => x.left) ? 'صديقك طلع من اللعبة' : 'نتيجة الجولة';
+  }
+  card.append(mk('div', 'dT', title), mk('div', 'dS', sub));
+  const row = (p, you) => {
+    const r = mk('div', 'dpl' + (res && res.winner && res.winner === p.name ? ' win' : ''));
+    r.append(mk('span', 'nm', p.name + (you ? ' (أنت)' : '')));
+    const rr = res ? res.results.find(x => x.name === p.name) : null;
+    r.append(mk('span', 'st' + (p.ready ? ' ok' : ''), (rr ? '🎯 ' + rr.score + '  ' : '') + (p.ready ? '✅ جاهز' : '⏳ مو جاهز')));
+    card.appendChild(r);
+  };
+  if (me) row(me, true);
+  if (fr) row(fr, false);
+  else { const r = mk('div', 'dpl empty'); r.append(mk('span', 'nm', '⏳ بانتظار صديقك...'), mk('span', 'st', 'يدخل نفس الكود')); card.appendChild(r); }
+  let hint = 'تبدي اللعبة لما الاثنين يضغطون «جاهز»';
+  if (!fr) hint = 'خلي صديقك يفتح الطور الزوجي ويدخل نفس الكود';
+  else if (me && me.ready && !fr.ready) hint = 'بانتظار ' + fr.name + ' يضغط جاهز...';
+  else if (me && !me.ready && fr.ready) hint = fr.name + ' جاهز، دورك!';
+  card.appendChild(mk('div', 'dS', hint));
+  const rb = mk('button', 'big' + (me && me.ready ? '' : ' rdy'), me && me.ready ? '✅ جاهز (اضغط للإلغاء)' : (res ? '🔁 إعادة اللعب — أنا جاهز' : '✅ أنا جاهز'));
+  rb.type = 'button'; rb.disabled = !me; rb.onclick = () => duoReady(!(me && me.ready));
+  card.appendChild(rb);
+  const lb = mk('button', 'ghost', '🚪 خروج من الغرفة الزوجية'); lb.type = 'button'; lb.onclick = duoLeave;
+  card.appendChild(lb);
+}
+$('duoOv').addEventListener('pointerdown', e => e.stopPropagation());
+// إذا طلعت من التبويب: نلغي الجاهزية، وإذا طلعت وسط الجولة 3 ثواني تعتبر خسران (حتى ما توقف الثاني)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if ((duo.phase === 'lobby' || duo.phase === 'over') && joined) { const me = duo.players.find(p => p.k === myKey()); if (me && me.ready) duoReady(false); }
+    clearTimeout(duo.hideT);
+    if (duo.phase === 'play' && duo.alive) duo.hideT = setTimeout(() => { if (document.hidden && duo.phase === 'play' && duo.alive) duoDie(); }, 3000);
+  } else clearTimeout(duo.hideT);
+});
+duoRenderBox();
 
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {

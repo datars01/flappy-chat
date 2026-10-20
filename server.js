@@ -134,11 +134,31 @@ function rankOf(key) {
 // سكنات الطير: الرقم = أقل "أعلى نتيجة" لازم توصلها حتى تنفتح
 const SKIN_AT = { classic: 0, ruby: 15, ocean: 30, mint: 50, royal: 75, golden: 100 };
 const SKIN_NAMES = { ruby: 'الناري', ocean: 'المحيط', mint: 'النعناع', royal: 'الملكي', golden: 'الذهبي' };
+
+/* ===== العملات والمتجر (كل الحقول الجديدة تنضاف للاعب بدون ما تمس القديمة) ===== */
+const SHOP_COUNT = 20, SHOP_BASE = 40, SHOP_STEP = 20;     // 20 سكن: الأرخص 40 عملة وكل سكن بعده +20 (لين 420)
+const SHOP_IDS = Array.from({ length: SHOP_COUNT }, (_, i) => 's' + String(i + 1).padStart(2, '0'));
+const shopPrice = id => { const i = SHOP_IDS.indexOf(id); return i < 0 ? 0 : SHOP_BASE + i * SHOP_STEP; };
+const DAILY_BASE = 20, DAILY_STEP = 5, DAILY_MAX = 50;     // مكافأة اليوم 20 عملة وتزيد 5 لكل يوم متتالي لين 50
+const DAY_MS = 24 * 3600e3, DAY_OFFSET = 3 * 3600e3;       // اليوم الجديد يبدي الساعة 12 بالليل بتوقيت العراق (UTC+3)
+const dayNum = t => Math.floor((t + DAY_OFFSET) / DAY_MS);
+const dailyAmount = streak => Math.min(DAILY_MAX, DAILY_BASE + Math.max(0, streak - 1) * DAILY_STEP);
+function dailyInfo(u) {
+  const now = Date.now(), today = dayNum(now), last = u.lastDaily || 0;
+  const can = last < today;
+  // streak = كم يوم متتالي لحد الآن (قبل استلام اليوم إذا لسه ما استلم)
+  const streak = last === today ? (u.streak || 1) : (last === today - 1 ? (u.streak || 0) : 0);
+  const claimStreak = can ? streak + 1 : streak;
+  return { can, streak, claimStreak, amount: can ? dailyAmount(claimStreak) : dailyAmount(claimStreak + 1), msLeft: (today + 1) * DAY_MS - DAY_OFFSET - now };
+}
+const skinOk = (u, id) => own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
+const skinOf = key => { const u = db.users[key]; return u.skin && skinOk(u, u.skin) ? u.skin : 'classic'; };
 const userInfo = key => {
   const u = db.users[key];
-  const best = u.best || 0;
-  const skin = u.skin && own(SKIN_AT, u.skin) && best >= SKIN_AT[u.skin] ? u.skin : 'classic';
-  return { name: u.name, best, games: u.games || 0, rank: rankOf(key), skin, avatar: u.avatar || '' };
+  return {
+    name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
+    coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u)
+  };
 };
 function newSession(key) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -211,14 +231,39 @@ app.post('/api/password', authMw, (req, res) => {
   res.json({ ok: true });
 });
 
-// تركيب سكن (لازم يكون مفتوح حسب أعلى نتيجة)
+// تركيب سكن (إما مفتوح حسب أعلى نتيجة، أو مشترى بالعملات)
 app.post('/api/skin', authMw, (req, res) => {
   const id = String((req.body && req.body.skin) || '');
-  if (!own(SKIN_AT, id)) return res.status(400).json({ error: 'سكن غير موجود' });
+  if (!own(SKIN_AT, id) && !SHOP_IDS.includes(id)) return res.status(400).json({ error: 'سكن غير موجود' });
   const u = db.users[req.key];
-  if ((u.best || 0) < SKIN_AT[id]) return res.status(403).json({ error: 'السكن ما انفتح بعد' });
+  if (!skinOk(u, id)) return res.status(403).json({ error: SHOP_IDS.includes(id) ? 'لازم تشتري السكن أول' : 'السكن ما انفتح بعد' });
   u.skin = id; save();
   res.json({ skin: id });
+});
+
+// مكافأة اليوم
+app.post('/api/daily', authMw, (req, res) => {
+  const u = db.users[req.key];
+  const d = dailyInfo(u);
+  if (!d.can) return res.status(400).json({ error: 'استلمت مكافأة اليوم، ارجع باجر', daily: d });
+  u.streak = d.claimStreak; u.lastDaily = dayNum(Date.now()); u.coins = (u.coins || 0) + d.amount;
+  save();
+  res.json({ got: d.amount, coins: u.coins, daily: dailyInfo(u) });
+});
+
+// شراء سكن بالعملات
+app.post('/api/buy', authMw, (req, res) => {
+  if (limited('buy:' + req.key, 60, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
+  const id = String((req.body && req.body.skin) || '');
+  if (!SHOP_IDS.includes(id)) return res.status(400).json({ error: 'سكن غير موجود' });
+  const u = db.users[req.key];
+  if (!Array.isArray(u.owned)) u.owned = [];
+  if (u.owned.includes(id)) return res.status(409).json({ error: 'عندك هذا السكن من قبل' });
+  const price = shopPrice(id), coins = u.coins || 0;
+  if (coins < price) return res.status(403).json({ error: 'عملاتك ما تكفي، ينقصك ' + (price - coins) });
+  u.coins = coins - price; u.owned.push(id);
+  save();
+  res.json({ coins: u.coins, owned: u.owned, skin: id });
 });
 
 app.get('/api/leaderboard', (req, res) => {
@@ -408,11 +453,119 @@ function delMedia(m) { if (m && m.media) mediaDelUrl(m.media.url); }
 const pub = m => { const { hidden, ...r } = m; return r; };
 function roomOf(code) { return own(db.rooms, code) ? db.rooms[code] : (db.rooms[code] = { msgs: [] }); }
 
+/* ============ الطور الزوجي (بالذاكرة فقط، ما ينحفظ) ============ */
+const duoRooms = new Map(); // كود الغرفة -> حالة اللعبة الزوجية
+const DUO_COUNT_MS = 3000, DUO_IDLE_MS = 8000;
+const duoOf = code => {
+  let d = duoRooms.get(code);
+  if (!d) duoRooms.set(code, d = { players: [], ready: {}, state: 'lobby', round: 0, seed: 0, startAt: 0, dead: {}, last: {}, seen: {}, gone: {}, timer: null });
+  return d;
+};
+const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
+function duoPub(code) {
+  const d = duoRooms.get(code);
+  if (!d) return { state: 'lobby', round: 0, players: [] };
+  return {
+    state: d.state, round: d.round,
+    players: d.players.map(k => ({ k, name: db.users[k].name, ready: !!d.ready[k], dead: !!d.dead[k], score: ((d.dead[k] || d.last[k]) || {}).score || 0, skin: skinOf(k) }))
+  };
+}
+const duoSync = code => bc(code, Object.assign({ t: 'duo' }, duoPub(code)));
+function duoCleanup(code) {
+  const d = duoRooms.get(code);
+  if (d && !d.players.length) { clearTimeout(d.timer); duoRooms.delete(code); }
+}
+function duoMaybeStart(code) {
+  const d = duoRooms.get(code);
+  if (!d || (d.state !== 'lobby' && d.state !== 'over')) return;
+  if (d.players.length !== 2 || !d.players.every(k => d.ready[k])) return;
+  d.state = 'count'; d.round++; d.seed = crypto.randomInt(1, 2147483647);
+  d.dead = {}; d.last = {}; d.seen = {}; d.gone = {};
+  d.startAt = Date.now() + DUO_COUNT_MS;
+  bc(code, { t: 'duo_go', seed: d.seed, round: d.round, ms: DUO_COUNT_MS });
+  duoSync(code);
+  const round = d.round;
+  clearTimeout(d.timer);
+  d.timer = setTimeout(() => {
+    const x = duoRooms.get(code);
+    if (x && x.round === round && x.state === 'count') { x.state = 'play'; duoSync(code); }
+  }, DUO_COUNT_MS + 150);
+}
+function duoCheckOver(code) {
+  const d = duoRooms.get(code);
+  if (!d || d.state !== 'play' || !d.players.length || !d.players.every(k => d.dead[k])) return;
+  const res = d.players.map(k => ({ k, name: db.users[k].name, score: d.dead[k].score, at: d.dead[k].at, left: !!d.dead[k].left }));
+  res.sort((a, b) => b.score - a.score || b.at - a.at);
+  const stay = res.filter(r => !r.left);
+  let winner = null;
+  if (res.length === 1) winner = res[0].name;
+  else if (stay.length === 1) winner = stay[0].name;                  // اللي طلع من اللعبة وهو حي يخسر
+  else if (res[0].score !== res[1].score) winner = res[0].name;
+  else if (res[0].at - res[1].at > 150) winner = res[0].name;         // نفس النقاط: اللي طار أطول يفوز
+  d.state = 'over'; d.ready = {};
+  d.players = d.players.filter(k => !d.gone[k]);
+  bc(code, { t: 'duo_over', round: d.round, winner, results: res.map(r => ({ name: r.name, score: r.score, left: r.left })) });
+  bc(code, { t: 'sys', text: '🏁 جولة زوجية: ' + res.map(r => r.name + ' ' + r.score).join(' — ') + (winner ? ' | الفائز: ' + winner : ' | تعادل') });
+  duoSync(code); duoCleanup(code);
+}
+function duoRemove(code, key) {
+  const d = duoRooms.get(code);
+  if (!d || !d.players.includes(key)) return;
+  if (d.state === 'play') {
+    d.gone[key] = true;
+    if (!d.dead[key]) d.dead[key] = { score: (d.last[key] || {}).score || 0, at: Date.now(), left: true };
+    bc(code, { t: 'duo_dead', k: key, name: db.users[key].name, score: d.dead[key].score });
+    duoSync(code); duoCheckOver(code);
+    return;
+  }
+  if (d.state === 'count') { clearTimeout(d.timer); d.state = 'lobby'; d.ready = {}; }
+  d.players = d.players.filter(k => k !== key); delete d.ready[key];
+  if (d.state === 'over' && !d.players.length) d.state = 'lobby';
+  duoSync(code); duoCleanup(code);
+}
+// لقطات حالة الطير: تنرسل للاعب الثاني فقط (ولها حد خاص حتى ما تتأثر بحد الشات)
+function duoState(ws, d) {
+  const code = ws.room; if (!code) return;
+  const du = duoRooms.get(code);
+  if (!du || du.state !== 'play' || !du.players.includes(ws.key) || du.dead[ws.key]) return;
+  const n = Date.now();
+  if (n - (ws.dTs || 0) > 1000) { ws.dTs = n; ws.dN = 0; }
+  if (++ws.dN > 40) return;
+  const score = Math.floor(num(d.score, 0, 10000));
+  du.last[ws.key] = { score }; du.seen[ws.key] = n;
+  const msg = JSON.stringify({ t: 'duo_state', k: ws.key, tick: Math.floor(num(d.tick, 0, 1e6)), y: num(d.y, -100, 700), vy: num(d.vy, -40, 40), score });
+  const set = live.get(code); if (!set) return;
+  for (const w of set) if (w !== ws && w.key !== ws.key && w.readyState === 1 && du.players.includes(w.key)) w.send(msg);
+}
+// لاعب جامد (تطبيق مسكّر/فاصل الاتصال) أكثر من 8 ثواني وسط الجولة = يعتبر خسر حتى ما توقف اللعبة على الثاني
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, d] of duoRooms) {
+    if (d.state !== 'play') continue;
+    for (const k of [...d.players]) {
+      if (d.dead[k]) continue;
+      if (now - Math.max(d.seen[k] || 0, d.startAt) > DUO_IDLE_MS) {
+        d.dead[k] = { score: (d.last[k] || {}).score || 0, at: now };
+        bc(code, { t: 'duo_dead', k, name: db.users[k].name, score: d.dead[k].score });
+        duoSync(code); duoCheckOver(code);
+      }
+    }
+  }
+}, 2000);
+
 function leave(ws) {
   const code = ws.room; if (!code) return;
   ws.room = null;
   const set = live.get(code); if (!set) return;
   set.delete(ws);
+  // اللاعب الزوجي ننطيه 6 ثواني يرجع (انقطاع نت بسيط) قبل ما نشيله
+  const du = duoRooms.get(code);
+  if (du && du.players.includes(ws.key) && ![...set].some(w => w.key === ws.key)) {
+    setTimeout(() => {
+      const s2 = live.get(code);
+      if (!s2 || ![...s2].some(w => w.key === ws.key)) duoRemove(code, ws.key);
+    }, 6000);
+  }
   if (!set.size) { live.delete(code); return; }
   bc(code, { t: 'presence', members: membersOf(code) });
   if (![...set].some(w => w.key === ws.key)) bc(code, { t: 'sys', text: db.users[ws.key].name + ' طلع من الغرفة' });
@@ -420,6 +573,7 @@ function leave(ws) {
 
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
+  if (d.t === 'duo_state') return duoState(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
   if (++ws.bucket.n > 40) return send(ws, { t: 'err', error: 'بطّء شوي' });
@@ -436,7 +590,7 @@ function onMsg(ws, d) {
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
     const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-150).map(pub);
-    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {} });
+    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {}, duo: duoPub(code) });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
     return;
@@ -482,6 +636,31 @@ function onMsg(ws, d) {
     if (nb.url && pendingBg.get(ws.key) === nb.url) pendingBg.delete(ws.key);
     room.bg = nb; room.bgAt = now; save();
     bc(code, { t: 'bg', bg: nb, by: me.name }, w => w.key !== ws.key);
+  } else if (d.t === 'duo_join') {
+    const du = duoOf(code);
+    if (!du.players.includes(ws.key)) {
+      if (du.state === 'play' || du.state === 'count') return send(ws, { t: 'duo_err', error: 'فيه جولة شغالة بالغرفة، انتظر لين تخلص' });
+      if (du.players.length >= 2) return send(ws, { t: 'duo_err', error: 'الغرفة الزوجية فيها لاعبين اثنين' });
+      du.players.push(ws.key); du.ready[ws.key] = false;
+      if (du.state === 'over') du.state = 'lobby';
+    }
+    duoSync(code);
+  } else if (d.t === 'duo_leave') {
+    duoRemove(code, ws.key);
+  } else if (d.t === 'duo_ready') {
+    const du = duoRooms.get(code);
+    if (!du || !du.players.includes(ws.key) || (du.state !== 'lobby' && du.state !== 'over')) return;
+    du.ready[ws.key] = !!d.ready;
+    duoSync(code); duoMaybeStart(code);
+  } else if (d.t === 'duo_dead') {
+    const du = duoRooms.get(code);
+    if (!du || du.state !== 'play' || !du.players.includes(ws.key) || du.dead[ws.key]) return;
+    const ticks = (now - du.startAt) / 16.667;
+    const maxScore = ticks + 30 >= 177 ? Math.floor((ticks + 30 - 177) / 87.5) + 2 : 0; // أكبر نتيجة معقولة بهالوقت
+    const score = Math.min(Math.floor(num(d.score, 0, 10000)), maxScore);
+    du.dead[ws.key] = { score, at: now };
+    bc(code, { t: 'duo_dead', k: ws.key, name: me.name, score });
+    duoSync(code); duoCheckOver(code);
   } else if (d.t === 'typing') {
     bc(code, { t: 'typing', name: me.name, kind: d.kind === 'rec' ? 'rec' : 'txt' }, w => w.key !== ws.key);
   } else if (d.t === 'read') {
