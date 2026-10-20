@@ -286,6 +286,19 @@
   #shopGrid .skin button { font-size: 12px; padding: 5px 4px; }
   #shopGrid .skin button.cant { background: transparent; color: var(--muted); border: 1px solid var(--line); }
   #shopGrid .skin button.confirm { background: #35c27a; color: #fff; }
+
+  /* ===== مهام وإنجازات ودعوة ===== */
+  #earn .sec { font-weight: 700; font-size: 14px; margin: 4px 0 2px; }
+  .task, .ach { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); font-size: 13px; }
+  .task .tt { flex: 1; min-width: 0; }
+  .task .bar { height: 6px; border-radius: 4px; background: var(--line); margin-top: 5px; overflow: hidden; }
+  .task .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--green1), var(--green2)); }
+  .task button { padding: 6px 10px; font-size: 12px; white-space: nowrap; background: linear-gradient(135deg, #ffd166, #f5a623); color: #3a2a00; }
+  .task button:disabled { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .ach.done { border-color: #ffd23f; }
+  .ach .rw { color: #ffd166; font-weight: 700; white-space: nowrap; }
+  #earn .col { display: flex; flex-direction: column; gap: 6px; }
+  #refCodeBox { text-align: center; font-size: 20px; letter-spacing: 3px; font-weight: 700; color: #ffd166; }
 </style>
 </head>
 <body>
@@ -340,8 +353,21 @@
   <div class="card" id="shop">
     <div class="lbHead"><span>🪙 العملات والمتجر</span><span id="coinBal" class="coinBal">🪙 0</span></div>
     <div id="dailyBox"></div>
-    <div class="help">كل يوم تدخل وتستلم عملات، وكل ما تداوم أكثر تزيد المكافأة. اشتر سكنات حسب سعرها: أرخص سكن 40 عملة، وكل سكن بعده يزيد 20 لين 420.</div>
+    <div class="help">كل يوم تدخل وتستلم عملات، وكل ما تداوم أكثر تزيد المكافأة. وتكسب بعد من اللعب والمهام والإنجازات ودعوة الأصدقاء (الكارد اللي تحت). اشتر سكنات حسب سعرها: أرخص سكن 40 عملة، وكل سكن بعده يزيد 20 لين 420.</div>
     <div id="shopGrid"></div>
+  </div>
+
+  <div class="card" id="earn">
+    <div class="lbHead"><span>💰 اكسب عملات أكثر</span></div>
+    <div class="help" id="playInfo"></div>
+    <div class="sec">📋 مهام اليوم</div>
+    <div class="col" id="taskList"></div>
+    <div class="sec">🏆 الإنجازات</div>
+    <div class="col" id="achList"></div>
+    <div class="sec">🤝 ادعُ صديق</div>
+    <div class="help" id="refHelp"></div>
+    <div id="refCodeBox"></div>
+    <button id="refShare" class="act" type="button">📤 شارك رابط الدعوة</button>
   </div>
 
   <div class="card" id="lb">
@@ -462,6 +488,11 @@ function setMode(m) {
 }
 $('tabLogin').onclick = () => setMode('login');
 $('tabReg').onclick = () => setMode('register');
+try {
+  const rq = new URLSearchParams(location.search).get('ref');
+  if (rq) { localStorage.setItem('flappyRef', rq.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)); history.replaceState(null, '', location.pathname); }
+} catch (e) {}
+setTimeout(() => { let rf = ''; try { rf = localStorage.getItem('flappyRef') || ''; } catch (e) {} if (rf && !auth) { setMode('register'); authSay('🤝 جاك دعوة من صديق! سوّي حساب جديد والعب، وتحصلون الاثنين 30 عملة', true); } }, 600);
 
 function renderAuth() {
   $('authOut').style.display = auth ? 'none' : 'block';
@@ -481,7 +512,9 @@ $('authForm').addEventListener('submit', async e => {
   $('authBtn').disabled = true; authSay('⏳ لحظة...', true);
   try {
     auth = null;
-    const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: { u, p } });
+    let refSaved = ''; try { refSaved = localStorage.getItem('flappyRef') || ''; } catch (e) {}
+    const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: mode === 'register' && refSaved ? { u, p, ref: refSaved } : { u, p } });
+    if (mode === 'register') { try { localStorage.removeItem('flappyRef'); } catch (e) {} }
     auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
     syncUser(r.user);
     saveAuth(); $('pIn').value = ''; authSay('');
@@ -495,6 +528,7 @@ function syncUser(u) {
   if (!auth || !u) return;
   auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
+  if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
   if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
   if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
 }
@@ -790,7 +824,8 @@ async function claimDaily() {
   try {
     const r = await api('/api/daily', { method: 'POST' });
     auth.coins = r.coins; auth.daily = r.daily; auth.dailyAt = Date.now() + r.daily.msLeft;
-    renderAuth(); showToast('🪙 +' + r.got + ' عملة! رصيدك ' + r.coins);
+    if (r.user) syncUser(r.user);
+    renderAuth(); earnToast({ text: '🪙 +' + r.got + ' عملة! رصيدك ' + r.coins, achNew: r.achNew });
   } catch (e) {
     if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
     else { showToast('⚠️ ' + e.message); loadMe(); }
@@ -809,7 +844,63 @@ async function buySkin(k) {
     else { showToast('⚠️ ' + e.message); loadMe(); }
   }
 }
+function earnToast(r) {
+  if (!r) return;
+  const p = [];
+  if (r.text) p.push(r.text);
+  if (r.earned > 0) p.push('🪙 +' + r.earned + ' عملة من نقاطك');
+  if (r.refGot) p.push('🤝 +' + r.refGot + ' عملة دعوة صديق');
+  (r.achNew || []).forEach(a => p.push('🏆 إنجاز: ' + a.title + ' (+' + a.reward + ')'));
+  if (p.length) showToast(p.join('  •  '));
+}
+async function claimTask(id) {
+  try {
+    const r = await api('/api/task', { method: 'POST', body: { id } });
+    syncUser(r.user); renderAuth(); earnToast({ text: '🪙 +' + r.got + ' عملة من المهمة', achNew: r.achNew });
+  } catch (e) {
+    if (e.status === 401) { auth = null; saveAuth(); renderAuth(); authSay('انتهت الجلسة، سجّل دخول من جديد'); }
+    else { showToast('⚠️ ' + e.message); loadMe(); }
+  }
+}
+function refLink() { return location.origin + '/?ref=' + (auth && auth.ref ? auth.ref.code : ''); }
+$('refShare').onclick = async () => {
+  if (!auth || !auth.ref) { showToast('سجّل دخول أول'); return; }
+  const txt = 'تعال العب فلابي شات ويايه! سجّل من هذا الرابط ونحصل 30 عملة الاثنين 🪙';
+  try { if (navigator.share) { await navigator.share({ text: txt, url: refLink() }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(txt + ' ' + refLink()); showToast('📋 اننسخ رابط الدعوة، ارسله لصديقك'); }
+  catch (e) { prompt('انسخ الرابط:', refLink()); }
+};
+function renderEarn() {
+  const T = $('taskList'); if (!T) return;
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  T.innerHTML = ''; $('achList').innerHTML = '';
+  if (!auth) {
+    T.appendChild(mk('div', 'help', 'سجّل دخول حتى تظهر مهامك وإنجازاتك'));
+    $('playInfo').textContent = 'تكسب عملات من اللعب: عملة لكل 5 نقاط بالجولة الفردية، وبالزوجي الفايز 10 والخاسر 2.';
+    $('refHelp').textContent = 'سجّل دخول حتى تاخذ رابط دعوتك.'; $('refCodeBox').textContent = ''; $('refShare').style.display = 'none';
+    return;
+  }
+  const pl = auth.play || { got: 0, cap: 60, div: 5 };
+  $('playInfo').textContent = 'عملة لكل ' + pl.div + ' نقاط بالجولة الفردية (اليوم: ' + pl.got + ' من ' + pl.cap + ' عملة). بالزوجي: الفايز +10 والخاسر +2 (لين 5 جولات باليوم).';
+  (auth.tasks || []).forEach(t => {
+    const row = mk('div', 'task'), box = mk('div', 'tt');
+    box.appendChild(mk('div', '', t.title + '  (' + t.prog + '/' + t.goal + ')'));
+    const bar = mk('div', 'bar'), fill = mk('i'); fill.style.width = Math.round(t.prog / t.goal * 100) + '%'; bar.appendChild(fill); box.appendChild(bar);
+    const b = mk('button', '', t.claimed ? '✅ استلمت' : t.done ? '🎁 استلم ' + t.reward : '🪙 ' + t.reward);
+    b.type = 'button'; b.disabled = t.claimed || !t.done; b.onclick = () => claimTask(t.id);
+    row.append(box, b); T.appendChild(row);
+  });
+  (auth.ach || []).forEach(a => {
+    const r = mk('div', 'ach' + (a.done ? ' done' : ''));
+    r.append(mk('span', '', (a.done ? '🏆 ' : '🔒 ') + a.title), mk('span', 'rw', a.done ? '✅' : '🪙 ' + a.reward));
+    $('achList').appendChild(r);
+  });
+  const rf = auth.ref || { code: '', count: 0, max: 10, reward: 30 };
+  $('refHelp').textContent = 'ارسل رابطك لصديق، ولما يسجّل ويلعب أول جولة (3 نقاط على الأقل) تحصلون الاثنين ' + rf.reward + ' عملة. دعوت ' + rf.count + ' من ' + rf.max + '.';
+  $('refCodeBox').textContent = rf.code; $('refShare').style.display = '';
+}
 function renderShop() {
+  renderEarn();
   const g = $('shopGrid'); if (!g) return;
   $('coinBal').textContent = auth ? '🪙 ' + (auth.coins || 0) : '🪙 —';
   renderDaily();
@@ -1150,7 +1241,8 @@ async function submitScore(sc) {
     if (!gid) { lbSay('⚠️ ما انحفظت نتيجتك (مشكلة اتصال)'); return; }
     const r = await api('/api/score', { method: 'POST', body: { gid, score: sc } });
     auth.best = r.best; auth.games = r.games; auth.rank = r.rank; if (r.skin) auth.skin = r.skin;
-    renderAuth();
+    if (r.user) syncUser(r.user);
+    renderAuth(); earnToast(r);
     if (r.unlocked && r.unlocked.length) showUnlock(r.unlocked);
     if (r.improved && r.rank && r.rank <= 10) lbSay('🎉 رقمك الجديد! أنت الآن رقم ' + r.rank + ' بقائمة أفضل 10', true);
     else lbSay('');
@@ -1491,6 +1583,7 @@ function onServer(d) {
   else if (d.t === 'duo_dead') duoOnDead(d);
   else if (d.t === 'duo_over') duoOnOver(d);
   else if (d.t === 'duo_err') duoOnErr(d);
+  else if (d.t === 'earn') { earnToast(d); loadMe(); }
   else if (d.t === 'presence') setMembers(d.members);
   else if (d.t === 'sys') addSys(d.text);
   else if (d.t === 'score') addSys(d.name + ' لعب وجاب ' + (parseInt(d.score, 10) || 0) + ' 🐦');

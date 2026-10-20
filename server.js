@@ -153,11 +153,66 @@ function dailyInfo(u) {
 }
 const skinOk = (u, id) => own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
 const skinOf = key => { const u = db.users[key]; return u.skin && skinOk(u, u.skin) ? u.skin : 'classic'; };
+/* ===== طرق ثانية لكسب العملات (كلها حقول جديدة تنضاف للاعب، ما تمس القديمة) ===== */
+const PLAY_DIV = 5, PLAY_CAP = 60;                          // عملة لكل 5 نقاط بالفردي، بحد أقصى 60 عملة باليوم
+const DUO_WIN = 10, DUO_LOSE = 2, DUO_TIE = 5, DUO_ROUNDS = 5, DUO_MIN = 5; // مكافآت الزوجي (5 جولات باليوم، ولازم أحد يوصل 5 نقاط)
+const REF_REWARD = 30, REF_MAX = 10, REF_MINSCORE = 3;       // دعوة صديق: 30 عملة للاثنين (لين 10 أصدقاء)
+const TASK_POOL = [
+  { id: 'g3', title: 'العب 3 جولات فردية', goal: 3, reward: 10, f: 'games' },
+  { id: 'g8', title: 'العب 8 جولات فردية', goal: 8, reward: 15, f: 'games' },
+  { id: 's10', title: 'سجّل 10 نقاط بجولة وحدة', goal: 10, reward: 10, f: 'max' },
+  { id: 's25', title: 'سجّل 25 نقطة بجولة وحدة', goal: 25, reward: 15, f: 'max' },
+  { id: 's40', title: 'سجّل 40 نقطة بجولة وحدة', goal: 40, reward: 25, f: 'max' },
+  { id: 'd1', title: 'العب جولة زوجية كاملة', goal: 1, reward: 15, f: 'duo' }
+];
+const ACH = [
+  { id: 'b25', title: 'وصلت 25 نقطة', reward: 15, ok: u => (u.best || 0) >= 25 },
+  { id: 'b50', title: 'وصلت 50 نقطة', reward: 30, ok: u => (u.best || 0) >= 50 },
+  { id: 'b100', title: 'وصلت 100 نقطة', reward: 60, ok: u => (u.best || 0) >= 100 },
+  { id: 'g50', title: 'لعبت 50 جولة', reward: 20, ok: u => (u.games || 0) >= 50 },
+  { id: 'g200', title: 'لعبت 200 جولة', reward: 50, ok: u => (u.games || 0) >= 200 },
+  { id: 'st7', title: '7 أيام متتالية', reward: 40, ok: u => (u.streak || 0) >= 7 },
+  { id: 'dw5', title: 'فزت 5 مرات بالزوجي', reward: 30, ok: u => (u.duoWins || 0) >= 5 },
+  { id: 'rf3', title: 'دعيت 3 أصدقاء', reward: 40, ok: u => (u.refCount || 0) >= 3 }
+];
+function dayOf(u) {
+  const d = dayNum(Date.now());
+  if (!u.day || u.day.d !== d) u.day = { d, games: 0, max: 0, duo: 0, play: 0, duoR: 0, claimed: [] };
+  return u.day;
+}
+function tasksOf(u) {
+  const dy = dayOf(u);
+  return [0, 2, 4].map(i => TASK_POOL[(dy.d + i) % TASK_POOL.length]).map(t => {
+    const prog = Math.min(t.goal, t.f === 'games' ? dy.games : t.f === 'max' ? dy.max : dy.duo);
+    return { id: t.id, title: t.title, goal: t.goal, reward: t.reward, prog, done: prog >= t.goal, claimed: dy.claimed.includes(t.id) };
+  });
+}
+function checkAch(u) {
+  u.ach = Array.isArray(u.ach) ? u.ach : [];
+  const out = [];
+  for (const a of ACH) if (!u.ach.includes(a.id) && a.ok(u)) { u.ach.push(a.id); u.coins = (u.coins || 0) + a.reward; out.push({ id: a.id, title: a.title, reward: a.reward }); }
+  return out;
+}
+function refCodeOf(u) {
+  if (!u.refCode) {
+    let c;
+    do { c = crypto.randomBytes(4).toString('hex').slice(0, 6).toUpperCase(); } while (Object.values(db.users).some(x => x.refCode === c));
+    u.refCode = c; save();
+  }
+  return u.refCode;
+}
+function notifyUser(key, msg) {
+  const str = JSON.stringify(msg);
+  for (const set of live.values()) for (const w of set) if (w.key === key && w.readyState === 1) w.send(str);
+}
 const userInfo = key => {
-  const u = db.users[key];
+  const u = db.users[key], dy = dayOf(u);
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
-    coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u)
+    coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
+    tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
+    ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
+    ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
   };
 };
 function newSession(key) {
@@ -198,7 +253,9 @@ app.post('/api/register', (req, res) => {
   const key = name.toLowerCase();
   if (own(db.users, key)) return res.status(409).json({ error: 'هذا الاسم مستخدم، اختار اسم ثاني' });
   const salt = crypto.randomBytes(16).toString('hex');
-  db.users[key] = { name, salt, hash: hashPw(p, salt), best: 0, games: 0, bestAt: 0, created: Date.now() };
+  const rc = String((req.body && req.body.ref) || '').trim().toUpperCase().slice(0, 8);
+  const refBy = rc ? Object.keys(db.users).find(k => db.users[k].refCode === rc) : null;
+  db.users[key] = Object.assign({ name, salt, hash: hashPw(p, salt), best: 0, games: 0, bestAt: 0, created: Date.now() }, refBy ? { refBy } : {});
   const token = newSession(key);
   save();
   res.json({ token, user: userInfo(key) });
@@ -247,8 +304,22 @@ app.post('/api/daily', authMw, (req, res) => {
   const d = dailyInfo(u);
   if (!d.can) return res.status(400).json({ error: 'استلمت مكافأة اليوم، ارجع باجر', daily: d });
   u.streak = d.claimStreak; u.lastDaily = dayNum(Date.now()); u.coins = (u.coins || 0) + d.amount;
+  const achNew = checkAch(u);
   save();
-  res.json({ got: d.amount, coins: u.coins, daily: dailyInfo(u) });
+  res.json({ got: d.amount, coins: u.coins, daily: dailyInfo(u), achNew, user: userInfo(req.key) });
+});
+
+app.post('/api/task', authMw, (req, res) => {
+  const u = db.users[req.key];
+  const id = String((req.body && req.body.id) || '');
+  const t = tasksOf(u).find(x => x.id === id);
+  if (!t) return res.status(400).json({ error: 'مهمة غير موجودة' });
+  if (t.claimed) return res.status(409).json({ error: 'استلمت هذي المهمة' });
+  if (!t.done) return res.status(400).json({ error: 'ما كملت المهمة بعد' });
+  dayOf(u).claimed.push(id); u.coins = (u.coins || 0) + t.reward;
+  const achNew = checkAch(u);
+  save();
+  res.json({ got: t.reward, achNew, user: userInfo(req.key) });
 });
 
 // شراء سكن بالعملات
@@ -299,10 +370,24 @@ app.post('/api/score', authMw, (req, res) => {
   u.games = (u.games || 0) + 1;
   const improved = score > prevBest;
   if (improved) { u.best = score; u.bestAt = Date.now(); }
+  const dy = dayOf(u); dy.games++; if (score > dy.max) dy.max = score;
+  const gain = Math.max(0, Math.min(Math.floor(score / PLAY_DIV), PLAY_CAP - dy.play));
+  dy.play += gain; u.coins = (u.coins || 0) + gain;
+  let refGot = 0;
+  if (u.refBy && !u.refPaid && score >= REF_MINSCORE) {
+    u.refPaid = true;
+    const r = db.users[u.refBy];
+    if (r && (r.refCount || 0) < REF_MAX) {
+      r.refCount = (r.refCount || 0) + 1; r.coins = (r.coins || 0) + REF_REWARD; u.coins += REF_REWARD; refGot = REF_REWARD;
+      const ra = checkAch(r);
+      notifyUser(u.refBy, { t: 'earn', text: '🤝 صديقك ' + u.name + ' بدأ يلعب! +' + REF_REWARD + ' عملة', achNew: ra });
+    }
+  }
+  const achNew = checkAch(u);
   save();
   const unlocked = Object.keys(SKIN_AT).filter(k => SKIN_AT[k] > 0 && SKIN_AT[k] > prevBest && SKIN_AT[k] <= (u.best || 0));
   const info = userInfo(req.key);
-  res.json({ best: info.best, games: info.games, rank: info.rank, improved, skin: info.skin, unlocked });
+  res.json({ best: info.best, games: info.games, rank: info.rank, improved, skin: info.skin, unlocked, earned: gain, refGot, achNew, user: info });
   // إعلان النتيجة (وفتح السكنات) لغرف الشات
   for (const [code, set] of live) {
     for (const w of set) if (w.key === req.key) {
@@ -502,6 +587,20 @@ function duoCheckOver(code) {
   else if (stay.length === 1) winner = stay[0].name;                  // اللي طلع من اللعبة وهو حي يخسر
   else if (res[0].score !== res[1].score) winner = res[0].name;
   else if (res[0].at - res[1].at > 150) winner = res[0].name;         // نفس النقاط: اللي طار أطول يفوز
+  if (res.length === 2 && !res.some(r => r.left)) {          // جولة كاملة بين لاعبين (اللي يطلع ما ياخذ شي)
+    const real = Math.max(res[0].score, res[1].score) >= DUO_MIN;
+    for (const r of res) {
+      const u = db.users[r.k]; if (!u) continue;
+      const dy = dayOf(u); dy.duo++;
+      const win = !!winner && r.name === winner;
+      if (win) u.duoWins = (u.duoWins || 0) + 1;
+      let got = 0;
+      if (real && dy.duoR < DUO_ROUNDS) { got = !winner ? DUO_TIE : win ? DUO_WIN : DUO_LOSE; dy.duoR++; u.coins = (u.coins || 0) + got; }
+      const achNew = checkAch(u);
+      notifyUser(r.k, { t: 'earn', text: got ? '🪙 +' + got + ' عملة من الجولة الزوجية' : '', achNew });
+    }
+    save();
+  }
   d.state = 'over'; d.ready = {};
   d.players = d.players.filter(k => !d.gone[k]);
   bc(code, { t: 'duo_over', round: d.round, winner, results: res.map(r => ({ name: r.name, score: r.score, left: r.left })) });
