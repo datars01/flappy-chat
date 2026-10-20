@@ -271,6 +271,20 @@ app.post('/api/login', (req, res) => {
   res.json({ token: newSession(key), user: userInfo(key) });
 });
 
+// منح عملات للاعب (للمالك فقط): يحتاج متغير ADMIN_KEY بإعدادات Render
+app.post('/api/admin/grant', (req, res) => {
+  const ak = process.env.ADMIN_KEY || '';
+  if (limited('adm:' + req.ip, 10, 600e3)) return res.status(429).json({ error: 'محاولات كثيرة' });
+  if (!ak || ak.length < 8 || !safeEq(String(req.body && req.body.key || ''), ak)) return res.status(403).json({ error: 'مفتاح غلط' });
+  const key = String((req.body && req.body.user) || '').trim().toLowerCase();
+  const n = Math.floor(Number(req.body && req.body.coins));
+  if (!own(db.users, key)) return res.status(404).json({ error: 'اللاعب غير موجود' });
+  if (!Number.isFinite(n) || n === 0 || Math.abs(n) > 100000) return res.status(400).json({ error: 'عدد غلط' });
+  const u = db.users[key]; u.coins = Math.max(0, (u.coins || 0) + n); save();
+  try { notifyUser(key, { t: 'earn', text: '🎁 وصلتك هدية ' + n + ' عملة' }); } catch (e) {}
+  res.json({ ok: true, name: u.name, coins: u.coins });
+});
+
 app.get('/api/me', authMw, (req, res) => res.json(userInfo(req.key)));
 
 // تغيير كلمة السر (يطلّع باقي الأجهزة)
@@ -679,7 +693,7 @@ const zSpeed = l => 20 + 3.5 * Math.min(l, 12);
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function zNew(seed, mode) {
   seed = (seed || 1) >>> 0;
-  const g = { mode, rA: zMul(seed), level: 1, sc: [0, 0], chain: [], queue: 0, last: [-1, -1], shots: [], combo: 0, intro: true, tick: 0, dead: false, nid: 1, ev: [], lastOwner: 0,
+  const g = { mode, rA: zMul(seed), level: 1, sc: [0, 0], chain: [], queue: 0, last: [-1, -1], shots: [], combo: 0, intro: true, freeze: 0, tick: 0, dead: false, nid: 1, ev: [], lastOwner: 0,
     pl: [0, 1].map(i => ({ ang: -Math.PI / 2, cur: 0, next: 0, cool: 0, rB: zMul(seed ^ (0x5bd1e995 + i * 7919)) })) };
   zStartLevel(g);
   for (const p of g.pl) { p.cur = zShotColor(g, p); p.next = zShotColor(g, p); }
@@ -731,13 +745,14 @@ function zStep(g) {
   for (const p of g.pl) if (p.cool > 0) p.cool--;
   const ch = g.chain;
   if (g.dead) { for (const b of ch) b.s = Math.min(ZPATH.L, b.s + 6); return; }
-  while (g.queue > 0 && (ch.length === 0 || ch[0].s >= ZD)) {
+  const frozen = g.freeze > 0 && !g.intro; if (g.freeze > 0) g.freeze--;   // أي رمية توقف سير الكرات ثانية
+  while (!frozen && g.queue > 0 && (ch.length === 0 || ch[0].s >= ZD)) {
     const s = ch.length && ch[0].s < 2 * ZD ? ch[0].s - ZD : 0;
     ch.unshift({ id: g.nid++, c: zSpawnColor(g), s }); g.queue--;
   }
   let join = -1;
   const n = ch.length;
-  if (n) {
+  if (n && !frozen) {
     let e = 0; while (e < n - 1 && ch[e + 1].s - ch[e].s <= ZD + 1.5) e++;
     const gapAbove = e < n - 1, head = ch[n - 1].s;
     if (g.intro && head >= ZPATH.L * 0.3) g.intro = false;
@@ -774,7 +789,7 @@ function zFireC(g, slot, ang) {
   const p = g.pl[slot]; if (!p || g.dead || p.cool > 0) return false;
   p.ang = ang; const S = ZSHOOT[slot];
   g.shots.push({ x: S.x + Math.cos(ang) * 30, y: S.y + Math.sin(ang) * 30, vx: Math.cos(ang) * ZSHOT_V, vy: Math.sin(ang) * ZSHOT_V, c: p.cur, o: slot, a: ang });
-  p.cur = p.next; p.next = zShotColor(g, p); p.cool = ZCOOL;
+  p.cur = p.next; p.next = zShotColor(g, p); p.cool = ZCOOL; g.freeze = 60;
   g.ev.push({ e: 's', o: slot });
   return true;
 }
@@ -782,7 +797,7 @@ function zSwapC(g, slot) { const p = g.pl[slot]; if (p) { const t = p.cur; p.cur
 function zSnapOf(g, slots) {
   const r1 = v => Math.round(v * 10) / 10;
   const snap = {
-    t: 'z', tk: g.tick, lv: g.level, q: g.queue, sc: g.sc, sl: slots, dd: g.dead ? 1 : 0,
+    t: 'z', tk: g.tick, lv: g.level, q: g.queue, sc: g.sc, sl: slots, dd: g.dead ? 1 : 0, fz: g.freeze,
     ids: g.chain.map(b => b.id), cs: g.chain.map(b => b.c).join(''), ss: g.chain.map(b => r1(b.s)),
     sh: g.shots.map(s => [r1(s.x), r1(s.y), s.c, s.o, Math.round(s.a * 1000) / 1000]),
     pl: g.pl.map(p => [Math.round(p.ang * 100) / 100, p.cur, p.next, p.cool]), ev: g.ev

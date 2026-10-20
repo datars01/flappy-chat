@@ -1129,7 +1129,7 @@ const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function newZ(seed) {
   seed = (seed || 1) >>> 0;
   const g = { rA: mulberry32(seed), rB: mulberry32(seed ^ 0x5bd1e995), level: 1, score: 0, chain: [], queue: 0, last: [-1, -1], shots: [], parts: [], floats: [],
-    ang: -Math.PI / 2, tgt: -Math.PI / 2, cur: 0, next: 0, cool: 0, combo: 0, intro: true, tick: 0, dead: false, dyingT: 0, lvlT: 0, pops: 0, clears: 0 };
+    ang: -Math.PI / 2, tgt: -Math.PI / 2, cur: 0, next: 0, cool: 0, combo: 0, intro: true, freeze: 0, tick: 0, dead: false, dyingT: 0, lvlT: 0, pops: 0, clears: 0 };
   zStartLevel(g); g.cur = zShotColor(g); g.next = zShotColor(g);
   return g;
 }
@@ -1196,14 +1196,15 @@ function zStep(g) {
     return;
   }
   // ---- دخول كرات جديدة من بداية الطريق ----
-  while (g.queue > 0 && (ch.length === 0 || ch[0].s >= D)) {
+  const frozen = g.freeze > 0 && !g.intro; if (g.freeze > 0) g.freeze--;   // أي رمية توقف سير الكرات ثانية
+  while (!frozen && g.queue > 0 && (ch.length === 0 || ch[0].s >= D)) {
     const s = ch.length && ch[0].s < 2 * D ? ch[0].s - D : 0;
     ch.unshift({ c: zSpawnColor(g), s, fx: 0, fy: 0 }); g.queue--;
   }
   // ---- حركة السلسلة: الجزء الأخير (الذيل) هو اللي يتحرك ويدفع اللي قدامه؛ إذا صار فراغ يركض يسد الفراغ ----
   let join = -1;
   const n = ch.length;
-  if (n) {
+  if (n && !frozen) {
     let e = 0; while (e < n - 1 && ch[e + 1].s - ch[e].s <= D + 1.5) e++;
     const gapAbove = e < n - 1, head = ch[n - 1].s;
     if (g.intro && head >= PATH.L * 0.3) g.intro = false;
@@ -1244,7 +1245,7 @@ function zFire(g) {
   if (g.dead || g.cool > 0) return false;
   g.ang = g.tgt; const a = g.ang;
   g.shots.push({ x: CX + Math.cos(a) * 30, y: CY + Math.sin(a) * 30, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, c: g.cur });
-  g.cur = g.next; g.next = zShotColor(g); g.cool = COOLDOWN;
+  g.cur = g.next; g.next = zShotColor(g); g.cool = COOLDOWN; g.freeze = 60;
   return true;
 }
 function zSwap(g) { const t = g.cur; g.cur = g.next; g.next = t; }
@@ -1303,6 +1304,19 @@ function drawBoard(g, lvl, hole) {
   for (const f of g.floats) { ctx.globalAlpha = Math.min(1, f.t / 20); text(f.text, f.x, f.y, 15, f.c); }
   ctx.globalAlpha = 1;
 }
+const SWX = 286, SWY = 446;
+function drawSwapBtn() {
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(SWX, SWY, 22, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = '20px system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🔄', SWX, SWY + 7);
+  ctx.font = 'bold 9px Cairo, system-ui, Arial'; ctx.fillText('بدّل', SWX, SWY + 19);
+}
+function drawFreeze(fz) {
+  if (!(fz > 0)) return;
+  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(W / 2 - 40, 70, 80, 6);
+  ctx.fillStyle = '#6ee7ff'; ctx.fillRect(W / 2 - 40, 70, 80 * Math.min(1, fz / 60), 6);
+  ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#bff3ff'; ctx.fillText('❄️', W / 2, 66);
+}
 function drawHud(g, label) {
   text(String(g.score), W / 2, 40, 34);
   ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillText('مرحلة ' + g.level, W - 10, 20);
@@ -1339,6 +1353,7 @@ function drawSolo() {
     text('اضغط للبدء', W / 2, 168, 15, '#9ff3b5');
   } else {
     drawHud(Z, myBest() ? 'الأفضل ' + Math.max(myBest(), score) : '');
+    if (state === 'play') { drawFreeze(Z.freeze); drawSwapBtn(); }
     if (state === 'dead') {
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(20, 150, W - 40, 150);
       text('💀 وصلت الكرات للحفرة', W / 2, 184, 20, '#ff9b9b');
@@ -1431,13 +1446,13 @@ function onTap(x, y) {
   if (gameMode === 'duo') {
     if (duo.slot < 0 || (duo.phase !== 'play' && duo.phase !== 'count')) return;
     const S = ZSH[duo.slot];
-    if (Math.hypot(x - S.x, y - S.y) < 26 && duo.phase === 'play') { duoSwap(); return; }
+    if ((Math.hypot(x - S.x, y - S.y) < 26 || Math.hypot(x - SWX, y - SWY) < 26) && duo.phase === 'play') { sfx('swap'); duoSwap(); return; }
     duoAim(x, y); duoFire();
     return;
   }
   if (state === 'ready') { state = 'play'; startGame(); zAim(Z, x, y); return; }
   if (state === 'play') {
-    if (Math.hypot(x - CX, y - CY) < 26) { zSwap(Z); return; }
+    if (Math.hypot(x - CX, y - CY) < 26 || Math.hypot(x - SWX, y - SWY) < 26) { zSwap(Z); sfx('swap'); return; }
     zAim(Z, x, y); playFire(Z);
   } else if (state === 'dead' && deadTime > 40) { reset(); state = 'ready'; }
 }
@@ -1457,7 +1472,7 @@ document.addEventListener('keydown', e => {
     if (e.code === 'Space') { if (g === duo) duoFire(); else onTap(CX + Math.cos(g.tgt) * 100, CY + Math.sin(g.tgt) * 100); }
     else if (e.code === 'ArrowLeft') g.tgt = zWrap(g.tgt - 0.15);
     else if (e.code === 'ArrowRight') g.tgt = zWrap(g.tgt + 0.15);
-    else if (e.code === 'KeyX') { if (g === duo) duoSwap(); else if (state === 'play') zSwap(g); }
+    else if (e.code === 'KeyX') { if (g === duo) { sfx('swap'); duoSwap(); } else if (state === 'play') { zSwap(g); sfx('swap'); } }
   }
 });
 document.addEventListener('keyup', e => { if (!typing(e) && e.code === 'Space') e.preventDefault(); });
@@ -2237,6 +2252,8 @@ function sfx(kind, a) {
     if (kind === 'shoot' || kind === 'flap') {            // رمي كرة: ويييش قصير
       if (n - lastFlapSfx < 50) return; lastFlapSfx = n; const v = (a && a.v) || 1;
       blip('sine', 900, 260, 0.11, 0.1 * v); blip('triangle', 1400, 500, 0.07, 0.04 * v); burst(0.07, 0.035 * v, 0, 3000);
+    } else if (kind === 'swap') {
+      blip('sine', 500, 900, 0.07, 0.09); blip('sine', 900, 600, 0.07, 0.06, 0.07);
     } else if (kind === 'stick') {                          // كرة التصقت بالسلسلة
       blip('sine', 240, 110, 0.09, 0.12); burst(0.03, 0.04, 0, 800);
     } else if (kind === 'pop') {                            // انفجار: ينعلي بالنغمة مع عدد الكرات والكومبو
@@ -2440,7 +2457,7 @@ function duoOnZ(d) {
     nv.push(v); map.set(id, v);
   }
   duo.chain = nv; duo.vis = map; duo.recv = now;
-  duo.sc = d.sc; duo.lv = d.lv; duo.tk = d.tk; duo.dead = !!d.dd;
+  duo.fz = d.fz || 0; duo.sc = d.sc; duo.lv = d.lv; duo.tk = d.tk; duo.dead = !!d.dd;
   if (d.sl && d.sl.length) { duo.slots = d.sl; duo.slot = d.sl.indexOf(myKey()); }
   duo.shots = d.sh; duo.pl = d.pl;
   let hadPop = false;
@@ -2542,6 +2559,7 @@ function drawDuo() {
     text('⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'), W / 2, 26, 15, left < 15 ? '#ff9b9b' : '#fff');
     if (duo.mode === 'co') text('🤝 ' + (duo.sc[0] + duo.sc[1]), W / 2, 62, 26, '#ffd166');
     ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillText('مرحلة ' + duo.lv, 10, H - 10);
+    if (duo.slot >= 0) { drawFreeze(duo.fz); drawSwapBtn(); }
     if (duo.dead) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(20, 150, W - 40, 60); text('💀 وصلت الكرات للحفرة', W / 2, 188, 20, '#ff9b9b'); }
   } else if (ph === 'off' || ph === 'connecting') {
     text('👥 اللعب الزوجي', W / 2, 120, 26);
