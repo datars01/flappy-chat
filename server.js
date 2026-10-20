@@ -20,7 +20,7 @@ const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* ============ التخزين ============ */
-let db = { users: {}, sessions: {}, rooms: {} };
+let db = { users: {}, sessions: {}, rooms: {}, dms: {} };
 let pool = null;
 const mediaSet = new Set(); // أسماء الملفات الموجودة (وضع Postgres)
 
@@ -538,6 +538,111 @@ function delMedia(m) { if (m && m.media) mediaDelUrl(m.media.url); }
 const pub = m => { const { hidden, ...r } = m; return r; };
 function roomOf(code) { return own(db.rooms, code) ? db.rooms[code] : (db.rooms[code] = { msgs: [] }); }
 
+/* ============ الأصدقاء والرسائل الخاصة ============ */
+const FRIEND_MAX = 100, DM_MAX = 200, DM_KEEP = 30 * 24 * 3600e3;
+const isOnline = (key, except) => { for (const w of wss.clients) if (w !== except && w.key === key && w.readyState === 1) return true; return false; };
+function pushTo(key, msg) { const str = JSON.stringify(msg); for (const w of wss.clients) if (w.key === key && w.readyState === 1) w.send(str); }
+const flist = (u, f) => Array.isArray(u[f]) ? u[f] : (u[f] = []);
+const pairKey = (a, b) => [a, b].sort().join('|');
+function dmOf(a, b) { if (!db.dms) db.dms = {}; const k = pairKey(a, b); return db.dms[k] || (db.dms[k] = { msgs: [], reads: {} }); }
+const lastMsgOf = (a, b) => { const d = db.dms && db.dms[pairKey(a, b)]; return d && d.msgs.length ? d.msgs[d.msgs.length - 1] : null; };
+function friendRow(me, key) {
+  const f = db.users[key], d = db.dms && db.dms[pairKey(me, key)];
+  const rd = d && d.reads ? (d.reads[me] || 0) : 0;
+  const unread = d ? d.msgs.filter(m => m.k !== me && m.ts > rd).length : 0;
+  const last = lastMsgOf(me, key), on = isOnline(key);
+  let room = '';
+  if (on) for (const w of wss.clients) if (w.key === key && w.room) { room = w.room; break; }
+  return { name: f.name, online: on, lastSeen: f.lastSeen || 0, room, unread, avatar: f.avatar || '',
+    last: last ? { text: last.inv ? '🎟️ دعوة للعب' : String(last.text || '').slice(0, 40), ts: last.ts, mine: last.k === me } : null };
+}
+const keyOfName = n => String(n || '').trim().toLowerCase();
+const mutual = (a, b) => flist(db.users[a], 'friends').includes(b) && flist(db.users[b], 'friends').includes(a);
+function makeFriends(a, b) {
+  for (const [x, y] of [[a, b], [b, a]]) {
+    const u = db.users[x];
+    if (!flist(u, 'friends').includes(y)) u.friends.push(y);
+    u.fin = flist(u, 'fin').filter(k => k !== y); u.fout = flist(u, 'fout').filter(k => k !== y);
+  }
+}
+function presenceChange(key, on) {
+  const u = db.users[key]; if (!u) return;
+  if (!on) { u.lastSeen = Date.now(); save(); }
+  for (const f of flist(u, 'friends')) pushTo(f, { t: 'f_presence', name: u.name, online: on, lastSeen: u.lastSeen || 0 });
+}
+app.get('/api/friends', authMw, (req, res) => {
+  const u = db.users[req.key];
+  const ok = k => own(db.users, k);
+  const friends = flist(u, 'friends').filter(ok).map(k => friendRow(req.key, k));
+  friends.sort((a, b) => (b.online - a.online) || (b.unread - a.unread) || a.name.localeCompare(b.name));
+  res.json({ friends, inc: flist(u, 'fin').filter(ok).map(k => db.users[k].name), out: flist(u, 'fout').filter(ok).map(k => db.users[k].name) });
+});
+app.post('/api/friend/add', authMw, (req, res) => {
+  if (limited('fadd:' + req.key, 30, 3600e3)) return res.status(429).json({ error: 'طلبات كثيرة، جرب بعد شوي' });
+  const me = db.users[req.key], k = keyOfName(req.body && req.body.name);
+  if (!k || !own(db.users, k)) return res.status(404).json({ error: 'ما لقيت لاعب بهذا الاسم' });
+  if (k === req.key) return res.status(400).json({ error: 'هذا أنت 😅' });
+  const t = db.users[k];
+  if (flist(me, 'friends').includes(k)) return res.status(409).json({ error: t.name + ' صديقك من قبل' });
+  if (flist(me, 'fout').includes(k)) return res.status(409).json({ error: 'أرسلت له طلب من قبل، انتظر يقبل' });
+  if (flist(me, 'friends').length >= FRIEND_MAX) return res.status(400).json({ error: 'وصلت الحد الأقصى للأصدقاء' });
+  if (flist(t, 'fout').includes(req.key)) {                     // هو طالب صداقتك أصلاً: نقبل مباشرة
+    makeFriends(req.key, k); save();
+    pushTo(k, { t: 'f_update', toast: '🤝 ' + me.name + ' صار صديقك' }); return res.json({ status: 'friends', name: t.name });
+  }
+  if (flist(t, 'fin').length >= 100) return res.status(400).json({ error: 'عنده طلبات كثيرة حالياً' });
+  me.fout.push(k); flist(t, 'fin').push(req.key); save();
+  pushTo(k, { t: 'f_update', toast: '👋 ' + me.name + ' يريد يضيفك صديق' });
+  res.json({ status: 'sent', name: t.name });
+});
+app.post('/api/friend/accept', authMw, (req, res) => {
+  const me = db.users[req.key], k = keyOfName(req.body && req.body.name);
+  if (!own(db.users, k) || !flist(me, 'fin').includes(k)) return res.status(400).json({ error: 'ما في طلب من هذا الشخص' });
+  makeFriends(req.key, k); save();
+  pushTo(k, { t: 'f_update', toast: '🤝 ' + me.name + ' قبل طلبك، صرتم أصدقاء' });
+  res.json({ ok: true });
+});
+app.post('/api/friend/remove', authMw, (req, res) => {       // يحذف صديق أو يرفض/يلغي طلب
+  const me = db.users[req.key], k = keyOfName(req.body && req.body.name);
+  if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيته' });
+  const t = db.users[k];
+  const was = flist(me, 'friends').includes(k);
+  me.friends = flist(me, 'friends').filter(x => x !== k); t.friends = flist(t, 'friends').filter(x => x !== req.key);
+  me.fin = flist(me, 'fin').filter(x => x !== k); me.fout = flist(me, 'fout').filter(x => x !== k);
+  t.fin = flist(t, 'fin').filter(x => x !== req.key); t.fout = flist(t, 'fout').filter(x => x !== req.key);
+  if (was && db.dms) delete db.dms[pairKey(req.key, k)];
+  save(); pushTo(k, { t: 'f_update' });
+  res.json({ ok: true });
+});
+app.get('/api/dm', authMw, (req, res) => {
+  let w = ''; try { w = new URL(req.url, 'http://x').searchParams.get('with'); } catch (e) {}
+  const k = keyOfName(w);
+  if (!own(db.users, k) || !mutual(req.key, k)) return res.status(403).json({ error: 'مو صديقك' });
+  const d = dmOf(req.key, k);
+  d.reads[req.key] = Date.now(); save();
+  res.json({ msgs: d.msgs.slice(-100), friend: friendRow(req.key, k) });
+});
+app.post('/api/dm', authMw, (req, res) => {
+  const me = db.users[req.key], k = keyOfName(req.body && req.body.to);
+  if (!own(db.users, k) || !mutual(req.key, k)) return res.status(403).json({ error: 'مو صديقك' });
+  if (limited('dm:' + req.key, 40, 60e3)) return res.status(429).json({ error: 'بطّء شوي' });
+  const text = String((req.body && req.body.text) || '').trim().slice(0, 500);
+  let inv = null;
+  const iv = req.body && req.body.inv;
+  if (iv && typeof iv === 'object') {
+    const code = String(iv.code || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+    if (code.length >= 4) inv = { code, duo: !!iv.duo };
+  }
+  if (!text && !inv) return res.status(400).json({ error: 'اكتب رسالة' });
+  const d = dmOf(req.key, k);
+  const m = { id: crypto.randomBytes(8).toString('hex'), k: req.key, text, ts: Date.now() };
+  if (inv) m.inv = inv;
+  d.msgs.push(m); while (d.msgs.length > DM_MAX) d.msgs.shift();
+  d.reads[req.key] = m.ts; save();
+  pushTo(k, { t: 'dm', from: me.name, m });
+  res.json({ m });
+});
+
 /* ============ الطور الزوجي (بالذاكرة فقط، ما ينحفظ) ============ */
 const duoRooms = new Map(); // كود الغرفة -> حالة اللعبة الزوجية
 const DUO_COUNT_MS = 3000, DUO_IDLE_MS = 8000;
@@ -805,9 +910,10 @@ wss.on('connection', (ws, req) => {
   try { key = keyFromToken(new URL(req.url, 'http://x').searchParams.get('token')); } catch (e) {}
   if (!key) { send(ws, { t: 'err', fatal: true, error: 'سجّل دخول من جديد' }); return ws.close(); }
   ws.key = key; ws.room = null; ws.alive = true; ws.bucket = { n: 0, t: Date.now() };
+  if (!isOnline(key, ws)) presenceChange(key, true);
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => leave(ws));
+  ws.on('close', () => { leave(ws); if (!isOnline(ws.key, ws)) presenceChange(ws.key, false); });
   ws.on('error', () => {});
 });
 setInterval(() => {
@@ -827,6 +933,7 @@ function cleanup() {
     }
   }
   for (const h in db.sessions) if (db.sessions[h].t < Date.now() - 90 * 24 * 3600e3) delete db.sessions[h];
+  for (const pk in (db.dms || {})) { const d = db.dms[pk]; d.msgs = d.msgs.filter(m => m.ts > Date.now() - DM_KEEP); if (!d.msgs.length) delete db.dms[pk]; }
   if (pool) {
     // ملفات الشات اللي عمرها أكثر من 15 يوم (الأفاتار ما ينحذف)
     pool.query('DELETE FROM media WHERE ts < $1 RETURNING name', [Date.now() - 15 * 24 * 3600e3])

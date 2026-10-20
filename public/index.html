@@ -299,6 +299,33 @@
   .ach .rw { color: #ffd166; font-weight: 700; white-space: nowrap; }
   #earn .col { display: flex; flex-direction: column; gap: 6px; }
   #refCodeBox { text-align: center; font-size: 20px; letter-spacing: 3px; font-weight: 700; color: #ffd166; }
+
+  /* ===== الأصدقاء والرسائل الخاصة ===== */
+  #frHead .badge { background: #ff4d4d; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 12px; margin-inline-start: 6px; }
+  #frList, #frReq { display: flex; flex-direction: column; gap: 6px; }
+  .fr { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); }
+  .fr .av { width: 38px; height: 38px; border-radius: 50%; flex: none; background: var(--teal); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .fr .av img { width: 100%; height: 100%; object-fit: cover; }
+  .fr .dot { position: absolute; bottom: 0; inset-inline-end: 0; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--card2); background: #8a94a3; }
+  .fr .dot.on { background: #35c27a; }
+  .fr .inf { flex: 1; min-width: 0; }
+  .fr .nm { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr .sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr .sub.on { color: #6ee7a0; }
+  .fr button { padding: 6px 9px; font-size: 13px; }
+  .fr .bdg { background: #ff4d4d; color: #fff; border-radius: 10px; padding: 0 6px; font-size: 12px; font-weight: 700; margin-inline-start: 4px; }
+  #dmPop { display: none; position: fixed; inset: 0; z-index: 55; background: rgba(0,0,0,.65); align-items: center; justify-content: center; padding: 10px; }
+  #dmPop.open { display: flex; }
+  #dmCard { width: 100%; max-width: 400px; height: min(560px, 90vh); background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  #dmHead { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  #dmName { font-weight: 700; } #dmSub { font-size: 12px; color: var(--muted); } #dmSub.on { color: #6ee7a0; }
+  #dmLog { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .dmm { max-width: 80%; padding: 7px 11px; border-radius: 14px; font-size: 14px; line-height: 1.6; word-break: break-word; background: var(--card2); align-self: flex-start; }
+  .dmm.me { align-self: flex-end; background: linear-gradient(135deg, var(--teal), #2d9aa5); color: #fff; }
+  .dmm .tm { display: block; font-size: 10px; opacity: .65; margin-top: 2px; }
+  .dmm button { margin-top: 4px; width: 100%; padding: 7px; font-size: 13px; }
+  #dmInv { padding: 6px 10px 0; } #dmInv button { font-size: 12px; padding: 7px 4px; }
+  #dmForm { padding: 8px 10px 10px; }
 </style>
 </head>
 <body>
@@ -350,6 +377,14 @@
     <div id="skinGrid"></div>
   </div>
 
+  <div class="card" id="friends">
+    <div class="lbHead" id="frHead"><span>👥 الأصدقاء<span class="badge" id="frBadge" style="display:none"></span></span><button id="frRefresh" class="ghost" type="button">🔄</button></div>
+    <div class="row"><input id="frName" placeholder="اكتب يوزر صديقك" maxlength="16" autocomplete="off" autocapitalize="off"><button id="frAdd" type="button">➕ إضافة</button></div>
+    <div id="frMsg" class="help"></div>
+    <div id="frReq"></div>
+    <div id="frList"></div>
+  </div>
+
   <div class="card" id="shop">
     <div class="lbHead"><span>🪙 العملات والمتجر</span><span id="coinBal" class="coinBal">🪙 0</span></div>
     <div id="dailyBox"></div>
@@ -394,6 +429,12 @@
 <button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
 <button id="fab" aria-label="فتح الشات" type="button">💬<span id="badge">0</span></button>
 <div id="toast"></div>
+<div id="dmPop"><div id="dmCard">
+  <div id="dmHead"><button id="dmClose" class="ghost" type="button">✕</button><div><div id="dmName"></div><div id="dmSub"></div></div></div>
+  <div id="dmLog"></div>
+  <div id="dmInv" class="row2"><button id="dmInvRoom" class="act" type="button">🎟️ ادعُه لغرفتي</button><button id="dmInvDuo" class="act" type="button">👥 العب زوجي ويا</button></div>
+  <form id="dmForm" class="row"><input id="dmIn" maxlength="500" placeholder="اكتب رسالة..." autocomplete="off"><button type="submit">إرسال</button></form>
+</div></div>
 <div id="unlockPop"><div id="upCard">
   <div class="upTitle" id="upTitle">🎉 مكافأة جديدة!</div>
   <canvas id="upCanvas" width="240" height="180"></canvas>
@@ -504,6 +545,7 @@ function renderAuth() {
   lbRender(lbLast, true);
   renderRewards();
   renderShop();
+  presenceSync();
 }
 $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -2314,6 +2356,197 @@ document.addEventListener('visibilitychange', () => {
   } else clearTimeout(duo.hideT);
 });
 duoRenderBox();
+
+/* ================= الأصدقاء والرسائل الخاصة ================= */
+var fws, fRetry, fTimer, fStop, fData, dmWith, dmMsgs, frArm, frArmT; // بدون قيم أولية لأن presenceSync تنادى بدري من renderAuth
+fData = fData || { friends: [], inc: [], out: [] }; dmMsgs = dmMsgs || []; fRetry = fRetry || 0;
+function agoText(ts) {
+  if (!ts) return 'غير متصل';
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'آخر ظهور: قبل لحظات';
+  if (m < 60) return 'آخر ظهور: قبل ' + m + ' دقيقة';
+  const h = Math.floor(m / 60);
+  if (h < 24) return 'آخر ظهور: قبل ' + h + ' ساعة';
+  return 'آخر ظهور: قبل ' + Math.floor(h / 24) + ' يوم';
+}
+function presenceSync() {
+  if (!auth) {
+    fStop = true; clearTimeout(fTimer);
+    if (fws) { const w = fws; fws = null; try { w.close(); } catch (e) {} }
+    fData = { friends: [], inc: [], out: [] }; dmWith = null; $('dmPop').classList.remove('open');
+    renderFriends(); return;
+  }
+  if (fws && fws.readyState <= 1) return;
+  fStop = false; connectPresence();
+}
+function connectPresence() {
+  if (!auth || fStop) return;
+  let sock;
+  try { sock = new WebSocket(wsUrl()); } catch (e) { return; }
+  fws = sock;
+  sock.onopen = () => { fRetry = 0; loadFriends(); };
+  sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onFriendMsg(d); };
+  sock.onclose = () => {
+    if (fws !== sock) return;
+    fws = null;
+    if (!auth || fStop) return;
+    clearTimeout(fTimer); fTimer = setTimeout(connectPresence, Math.min(30000, 2000 * Math.pow(1.6, fRetry++)));
+  };
+  sock.onerror = () => {};
+}
+function onFriendMsg(d) {
+  if (d.t === 'err' && d.fatal) { fStop = true; return; }
+  if (d.t === 'f_update') { if (d.toast) { showToast(d.toast); } loadFriends(); }
+  else if (d.t === 'f_presence') {
+    const f = fData.friends.find(x => x.name.toLowerCase() === String(d.name).toLowerCase());
+    if (f) { f.online = !!d.online; f.lastSeen = d.lastSeen || f.lastSeen; if (!d.online) f.room = ''; renderFriends(); if (dmWith && dmWith.toLowerCase() === f.name.toLowerCase()) dmHeader(f); }
+  } else if (d.t === 'dm') onDmPush(d);
+}
+async function loadFriends() {
+  if (!auth) return;
+  try { fData = await api('/api/friends'); renderFriends(); }
+  catch (e) { if (e.status === 401) { auth = null; saveAuth(); renderAuth(); } }
+}
+function frSay(m, ok) { const e = $('frMsg'); e.textContent = m || ''; e.style.color = ok ? '#6ee7a0' : ''; }
+async function frAddName() {
+  if (!auth) { frSay('⚠️ سجّل دخول أول'); return; }
+  const name = $('frName').value.trim(); if (!name) { frSay('اكتب يوزر صديقك'); return; }
+  $('frAdd').disabled = true; frSay('⏳', true);
+  try {
+    const r = await api('/api/friend/add', { method: 'POST', body: { name } });
+    $('frName').value = '';
+    frSay(r.status === 'friends' ? '🤝 صرتم أصدقاء مع ' + r.name : '✅ انرسل طلب الصداقة لـ ' + r.name + '، لما يقبل يطلع بقائمتك', true);
+    loadFriends();
+  } catch (e) { frSay('❌ ' + e.message); }
+  $('frAdd').disabled = false;
+}
+$('frAdd').onclick = frAddName;
+$('frName').addEventListener('keydown', e => { if (e.key === 'Enter') frAddName(); });
+$('frRefresh').onclick = () => { loadFriends(); showToast('🔄 تحدّثت القائمة'); };
+async function frAct(path, name, okMsg) {
+  try { await api(path, { method: 'POST', body: { name } }); if (okMsg) showToast(okMsg); } catch (e) { showToast('⚠️ ' + e.message); }
+  loadFriends();
+}
+function frMk(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function joinFromInvite(code, duoMode) {
+  $('dmPop').classList.remove('open');
+  if (duoMode) { setGameMode('duo'); $('duoCode').value = code; duoEnter(); }
+  else { if (gameMode !== 'solo') setGameMode('solo'); $('codeIn').value = code; enterRoom(); openChat(); }
+  try { $('stage').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+}
+function renderFriends() {
+  const L = $('frList'); if (!L) return;
+  L.innerHTML = ''; $('frReq').innerHTML = '';
+  if (!auth) { L.appendChild(frMk('div', 'help', 'سجّل دخول حتى تضيف أصدقاء وتشوف مين فاتح اللعبة وتراسلهم')); $('frBadge').style.display = 'none'; return; }
+  fData.inc.forEach(n => {
+    const r = frMk('div', 'fr'), i = frMk('div', 'inf');
+    i.append(frMk('div', 'nm', n), frMk('div', 'sub', '👋 يريد يضيفك صديق'));
+    const a = frMk('button', '', 'قبول'), d = frMk('button', 'ghost', 'رفض'); a.type = d.type = 'button';
+    a.onclick = () => frAct('/api/friend/accept', n, '🤝 صرتم أصدقاء'); d.onclick = () => frAct('/api/friend/remove', n);
+    r.append(i, a, d); $('frReq').appendChild(r);
+  });
+  fData.out.forEach(n => {
+    const r = frMk('div', 'fr'), i = frMk('div', 'inf');
+    i.append(frMk('div', 'nm', n), frMk('div', 'sub', '⏳ بانتظار موافقته'));
+    const c = frMk('button', 'ghost', 'إلغاء'); c.type = 'button'; c.onclick = () => frAct('/api/friend/remove', n);
+    r.append(i, c); $('frReq').appendChild(r);
+  });
+  if (!fData.friends.length) L.appendChild(frMk('div', 'help', 'ما عندك أصدقاء بعد. اكتب يوزر صديقك فوق واضغط إضافة.'));
+  let total = 0;
+  fData.friends.forEach(f => {
+    total += f.unread || 0;
+    const r = frMk('div', 'fr'), av = frMk('div', 'av');
+    if (f.avatar) { const im = document.createElement('img'); im.src = f.avatar; im.alt = ''; av.appendChild(im); } else av.textContent = f.name.slice(0, 1).toUpperCase();
+    av.appendChild(frMk('span', 'dot' + (f.online ? ' on' : '')));
+    const i = frMk('div', 'inf'), nm = frMk('div', 'nm', f.name);
+    if (f.unread) nm.appendChild(frMk('span', 'bdg', String(f.unread)));
+    let sub = f.online ? '🟢 متصل (فاتح اللعبة)' + (f.room ? ' • بغرفة شات' : '') : '⚪ ' + agoText(f.lastSeen);
+    if (!f.online || !f.room) { if (f.last) sub += ' — ' + (f.last.mine ? 'أنت: ' : '') + f.last.text; }
+    i.append(nm, frMk('div', 'sub' + (f.online ? ' on' : ''), sub));
+    r.append(av, i);
+    if (f.online && f.room) { const j = frMk('button', 'ghost', 'انضم'); j.type = 'button'; j.title = 'ادخل غرفته'; j.onclick = () => joinFromInvite(f.room, false); r.appendChild(j); }
+    const m = frMk('button', '', '💬'); m.type = 'button'; m.onclick = () => openDm(f.name);
+    const x = frMk('button', 'ghost', frArm === f.name ? 'تأكيد؟' : '✖'); x.type = 'button';
+    x.onclick = () => {
+      if (frArm !== f.name) { frArm = f.name; clearTimeout(frArmT); frArmT = setTimeout(() => { frArm = null; renderFriends(); }, 3000); renderFriends(); return; }
+      frArm = null; clearTimeout(frArmT); frAct('/api/friend/remove', f.name, 'انحذف من الأصدقاء');
+    };
+    r.append(m, x); L.appendChild(r);
+  });
+  const b = $('frBadge'); const n = total + fData.inc.length;
+  b.textContent = String(n); b.style.display = n ? '' : 'none';
+}
+
+/* ---- المحادثة الخاصة ---- */
+const hhmm = ts => { const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+function dmHeader(f) {
+  $('dmName').textContent = f.name;
+  const sub = $('dmSub'); sub.textContent = f.online ? '🟢 متصل (فاتح اللعبة)' : '⚪ ' + agoText(f.lastSeen); sub.className = f.online ? 'on' : '';
+}
+function dmRender() {
+  const log = $('dmLog'); log.innerHTML = '';
+  dmMsgs.forEach(m => {
+    const me = m.k === myKey(), b = frMk('div', 'dmm' + (me ? ' me' : ''));
+    if (m.inv) {
+      b.appendChild(frMk('div', '', (me ? 'دعوتك: ' : 'دعوة: ') + (m.inv.duo ? '🎮 لعب زوجي' : '💬 غرفة شات') + ' — الكود ' + m.inv.code));
+      if (!me) { const j = frMk('button', '', m.inv.duo ? '👥 ادخل العب' : '🚪 ادخل الغرفة'); j.type = 'button'; j.onclick = () => joinFromInvite(m.inv.code, m.inv.duo); b.appendChild(j); }
+    }
+    if (m.text) b.appendChild(frMk('div', '', m.text));
+    b.appendChild(frMk('span', 'tm', hhmm(m.ts)));
+    log.appendChild(b);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+async function openDm(name) {
+  if (!auth) return;
+  dmWith = name; dmMsgs = []; dmRender(); $('dmName').textContent = name; $('dmSub').textContent = '⏳'; $('dmPop').classList.add('open');
+  await dmReload();
+  setTimeout(() => { try { $('dmIn').focus(); } catch (e) {} }, 100);
+}
+async function dmReload() {
+  if (!dmWith) return;
+  try {
+    const r = await api('/api/dm?with=' + encodeURIComponent(dmWith));
+    dmMsgs = r.msgs; dmHeader(r.friend); dmRender();
+    const f = fData.friends.find(x => x.name === r.friend.name); if (f) { f.unread = 0; renderFriends(); }
+  } catch (e) { showToast('⚠️ ' + e.message); $('dmPop').classList.remove('open'); dmWith = null; }
+}
+function onDmPush(d) {
+  if (dmWith && $('dmPop').classList.contains('open') && dmWith.toLowerCase() === String(d.from).toLowerCase()) {
+    dmMsgs.push(d.m); dmRender(); api('/api/dm?with=' + encodeURIComponent(dmWith)).catch(() => {});
+    try { ding(); } catch (e) {}
+    return;
+  }
+  showToast('💬 ' + d.from + ': ' + (d.m.inv ? '🎟️ دعوة للعب' : String(d.m.text).slice(0, 40)));
+  try { ding(); } catch (e) {}
+  loadFriends();
+}
+async function dmSend(body) {
+  if (!dmWith) return;
+  try {
+    const r = await api('/api/dm', { method: 'POST', body: Object.assign({ to: dmWith }, body) });
+    dmMsgs.push(r.m); dmRender(); loadFriends(); return r.m;
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+$('dmForm').addEventListener('submit', async e => {
+  e.preventDefault(); const t = $('dmIn').value.trim(); if (!t) return;
+  $('dmIn').value = ''; await dmSend({ text: t });
+});
+$('dmClose').onclick = () => { $('dmPop').classList.remove('open'); dmWith = null; loadFriends(); };
+$('dmPop').addEventListener('pointerdown', e => { if (e.target === $('dmPop')) $('dmClose').onclick(); });
+$('dmInvRoom').onclick = async () => {
+  let code = joined && wantRoom ? wantRoom : $('codeIn').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (code.length < 4) { showToast('ادخل غرفة شات أول، أو اكتب كود (4 أحرف على الأقل) بخانة الكود'); return; }
+  if (!(joined && wantRoom === code)) { $('codeIn').value = code; enterRoom(); }
+  if (await dmSend({ inv: { code, duo: false } })) showToast('🎟️ انرسلت الدعوة');
+};
+$('dmInvDuo').onclick = async () => {
+  const code = Array.from({ length: 6 }, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 31)]).join('');
+  const m = await dmSend({ inv: { code, duo: true } });
+  if (m) { showToast('🎟️ انرسلت دعوة اللعب الزوجي، انتظره بالغرفة'); joinFromInvite(code, true); }
+};
+document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) { if (!fws || fws.readyState > 1) { fRetry = 0; presenceSync(); } else loadFriends(); } });
+renderFriends();
 
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {
