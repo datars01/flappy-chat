@@ -154,21 +154,21 @@ function dailyInfo(u) {
 const skinOk = (u, id) => own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
 const skinOf = key => { const u = db.users[key]; return u.skin && skinOk(u, u.skin) ? u.skin : 'classic'; };
 /* ===== طرق ثانية لكسب العملات (كلها حقول جديدة تنضاف للاعب، ما تمس القديمة) ===== */
-const PLAY_DIV = 5, PLAY_CAP = 60;                          // عملة لكل 5 نقاط بالفردي، بحد أقصى 60 عملة باليوم
-const DUO_WIN = 10, DUO_LOSE = 2, DUO_TIE = 5, DUO_ROUNDS = 5, DUO_MIN = 5; // مكافآت الزوجي (5 جولات باليوم، ولازم أحد يوصل 5 نقاط)
-const REF_REWARD = 30, REF_MAX = 10, REF_MINSCORE = 3;       // دعوة صديق: 30 عملة للاثنين (لين 10 أصدقاء)
+const PLAY_DIV = 25, PLAY_CAP = 60;                         // عملة لكل 25 نقطة بالفردي، بحد أقصى 60 عملة باليوم
+const DUO_WIN = 10, DUO_LOSE = 2, DUO_TIE = 5, DUO_ROUNDS = 5, DUO_MIN = 30; // مكافآت الزوجي (5 جولات باليوم، ولازم أحد يوصل 5 نقاط)
+const REF_REWARD = 30, REF_MAX = 10, REF_MINSCORE = 10;       // دعوة صديق: 30 عملة للاثنين (لين 10 أصدقاء)
 const TASK_POOL = [
   { id: 'g3', title: 'العب 3 جولات فردية', goal: 3, reward: 10, f: 'games' },
   { id: 'g8', title: 'العب 8 جولات فردية', goal: 8, reward: 15, f: 'games' },
-  { id: 's10', title: 'سجّل 10 نقاط بجولة وحدة', goal: 10, reward: 10, f: 'max' },
-  { id: 's25', title: 'سجّل 25 نقطة بجولة وحدة', goal: 25, reward: 15, f: 'max' },
-  { id: 's40', title: 'سجّل 40 نقطة بجولة وحدة', goal: 40, reward: 25, f: 'max' },
+  { id: 's10', title: 'سجّل 60 نقطة بجولة وحدة', goal: 60, reward: 10, f: 'max' },
+  { id: 's25', title: 'سجّل 150 نقطة بجولة وحدة', goal: 150, reward: 15, f: 'max' },
+  { id: 's40', title: 'سجّل 300 نقطة بجولة وحدة', goal: 300, reward: 25, f: 'max' },
   { id: 'd1', title: 'العب جولة زوجية كاملة', goal: 1, reward: 15, f: 'duo' }
 ];
 const ACH = [
-  { id: 'b25', title: 'وصلت 25 نقطة', reward: 15, ok: u => (u.best || 0) >= 25 },
-  { id: 'b50', title: 'وصلت 50 نقطة', reward: 30, ok: u => (u.best || 0) >= 50 },
-  { id: 'b100', title: 'وصلت 100 نقطة', reward: 60, ok: u => (u.best || 0) >= 100 },
+  { id: 'b25', title: 'وصلت 100 نقطة', reward: 15, ok: u => (u.best || 0) >= 100 },
+  { id: 'b50', title: 'وصلت 250 نقطة', reward: 30, ok: u => (u.best || 0) >= 250 },
+  { id: 'b100', title: 'وصلت 500 نقطة', reward: 60, ok: u => (u.best || 0) >= 500 },
   { id: 'g50', title: 'لعبت 50 جولة', reward: 20, ok: u => (u.games || 0) >= 50 },
   { id: 'g200', title: 'لعبت 200 جولة', reward: 50, ok: u => (u.games || 0) >= 200 },
   { id: 'st7', title: '7 أيام متتالية', reward: 40, ok: u => (u.streak || 0) >= 7 },
@@ -362,8 +362,8 @@ app.post('/api/score', authMw, (req, res) => {
   if (!g || g.k !== req.key) return res.status(400).json({ error: 'لعبة غير صالحة' });
   games.delete(gid);
   const elapsed = (Date.now() - g.t) / 1000;
-  // أسرع سرعة باللعبة تعدّي أنبوب كل ~1.04 ثانية، فنسمح بهامش واسع
-  if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed / 0.8) + 2)
+  // أقصى معدل معقول للنقاط بلعبة الكرات (نسمح بهامش واسع)
+  if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed * 25) + 60)
     return res.status(400).json({ error: 'نتيجة غير صالحة' });
   const u = db.users[req.key];
   const prevBest = u.best || 0;
@@ -644,20 +644,168 @@ app.post('/api/dm', authMw, (req, res) => {
 });
 
 /* ============ الطور الزوجي (بالذاكرة فقط، ما ينحفظ) ============ */
+/* ============ محرك لعبة الكرات المشتركة (يشتغل بالسيرفر، لاعبين على لوحة وحدة) ============ */
+const ZR = 12, ZD = 24, ZSHOT_V = 9, ZCOOL = 12, Z_MAX_TICKS = 10800; // الجولة القصوى 3 دقايق
+const ZSHOOT = [{ x: 160, y: 212 }, { x: 160, y: 298 }];             // الشخصية الأولى فوق والثانية تحت، حول الحفرة
+function zMul(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const ZPATH = (function () {
+  const raw = [], cx = 160, cy = 255, RX = 146, RY = 204, K1 = 0.42, TURNS = 2;
+  for (let y = 560; y > cy; y -= 6) raw.push([cx - RX, y]);
+  const th0 = Math.PI, th1 = Math.PI + TURNS * 2 * Math.PI, n = 520;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, th = th0 + (th1 - th0) * t, k = 1 - (1 - K1) * t;
+    raw.push([cx + RX * k * Math.cos(th), cy + RY * k * Math.sin(th)]);
+  }
+  const cum = [0];
+  for (let i = 1; i < raw.length; i++) cum.push(cum[i - 1] + Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]));
+  const L = cum[cum.length - 1], N = Math.floor(L) + 2, xs = new Float32Array(N), ys = new Float32Array(N);
+  let j = 0;
+  for (let s = 0; s < N; s++) {
+    while (j < raw.length - 2 && cum[j + 1] < s) j++;
+    const seg = cum[j + 1] - cum[j] || 1, f = Math.min(1, Math.max(0, (s - cum[j]) / seg));
+    xs[s] = raw[j][0] + (raw[j + 1][0] - raw[j][0]) * f; ys[s] = raw[j][1] + (raw[j + 1][1] - raw[j][1]) * f;
+  }
+  return { xs, ys, L, N };
+})();
+const _zp = { x: 0, y: 0 };
+function zPos(s) {
+  if (s < 0) s = 0; if (s > ZPATH.L) s = ZPATH.L;
+  const i = Math.floor(s), f = s - i, j = Math.min(i + 1, ZPATH.N - 1);
+  _zp.x = ZPATH.xs[i] + (ZPATH.xs[j] - ZPATH.xs[i]) * f; _zp.y = ZPATH.ys[i] + (ZPATH.ys[j] - ZPATH.ys[i]) * f;
+  return _zp;
+}
+const zLevelN = l => 34 + 8 * l;
+const zSpeed = l => 20 + 3.5 * Math.min(l, 12);
+const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
+function zNew(seed, mode) {
+  seed = (seed || 1) >>> 0;
+  const g = { mode, rA: zMul(seed), level: 1, sc: [0, 0], chain: [], queue: 0, last: [-1, -1], shots: [], combo: 0, intro: true, tick: 0, dead: false, nid: 1, ev: [], lastOwner: 0,
+    pl: [0, 1].map(i => ({ ang: -Math.PI / 2, cur: 0, next: 0, cool: 0, rB: zMul(seed ^ (0x5bd1e995 + i * 7919)) })) };
+  zStartLevel(g);
+  for (const p of g.pl) { p.cur = zShotColor(g, p); p.next = zShotColor(g, p); }
+  return g;
+}
+function zStartLevel(g) { g.queue = zLevelN(g.level); g.intro = true; g.last = [-1, -1]; }
+function zSpawnColor(g) {
+  const n = zNCol(g.level); let c, tries = 0;
+  do { c = Math.floor(g.rA() * n); tries++; } while (c === g.last[0] && c === g.last[1] && tries < 20);
+  g.last[1] = g.last[0]; g.last[0] = c; return c;
+}
+function zShotColor(g, p) {
+  const n = zNCol(g.level), has = new Array(n).fill(false); let any = false;
+  for (const b of g.chain) if (b.c < n) { has[b.c] = true; any = true; }
+  const list = []; for (let i = 0; i < n; i++) if (!any || has[i]) list.push(i);
+  return list[Math.floor(p.rB() * list.length)];
+}
+const zLinked = (ch, i) => i >= 0 && i < ch.length - 1 && ch[i + 1].s - ch[i].s <= ZD + 1.5;
+function zRun(ch, i) {
+  let lo = i, hi = i; const c = ch[i].c;
+  while (lo > 0 && zLinked(ch, lo - 1) && ch[lo - 1].c === c) lo--;
+  while (hi < ch.length - 1 && zLinked(ch, hi) && ch[hi + 1].c === c) hi++;
+  return { lo, hi };
+}
+function zPopC(g, lo, hi, join, owner) {
+  const ch = g.chain, cnt = hi - lo + 1;
+  let pts = cnt + (cnt > 3 ? cnt - 3 : 0);
+  if (join) { g.combo++; pts += 5 * g.combo; }
+  const mp = zPos(ch[(lo + hi) >> 1].s), mx = Math.round(mp.x), my = Math.round(mp.y), bl = [];
+  for (let i = lo; i <= hi; i++) { const q = zPos(ch[i].s); bl.push([Math.round(q.x), Math.round(q.y), ch[i].c]); }
+  ch.splice(lo, cnt); g.sc[owner] += pts;
+  g.ev.push({ e: 'p', x: mx, y: my, n: pts, o: owner, j: join ? 1 : 0, cb: g.combo, b: bl });
+}
+function zInsertC(g, sh, hit) {
+  const ch = g.chain, b = ch[hit], p = zPos(b.s), px = p.x, py = p.y;
+  const a = zPos(b.s - 2), ax = a.x, ay = a.y, c2 = zPos(b.s + 2);
+  const after = (sh.x - px) * (c2.x - ax) + (sh.y - py) * (c2.y - ay) >= 0;
+  const j = after ? hit + 1 : hit;
+  const nb = { id: g.nid++, c: sh.c, s: after ? b.s + ZD : b.s };
+  ch.splice(j, 0, nb);
+  for (let k = j + 1; k < ch.length; k++) { const need = ch[k - 1].s + ZD; if (ch[k].s < need) ch[k].s = need; else break; }
+  g.ev.push({ e: 'i', id: nb.id, x: Math.round(sh.x), y: Math.round(sh.y) });
+  g.combo = 0; g.lastOwner = sh.o;
+  const r = zRun(ch, j);
+  if (r.hi - r.lo + 1 >= 3) zPopC(g, r.lo, r.hi, false, sh.o);
+}
+function zStep(g) {
+  g.tick++;
+  for (const p of g.pl) if (p.cool > 0) p.cool--;
+  const ch = g.chain;
+  if (g.dead) { for (const b of ch) b.s = Math.min(ZPATH.L, b.s + 6); return; }
+  while (g.queue > 0 && (ch.length === 0 || ch[0].s >= ZD)) {
+    const s = ch.length && ch[0].s < 2 * ZD ? ch[0].s - ZD : 0;
+    ch.unshift({ id: g.nid++, c: zSpawnColor(g), s }); g.queue--;
+  }
+  let join = -1;
+  const n = ch.length;
+  if (n) {
+    let e = 0; while (e < n - 1 && ch[e + 1].s - ch[e].s <= ZD + 1.5) e++;
+    const gapAbove = e < n - 1, head = ch[n - 1].s;
+    if (g.intro && head >= ZPATH.L * 0.3) g.intro = false;
+    const sp = (g.intro ? 300 : gapAbove ? 340 : zSpeed(g.level)) / 60;
+    for (let i = 0; i <= e; i++) ch[i].s += sp;
+    if (gapAbove) {
+      const over = ch[e].s - (ch[e + 1].s - ZD);
+      if (over >= 0) { for (let i = 0; i <= e; i++) ch[i].s -= over; join = e; }
+    }
+  }
+  if (join >= 0 && ch[join].c === ch[join + 1].c) {
+    const r = zRun(ch, join);
+    if (r.hi - r.lo + 1 >= 3) zPopC(g, r.lo, r.hi, true, g.lastOwner);
+  }
+  if (g.shots.length) {
+    for (const b of ch) { const p = zPos(b.s); b.px = p.x; b.py = p.y; }
+    for (const sh of g.shots) {
+      sh.x += sh.vx; sh.y += sh.vy;
+      let hit = -1, bd = (ZR * 2 - 3) * (ZR * 2 - 3);
+      for (let i = 0; i < ch.length; i++) { const dx = sh.x - ch[i].px, dy = sh.y - ch[i].py, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; hit = i; } }
+      if (hit >= 0) { zInsertC(g, sh, hit); sh.dead = true; for (const b of ch) { const p = zPos(b.s); b.px = p.x; b.py = p.y; } }
+      else if (sh.x < -30 || sh.x > 350 || sh.y < -30 || sh.y > 510) sh.dead = true;
+    }
+    g.shots = g.shots.filter(s => !s.dead);
+  }
+  if (ch.length && ch[ch.length - 1].s >= ZPATH.L - 6) { g.dead = true; g.ev.push({ e: 'd' }); return; }
+  if (g.queue === 0 && ch.length === 0) {
+    g.level++; g.sc[0] += 25; g.sc[1] += 25;
+    g.ev.push({ e: 'l', lv: g.level });
+    zStartLevel(g);
+  }
+}
+function zFireC(g, slot, ang) {
+  const p = g.pl[slot]; if (!p || g.dead || p.cool > 0) return false;
+  p.ang = ang; const S = ZSHOOT[slot];
+  g.shots.push({ x: S.x + Math.cos(ang) * 30, y: S.y + Math.sin(ang) * 30, vx: Math.cos(ang) * ZSHOT_V, vy: Math.sin(ang) * ZSHOT_V, c: p.cur, o: slot, a: ang });
+  p.cur = p.next; p.next = zShotColor(g, p); p.cool = ZCOOL;
+  g.ev.push({ e: 's', o: slot });
+  return true;
+}
+function zSwapC(g, slot) { const p = g.pl[slot]; if (p) { const t = p.cur; p.cur = p.next; p.next = t; } }
+function zSnapOf(g, slots) {
+  const r1 = v => Math.round(v * 10) / 10;
+  const snap = {
+    t: 'z', tk: g.tick, lv: g.level, q: g.queue, sc: g.sc, sl: slots, dd: g.dead ? 1 : 0,
+    ids: g.chain.map(b => b.id), cs: g.chain.map(b => b.c).join(''), ss: g.chain.map(b => r1(b.s)),
+    sh: g.shots.map(s => [r1(s.x), r1(s.y), s.c, s.o, Math.round(s.a * 1000) / 1000]),
+    pl: g.pl.map(p => [Math.round(p.ang * 100) / 100, p.cur, p.next, p.cool]), ev: g.ev
+  };
+  g.ev = [];
+  return snap;
+}
+
 const duoRooms = new Map(); // كود الغرفة -> حالة اللعبة الزوجية
-const DUO_COUNT_MS = 3000, DUO_IDLE_MS = 8000;
+const DUO_COUNT_MS = 3000;
+const DUO_COOP = 6;                       // مكافأة الجولة التعاونية لكل لاعب
 const duoOf = code => {
   let d = duoRooms.get(code);
-  if (!d) duoRooms.set(code, d = { players: [], ready: {}, state: 'lobby', round: 0, seed: 0, startAt: 0, dead: {}, last: {}, seen: {}, gone: {}, timer: null });
+  if (!d) duoRooms.set(code, d = { players: [], ready: {}, state: 'lobby', mode: 'co', slots: [], z: null, acc: 0, lastT: 0, deadAt: 0, round: 0, seed: 0, startAt: 0, dead: {}, last: {}, seen: {}, gone: {}, timer: null });
   return d;
 };
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
 function duoPub(code) {
   const d = duoRooms.get(code);
-  if (!d) return { state: 'lobby', round: 0, players: [] };
+  if (!d) return { state: 'lobby', round: 0, mode: 'co', players: [] };
   return {
-    state: d.state, round: d.round,
-    players: d.players.map(k => ({ k, name: db.users[k].name, ready: !!d.ready[k], dead: !!d.dead[k], score: ((d.dead[k] || d.last[k]) || {}).score || 0, skin: skinOf(k) }))
+    state: d.state, round: d.round, mode: d.mode,
+    players: d.players.map(k => ({ k, name: db.users[k].name, ready: !!d.ready[k], dead: false, score: 0, skin: skinOf(k) }))
   };
 }
 const duoSync = code => bc(code, Object.assign({ t: 'duo' }, duoPub(code)));
@@ -671,45 +819,48 @@ function duoMaybeStart(code) {
   if (d.players.length !== 2 || !d.players.every(k => d.ready[k])) return;
   d.state = 'count'; d.round++; d.seed = crypto.randomInt(1, 2147483647);
   d.dead = {}; d.last = {}; d.seen = {}; d.gone = {};
+  d.slots = d.players.slice(0, 2); d.z = zNew(d.seed, d.mode); d.acc = 0; d.deadAt = 0;
   d.startAt = Date.now() + DUO_COUNT_MS;
-  bc(code, { t: 'duo_go', seed: d.seed, round: d.round, ms: DUO_COUNT_MS });
+  bc(code, { t: 'duo_go', seed: d.seed, round: d.round, ms: DUO_COUNT_MS, mode: d.mode, slots: d.slots });
   duoSync(code);
   const round = d.round;
   clearTimeout(d.timer);
   d.timer = setTimeout(() => {
     const x = duoRooms.get(code);
-    if (x && x.round === round && x.state === 'count') { x.state = 'play'; duoSync(code); }
+    if (x && x.round === round && x.state === 'count') { x.state = 'play'; x.lastT = Date.now(); x.acc = 0; duoSync(code); duoSnap(code, x); }
   }, DUO_COUNT_MS + 150);
 }
-function duoCheckOver(code) {
+function duoSnap(code, d) { if (d.z) bc(code, zSnapOf(d.z, d.slots)); }
+// نهاية الجولة المشتركة: وضع تعاوني (نقاط مشتركة) أو تنافسي (كل واحد نقاطه)
+function zEnd(code, leaver) {
   const d = duoRooms.get(code);
-  if (!d || d.state !== 'play' || !d.players.length || !d.players.every(k => d.dead[k])) return;
-  const res = d.players.map(k => ({ k, name: db.users[k].name, score: d.dead[k].score, at: d.dead[k].at, left: !!d.dead[k].left }));
-  res.sort((a, b) => b.score - a.score || b.at - a.at);
-  const stay = res.filter(r => !r.left);
+  if (!d || d.state !== 'play' || !d.z) return;
+  const g = d.z, team = d.mode === 'co';
+  const rows = d.slots.map((k, i) => ({ k, name: db.users[k].name, score: g.sc[i], left: k === leaver }));
+  const total = g.sc[0] + g.sc[1];
   let winner = null;
-  if (res.length === 1) winner = res[0].name;
-  else if (stay.length === 1) winner = stay[0].name;                  // اللي طلع من اللعبة وهو حي يخسر
-  else if (res[0].score !== res[1].score) winner = res[0].name;
-  else if (res[0].at - res[1].at > 150) winner = res[0].name;         // نفس النقاط: اللي طار أطول يفوز
-  if (res.length === 2 && !res.some(r => r.left)) {          // جولة كاملة بين لاعبين (اللي يطلع ما ياخذ شي)
-    const real = Math.max(res[0].score, res[1].score) >= DUO_MIN;
-    for (const r of res) {
+  if (!team) {
+    if (leaver) { const st = rows.find(r => !r.left); winner = st ? st.name : null; }
+    else if (rows[0].score !== rows[1].score) winner = (rows[0].score > rows[1].score ? rows[0] : rows[1]).name;
+  }
+  if (rows.length === 2 && !leaver) {                       // جولة كاملة: اللي يطلع ما ياخذ شي
+    const real = (team ? total : Math.max(rows[0].score, rows[1].score)) >= DUO_MIN;
+    for (const r of rows) {
       const u = db.users[r.k]; if (!u) continue;
       const dy = dayOf(u); dy.duo++;
-      const win = !!winner && r.name === winner;
+      const win = !team && !!winner && r.name === winner;
       if (win) u.duoWins = (u.duoWins || 0) + 1;
       let got = 0;
-      if (real && dy.duoR < DUO_ROUNDS) { got = !winner ? DUO_TIE : win ? DUO_WIN : DUO_LOSE; dy.duoR++; u.coins = (u.coins || 0) + got; }
+      if (real && dy.duoR < DUO_ROUNDS) { got = team ? DUO_COOP : !winner ? DUO_TIE : win ? DUO_WIN : DUO_LOSE; dy.duoR++; u.coins = (u.coins || 0) + got; }
       const achNew = checkAch(u);
       notifyUser(r.k, { t: 'earn', text: got ? '🪙 +' + got + ' عملة من الجولة الزوجية' : '', achNew });
     }
     save();
   }
-  d.state = 'over'; d.ready = {};
+  d.state = 'over'; d.ready = {}; d.z = null;
   d.players = d.players.filter(k => !d.gone[k]);
-  bc(code, { t: 'duo_over', round: d.round, winner, results: res.map(r => ({ name: r.name, score: r.score, left: r.left })) });
-  bc(code, { t: 'sys', text: '🏁 جولة زوجية: ' + res.map(r => r.name + ' ' + r.score).join(' — ') + (winner ? ' | الفائز: ' + winner : ' | تعادل') });
+  bc(code, { t: 'duo_over', round: d.round, winner, mode: d.mode, team, total, results: rows.map(r => ({ name: r.name, score: r.score, left: r.left })) });
+  bc(code, { t: 'sys', text: '🏁 جولة زوجية (' + (team ? 'تعاوني' : 'تنافسي') + '): ' + (team ? 'نتيجة الفريق ' + total : rows.map(r => r.name + ' ' + r.score).join(' — ') + (winner ? ' | الفائز: ' + winner : ' | تعادل')) });
   duoSync(code); duoCleanup(code);
 }
 function duoRemove(code, key) {
@@ -717,9 +868,7 @@ function duoRemove(code, key) {
   if (!d || !d.players.includes(key)) return;
   if (d.state === 'play') {
     d.gone[key] = true;
-    if (!d.dead[key]) d.dead[key] = { score: (d.last[key] || {}).score || 0, at: Date.now(), left: true };
-    bc(code, { t: 'duo_dead', k: key, name: db.users[key].name, score: d.dead[key].score });
-    duoSync(code); duoCheckOver(code);
+    zEnd(code, key);
     return;
   }
   if (d.state === 'count') { clearTimeout(d.timer); d.state = 'lobby'; d.ready = {}; }
@@ -727,35 +876,31 @@ function duoRemove(code, key) {
   if (d.state === 'over' && !d.players.length) d.state = 'lobby';
   duoSync(code); duoCleanup(code);
 }
-// لقطات حالة الطير: تنرسل للاعب الثاني فقط (ولها حد خاص حتى ما تتأثر بحد الشات)
-function duoState(ws, d) {
-  const code = ws.room; if (!code) return;
-  const du = duoRooms.get(code);
-  if (!du || du.state !== 'play' || !du.players.includes(ws.key) || du.dead[ws.key]) return;
-  const n = Date.now();
-  if (n - (ws.dTs || 0) > 1000) { ws.dTs = n; ws.dN = 0; }
-  if (++ws.dN > 40) return;
-  const score = Math.floor(num(d.score, 0, 10000));
-  du.last[ws.key] = { score }; du.seen[ws.key] = n;
-  const msg = JSON.stringify({ t: 'duo_state', k: ws.key, tick: Math.floor(num(d.tick, 0, 1e6)), y: num(d.y, -100, 700), vy: num(d.vy, -40, 40), score });
-  const set = live.get(code); if (!set) return;
-  for (const w of set) if (w !== ws && w.key !== ws.key && w.readyState === 1 && du.players.includes(w.key)) w.send(msg);
-}
-// لاعب جامد (تطبيق مسكّر/فاصل الاتصال) أكثر من 8 ثواني وسط الجولة = يعتبر خسر حتى ما توقف اللعبة على الثاني
+// المحاكاة: السيرفر يشغّل اللعبة المشتركة 60 مرة بالثانية ويرسل لقطة للاثنين 15 مرة بالثانية
 setInterval(() => {
   const now = Date.now();
   for (const [code, d] of duoRooms) {
-    if (d.state !== 'play') continue;
-    for (const k of [...d.players]) {
-      if (d.dead[k]) continue;
-      if (now - Math.max(d.seen[k] || 0, d.startAt) > DUO_IDLE_MS) {
-        d.dead[k] = { score: (d.last[k] || {}).score || 0, at: now };
-        bc(code, { t: 'duo_dead', k, name: db.users[k].name, score: d.dead[k].score });
-        duoSync(code); duoCheckOver(code);
-      }
-    }
+    const g = d.z; if (!g || d.state !== 'play') continue;
+    let acc = (d.acc || 0) + Math.min(now - (d.lastT || now), 100); d.lastT = now;
+    let n = 0;
+    while (acc >= 16.667 && n < 4 && g.tick < Z_MAX_TICKS) { acc -= 16.667; n++; zStep(g); if (g.tick % 4 === 0) duoSnap(code, d); }
+    d.acc = acc;
+    if (g.dead && !d.deadAt) d.deadAt = now;
+    if ((g.dead && now - d.deadAt > 1300) || g.tick >= Z_MAX_TICKS) zEnd(code, null);
   }
-}, 2000);
+}, 16);
+// مدخلات اللاعبين: تصويب / إطلاق / تبديل الكرة (لها حد خاص حتى ما تتأثر بحد الشات)
+function zInput(ws, d) {
+  const code = ws.room, du = code && duoRooms.get(code);
+  if (!du || du.state !== 'play' || !du.z) return;
+  const slot = du.slots.indexOf(ws.key); if (slot < 0) return;
+  const n = Date.now(); if (n - (ws.zTs || 0) > 1000) { ws.zTs = n; ws.zN = 0; } if (++ws.zN > 60) return;
+  const g = du.z;
+  if (d.t === 'duo_swap') return zSwapC(g, slot);
+  const a = Number(d.a); if (!Number.isFinite(a)) return;
+  const ang = Math.max(-7, Math.min(7, a)); g.pl[slot].ang = ang;
+  if (d.t === 'duo_fire') zFireC(g, slot, ang);
+}
 
 function leave(ws) {
   const code = ws.room; if (!code) return;
@@ -777,7 +922,7 @@ function leave(ws) {
 
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
-  if (d.t === 'duo_state') return duoState(ws, d);
+  if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
   if (++ws.bucket.n > 40) return send(ws, { t: 'err', error: 'بطّء شوي' });
@@ -856,15 +1001,12 @@ function onMsg(ws, d) {
     if (!du || !du.players.includes(ws.key) || (du.state !== 'lobby' && du.state !== 'over')) return;
     du.ready[ws.key] = !!d.ready;
     duoSync(code); duoMaybeStart(code);
-  } else if (d.t === 'duo_dead') {
+  } else if (d.t === 'duo_mode') {
     const du = duoRooms.get(code);
-    if (!du || du.state !== 'play' || !du.players.includes(ws.key) || du.dead[ws.key]) return;
-    const ticks = (now - du.startAt) / 16.667;
-    const maxScore = ticks + 30 >= 177 ? Math.floor((ticks + 30 - 177) / 87.5) + 2 : 0; // أكبر نتيجة معقولة بهالوقت
-    const score = Math.min(Math.floor(num(d.score, 0, 10000)), maxScore);
-    du.dead[ws.key] = { score, at: now };
-    bc(code, { t: 'duo_dead', k: ws.key, name: me.name, score });
-    duoSync(code); duoCheckOver(code);
+    if (!du || !du.players.includes(ws.key) || (du.state !== 'lobby' && du.state !== 'over')) return;
+    const m = d.mode === 'vs' ? 'vs' : 'co';
+    if (du.mode !== m) { du.mode = m; du.ready = {}; }
+    duoSync(code);
   } else if (d.t === 'typing') {
     bc(code, { t: 'typing', name: me.name, kind: d.kind === 'rec' ? 'rec' : 'txt' }, w => w.key !== ws.key);
   } else if (d.t === 'read') {
