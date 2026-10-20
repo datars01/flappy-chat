@@ -211,6 +211,10 @@ const BRICK_DAY_CAP = 600;
 const HOUSE_DEF = [
   ['home', 'home', 'شكل البيت', [['h1', 'كوخ', '🛖', 0], ['h2', 'بيت صغير', '🏠', 80], ['h3', 'بيت واسع', '🏡', 250], ['h4', 'فيلا', '🏰', 600]]],
   ['home', 'walls', 'لون الجدران', [['w1', 'أبيض', '#f4efe6', 0], ['w2', 'سماوي', '#bfe3f5', 25], ['w3', 'وردي', '#f7c6d6', 25], ['w4', 'ليموني', '#e4f0a8', 25]]],
+  ['home', 'door', 'لون الباب', [['d1', 'بني', '#7a4a2a', 0], ['d2', 'أزرق', '#2f5f9e', 15], ['d3', 'أحمر', '#b3362a', 15], ['d4', 'ذهبي', '#d4a437', 40]]],
+  ['home', 'upg', 'ترقيات البيت', [['u1', 'ألواح شمسية', '☀️', 90], ['u2', 'طبق ستلايت', '📡', 40], ['u3', 'علم', '🚩', 25], ['u4', 'إضاءة الواجهة', '💡', 60]]],
+  ['inside', 'paper', 'ورق الجدران', [['p1', 'كريمي', '#f3e6cf', 0], ['p2', 'أزرق', '#cfe3f3', 25], ['p3', 'أخضر', '#d4ebd0', 25], ['p4', 'وردي', '#f4d4de', 25]]],
+  ['inside', 'floor', 'الأرضية', [['f1', 'خشب', '#b98a5a', 0], ['f2', 'بلاط', '#d9d4c8', 30], ['f3', 'رخام', '#ecebf0', 60], ['f4', 'خشب داكن', '#7a5a3a', 40]]],
   ['home', 'roof', 'لون السقف', [['r1', 'أحمر', '#c9483c', 0], ['r2', 'بني', '#7a4a2a', 20], ['r3', 'أزرق', '#3f6fb5', 20], ['r4', 'أخضر', '#3f8f55', 20]]],
   ['inside', 'seat', 'الجلوس', [['se1', 'كرسي', '🪑', 15], ['se2', 'قنفة', '🛋️', 45], ['se3', 'سرير', '🛏️', 90]]],
   ['inside', 'tv', 'الجدار', [['tv1', 'لوحة', '🖼️', 20], ['tv2', 'تلفزيون', '📺', 60], ['tv3', 'ساعة', '🕰️', 35]]],
@@ -402,7 +406,7 @@ app.post('/api/start', authMw, (req, res) => {
   const u = db.users[req.key];
   let sl = Math.floor(Number(req.body && req.body.startLevel)) || 1;
   if (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1)) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
-  games.set(gid, { k: req.key, t: Date.now(), last: sl - 1, lt: Date.now() });
+  games.set(gid, { k: req.key, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
   res.json({ gid, start: sl });
 });
 
@@ -425,6 +429,18 @@ app.post('/api/level', authMw, (req, res) => {
   res.json({ gained, capped: gained < want, newZone, user: userInfo(req.key) });
 });
 
+// مكافأة الكومبو: كل 3 كومبوهات بالفردي = 8 مواد بناء (بحد أدنى فاصل زمني وحد أعلى لكل لعبة)
+app.post('/api/bonus', authMw, (req, res) => {
+  const g = games.get(String((req.body && req.body.gid) || ''));
+  if (!g || g.k !== req.key) return res.status(400).json({ error: 'لعبة غير صالحة' });
+  const now = Date.now();
+  if (g.bn >= 30 || now - g.bt < 3500) return res.status(429).json({ error: 'بسرعة' });
+  g.bn++; g.bt = now;
+  const u = db.users[req.key], dy = dayOf(u);
+  const gained = Math.max(0, Math.min(8, BRICK_DAY_CAP - (dy.bricks || 0)));
+  dy.bricks = (dy.bricks || 0) + gained; u.bricks = (u.bricks || 0) + gained; save();
+  res.json({ gained, user: userInfo(req.key) });
+});
 app.get('/api/house', authMw, (req, res) => res.json({ catalog: HOUSE, user: userInfo(req.key) }));
 app.post('/api/house/buy', authMw, (req, res) => {
   const it = HOUSE_ITEM[String((req.body && req.body.id) || '')]; const u = db.users[req.key];
