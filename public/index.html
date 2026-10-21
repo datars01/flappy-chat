@@ -367,11 +367,20 @@
   #spBab { font-family: Pacifico, 'Brush Script MT', 'Segoe Script', cursive; direction: ltr; unicode-bidi: isolate; padding: 0 6px; font-size: 56px; font-weight: 400; background: linear-gradient(90deg, #ff4d6d, #ffd166, #3ddc84, #3da5ff, #a855f7, #ff4d6d); background-size: 300% 100%;
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: spShine 2s linear infinite; filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
   @keyframes spShine { to { background-position: 300% 0; } }
-  #spBabRow { display: flex; align-items: center; gap: 10px; }
+  #spBabRow { display: flex; align-items: center; gap: 10px; position: relative; opacity: 0; }
+  #spReveal.magic #spBabRow { animation: spMagic 1.5s cubic-bezier(.2,.9,.3,1) forwards; }
+  @keyframes spMagic { 0% { opacity: 0; transform: scale(2.6) rotate(-6deg); filter: blur(18px) brightness(3); } 45% { opacity: 1; filter: blur(3px) brightness(2); } 70% { transform: scale(.92); filter: blur(0) brightness(1.4); } 100% { opacity: 1; transform: none; filter: none; } }
+  #spReveal.magic #spBab { animation: spShine 2s linear infinite, spGlow 1.6s ease-in-out infinite .8s; }
+  @keyframes spGlow { 0%,100% { filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); } 50% { filter: drop-shadow(0 0 16px rgba(255,214,102,.95)) drop-shadow(0 0 30px rgba(168,85,247,.8)); } }
+  #spRing { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid #ffd166; opacity: 0; pointer-events: none; }
+  #spReveal.magic #spRing { animation: spRing 1.2s ease-out .1s; }
+  @keyframes spRing { 0% { transform: scale(1); opacity: .9; box-shadow: 0 0 20px #ffd166; } 100% { transform: scale(16); opacity: 0; } }
+  .spStar { position: absolute; left: 50%; top: 50%; pointer-events: none; color: #fff; text-shadow: 0 0 10px #ffd166, 0 0 20px #a855f7; animation: spStar var(--d) ease-out forwards; }
+  @keyframes spStar { 0% { transform: translate(-50%,-50%) scale(0) rotate(0); opacity: 1; } 30% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.2) rotate(240deg); opacity: 0; } }
   #spHeart svg { width: 48px; height: 44px; display: block; } #spHeart { font-size: 48px; line-height: 0; animation: spBeat 1s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(255,60,100,.8)); }
   @keyframes spBeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.22); } 60% { transform: scale(1); } }
   #spSkip { position: absolute; bottom: 24px; z-index: 2; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 8px 20px; border-radius: 20px; font-size: 14px; }
-  @media (prefers-reduced-motion: reduce) { #spNum.pop, #spReveal.show, #spBird, #spBab, #spHeart { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { #spNum.pop, #spReveal.show, #spBird, #spBab, #spHeart { animation: none; } #spBabRow { opacity: 1; } }
 
   /* ===== الواجهة الرئيسية: اللعبة بالنص + قائمة أزرار ===== */
   #app { padding-bottom: 90px; gap: 8px; }
@@ -753,7 +762,7 @@
 <div id="toast"></div>
 <div id="splash"><canvas id="spConf"></canvas>
   <div id="spNum"></div>
-  <div id="spReveal"><canvas id="spBird" width="300" height="224"></canvas><div id="spTitle">بابيتو شات</div><div id="spBabRow"><span id="spBab">Rbsh</span><span id="spHeart"><svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhgb)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></span></div></div>
+  <div id="spReveal"><canvas id="spBird" width="300" height="224"></canvas><div id="spTitle">بابيتو شات</div><div id="spBabRow"><i id="spRing"></i><span id="spBab">Rbsh</span><span id="spHeart"><svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhgb)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></span></div></div>
   <button id="spSkip" type="button">تخطي ⏭</button>
 </div>
 <div id="dmPop"><div id="dmCard">
@@ -4703,13 +4712,25 @@ renderHome();
   function drawBird() {
     try { const b = $('spBird').getContext('2d'); b.clearRect(0, 0, 300, 224); b.save(); b.scale(3, 3); drawBirdSkin(b, 50, 37, 0, curSkin(), 0); b.restore(); } catch (e) {}
   }
+  function magicSparks() {
+    const row = $('spBabRow'); if (!row) return;
+    for (let i = 0; i < 34; i++) {
+      const s = document.createElement('span'); s.className = 'spStar'; s.textContent = ['✦', '✧', '★', '✨', '💖'][i % 5];
+      const a = Math.random() * 6.283, r = 70 + Math.random() * 150;
+      s.style.setProperty('--x', Math.cos(a) * r + 'px'); s.style.setProperty('--y', Math.sin(a) * r * 0.7 + 'px'); s.style.setProperty('--d', (900 + Math.random() * 900) + 'ms');
+      s.style.fontSize = (12 + Math.random() * 16) + 'px'; s.style.animationDelay = (Math.random() * 250) + 'ms';
+      row.appendChild(s); setTimeout(() => s.remove(), 2200);
+    }
+    burst(120);
+  }
   let n = 3;
   function step() {
     if (done) return;
     if (n > 0) { num.textContent = String(n); num.classList.remove('pop'); void num.offsetWidth; num.classList.add('pop'); n--; timers.push(setTimeout(step, 650)); return; }
-    num.style.display = 'none'; drawBird(); $('spReveal').classList.add('show'); try { magicSnd(); } catch (e) {}
+    num.style.display = 'none'; drawBird(); $('spReveal').classList.add('show');
+    timers.push(setTimeout(() => { if (done) return; $('spReveal').classList.add('magic'); try { magicSnd(); } catch (e) {} magicSparks(); }, 450));
     burst(170); timers.push(setTimeout(() => burst(90), 350));
-    timers.push(setTimeout(finish, 2300));
+    timers.push(setTimeout(finish, 4200));
   }
   raf = requestAnimationFrame(tick);
   try { introSnd(); if (actx && actx.state !== 'running') { const g = () => { if (!done) introSnd(); document.removeEventListener('pointerdown', g, true); }; document.addEventListener('pointerdown', g, true); } } catch (e) {}
