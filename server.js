@@ -588,10 +588,10 @@ app.post('/api/pet/share', authMw, (req, res) => {   // صاحب الحيوان 
   else { p.partners = p.partners.filter(x => x !== t); if (p.at === t) { p.at = ''; p.atUntil = 0; } }
   save(); pushTo(t, { t: 'pet_upd', owner: u.name }); res.json({ pet: petView(req.key, req.key) });
 });
-app.post('/api/pet/send', authMw, (req, res) => {   // يرسل الحيوان لبيت شريك 10 دقايق (ويرجع تلقائياً)
+app.post('/api/pet/send', authMw, (req, res) => {   // صاحب الحيوان يرسله يدوياً لبيت صديق (بإذنه)، ويرجع تلقائياً بعد 10 دقايق
   const u = db.users[req.key], p = petFix(req.key); if (!petSpecies(u)) return res.status(400).json({ error: 'ما عندك حيوان' });
   if (req.body && req.body.recall) { p.at = ''; p.atUntil = 0; save(); return res.json({ pet: petView(req.key, req.key) }); }
-  const t = keyOfName(req.body && req.body.name); if (!p.partners.includes(t) || !mutual(req.key, t)) return res.status(400).json({ error: 'ضيفه شريك أول' });
+  const t = keyOfName(req.body && req.body.name); if (!own(db.users, t) || t === req.key || !mutual(req.key, t)) return res.status(400).json({ error: 'لازم يكون صديقك' });
   p.at = t; p.atUntil = Date.now() + 600e3; save(); pushTo(t, { t: 'pet_upd', owner: u.name, toast: '🐾 ' + u.name + ' أرسل لك حيوانه ' + (p.name || '') + ' لمدة 10 دقايق، اعتنوا به سوا!' }); res.json({ pet: petView(req.key, req.key) });
 });
 

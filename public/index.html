@@ -4520,11 +4520,10 @@ function ptPanelRender() {
     const i = document.createElement('input'); i.maxLength = 14; i.placeholder = 'اسم الحيوان'; i.value = p.name || ''; const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB on'; b.textContent = '✔ حفظ';
     b.onclick = async () => { const r = await petAct('name', { name: i.value }); if (r) { PT.panel = ''; ptPanelRender(); sfx('magic'); } }; P.append(i, b);
   } else if (PT.panel === 'share' || PT.panel === 'send') {
-    const hd = document.createElement('div'); hd.className = 'ptNote'; hd.textContent = PT.panel === 'share' ? 'اختر الأصدقاء اللي يكدرون يعتنون بحيوانك معاك (تكدر تشيلهم بأي وقت):' : 'اختر شريك حتى ينرسل لبيته 10 دقايق ويعتنون سوا (يرجع تلقائياً):'; P.appendChild(hd);
+    const hd = document.createElement('div'); hd.className = 'ptNote'; hd.textContent = PT.panel === 'share' ? 'اختر الأصدقاء اللي يكدرون يعتنون بحيوانك معاك (تكدر تشيلهم بأي وقت):' : 'اختر صديق حتى ينرسل الحيوان لبيته ويعتنون به سوا، ويرجع لك تلقائياً بعد 10 دقايق:'; P.appendChild(hd);
     const fr = (fData && fData.friends) || []; if (!fr.length) { const e = document.createElement('div'); e.className = 'ptNote'; e.textContent = 'ما عندك أصدقاء بعد 👥'; P.appendChild(e); }
     fr.forEach(f => {
       const isP = p.partners.some(x => x.toLowerCase() === f.name.toLowerCase());
-      if (PT.panel === 'send' && !isP) return;
       const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB' + (PT.panel === 'share' && isP ? ' on' : ''); b.textContent = (PT.panel === 'share' ? (isP ? '✓ ' : '＋ ') : '📤 ') + f.name;
       b.onclick = async () => {
         try {
@@ -4534,7 +4533,6 @@ function ptPanelRender() {
       };
       P.appendChild(b);
     });
-    if (PT.panel === 'send' && !p.partners.length) { const e = document.createElement('div'); e.className = 'ptNote'; e.textContent = 'أول شي اضغط «شارك الحيوان» وضيف صديق شريك.'; P.appendChild(e); }
   }
 }
 function ptBed(on) { if (!PT.pet) return; PT.onBed = on; sfx('click'); petAct('bed', { on }); }
