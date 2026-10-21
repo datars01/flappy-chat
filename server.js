@@ -51,6 +51,50 @@ async function initStorage() {
   }
 }
 
+
+/* ===== تخزين خاص ومستقل للغرف المحمية (الشات ما ينمسح حتى لو انمسح/انخرب db الرئيسي) ===== */
+const PROT_DIR = path.join(DATA_DIR, 'protected');
+const protSig = {}, protBakAt = {};
+const protFile = code => path.join(PROT_DIR, String(code).replace(/[^a-z0-9]/g, '') + '.json');
+async function protRead(code) {
+  try {
+    if (pool) { const r = await pool.query('SELECT value FROM kv WHERE key = $1', ['prot:' + code]); return r.rows[0] ? JSON.parse(r.rows[0].value) : null; }
+    for (const f of [protFile(code), protFile(code) + '.bak']) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') console.error('protected read:', f, e.message); } }
+  } catch (e) { console.error('protected load failed:', e.message); }
+  return null;
+}
+async function protSave() {
+  for (const code of PROTECTED) {
+    const room = db.rooms && db.rooms[code]; if (!room) continue;
+    const json = JSON.stringify(room); if (protSig[code] === json) continue;
+    try {
+      if (pool) {
+        await pool.query("INSERT INTO kv (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", ['prot:' + code, json]);
+        if (Date.now() - (protBakAt[code] || 0) > 6 * 3600e3) { await pool.query("INSERT INTO kv (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", ['protbak:' + code, json]); protBakAt[code] = Date.now(); }
+      } else {
+        fs.mkdirSync(PROT_DIR, { recursive: true }); const f = protFile(code);
+        if (fs.existsSync(f) && Date.now() - (protBakAt[code] || 0) > 600e3) { fs.copyFileSync(f, f + '.bak'); protBakAt[code] = Date.now(); }
+        fs.writeFileSync(f + '.tmp', json); fs.renameSync(f + '.tmp', f);
+      }
+      protSig[code] = json;
+    } catch (e) { console.error('protected save failed:', e.message); }
+  }
+}
+async function protRestore() {   // عند التشغيل: ندمج الرسائل المحفوظة بالتخزين الخاص مع db (union بدون حذف أي رسالة)
+  for (const code of PROTECTED) {
+    const ext = await protRead(code), room = roomOf(code);
+    if (ext && Array.isArray(ext.msgs)) {
+      const have = new Set(room.msgs.map(m => m.id)), add = ext.msgs.filter(m => m && m.id && !have.has(m.id));
+      if (add.length) { room.msgs = room.msgs.concat(add).sort((a, b) => (a.ts || 0) - (b.ts || 0)); console.log('protected ' + code + ': رجّعت ' + add.length + ' رسالة من التخزين الخاص'); }
+      if ((!room.pins || !room.pins.length) && ext.pins && ext.pins.length) room.pins = ext.pins;
+      if (!room.bg && ext.bg) { room.bg = ext.bg; room.bgAt = ext.bgAt; }
+      room.reads = Object.assign({}, ext.reads || {}, room.reads || {});
+    }
+    console.log('protected ' + code + ': ' + room.msgs.length + ' رسالة');
+  }
+  await protSave();
+}
+
 let saveTimer = null, writing = false, dirty = false;
 async function writeNow() {
   if (writing) { dirty = true; return; }
@@ -65,6 +109,7 @@ async function writeNow() {
       fs.writeFileSync(tmp, json); fs.renameSync(tmp, DB_FILE);
     }
   } catch (e) { console.error('save failed:', e.message); }
+  try { await protSave(); } catch (e) {}
   writing = false;
   if (dirty) { dirty = false; await writeNow(); }
 }
@@ -362,6 +407,15 @@ app.post('/api/login', (req, res) => {
   res.json({ token: newSession(key), user: userInfo(key) });
 });
 
+// تصدير نسخة من الغرفة المحمية (للمالك فقط، يحتاج ADMIN_KEY)
+app.get('/api/admin/chat-backup', (req, res) => {
+  const sp = new URL(req.url, 'http://x').searchParams;
+  const ak = process.env.ADMIN_KEY || '';
+  if (limited('adm:' + req.ip, 10, 600e3)) return res.status(429).json({ error: 'محاولات كثيرة' });
+  if (!ak || ak.length < 8 || !safeEq(String(sp.get('key') || ''), ak)) return res.status(403).json({ error: 'مفتاح غلط' });
+  const code = String(sp.get('code') || 'rbsh99daklot99').toLowerCase(); if (!PROTECTED.has(code) || !db.rooms[code]) return res.status(404).json({ error: 'غرفة غير موجودة' });
+  res.setHeader('Content-Disposition', 'attachment; filename="chat-' + code + '.json"'); res.json(db.rooms[code]);
+});
 // منح عملات للاعب (للمالك فقط): يحتاج متغير ADMIN_KEY بإعدادات Render
 app.post('/api/admin/grant', (req, res) => {
   const ak = process.env.ADMIN_KEY || '';
@@ -1614,6 +1668,6 @@ function cleanup() {
 setInterval(cleanup, 3600e3);
 
 initStorage()
-  .then(() => { ensureAdmin(); rmLoad(); PROTECTED.forEach(c => roomOf(c)); })
+  .then(() => { ensureAdmin(); rmLoad(); return protRestore(); })
   .then(() => server.listen(PORT, () => console.log('Flappy server on :' + PORT)))
   .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
