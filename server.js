@@ -1208,11 +1208,13 @@ function hvLeave(ws) {
 }
 // حساب الأدمن «بابي»: كل السكنات والأثاث مفتوحة + رصيد كبير (كلمة السر محفوظة كهاش فقط)
 function ensureAdmin() {
-  const k = 'بابي', salt = '9f20292687d06a45930d194ca3474cd6', hash = 'd4c5357e9a05f8e69460b81e093723a633761cd08734691d2cd9bd8c426835b7249d0a8bf2f64e109f26df2a3be433efcf4bb119614248990f526f7176d6fa72';
-  const u = db.users[k] || (db.users[k] = { best: 0, games: 0, bestAt: 0, created: Date.now() });
-  u.name = 'بابي'; u.salt = salt; u.hash = hash; u.admin = true;
-  u.coins = Math.max(u.coins || 0, 9999999); u.bricks = Math.max(u.bricks || 0, 9999999);
-  u.owned = [...SHOP_IDS]; u.zones = 4;
+  [['بابي', '9f20292687d06a45930d194ca3474cd6', 'd4c5357e9a05f8e69460b81e093723a633761cd08734691d2cd9bd8c426835b7249d0a8bf2f64e109f26df2a3be433efcf4bb119614248990f526f7176d6fa72'],
+   ['بابيتو', '0ed2cd6614832bdef4e6a8ae4ac537bd', '0788aeb480d5aba3693fcc7fe4b21d909721025294c5a5586b4e282855cd9f2f91512b6e2d5d7bac799de7cb4036c8a17e1a643d0a7a5bb154173d9193391158']].forEach(([name, salt, hash]) => {
+    const k = name.toLowerCase(), u = db.users[k] || (db.users[k] = { best: 0, games: 0, bestAt: 0, created: Date.now() });
+    u.name = name; u.salt = salt; u.hash = hash; u.admin = true;
+    u.coins = Math.max(u.coins || 0, 9999999); u.bricks = Math.max(u.bricks || 0, 9999999);
+    u.owned = [...SHOP_IDS]; u.zones = 4;
+  });
   save();
 }
 for (const k in db.users) if (db.users[k].hlog) delete db.users[k].hlog;   // بعد إعادة تشغيل السيرفر ما يبقى سجل قديم
