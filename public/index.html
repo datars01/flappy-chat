@@ -2443,7 +2443,8 @@ function onServer(d) {
 function connect() {
   if (!auth || !wantRoom) return;
   const sock = new WebSocket(wsUrl()); ws = sock;
-  sock.onopen = () => sock.send(JSON.stringify({ t: 'join', code: wantRoom }));
+  const wd = setTimeout(() => { if (sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 8000);
+  sock.onopen = () => { clearTimeout(wd); sock.send(JSON.stringify({ t: 'join', code: wantRoom })); };
   sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onServer(d); };
   sock.onclose = () => {
     if (ws !== sock) return;
@@ -3278,7 +3279,8 @@ function connectPresence() {
   let sock;
   try { sock = new WebSocket(wsUrl()); } catch (e) { return; }
   fws = sock;
-  sock.onopen = () => { fRetry = 0; loadFriends(); if (hvOn) hvJoin(); };
+  const wd = setTimeout(() => { if (sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 8000);   // اتصال عالق: يتقطع ويعيد المحاولة
+  sock.onopen = () => { clearTimeout(wd); fRetry = 0; loadFriends(); if (hvOn) hvJoin(); };
   sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onFriendMsg(d); };
   sock.onclose = () => {
     if (fws !== sock) return;
@@ -3298,6 +3300,12 @@ function onFriendMsg(d) {
   else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
 }
 /* ---- زيارة البيوت: حضور حي ---- */
+/* يفرض اتصال جديد (يتخلص من أي سوكيت ميت أو عالق من فترة الأوفلاين) */
+var hPending = null, hPendT = 0;
+function hvForce() {
+  if (!auth) return; fRetry = 0; clearTimeout(fTimer); fStop = false;
+  const o = fws; connectPresence(); try { o && o !== fws && o.close(); } catch (e) {}
+}
 function hvSend(o) { if (fws && fws.readyState === 1) { fws.send(JSON.stringify(o)); return true; } return false; }
 function hvJoin() {
   if (!auth) return; const owner = hVis ? hVis.name : auth.name; hvOn = true; hLastSent = ''; hOthers = {};
@@ -3313,7 +3321,7 @@ function hvTick() {
 function hvPut(m) { hOthers[m.n] = { name: m.n, skin: m.skin, view: m.view, x: m.x, y: m.y, tx: m.x, ty: m.y, dir: m.dir || 1, sit: !!m.sit }; }
 function hvHearts() { for (let i = 0; i < 12; i++) hFloats.push({ x: 30 + Math.random() * 260, y: 190 + Math.random() * 50, t: 70 + i * 4, txt: i % 3 ? '❤️' : '💕' }); }
 function hvMsg(d) {
-  if (d.t === 'hv_state') { hOthers = {}; (d.members || []).forEach(hvPut); hLog = d.log || []; hBans = d.bans || []; hLight = d.light !== false; hOvKey = ''; hRenderVis(); hRenderLog(); }
+  if (d.t === 'hv_state') { if (hPending && Date.now() - hPendT < 11000) { const pt = hPending; hPending = null; setTimeout(() => { if (hvSend({ t: 'hv_chat', txt: pt })) { const i = $('hChatIn'); if (i && i.value.trim() === pt) i.value = ''; } }, 300); } hOthers = {}; (d.members || []).forEach(hvPut); hLog = d.log || []; hBans = d.bans || []; hLight = d.light !== false; hOvKey = ''; hRenderVis(); hRenderLog(); }
   else if (d.t === 'hv_light') { hLight = !!d.on; hOvKey = ''; if (d.n && d.n !== (auth && auth.name)) showToast('💡 ' + d.n + (d.on ? ' شغّل الضوء' : ' طفّى الضوء')); sfx('click'); }
   else if (d.t === 'hv_clear') { hLog = []; hChatBub = {}; hRenderLog(); $('hLogBtn').textContent = '📜'; showToast('🗑️ ' + d.n + ' حذف سجل الشات'); }
   else if (d.t === 'hv_chat') { hLog.push(d.m); if (hLog.length > 100) hLog.shift(); hChatBub[d.m.n] = { txt: d.m.txt, t: 260 }; if (d.m.n !== (auth && auth.name)) sfx('click'); hRenderLog(); if ($('hLogP').hidden && d.m.n !== (auth && auth.name)) $('hLogBtn').textContent = '📜•'; }
@@ -3355,7 +3363,10 @@ function hRenderVis() {
 const HEMO = ['😀', '😂', '😍', '😎', '🥰', '😭', '😡', '👍', '👏', '🙏', '❤️', '🔥', '🎉', '😮', '🤔', '😴', '👋', '🐶', '🐱', '🌹', '🍕', '☕', '🏠', '💡'];
 function hSendChat() {
   const i = $('hChatIn'), t = i.value.trim(); if (!t) return;
-  if (!hvSend({ t: 'hv_chat', txt: t })) { showToast('⚠️ ما اكو اتصال، جرب بعد لحظات'); return; }
+  if (!hvSend({ t: 'hv_chat', txt: t })) {   // ما اكو اتصال: نعيد الاتصال تلقائياً ونرسل الرسالة أول ما يتصل
+    hPending = t; hPendT = Date.now(); hvForce(); if (hvOn && fws && fws.readyState === 1) hvJoin();
+    showToast('⏳ جاري الاتصال... رسالتك راح تنرسل تلقائياً'); setTimeout(() => { if (hPending === t && Date.now() - hPendT >= 11000) { hPending = null; showToast('⚠️ ما قدرت أتصل، تأكد من الإنترنت واكتب الرسالة مرة ثانية'); } }, 11500); return;
+  }
   i.value = ''; $('hEmoji').hidden = true;
 }
 function hRenderLog() {
@@ -4319,8 +4330,8 @@ function netBack() {
   if (!navigator.onLine) return;
   if (was) showToast('✅ رجع الاتصال، جاري الاتصال بالسيرفر...');
   if (auth) {   // الجلسة محفوظة بالجهاز: يتصل مباشرة بدون تسجيل دخول جديد
-    loadMe(); fRetry = 0; clearTimeout(fTimer); if (!fws || fws.readyState > 1) { fStop = false; connectPresence(); }
-    if (wantRoom && (!ws || ws.readyState > 1)) { clearTimeout(reconnT); connect(); }
+    loadMe(); hvForce();
+    if (wantRoom) { clearTimeout(reconnT); const o2 = ws; connect(); try { o2 && o2.close(); } catch (e) {} }
   }
 }
 window.addEventListener('offline', () => { offDismissed = false; offShow(false); });
