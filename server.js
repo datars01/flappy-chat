@@ -1394,7 +1394,7 @@ const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.user
 function rmBc(r, msg, except) { const str = JSON.stringify(msg); for (const w of r.mem) if (w !== except && w.readyState === 1) w.send(str); }
 
 /* ===== شخصيات المنتجع (انمي): تنظيف ما يرسله اللاعب ===== */
-const AV_HS = { f: ['long','longb','wavy','wavys','xlong','bob','bobs','shoulder','pixie','crop','twin','twinbun','bun','pony','lowpony','sidepony','braid','twobraid','curly','afro','bowl','band','flower','halfup'], m: ['short','sweep','undercut','curly','spiky','buzz','pomp','mohawk','afro','manbun','long','mid','slick','curtain','messy','fade','pony','fringe','quiff','emo','wavy','samurai','spikelong','bowlcut'] }, AV_HC = ['black','dbrown','brown','chest','auburn','ginger','blonde','platinum','white','grey','red','burgundy','pink','hotpink','purple','lavender','blue','navy','teal','mint','green','orange','gold','galaxy','fire','ice','rainbow','rose'], AV_ADMHC = ['gold', 'galaxy', 'fire', 'ice', 'rainbow', 'rose'], AV_SK = ['porcelain','fair','light','peach','tan','olive','brown','dark','deep'];
+const AV_HS = { f: ['long','longb','wavy','wavys','xlong','bob','bobs','shoulder','pixie','pixiebang','twin','twinbun','bun','pony','lowpony','sidepony','braid','twobraid','curly','afro','bowl','band','flower','halfup','sidebraid','bunlong','bobbow','curlybang','pixieband','wavyribbon'], m: ['short','sweep','undercut','curly','spiky','buzz','pomp','mohawk','afro','manbun','long','mid','slick','curtain','messy','fade','pony','fringe','quiff','emo','wavy','samurai','spikelong','bowlcut','sidepart','sweepL','flattop','twists','bald','curlylong'] }, AV_HC = ['black','dbrown','brown','chest','auburn','ginger','blonde','platinum','white','grey','red','burgundy','pink','hotpink','purple','lavender','blue','navy','teal','mint','green','orange','gold','galaxy','fire','ice','rainbow','rose'], AV_ADMHC = ['gold', 'galaxy', 'fire', 'ice', 'rainbow', 'rose'], AV_SK = ['porcelain','fair','light','peach','tan','olive','brown','dark','deep'];
 const AV_TP = { f: ['tee','tank','crop','hoodie','long','blouse','sweater','polo','shirt'], m: ['tee','hoodie','long','polo','shirt','sweater','tank'] }, AV_BT = { f: ['jeans','shorts','skirt','pleat','lskirt','track'], m: ['jeans','shorts','track'] };
 function avClean(a, adm) {
   if (!a || typeof a !== 'object') return null; const g = a.g === 'm' ? 'm' : 'f', n = (v, lo, hi, d) => { v = Number(v); return Number.isInteger(v) && v >= lo && v <= hi ? v : d; }, hx = (v, d) => (typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v)) ? v.toLowerCase() : d, mk = Array.isArray(a.mk) ? a.mk : [];
@@ -1404,7 +1404,7 @@ function avClean(a, adm) {
     o: (typeof a.o === 'string' && /^[fm]_[a-z]{3}[0-9]{1,2}$/.test(a.o) && a.o[0] === g) ? a.o : '' };
 }
 function avClean2(a, adm) { const v = avClean(a); if (!v) return v; if (!adm) { if (AV_ADMHC.includes(v.hc)) v.hc = 'brown'; if (v.ey > 13) v.ey = 0; v.wg = 0; if (v.o.slice(2, 5) === 'adm') v.o = ''; } return v; }
-function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
+function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
   if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws); ws.rm = null; if (!r) return;
   r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) rmBc(r, { t: 'rm_leave', n: nm });
@@ -1445,7 +1445,7 @@ function rmOnMsg(ws, d) {
     const distinct = new Set([...r.mem].map(w => w.key)); if (!distinct.has(ws.key) && distinct.size >= (r.cap || RM_CAP)) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة ممتلئة (' + (r.cap || RM_CAP) + ' شخص)' });
     ws.rm = { id: r.id, owner: r.owner, x: 380 + Math.random() * 40, y: 300 + Math.random() * 30, dir: 1, sit: false, t: 0, ct: 0 };
     const members = [...r.mem].filter(w => w.readyState === 1).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws);
-    send(ws, { t: 'rm_state', id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
+    send(ws, { t: 'rm_state', music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     const am = rmAdm(ws); r.wel = r.wel || {};
     if (am && now - (r.wel[ws.key] || 0) > 60e3) {   // ترحيب مميز بدخول الادمنية
@@ -1455,13 +1455,24 @@ function rmOnMsg(ws, d) {
     }
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
-    const h = ws.rm; if (!h || now - h.t < 90) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     h.x = Math.max(0, Math.min(800, x)); h.y = Math.max(0, Math.min(620, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
-    const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
+    const r = rmRooms.get(h.id);
+    if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
+    if (r) rmBc(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
   } else if (d.t === 'rm_av') {   // حفظ شكل الشخصية (حساب: يتحفظ دائماً، ضيف: للجلسة فقط)
     const h = ws.rm; if (!h || now - (h.avt || 0) < 800) return; h.avt = now; const av = avClean2(d.av, rmAdm(ws)); if (!av) return;
     if (ws.guest) ws.av = av; else { db.users[ws.key].av = av; save(); }
     const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_av', n: me.name, av }, ws);
+  } else if (d.t === 'rm_music') {   // أغاني المنتجع (للمشرفين والادمنية فقط)
+    const h = ws.rm; if (!h) return; if (!rmAdm(ws)) { send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' }); return; } const r = rmRooms.get(h.id); if (!r) return; const u = String(d.url || '').trim().slice(0, 300);
+    if (!u) r.music = null; else { const m = u.match(/[?&]list=([A-Za-z0-9_-]{10,64})/), v = u.match(/(?:[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/); if (!m && !v) { send(ws, { t: 'rm_err', error: 'رابط يوتيوب غير صالح' }); return; } r.music = m ? { k: 'pl', id: m[1] } : { k: 'v', id: v[1] }; r.music.by = me.name; }
+    rmBc(r, { t: 'rm_music', music: r.music || null });
+  } else if (d.t === 'rm_hide') {   // اختفاء المشرفين
+    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!(rmAdm(ws) || r.mods.has(ws.key))) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
+    h.hid = d.on ? 1 : 0; rmBc(r, { t: 'rm_hid', n: rmNm(ws), on: h.hid });
+  } else if (d.t === 'rm_umb') {   // شمسية المطر
+    const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
     const h = ws.rm; if (!h || now - (h.et || 0) < 250) return; h.et = now; const e = Number(d.e); h.emo = Number.isInteger(e) && e >= 0 && e <= 8 ? e : 0;
     const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_emo', n: me.name, e: h.emo }, ws);

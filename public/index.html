@@ -442,7 +442,7 @@
   #rmMemArr { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 58px; padding: 0; border-radius: 0 14px 14px 0; background: rgba(10,14,30,.85); color: #fff; border: 1px solid rgba(255,255,255,.4); border-left: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; z-index: 3; } #rmMemArr b { font-size: 17px; line-height: 1; } #rmMemArr small { font-size: 10px; color: #ffd166; font-weight: 700; }
   #rmBox.memOpen #rmMemArr { left: 122px; }
   #rmRot { display: none; position: absolute; inset: 0; z-index: 20; background: rgba(20,10,40,.96); color: #fff; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; pointer-events: auto; } #rmRot.show { display: flex; } #rmRot div { font-size: 56px; animation: rsBob 1.6s ease-in-out infinite; } #rmRot b { font-size: 20px; } #rmRot small { opacity: .8; }
-  #rmFTtl { pointer-events: none; background: rgba(10,14,30,.7); }
+  #rmFTtl { pointer-events: auto; background: rgba(10,14,30,.7); }
   #rmKiss { position: absolute; left: 8px; bottom: 52px; z-index: 4; pointer-events: auto; background: linear-gradient(135deg,#ff5c8a,#e0245e); color: #fff; font-size: 15px; font-weight: 800; padding: 8px 16px; border-radius: 22px; border: 2px solid #fff; box-shadow: 0 4px 14px rgba(224,36,94,.55); width: auto; } #rmKiss[hidden] { display: none; }
   .rmRow.rmPerm { border: 1px solid #ffc83d; background: linear-gradient(90deg, rgba(255,200,61,.18), rgba(255,200,61,.04)); }
   #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
@@ -542,8 +542,26 @@
   #gameFab.drag { cursor: grabbing; transform: scale(1.12); }
 
   #rmSide { position: absolute; right: 6px; top: 84px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; z-index: 3; } #rmSide .hOvB { padding: 6px 10px; font-size: 12px; }
-  #rmBox.rmTiny #rmSide { display: none; }
-  #rmDance { position: absolute; right: 6px; top: 146px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.92); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: min(230px, 70%); } #rmDance[hidden] { display: none; }
+
+  #rmDock { position: absolute; right: 6px; top: 40px; display: grid; grid-template-columns: repeat(2, 46px); gap: 8px; z-index: 3; direction: ltr; }
+  .rmC { width: 46px; height: 46px; border-radius: 50%; border: 2px solid rgba(255,255,255,.55); background: rgba(10,14,30,.66); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; line-height: 1; box-shadow: 0 2px 8px rgba(0,0,0,.35); backdrop-filter: blur(3px); cursor: pointer; font-family: inherit; }
+  .rmC i { font-style: normal; font-size: 18px; } .rmC small { font-size: 7.5px; font-weight: 700; margin-top: 2px; max-width: 42px; white-space: nowrap; overflow: hidden; }
+
+  .rc-hid { background: rgba(90,110,200,.85); }
+  .rc-mus { background: rgba(190,40,120,.8); }
+  #rmMus { position: absolute; right: 108px; top: 40px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.93); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 10px; width: min(240px, 68%); color: #fff; font-size: 12px; } #rmMus[hidden] { display: none; }
+  #rmMus b { display: block; font-size: 12px; line-height: 1.5; margin-bottom: 8px; word-break: break-word; } #rmMus .mr { display: flex; gap: 6px; align-items: center; margin-top: 6px; } #rmMus button { width: auto; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; } #rmMus input[type=range] { flex: 1; width: 100%; } #rmMus input[type=text], #rmMusUrl { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; font-size: 12px; direction: ltr; }
+  #rmYT { position: fixed; left: -300px; top: 0; width: 200px; height: 200px; overflow: hidden; pointer-events: none; opacity: .01; }
+
+  #rmFTtl { cursor: pointer; } #rmFTtl::after { content: ' ▾'; }
+  #rmGo { position: absolute; left: 8px; top: 40px; z-index: 6; pointer-events: auto; width: min(250px, 72%); max-height: 70%; overflow: auto; background: rgba(20,12,50,.95); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 10px; color: #fff; font-size: 12px; } #rmGo[hidden] { display: none; }
+  #rmGo .gr { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 7px 8px; margin-top: 6px; border-radius: 10px; background: rgba(255,255,255,.1); cursor: pointer; } #rmGo .gr.cur { background: rgba(60,180,120,.35); cursor: default; } #rmGo .gr small { opacity: .8; display: block; } #rmGo .gr:active { background: rgba(255,255,255,.25); }
+  #rmGoC { margin-top: 8px; padding: 8px; border-radius: 10px; background: rgba(255,200,60,.18); border: 1px solid rgba(255,220,100,.5); } #rmGoC .mr { display: flex; gap: 6px; margin-top: 6px; } #rmGoC button { flex: 1; width: auto; background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 10px; padding: 6px; font-size: 12px; cursor: pointer; } #rmGoCode { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; }
+  .rmC.on { background: #ffd166; color: #3a2a00; } .rmC[hidden] { display: none; }
+  .rc-exit { background: rgba(170,30,55,.8); } .rc-view { background: rgba(20,95,170,.78); } .rc-soc { background: rgba(85,55,160,.78); } .rc-fun { background: rgba(205,115,20,.82); } .rc-me { background: rgba(25,125,95,.8); }
+  #rmBox.rmTiny .rmC { width: 36px; height: 36px; } #rmBox.rmTiny .rmC small { display: none; } #rmBox.rmTiny .rmC i { font-size: 16px; } #rmBox.rmTiny #rmDock { grid-template-columns: repeat(2, 36px); gap: 6px; top: 34px; }
+
+  #rmDance { position: absolute; right: 108px; top: 40px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.92); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: min(230px, 70%); } #rmDance[hidden] { display: none; }
   #rmDance button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; padding: 7px 4px; font-size: 13px; font-weight: 700; width: 100%; cursor: pointer; } #rmDance button.on { background: #ffd166; color: #3a2a00; } #rmDance button.stop { grid-column: 1 / -1; background: #c0392b; }
   #avEd { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 100000; background: rgba(10,8,30,.94); display: flex; justify-content: center; color: #fff; } #avEd[hidden] { display: none; }
   .avBox { display: flex; flex-direction: column; width: 100%; max-width: 920px; height: 100%; } .avMain { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -727,10 +745,10 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><span id="rmFTtl" class="hOvB"></span></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button></div></div>
+        <div class="hOvTop"><div class="hOvG"><span id="rmFTtl" class="hOvB"></span></div></div>
         <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><button id="rmKiss" type="button" hidden>😘 بوسة</button><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
-        <div id="rmSide"><button id="rmDanceBtn" class="hOvB" type="button">💃 رقص</button><button id="rmAvBtn" class="hOvB" type="button">👗 شخصيتي</button></div><div id="rmDance" hidden></div>
+        <div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
         <div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="500" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
       </div>
@@ -5101,8 +5119,8 @@ var AVT = (function () {
   const MKLOOKS = [['بدون مكياج', [0, 0, 0, 0, 0, 0]], ['طبيعي ناعم', [8, 7, 3, 1, 1, 0]], ['مكياج كامل', [2, 2, 1, 3, 2, 0]], ['سهرة أحمر', [2, 10, 4, 3, 3, 2]], ['سموكي', [7, 10, 7, 4, 3, 2]], ['وردي حالم', [11, 1, 3, 1, 2, 3]], ['ذهبي لامع', [14, 16, 5, 3, 2, 1]], ['بنفسجي', [12, 13, 6, 2, 2, 3]], ['أزرق بحري', [16, 3, 10, 3, 2, 4]], ['كراميل', [5, 4, 2, 1, 1, 1]], ['توتي', [10, 8, 6, 2, 2, 0]], ['مرجاني', [13, 14, 2, 1, 1, 0]], ['أخضر زمردي', [15, 12, 1, 3, 2, 1]], ['فاتح كوري', [21, 7, 3, 1, 1, 3]], ['جريء داكن', [19, 21, 8, 4, 3, 0]], ['مشمشي', [9, 7, 5, 1, 1, 1]], ['عروس', [16, 1, 3, 3, 2, 2]], ['برونزي', [22, 15, 7, 3, 2, 1]], ['لافندر', [20, 19, 9, 1, 2, 3]], ['نيون وردي', [6, 11, 1, 5, 2, 5]], ['فيروزي', [3, 22, 10, 5, 2, 4]], ['رمادي أنيق', [18, 15, 7, 2, 1, 2]], ['أسود غامض', [23, 10, 8, 4, 3, 2]], ['ربيعي', [21, 20, 2, 1, 1, 0]]];
   /* ---- قصات الشعر: [مفتاح، اسم، خلفية، أمامية، إضافة] ---- */
   const HSL = {
-    f: [['long', 'طويل ناعم', 'long', 'center', ''], ['longb', 'طويل بغرة', 'long', 'bangs', ''], ['wavy', 'طويل مموج', 'longwave', 'center', ''], ['wavys', 'مموج جانبي', 'longwave', 'side', ''], ['xlong', 'طويل جداً', 'xlong', 'bangs', ''], ['bob', 'كاريه', 'bob', 'bangs', ''], ['bobs', 'كاريه جانبي', 'bob', 'side', ''], ['shoulder', 'لحد الكتف', 'shoulder', 'center', ''], ['pixie', 'قصير ناعم', 'none', 'side', ''], ['crop', 'قصير ولادي', 'none', 'crop', ''], ['twin', 'ذيلين', 'twin', 'center', ''], ['twinbun', 'كعكتين', 'none', 'center', 'twinbun'], ['bun', 'كعكة عالية', 'none', 'center', 'topbun'], ['pony', 'ذيل عالي', 'pony', 'center', ''], ['lowpony', 'ذيل واطي', 'lowpony', 'center', ''], ['sidepony', 'ذيل جانبي', 'sidepony', 'side', ''], ['braid', 'ضفيرة', 'braid', 'center', ''], ['twobraid', 'ضفيرتين', 'twobraid', 'bangs', ''], ['curly', 'كيرلي', 'curlyl', 'side', ''], ['afro', 'أفرو', 'afro', 'crop', ''], ['bowl', 'طويل مع شريطة', 'long', 'bangs', 'bow'], ['band', 'مموج مع طوق', 'longwave', 'center', 'headband'], ['flower', 'طويل مع ورد', 'xlong', 'side', 'flowers'], ['halfup', 'نص مربوط', 'long', 'center', 'halfup']],
-    m: [['short', 'قصير كلاسيك', 'none', 'short', ''], ['sweep', 'مسرّح جانبي', 'none', 'sweep', ''], ['undercut', 'أندركت', 'none', 'undercut', ''], ['curly', 'كيرلي', 'none', 'curly', ''], ['spiky', 'مدبب', 'none', 'spiky', ''], ['buzz', 'حليق خفيف', 'none', 'buzz', ''], ['pomp', 'بومبادور', 'none', 'pomp', ''], ['mohawk', 'موهوك', 'none', 'mohawk', ''], ['afro', 'أفرو', 'afro', 'crop', ''], ['manbun', 'كعكة رجالي', 'none', 'crop', 'topbun'], ['long', 'طويل', 'xlong', 'center', ''], ['mid', 'متوسط', 'mid', 'center', ''], ['slick', 'للخلف', 'none', 'slick', ''], ['curtain', 'ستارة', 'none', 'center', ''], ['messy', 'منكوش', 'none', 'messy', ''], ['fade', 'فيد', 'none', 'crop', ''], ['pony', 'ذيل رجالي', 'pony', 'crop', ''], ['fringe', 'غرة', 'none', 'bangs', ''], ['quiff', 'كويف', 'none', 'quiff', ''], ['emo', 'غرة طويلة', 'mid', 'emo', ''], ['wavy', 'متوسط مموج', 'midwave', 'center', ''], ['samurai', 'ساموراي', 'none', 'slick', 'topknot'], ['spikelong', 'مدبب مع خلفية', 'mid', 'spiky', ''], ['bowlcut', 'كاسة', 'none', 'bangs', '']]
+    f: [['long', 'طويل ناعم', 'long', 'center', ''], ['longb', 'طويل بغرة', 'long', 'bangs', ''], ['wavy', 'طويل مموج', 'longwave', 'center', ''], ['wavys', 'مموج جانبي', 'longwave', 'side', ''], ['xlong', 'طويل جداً', 'xlong', 'bangs', ''], ['bob', 'كاريه', 'bob', 'bangs', ''], ['bobs', 'كاريه جانبي', 'bob', 'side', ''], ['shoulder', 'لحد الكتف', 'shoulder', 'center', ''], ['pixie', 'قصير ناعم', 'none', 'side', ''], ['pixiebang', 'قصير بغرة', 'none', 'bangs', ''], ['twin', 'ذيلين', 'twin', 'center', ''], ['twinbun', 'كعكتين', 'none', 'center', 'twinbun'], ['bun', 'كعكة عالية', 'none', 'center', 'topbun'], ['pony', 'ذيل عالي', 'pony', 'center', ''], ['lowpony', 'ذيل واطي', 'lowpony', 'center', ''], ['sidepony', 'ذيل جانبي', 'sidepony', 'side', ''], ['braid', 'ضفيرة', 'braid', 'center', ''], ['twobraid', 'ضفيرتين', 'twobraid', 'bangs', ''], ['curly', 'كيرلي', 'curlyl', 'side', ''], ['afro', 'أفرو', 'afro', 'crop', ''], ['bowl', 'طويل مع شريطة', 'long', 'bangs', 'bow'], ['band', 'مموج مع طوق', 'longwave', 'center', 'headband'], ['flower', 'طويل مع ورد', 'xlong', 'side', 'flowers'], ['halfup', 'نص مربوط', 'long', 'center', 'halfup'], ['sidebraid', 'ضفيرة جانبية', 'braid', 'side', ''], ['bunlong', 'طويل مع كعكة', 'long', 'center', 'topbun'], ['bobbow', 'كاريه مع شريطة', 'bob', 'bangs', 'bow'], ['curlybang', 'كيرلي بغرة', 'curlyl', 'bangs', ''], ['pixieband', 'قصير مع طوق', 'none', 'side', 'headband'], ['wavyribbon', 'مموج بغرة وشريطة', 'longwave', 'bangs', 'bow']],
+    m: [['short', 'قصير كلاسيك', 'none', 'short', ''], ['sweep', 'مسرّح جانبي', 'none', 'sweep', ''], ['undercut', 'أندركت', 'none', 'undercut', ''], ['curly', 'كيرلي', 'none', 'curly', ''], ['spiky', 'مدبب', 'none', 'spiky', ''], ['buzz', 'حليق خفيف', 'none', 'buzz', ''], ['pomp', 'بومبادور', 'none', 'pomp', ''], ['mohawk', 'موهوك', 'none', 'mohawk', ''], ['afro', 'أفرو', 'afro', 'crop', ''], ['manbun', 'كعكة رجالي', 'none', 'crop', 'topbun'], ['long', 'طويل للكتف', 'shoulder', 'center', ''], ['mid', 'متوسط', 'mid', 'center', ''], ['slick', 'للخلف', 'none', 'slick', ''], ['curtain', 'ستارة', 'none', 'center', ''], ['messy', 'منكوش', 'none', 'messy', ''], ['fade', 'فيد', 'none', 'crop', ''], ['pony', 'ذيل رجالي', 'pony', 'crop', ''], ['fringe', 'غرة', 'none', 'bangs', ''], ['quiff', 'كويف', 'none', 'quiff', ''], ['emo', 'غرة طويلة', 'mid', 'emo', ''], ['wavy', 'متوسط مموج', 'midwave', 'center', ''], ['samurai', 'ساموراي', 'none', 'slick', 'topknot'], ['spikelong', 'مدبب مع خلفية', 'mid', 'spiky', ''], ['bowlcut', 'كاسة', 'none', 'bangs', ''], ['sidepart', 'فرق جانبي', 'none', 'side', ''], ['sweepL', 'مسرّح يسار', 'none', 'sweepL', ''], ['flattop', 'فلات توب', 'none', 'flattop', ''], ['twists', 'تويست', 'none', 'twists', ''], ['bald', 'أصلع', 'none', 'bald', ''], ['curlylong', 'كيرلي طويل', 'mid', 'curly', '']]
   };
   const HS = { f: HSL.f.map(x => x[0]), m: HSL.m.map(x => x[0]) };
   const HSN = {}; ['f', 'm'].forEach(g => HSL[g].forEach(x => HSN[g + x[0]] = x));
@@ -5269,6 +5287,9 @@ var AVT = (function () {
     const F = H[1], L = H[2], f = S[3], ex = S[4];
     if (f === 'center' || f === 'bangs' || f === 'side' || f === 'short' || f === 'sweep' || f === 'undercut' || f === 'crop' || f === 'slick' || f === 'messy' || f === 'emo') { fringe(c, F, f === 'crop' ? -125 : -127.4, f); hl(c, L, -10, -120, -2, -125.6, 7, -122.6); if (f === 'center') { c.strokeStyle = sh(H[0], 1.2); c.lineWidth = 1 * KLW; c.beginPath(); c.moveTo(0, -127); c.lineTo(0, -112); c.stroke(); } if (f === 'slick') { c.strokeStyle = L; c.lineWidth = 1 * KLW; c.globalAlpha = .6; [-8, -3, 3, 8].forEach(x => { c.beginPath(); c.moveTo(x, -112); c.quadraticCurveTo(x * 1.2, -120, x * 1.6, -126); c.stroke(); }); c.globalAlpha = 1; } }
     if (f === 'buzz') { fringe(c, F, -123, 'buzz', .8); }
+    if (f === 'sweepL') { c.save(); c.scale(-1, 1); fringe(c, F, -127.4, 'sweep'); hl(c, L, -10, -120, -2, -125.6, 7, -122.6); c.restore(); }
+    if (f === 'flattop') { c.beginPath(); c.moveTo(-16, -98); c.lineTo(-15.4, -126); c.lineTo(15.4, -126); c.lineTo(16, -98); EDGES.crop.forEach(p => { if (p.length === 4) c.quadraticCurveTo(p[0], p[1], p[2], p[3]); else c.lineTo(p[0], p[1]); }); c.closePath(); P(c, F, 1.3); hl(c, L, -10, -122, 0, -123, 10, -122); }
+    if (f === 'twists') { fringe(c, F, -124, 'crop'); for (let i = -3; i <= 3; i++) for (let j = 0; j < 2; j++) { E(c, i * 4.4 + j * 2, -126 + j * 3 - Math.abs(i) * .8, 2.2, 2.6); P(c, F, 1); } }
     if (f === 'pomp') { fringe(c, F, -128, 'crop'); Q(c, [[-14, -116], [-18, -134, 0, -140, 8, -138], [20, -136, 18, -120, 14, -114], [8, -122, -6, -122, -14, -116]]); P(c, F, 1.3); hl(c, L, -9, -128, -1, -136, 9, -131); }
     if (f === 'quiff') { fringe(c, F, -127.4, 'sweep'); Q(c, [[-6, -126], [-4, -140, 14, -140, 17, -128], [12, -131, 2, -130, -6, -126]]); P(c, F, 1.3); hl(c, L, -2, -131, 5, -137, 12, -133); }
     if (f === 'mohawk') { fringe(c, F, -121, 'buzz', .45); Q(c, [[-5, -118], [-7, -134, -1, -143, 0, -143], [1, -143, 7, -134, 5, -118], [2, -112, -2, -112, -5, -118]]); P(c, F, 1.3); [[-4, -125], [0, -128], [4, -125]].forEach(p => hl(c, L, p[0], p[1] + 6, p[0], p[1], p[0] + .5, p[1] - 5)); }
@@ -5360,6 +5381,8 @@ var AVT = (function () {
       else if (d === 7) { const w = Math.abs(Math.sin(q / 6)); o.bob = -w * 10; o.aL = 2.4; o.aR = 2.4; o.lL = o.lR = .3 * w; o.kL = o.kR = .9 * w; o.hair = Math.sin(q / 6) * .08; }
       else if (d === 8) { const w = Math.sin(q / 5); o.aR = 1.7 + w * .9; o.aL = .35; o.hip = Math.sin(q / 10) * 1.8; o.rot = Math.sin(q / 10) * .05; o.bob = -Math.abs(w) * 1; o.hair = w * .05; o.headR = Math.sin(q / 10) * .08; }
     }
+    if (Pp.umb && !d) { o.aR = .55; o.sR = 0; o.eR = .25; }
+    if (Pp.cold > .05 && !d) { const k = Pp.cold, s = Math.sin(t * 1.9); o.rot += s * .03 * k; o.headR += Math.sin(t * 2.4) * .05 * k; o.hair += s * .05 * k; if (!mv) { o.aL = .3; if (!Pp.umb) o.aR = .3; o.eL = .9 * k; if (!Pp.umb) o.eR = .9 * k; o.sL = 0; if (!Pp.umb) o.sR = 0; o.kL = Math.abs(s) * .2 * k; o.kR = Math.abs(Math.sin(t * 1.9 + 1.7)) * .2 * k; } }
     return o;
   }
   const WINGS = 'M0,0 C16,-30 46,-50 72,-42 C60,-30 66,-22 50,-14 C57,-5 48,6 30,12 C20,8 10,6 0,0Z';
@@ -5489,7 +5512,7 @@ const RM_SEATS = [];
   [[600, 258], [700, 258], [610, 340], [712, 340]].forEach(p => add('bench', p[0], p[1]));
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.5; add('log', 400 + Math.cos(a) * 70, 440 + Math.sin(a) * 36); }
   [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
-  [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1]));
+  [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1])); add('swing2', 232, 392);
   [620, 648, 676, 704].forEach(x => add('stool', x, 492));
   add('chair', 330, 520, 58); add('chair', 478, 560, 58);
 })();
@@ -5499,6 +5522,7 @@ function rmSpots(sd) {
     case 'lounge': a = [mk(2, 9, 1)]; break;
     case 'bench': a = [mk(-12, 11, 1), mk(12, 11, -1)]; break;
     case 'sofa': { const g = SEAT_G['🛋️']; a = g.xs.map((x, i) => mk(x * sd.s, g.dy * sd.s, i ? -1 : 1)); break; }
+    case 'swing2': a = [mk(-15, 11, 1), mk(15, 11, 1)]; break;
     case 'chair': a = [mk(0, SEAT_G['🪑'].dy * sd.s)]; break;
     case 'log': a = [mk(0, 10)]; break;
     case 'stool': a = [mk(0, 18)]; break;
@@ -5507,6 +5531,9 @@ function rmSpots(sd) {
   a.forEach((s, i) => { s.i = i; s.k = sd.i + ':' + i; }); return a;
 }
 const RM_SPOTS = RM_SEATS.flatMap(rmSpots);
+const rmTaken = sp => rmBusy(sp) || (RM.me.seat === sp && (RM.me.sit || RM.me.jump || RM.me.goal));
+const rmSwingFor = (x, y) => RM_SPOTS.find(q => (q.seat.kind === 'swing' || q.seat.kind === 'swing2') && Math.hypot(q.x - x, q.y - y) < 12);
+function rmSeatCheck() { const m = RM.me; if (m.goal && m.seat && !m.sit && !m.jump && rmBusy(m.seat)) { m.goal = false; m.seat = null; m.tx = m.x; m.ty = m.y; showToast('⛔ سبقك أحد على هذا المقعد'); rmPrompt(true); } }
 const rmBusy = sp => Object.values(RM.others).some(o => o.sit && Math.hypot(o.x - sp.x, o.y - sp.y) < 9);
 var gws = null, RMG = { name: '' };
 const rmMe = () => (auth ? auth.name : RMG.name) || 'أنت';
@@ -5536,9 +5563,11 @@ function rmSeatDraw(c, sd) {
   else if (k === 'chair') drawSeat(c, '🪑', sd.s);
   else if (k === 'log') { rmRR(c, -10, -12, 20, 12, 3, '#8b5a2b'); c.fillStyle = '#d2a468'; c.beginPath(); c.ellipse(0, -12, 10, 4.2, 0, 0, 7); c.fill(); c.strokeStyle = '#a97a40'; c.lineWidth = 0.8; c.beginPath(); c.ellipse(0, -12, 6, 2.5, 0, 0, 7); c.stroke(); }
   else if (k === 'stool') { rmRR(c, -1.6, -17, 3.2, 17, 1, '#555'); c.fillStyle = '#444'; c.beginPath(); c.ellipse(0, -1, 7, 2.4, 0, 0, 7); c.fill(); c.fillStyle = '#c0392b'; c.beginPath(); c.ellipse(0, -18, 8.5, 3.6, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-2, -19, 4, 1.2, 0, 0, 7); c.fill(); }
-  else if (k === 'swing') {
-    const sw = Math.sin(RM.T / 45) * 0.03; c.strokeStyle = '#7a4a28'; c.lineWidth = 3; c.beginPath(); c.moveTo(-22, 0); c.lineTo(-17, -78); c.moveTo(22, 0); c.lineTo(17, -78); c.moveTo(-19, -78); c.lineTo(19, -78); c.stroke();
-    c.save(); c.translate(0, -78); c.rotate(sw); c.strokeStyle = '#d9c08a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-10, 0); c.lineTo(-10, 66); c.moveTo(10, 0); c.lineTo(10, 66); c.stroke(); rmRR(c, -13, 64, 26, 4.5, 2, '#c68a55'); c.restore();
+  else if (k === 'swing' || k === 'swing2') {
+    const sps = RM_SPOTS.filter(q => q.seat === sd), nT = sps.filter(rmTaken).length; sd.amp = (sd.amp || 0) + ((nT ? 0.15 + 0.09 * nT : 0.03) - (sd.amp || 0)) * 0.03; sd.ph = (sd.ph || 0) + 0.05; sd.ang = sd.amp * Math.sin(sd.ph);
+    const W = k === 'swing2' ? 44 : 22; c.strokeStyle = '#7a4a28'; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(-W, 0); c.lineTo(-W + 5, -80); c.moveTo(W, 0); c.lineTo(W - 5, -80); c.moveTo(-W + 3, -80); c.lineTo(W - 3, -80); c.stroke();
+    if (k === 'swing2') { c.strokeStyle = '#5a361c'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-W + 1, -40); c.lineTo(W - 1, -40); c.stroke(); }
+    (k === 'swing2' ? [-15, 15] : [0]).forEach(dx => { c.save(); c.translate(dx, -80); c.rotate(sd.ang); c.strokeStyle = '#d9c08a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-10, 0); c.lineTo(-10, 68); c.moveTo(10, 0); c.lineTo(10, 68); c.stroke(); rmRR(c, -13, 66, 26, 4.5, 2, '#c68a55'); c.restore(); });
   }
   c.restore();
 }
@@ -5657,27 +5686,34 @@ function rmAura(c, x, y, kind) {
 }
 function rmBurst(x, y, kind) { for (let i = 0; i < 46; i++) { const a = Math.random() * 6.283, v = 0.6 + Math.random() * 2.2; RM.sparks.push({ x, y: y - 16, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.6, t: 34 + Math.random() * 26 }); } }
 function crownIcon(kind) { const k = document.createElement('canvas'); k.width = 30; k.height = 22; k.style.cssText = 'width:20px;height:15px;vertical-align:-2px;margin-inline-end:3px'; drawCrown(k.getContext('2d'), 15, 19, kind, 1.05); return k; }
-const AV_H = 54;
+const AV_H = 76;
 function rmSetDance(e) { const m = RM.me; e = e | 0; if ((m.dance || 0) === e) return; if (e && (m.sit || m.jump)) { showToast('🧍 قوم من الكرسي أول'); return; } m.dance = e; m.dt = 0; rmSend({ t: 'rm_emo', e }); rmDanceMark(); }
-function rmDrawMe(c, st) {
+function rmDrawMe(c, st) { rmDrawMeH(c, st); rmBurnFx(c, RM.me); }
+function rmDrawMeH(c, st) { if (RM.me.hid) { c.save(); c.globalAlpha = 0.42; rmDrawMe0(c, st); c.restore(); rmGhost(c, RM.me.x, RM.me.y); return; } rmDrawMe0(c, st); }
+function rmGhost(c, x, y) { const t = RM.T / 30; c.save(); c.globalAlpha = 0.3 + 0.12 * Math.sin(t * 2); const g = c.createRadialGradient(x, y - 40, 5, x, y - 40, 62); g.addColorStop(0, 'rgba(160,200,255,.55)'); g.addColorStop(1, 'rgba(160,200,255,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(x, y - 40, 40, 66, 0, 0, 7); c.fill(); c.globalAlpha = 0.8; c.font = '12px sans-serif'; c.textAlign = 'center'; c.fillText('👻', x + 22, y - 92); c.restore(); }
+function rmDrawMe0(c, st) {
   const m = RM.me, sit = m.sit && !st.mv;
   m.sk += ((sit ? 1 : 0) - m.sk) * 0.18; m.bn = Math.max(0, m.bn - 0.07);
   { const dd = Math.hypot(m.x - (m.lx === undefined ? m.x : m.lx), m.y - (m.ly === undefined ? m.y : m.ly)); m.ph = (m.ph || 0) + Math.min(dd, 4) * 0.14; m.lx = m.x; m.ly = m.y; } if (m.dance && (st.mv || m.sit || m.jump)) rmSetDance(0); if (m.dance) m.dt = (m.dt || 0) + 1;
   const sk = m.sk, up = st.air * 0.8;
   if (RM.myAdm) rmAura(c, m.x, m.y, RM.myAdm);
-  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 12 * (1 - st.air / 40), 3.6 * (1 - st.air / 50), 0, 0, 7); c.fill();
-  c.save(); c.translate(m.x, m.y + 8 * sk - up); c.scale(m.dir, 1); AVT.drawAt(c, m.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: m.dance || 0, dt: m.dt || 0 }); c.restore();
-  rmTag(c, rmMe(), m.x, m.y - 68 + 8 * sk - up, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - 72 + 8 * sk - up);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 17 * (1 - st.air / 40), 5 * (1 - st.air / 50), 0, 0, 7); c.fill();
+  const cold = rmCold(m), ui = rmUi(m), wet = rmWet(m); m.pseed = 3;
+  const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: m.dance || 0, dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
+  const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf);
 }
-function rmDrawOther(c, o) {
+function rmDrawOther(c, o) { rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) rmBurnFx(c, o); }
+function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; c.save(); c.globalAlpha = 0.42; rmDrawOther0(c, o); c.restore(); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
+function rmDrawOther0(c, o) {
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
   const sit = o.sit && !mv; if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
   o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
   { const dd = Math.hypot(o.x - (o.lx === undefined ? o.x : o.lx), o.y - (o.ly === undefined ? o.y : o.ly)); o.ph = (o.ph || 0) + Math.min(dd, 4) * 0.14; o.lx = o.x; o.ly = o.y; } if (mv) o.dance = 0; if (o.sit) o.dance = 0; if (o.dance) o.dt = (o.dt || 0) + 1;
   if (o.adm) rmAura(c, o.x, o.y, o.adm);
-  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 12, 3.6, 0, 0, 7); c.fill();
-  c.save(); c.translate(o.x, o.y + 8 * k); c.scale(o.dir, 1); AVT.drawAt(c, o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: o.dance || 0, dt: o.dt || 0 }); c.restore();
-  rmTag(c, o.name, o.x, o.y - 68 + 8 * k, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - 72 + 8 * k); rmTyping(c, o.name, o.x, o.y - 72 + 8 * k);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 17, 5, 0, 0, 7); c.fill();
+  if (!o.pseed) o.pseed = rmHash(o.name) % 30; const cold = rmCold(o), ui = rmUi(o), wet = rmWet(o);
+  const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: o.dance || 0, dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
+  const lf = 16 * ui; rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
 }
 function rmTyping(c, name, x, y) {
   if (!RM.typOn) return; const e = RM.typ[name]; if (!e) return; const now = performance.now(); if (now > e) { delete RM.typ[name]; return; }
@@ -5698,15 +5734,193 @@ function rmWrap(c, txt, maxW) {
   if (cur) lines.push(cur); return lines;
 }
 function rmBub(c, name, x, y) {
-  const b = RM.bubs[name]; if (!b || b.t <= 0) return; b.t--;
-  c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center';
-  if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
-  const LH = 14, w = b.w, h = b.lines.length * LH + 8, bx = x - w / 2, by = y - 16 - h; c.globalAlpha = Math.min(1, b.t / 20);
-  c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
-  c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 7); c.lineTo(x + 5, by + h - 0.5); c.fill(); c.fillStyle = '#222';
-  b.lines.forEach((l, k) => c.fillText(l, x, by + 4 + LH * (k + 1) - 3, w - 8)); c.restore();
+  const b = RM.bubs[name]; if (!b || b.t <= 0) return; b.t--; if (!b.st) b.st = ++RM.bubN;
+  (RM.bubQ || (RM.bubQ = [])).push({ b, x, y });
+}
+RM.bubN = 0;
+function rmBubFlush(c) {
+  const Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = [];
+  c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const LH = 14, placed = [];
+  Q.sort((p, q) => p.b.st - q.b.st).forEach(it => {
+    const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
+    const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
+    for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = hit.y - h - 4; }
+    placed.push({ x: bx, y: by, w, h });
+    c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
+    const ty = it.y - 16; if (by + h < ty - 2) { c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.strokeStyle = 'rgba(0,0,0,.25)'; c.setLineDash([2, 3]); c.stroke(); c.setLineDash([]); }
+    else { c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 7); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
+    c.fillStyle = '#222'; b.lines.forEach((l, k) => c.fillText(l, bx + w / 2, by + 4 + LH * (k + 1) - 3, w - 8)); c.restore();
+  }); c.restore();
 }
 function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math.hypot(s.x - x, s.y - y) < 7); if (sp) return sp.ey + 0.5; } return sy; }
+/* ---------- الطقس (مطر/ثلج) + جربوع (موظف الاستقبال) ---------- */
+const RM_FIRE = { x: 400, y: 440 }, RM_WX_CYC = 1440;
+RM.rainI = 0; RM.snowI = 0; RM.wxUmb = false; RM.wxRain = false; RM.rain = null; RM.flakes = null; RM.wx0 = 0; RM.wxOff = 0; RM.wxLast = '';
+function rmWx() { if (!RM.wx0) RM.wx0 = performance.now() / 1000; const el = ((performance.now() / 1000 - RM.wx0 + (RM.wxOff || 0)) % RM_WX_CYC + RM_WX_CYC) % RM_WX_CYC; return { el, rain: el >= 600 && el < 720, umb: el >= 600 && el < 840, snow: el >= 1320 }; }
+function rmHash(s) { let h = 0; s = String(s || ''); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+function rmWxStep() {
+  const w = rmWx(); RM.rainI += ((w.rain ? 1 : 0) - RM.rainI) * 0.02; RM.snowI += ((w.snow ? 1 : 0) - RM.snowI) * 0.02; RM.wxUmb = w.umb; RM.wxRain = w.rain; rmUmbBtn();
+  const k = w.rain ? 'rain' : w.snow ? 'snow' : 'clear'; if (k !== RM.wxLast) { if (RM.wxLast) showToast(k === 'rain' ? '🌧️ بدأ المطر! الكل يطلع الشمسيات ☂️' : k === 'snow' ? '❄️ بدأ الثلج! تقرّبوا من النار 🔥' : (RM.wxLast === 'rain' ? '🌤️ توقف المطر' : '☀️ صفا الجو')); RM.wxLast = k; }
+}
+function rmCold(o) {
+  const near = Math.hypot(o.x - RM_FIRE.x, (o.y - RM_FIRE.y) * 1.25) < 82, tg = (RM.snowI > 0.4 && !near) ? 1 : 0; o.cold = (o.cold || 0) + (tg - (o.cold || 0)) * (tg ? 0.03 : 0.09); if (o.cold < 0.01) o.cold = 0;
+  if (o.cold > 0.5 && (RM.T + (o.pseed || 0)) % 34 === 0) RM.sparks.push({ x: o.x + (o.dir || 1) * 4, y: o.y - AV_H * 0.9, vx: 0.18 * (o.dir || 1), vy: -0.3, t: 50, puff: 1 });
+  return o.cold;
+}
+
+function rmUi(o) { o.ui = (o.ui || 0) + (((RM.wxUmb && o.umbOn !== false) ? 1 : 0) - (o.ui || 0)) * 0.07; return o.ui; }
+function rmWet(o) {
+  const rainOn = RM.rainI > 0.3 && (o.ui || 0) < 0.3; o.wet = Math.max(0, Math.min(1, (o.wet || 0) + (rainOn ? 0.006 : -0.012))); if (!rainOn && o.wet < 0.01) o.wet = 0;
+  if (rainOn && RM.T % 5 === 0) RM.sparks.push({ x: o.x + (Math.random() - 0.5) * 14, y: o.y - AV_H * (0.86 + Math.random() * 0.2), vx: (Math.random() - 0.5) * 0.8, vy: -0.5, t: 14, drop: 1 });
+  if (o.wet > 0.5 && RM.T % 9 === 0) RM.sparks.push({ x: o.x + (Math.random() - 0.5) * 12, y: o.y - AV_H * (0.25 + Math.random() * 0.3), vx: 0, vy: 0.3, t: 22, drop: 1 });
+  return o.wet;
+}
+function rmAvDraw(c, av, P, wet) {
+  if (wet < 0.03) { AVT.drawAt(c, av, 0, 0, AV_H, P); return; }
+  const O = RM.wetCv || (RM.wetCv = document.createElement('canvas')); if (O.width !== 260) { O.width = 260; O.height = 300; } const o = O.getContext('2d'); o.clearRect(0, 0, 260, 300); const S = 2.2; AVT.drawAt(o, av, 130, 276, AV_H * S, P);
+  o.globalCompositeOperation = 'source-atop'; o.fillStyle = 'rgba(25,55,110,' + (0.34 * wet) + ')'; o.fillRect(0, 0, 260, 300); const g = o.createLinearGradient(0, 0, 260, 300); g.addColorStop(0.2, 'rgba(190,225,255,0)'); g.addColorStop(0.5, 'rgba(190,225,255,' + (0.3 * wet) + ')'); g.addColorStop(0.8, 'rgba(190,225,255,0)'); o.fillStyle = g; o.fillRect(0, 0, 260, 300);
+  o.fillStyle = 'rgba(210,235,255,' + (0.5 * wet) + ')'; for (let i = 0; i < 14; i++) { const px = 60 + ((i * 53) % 140), py = 90 + ((i * 37) % 170) + (Math.sin(RM.T / 30 + i) * 2); o.beginPath(); o.ellipse(px, py, 1.6, 2.6, 0, 0, 7); o.fill(); }
+  o.globalCompositeOperation = 'source-over'; c.drawImage(O, -130 / S, -276 / S, 260 / S, 300 / S);
+}
+function rmUmbBtn() { const b = $('rmUmbBtn'); if (!b) return; const show = !!(RM.on && RM.wxRain); if (b.hidden === show) b.hidden = !show; if (show) { const on = RM.me.umbOn !== false, t = on ? 'تبلل' : 'احتماء'; if (b.dataset.t !== t) { b.dataset.t = t; rmLbl('rmUmbBtn', on ? '💧' : '☂️', t); b.title = on ? 'تبلل' : 'احتماء من المطر'; } } }
+
+const rmShake = cold => Math.sin(RM.T * 1.7) * 0.9 * (cold || 0);
+function rmUmbrella(c, x, y, dir, sk, I, seed) {
+  if (I < 0.05) return; const col = ['#e8284a', '#2a8ad8', '#ffd23a', '#3aa07a', '#8a4ad8', '#ff7aa8'][seed % 6], hx = x + dir * 9, hy = y - AV_H * 0.42 + 11 * sk, cy = y - AV_H * 1.06 + 11 * sk, cx = x + dir * 3, R = 21 * I;
+  c.save(); c.strokeStyle = '#5a3a22'; c.lineWidth = 1.7; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(cx, cy + 2); c.stroke();
+  c.beginPath(); c.moveTo(cx - R, cy); c.quadraticCurveTo(cx - R, cy - R * 0.95, cx, cy - R * 0.95); c.quadraticCurveTo(cx + R, cy - R * 0.95, cx + R, cy); for (let i = 0; i < 4; i++) { const x0 = cx + R - i * R / 2, x1 = x0 - R / 2; c.quadraticCurveTo((x0 + x1) / 2, cy + 4 * I, x1, cy); } c.closePath(); c.fillStyle = col; c.fill(); c.strokeStyle = '#2e2030'; c.lineWidth = 1.1; c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 0.9; [-1, -0.5, 0, 0.5, 1].forEach(i => { c.beginPath(); c.moveTo(cx, cy - R * 0.93); c.quadraticCurveTo(cx + i * R * 0.7, cy - R * 0.55, cx + i * R * 0.95, cy); c.stroke(); }); c.fillStyle = '#ffd24a'; c.beginPath(); c.arc(cx, cy - R * 0.95, 1.5, 0, 7); c.fill(); c.restore();
+  if (RM.rainI > 0.3 && RM.T % 2 === 0) { const a = Math.PI * (1 + Math.random()), ca = Math.cos(a); RM.sparks.push({ x: cx + ca * R * 0.92, y: cy + Math.sin(a) * R * 0.85, vx: ca * (0.5 + Math.random() * 0.7), vy: -0.9 - Math.random() * 0.7, t: 18, drop: 1 }); }
+}
+function rmWxDraw(c, bw, bh) {
+  if (RM.rainI > 0.02) { c.fillStyle = 'rgba(30,45,75,' + (0.28 * RM.rainI) + ')'; c.fillRect(0, 0, bw, bh); if (!RM.rain) RM.rain = Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), v: 0.012 + Math.random() * 0.012, l: 8 + Math.random() * 10 })); c.strokeStyle = 'rgba(190,220,255,' + (0.7 * RM.rainI) + ')'; c.lineWidth = 1.2; c.beginPath(); RM.rain.forEach(r => { r.y += r.v; r.x -= r.v * 0.18; if (r.y > 1) { r.y = -0.05; r.x = Math.random() * 1.2; } const px = r.x * bw, py = r.y * bh; c.moveTo(px, py); c.lineTo(px - r.l * 0.18, py + r.l); }); c.stroke(); }
+  if (RM.snowI > 0.02) { c.fillStyle = 'rgba(205,228,255,' + (0.2 * RM.snowI) + ')'; c.fillRect(0, 0, bw, bh); if (!RM.flakes) RM.flakes = Array.from({ length: 130 }, () => ({ x: Math.random(), y: Math.random(), v: 0.0015 + Math.random() * 0.0022, r: 1 + Math.random() * 2.2, ph: Math.random() * 6 })); c.fillStyle = 'rgba(255,255,255,' + (0.95 * RM.snowI) + ')'; c.beginPath(); RM.flakes.forEach(f => { f.y += f.v; f.ph += 0.02; f.x += Math.sin(f.ph) * 0.0009; if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); } const px = f.x * bw, py = f.y * bh; c.moveTo(px + f.r, py); c.arc(px, py, f.r, 0, 7); }); c.fill(); }
+}
+/* ----- جربوع ----- */
+const RM_NPC = { name: 'جربوع', x: 468, y: 322, hx: 468, hy: 322, dir: -1, wave: 0, ph: 0, cold: 0, mv: false, pseed: 7, greetT: 0 };
+function rmNpcSay(txt, t) { RM.bubs[RM_NPC.name] = { txt, t: t || 230 }; RM_NPC.wave = 130; }
+function rmNpcWelcome() { rmNpcSay('مرحباً بكم في منتجع بابي للدردشة 🌴✨', 230); }
+function rmNpcHit(x, y) { const n = RM_NPC; return Math.abs(x - n.x) < 24 && y > n.y - 96 && y < n.y + 10; }
+function rmNpcGreet() { rmNpcSay('مرحباً ' + rmMe() + ' 🌸 شكراً لزيارتك منتجع بابي 💖😊', 260); try { sfx('click'); } catch (e) {} }
+function rmDrawNpc(c) {
+  const n = RM_NPC, tgx = RM.snowI > 0.4 ? RM_FIRE.x - 30 : n.hx, tgy = RM.snowI > 0.4 ? RM_FIRE.y + 22 : n.hy, dx = tgx - n.x, dy = tgy - n.y, d = Math.hypot(dx, dy);
+  n.mv = d > 1.5; if (n.mv) { const st = Math.min(d, 0.9); n.x += dx / d * st; n.y += dy / d * st; n.ph += st * 0.17; if (Math.abs(dx) > 0.5) n.dir = dx > 0 ? 1 : -1; } else if (Math.abs(n.dir) !== 1) n.dir = -1;
+  rmCold(n); rmUi(n); if (n.wave > 0) n.wave--; const T = RM.T, k = AV_H / 76, sw = n.mv ? Math.sin(n.ph) : 0, bob = n.mv ? -Math.abs(Math.sin(n.ph)) * 1.8 : Math.sin(T / 28) * 0.5, sh = rmShake(n.cold);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(n.x, n.y + 1, 19, 5.5, 0, 0, 7); c.fill();
+  c.save(); c.translate(n.x + sh, n.y + bob); c.scale(n.dir * k * 0.92, k * 0.92); const OLC = '#2e2030', ln = (w) => { c.strokeStyle = OLC; c.lineWidth = w || 1.6; c.lineJoin = 'round'; c.stroke(); };
+  // أرجل قصيرة
+  [-1, 1].forEach(s => { const a = s * sw * 0.45; c.save(); c.translate(s * 6.5, -22); c.rotate(a); c.fillStyle = '#1a4a3a'; c.beginPath(); c.roundRect ? c.roundRect(-4.6, 0, 9.2, 18, 3) : c.rect(-4.6, 0, 9.2, 18); c.fill(); ln(); c.fillStyle = '#4a2a18'; c.beginPath(); c.ellipse(1.6, 20, 7.4, 4, 0, 0, 7); c.fill(); ln(1.4); c.restore(); });
+  // الجسم (مستدير)
+  c.beginPath(); c.ellipse(0, -38, 17, 21, 0, 0, 7); c.fillStyle = '#1f8a62'; c.fill(); ln(1.8);
+  c.beginPath(); c.moveTo(-6, -56); c.lineTo(6, -56); c.lineTo(0, -38); c.closePath(); c.fillStyle = '#fff'; c.fill(); ln(1.2);
+  c.fillStyle = '#ffd24a'; [-30, -22, -14].forEach(y => { c.beginPath(); c.arc(0, y, 1.7, 0, 7); c.fill(); }); c.beginPath(); c.moveTo(0, -54); c.lineTo(-7, -58); c.lineTo(-7, -50); c.closePath(); c.fillStyle = '#e8284a'; c.fill(); ln(1); c.beginPath(); c.moveTo(0, -54); c.lineTo(7, -58); c.lineTo(7, -50); c.closePath(); c.fill(); ln(1);
+  c.fillStyle = '#fff'; c.fillRect(7, -40, 8, 5); c.strokeStyle = OLC; c.lineWidth = 0.9; c.strokeRect(7, -40, 8, 5);
+  // الأذرع
+  const armPose = (s, ang, el) => { c.save(); c.translate(s * 16, -50); c.rotate(ang); c.beginPath(); c.roundRect ? c.roundRect(-4.2, -2, 8.4, 20, 4) : c.rect(-4.2, -2, 8.4, 20); c.fillStyle = '#1f8a62'; c.fill(); ln(1.5); c.translate(0, 18); c.rotate(el); c.beginPath(); c.roundRect ? c.roundRect(-3.6, -1, 7.2, 12, 3.6) : c.rect(-3.6, -1, 7.2, 12); c.fillStyle = '#2e1c14'; c.fill(); ln(1.3); c.beginPath(); c.arc(0, 13, 4.4, 0, 7); c.fillStyle = '#fff'; c.fill(); ln(1.2); c.restore(); };
+  const wv = n.wave > 0 ? 2.4 + Math.sin(T / 3.2) * 0.45 : 0, cold = n.cold, cl = cold * 0.9;
+  armPose(-1, n.wave > 0 ? -wv : 0.2 - sw * 0.35 + cl * 0.9, n.wave > 0 ? 0 : 0.2 + cl * 1.2);
+  armPose(1, n.ui > 0.3 ? 0.55 : 0.2 + sw * 0.35 + cl * 0.9, n.ui > 0.3 ? 0.25 : 0.2 + cl * 1.2);
+  // الراس
+  c.save(); c.translate(0, -73 + (cold ? Math.sin(T * 2.4) * 0.8 * cold : 0)); c.rotate(cold ? Math.sin(T * 2.2) * 0.05 * cold : Math.sin(T / 40) * 0.02);
+  [-1, 1].forEach(s => { c.beginPath(); c.arc(s * 19, 2, 4.4, 0, 7); c.fillStyle = '#2e1c14'; c.fill(); ln(1.3); });
+  c.beginPath(); c.ellipse(0, 0, 19.5, 18.5, 0, 0, 7); c.fillStyle = '#2e1c14'; c.fill(); ln(1.8);
+  c.fillStyle = 'rgba(120,70,50,.35)'; c.beginPath(); c.ellipse(-8, -6, 7, 5, -0.4, 0, 7); c.fill();
+  [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 7.6, -2, 4.6, 5.4, 0, 0, 7); c.fillStyle = '#fff'; c.fill(); ln(1.1); c.beginPath(); c.arc(s * 7.6 + 0.6, -1.4, 2.6, 0, 7); c.fillStyle = '#120a06'; c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(s * 7.6 - 0.4, -2.6, 1, 0, 7); c.fill(); c.strokeStyle = '#120a06'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(s * 3.4, -9.4); c.quadraticCurveTo(s * 7.6, -12.2, s * 11.6, -9.4); c.stroke(); });
+  c.fillStyle = 'rgba(210,90,90,.45)'; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 12.4, 5, 3.4, 2.2, 0, 0, 7); c.fill(); });
+  c.beginPath(); c.ellipse(0, 3, 2.6, 1.8, 0, 0, 7); c.fillStyle = '#1a0e0a'; c.fill();
+  const open = cold > 0.5 ? 0.5 + Math.abs(Math.sin(T * 2)) * 0.5 : (n.wave > 0 ? 1 : 0.35); c.beginPath(); c.moveTo(-8, 8); c.quadraticCurveTo(0, 8 + 8 * open + 3, 8, 8); c.quadraticCurveTo(0, 7, -8, 8); c.closePath(); c.fillStyle = '#7a1a2a'; c.fill(); c.save(); c.clip(); c.fillStyle = '#fff'; c.fillRect(-8, 7, 16, 3.4); c.restore(); c.beginPath(); c.moveTo(-8, 8); c.quadraticCurveTo(0, 8 + 8 * open + 3, 8, 8); ln(1.3);
+  // شعر مجعد + قبعة
+  [[-13, -17], [-7, -20], [0, -21], [7, -20], [13, -17]].forEach(p => { c.beginPath(); c.arc(p[0], p[1], 5.6, 0, 7); c.fillStyle = '#0e0a0a'; c.fill(); ln(1.2); });
+  c.beginPath(); c.moveTo(-12, -19); c.lineTo(-10, -30); c.lineTo(10, -30); c.lineTo(12, -19); c.closePath(); c.fillStyle = '#d8283e'; c.fill(); ln(1.5); c.fillStyle = '#ffd24a'; c.fillRect(-11.4, -22.6, 22.8, 3); c.beginPath(); c.arc(0, -30, 2.2, 0, 7); c.fill(); ln(1);
+  c.restore();
+  c.restore();
+  if (n.ui > 0.05) rmUmbrella(c, n.x, n.y, n.dir, 0, n.ui, 4);
+  const lift = n.ui > 0.05 ? 16 * n.ui : 0; rmTag(c, 'جربوع 🤝', n.x, n.y - AV_H * 1.26 - lift, { mod: false }); rmBub(c, RM_NPC.name, n.x, n.y - AV_H * 1.34 - lift);
+  if (n.cold > 0.6 && Math.floor(T / 50) % 2 === 0) { c.font = '12px system-ui'; c.textAlign = 'center'; c.fillText('🥶', n.x + 18, n.y - AV_H * 0.95 + Math.sin(T / 5) * 1.5); }
+}
+
+/* ---------- عصافير + كتم الأصوات + أغاني المنتجع (يوتيوب) ---------- */
+RM.ambMute = false; try { RM.ambMute = localStorage.getItem('rmAmb') === '0'; } catch (e) {}
+RM.music = null; RM.mus = { p: null, vol: 60, mute: false, title: '', st: -1 }; try { RM.mus.vol = +(localStorage.getItem('rmMusVol') || 60); RM.mus.mute = localStorage.getItem('rmMusMute') === '1'; } catch (e) {}
+function rmChirp() {
+  if (RM.ambMute || !actx || actx.state !== 'running') return; const n = 3 + Math.floor(Math.random() * 3), b = 2900 + Math.random() * 1100;
+  for (let i = 0; i < n; i++) { const f = b * (1 + (i % 2) * 0.18) + Math.random() * 120; blip('sine', f, f * 1.22, 0.07, 0.022, i * 0.1); blip('sine', f * 2, f * 2.3, 0.05, 0.006, i * 0.1); }
+}
+function rmBirds(c) {
+  const vis = 1 - Math.max(RM.rainI, RM.snowI); if (vis < 0.05) return;
+  if (!RM.birds) RM.birds = [0, 1, 2].map(i => ({ x: 120 + i * 260, y: 80, dir: i % 2 ? -1 : 1, sp: 0.5 + i * 0.13, ph: i * 2, cy: 70 + i * 26, col: ['#8a5a3a', '#6a6e80', '#a87a4a'][i] }));
+  RM.birds.forEach(b => {
+    b.x += b.dir * b.sp; b.ph += 0.33; b.y = b.cy + Math.sin(b.x / 40) * 9; if (b.x > RMW + 30 || b.x < -30) { b.dir *= -1; b.cy = 55 + Math.random() * 100; }
+    c.save(); c.globalAlpha = vis; c.translate(b.x, b.y); c.scale(b.dir, 1); const fl = Math.sin(b.ph) * 0.9;
+    c.fillStyle = b.col; c.strokeStyle = 'rgba(30,20,20,.7)'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(-4, 0); c.lineTo(-10, -2); c.lineTo(-9, 2); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.ellipse(0, 0, 5.5, 3.3, 0, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.arc(5, -1.6, 2.5, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#f0b030'; c.beginPath(); c.moveTo(7.2, -1.8); c.lineTo(10, -1); c.lineTo(7.2, -0.6); c.closePath(); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(5.6, -2.1, 0.5, 0, 7); c.fill();
+    c.fillStyle = sh2(b.col); c.save(); c.translate(-1, -1.5); c.rotate(-0.4 - fl); c.beginPath(); c.ellipse(-2, -4, 2.4, 6.2, 0.2, 0, 7); c.fill(); c.stroke(); c.restore(); c.restore();
+  });
+  if (!RM.chirpT || --RM.chirpT <= 0) { RM.chirpT = 420 + Math.random() * 520; if (RM.T > 120) rmChirp(); }
+}
+function sh2(h) { return h === '#6a6e80' ? '#8a8ea2' : h === '#8a5a3a' ? '#a87a54' : '#c89a64'; }
+function rmSndLbl() { rmLbl('rmSndBtn', RM.ambMute ? '🔇' : '🔊', RM.ambMute ? 'مكتوم' : 'الأصوات'); }
+/* --- الأغاني --- */
+function rmYtLoad(cb) { if (window.YT && YT.Player) return cb(); if (!window._ytq) { window._ytq = []; window.onYouTubeIframeAPIReady = () => { const q = window._ytq; window._ytq = []; q.forEach(f => f()); }; const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.onerror = () => { window._ytq = null; }; document.head.appendChild(s); } if (window._ytq) window._ytq.push(cb); }
+function rmMusUI() {
+  const t = $('rmMusT'); if (!t) return; const m = RM.music, S = RM.mus; t.textContent = !m ? 'لا توجد أغاني حالياً' : (S.title ? '🎵 ' + S.title : '🎵 جاري التحميل...'); $('rmMusMute').textContent = S.mute ? '🔇' : '🔊'; $('rmMusVol').value = S.vol; $('rmMusPlay').textContent = S.st === 1 ? '⏸' : '▶'; $('rmMusPlay').hidden = !m; $('rmMusAdm').hidden = !RM.myAdm; $('rmMusBtn').classList.toggle('on', !!m && S.st === 1 && !S.mute);
+}
+function rmMusApply() { const p = RM.mus.p; if (!p || !p.setVolume) return; try { p.setVolume(RM.mus.vol); if (RM.mus.mute) p.mute(); else p.unMute(); } catch (e) {} }
+function rmMusicSet(m) {
+  const S = RM.mus; RM.music = m || null; S.title = ''; S.st = -1; try { if (S.p && S.p.destroy) S.p.destroy(); } catch (e) {} S.p = null; const box = $('rmYT'); if (box) box.innerHTML = '<div id="rmYTin"></div>';
+  if (!m) { rmMusUI(); return; }
+  rmYtLoad(() => { if (RM.music !== m) return; const pv = { autoplay: 1, controls: 0, playsinline: 1, rel: 0 }; if (m.k === 'pl') { pv.listType = 'playlist'; pv.list = m.id; } else { pv.playlist = m.id; pv.loop = 1; }
+    S.p = new YT.Player('rmYTin', { height: '200', width: '200', videoId: m.k === 'v' ? m.id : undefined, playerVars: pv, events: { onReady: e => { rmMusApply(); try { if (m.k === 'pl') { e.target.setLoop(true); e.target.setShuffle(true); } e.target.playVideo(); } catch (er) {} }, onStateChange: e => { S.st = e.data; try { const d = e.target.getVideoData(); if (d && d.title) S.title = d.title; } catch (er) {} rmMusUI(); }, onError: () => { S.title = '⚠️ تعذر تشغيل هذي الأغنية، ينتقل للتالية'; try { if (m.k === 'pl') S.p.nextVideo(); } catch (er) {} rmMusUI(); } } });
+  }); rmMusUI();
+}
+$('rmMusBtn').onclick = () => { const P = $('rmMus'); const open = P.hidden; $('rmDance').hidden = true; P.hidden = !open; if (open) rmMusUI(); };
+$('rmMusMute').onclick = () => { RM.mus.mute = !RM.mus.mute; try { localStorage.setItem('rmMusMute', RM.mus.mute ? '1' : '0'); } catch (e) {} rmMusApply(); rmMusUI(); };
+$('rmMusVol').oninput = e => { RM.mus.vol = +e.target.value; if (RM.mus.vol > 0 && RM.mus.mute) { RM.mus.mute = false; try { localStorage.setItem('rmMusMute', '0'); } catch (er) {} } try { localStorage.setItem('rmMusVol', RM.mus.vol); } catch (er) {} rmMusApply(); rmMusUI(); };
+$('rmMusPlay').onclick = () => { const p = RM.mus.p; if (!p) return; try { if (RM.mus.st === 1) p.pauseVideo(); else p.playVideo(); } catch (e) {} };
+$('rmMusSet').onclick = () => { const u = $('rmMusUrl').value.trim(); if (!u) { showToast('الصق رابط قائمة تشغيل يوتيوب'); return; } rmSend({ t: 'rm_music', url: u }); };
+$('rmMusStop').onclick = () => rmSend({ t: 'rm_music', url: '' });
+$('rmSndBtn').onclick = () => { RM.ambMute = !RM.ambMute; try { localStorage.setItem('rmAmb', RM.ambMute ? '0' : '1'); } catch (e) {} rmSndLbl(); showToast(RM.ambMute ? '🔇 انكتمت أصوات المكان (العصافير)' : '🔊 رجعت أصوات المكان'); };
+rmSndLbl();
+
+
+/* ---------- لوحة التنقل بين الغرف ---------- */
+RM.goTo = null;
+async function rmGoLoad() {
+  const L = $('rmGoL'); L.innerHTML = '<small>...</small>'; try {
+    const r = auth ? await api('/api/rooms') : await (await fetch('/api/rooms/public')).json(); L.innerHTML = '';
+    r.rooms.forEach(x => { const row = document.createElement('div'); const cur = x.id === RM.id; row.className = 'gr' + (cur ? ' cur' : ''); const i = document.createElement('div'); const nm = document.createElement('b'); nm.textContent = (x.perm ? '👑 ' : x.locked ? '🔒 ' : '🌐 ') + x.name; const sm = document.createElement('small'); sm.textContent = '👥 ' + x.count + '/' + x.cap + (cur ? ' • أنت هنا' : ''); i.append(nm, sm); row.appendChild(i);
+      if (!cur) row.onclick = () => { if (x.count >= x.cap) { showToast('الغرفة ممتلئة'); return; } if (!auth && x.id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.goTo = x; $('rmGoT').textContent = '🚪 تنتقل إلى «' + x.name + '»؟'; const need = x.locked && !(auth && auth.admin) && x.id !== r.mine; $('rmGoCode').hidden = !need; $('rmGoCode').value = ''; $('rmGoC').hidden = false; };
+      L.appendChild(row); });
+  } catch (e) { L.innerHTML = '<small>⚠️ ما قدرت أحمّل الغرف</small>'; }
+}
+$('rmFTtl').onclick = () => { const P = $('rmGo'); const open = P.hidden; P.hidden = !open; $('rmGoC').hidden = true; if (open) rmGoLoad(); };
+$('rmGoN').onclick = () => { $('rmGoC').hidden = true; RM.goTo = null; };
+$('rmGoY').onclick = () => { const x = RM.goTo; if (!x) return; const code = $('rmGoCode').hidden ? '' : $('rmGoCode').value.trim(); if (!$('rmGoCode').hidden && !code) { showToast('اكتب رمز الغرفة'); return; } $('rmGo').hidden = true; $('rmGoC').hidden = true; RM.goTo = null; rmLeaveRoom(true); showToast('✈️ جاري الانتقال إلى ' + x.name + '...'); setTimeout(() => rmEnter(x.id, code), 250); };
+
+
+
+/* ---------- احتراق عند لمس النار ---------- */
+function rmBurn(o) {
+  const near = Math.hypot(o.x - RM_FIRE.x, (o.y - RM_FIRE.y) * 1.3) < 24; o.burn = (o.burn || 0) + ((near ? 1 : 0) - (o.burn || 0)) * (near ? 0.2 : 0.05); if (o.burn < 0.02) o.burn = 0;
+  if (near && o === RM.me && !RM.burnWarn) { RM.burnWarn = 1; showToast('🔥 احترقت! ابتعد عن النار'); setTimeout(() => { RM.burnWarn = 0; }, 4000); try { sfx('hit'); } catch (e) {} }
+  return o.burn;
+}
+function rmBurnFx(c, o) {
+  const k = rmBurn(o); if (k < 0.05) return; const t = RM.T;
+  c.save(); const H = AV_H * 1.3;
+  const g = c.createRadialGradient(o.x, o.y - H * 0.45, 4, o.x, o.y - H * 0.45, H * 0.7); g.addColorStop(0, 'rgba(255,120,20,' + 0.45 * k + ')'); g.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y - H * 0.45, 34, H * 0.62, 0, 0, 7); c.fill();
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9, fx0 = o.x + (a - 0.5) * 34 + Math.sin(t * 0.3 + i * 2) * 3, base = o.y - H * (0.08 + 0.78 * ((i * 37) % 10) / 10), fl = 14 + 10 * Math.abs(Math.sin(t * 0.25 + i * 1.7)), w = 6 + (i % 3) * 2;
+    for (let L = 0; L < 2; L++) { c.fillStyle = L ? 'rgba(255,230,90,' + 0.9 * k + ')' : 'rgba(255,90,20,' + 0.85 * k + ')'; const ww = w * (L ? 0.5 : 1), hh = fl * (L ? 0.6 : 1); c.beginPath(); c.moveTo(fx0 - ww, base); c.quadraticCurveTo(fx0 - ww * 0.6, base - hh * 0.5, fx0 + Math.sin(t * 0.4 + i) * 3, base - hh); c.quadraticCurveTo(fx0 + ww * 0.6, base - hh * 0.5, fx0 + ww, base); c.closePath(); c.fill(); }
+  }
+  if (t % 4 === 0) RM.sparks.push({ x: o.x + (Math.random() - 0.5) * 20, y: o.y - H * 0.9, vx: (Math.random() - 0.5) * 0.5, vy: -0.7, t: 40, puff: 1 });
+  c.restore();
+}
+/* ---------- اختفاء المشرفين ---------- */
+function rmHidUpd() { const b = $('rmHidBtn'); if (!b) return; const ok = !!(RM.on && (RM.myAdm || RM.isMod)); b.hidden = !ok; rmLbl('rmHidBtn', RM.me.hid ? '👁️' : '👻', RM.me.hid ? 'إظهار' : 'اختفاء', !!RM.me.hid); }
+$('rmHidBtn').onclick = () => { const on = !RM.me.hid; rmSend({ t: 'rm_hide', on: on ? 1 : 0 }); showToast(on ? '👻 اختفيت: محد يشوفك غير المشرفين' : '👁️ رجعت ظاهر للجميع'); };
+setInterval(rmHidUpd, 1500);
+
 /* ---------- الحلقة الرئيسية ---------- */
 function rmDraw() {
   const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
@@ -5714,7 +5928,7 @@ function rmDraw() {
   const bb = $('rmBox').getBoundingClientRect(), bw = Math.max(200, Math.round(bb.width)), bh = Math.max(110, Math.round(bb.height)), dpr = Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
   $('rmBox').classList.toggle('rmTiny', bh < 250); RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#7fd0f2'; c.fillRect(0, 0, bw, bh);
-  RM.T++; const m = RM.me, st = rmUpdMe();
+  RM.T++; rmWxStep(); const m = RM.me, st = rmUpdMe();
   const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / RMW, bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (!RM.z) RM.z = RM.zt;
   RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
   const tx = vw >= RMW ? (RMW - vw) / 2 : Math.max(0, Math.min(RMW - vw, m.x - vw / 2)), ty = vh >= RMH ? (RMH - vh) / 2 : Math.max(0, Math.min(RMH - vh, m.y - 20 - vh / 2));
@@ -5722,10 +5936,10 @@ function rmDraw() {
   c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
   rmBg(c, RM.T);
   const list = RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
-  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]);
+  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]); list.push([RM_NPC.y, rmDrawNpc]);
   list.sort((a, b) => a[0] - b[0]).forEach(it => it[1](c)); rmKissDraw(c);
-  RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
-  rmCanopies(c); c.restore();
+  RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.puff) { p.vy *= 0.98; c.fillStyle = 'rgba(255,255,255,.85)'; c.globalAlpha = Math.min(0.7, p.t / 60); c.beginPath(); c.arc(p.x, p.y, 1.5 + (50 - p.t) * 0.07, 0, 7); c.fill(); } else if (p.drop) { p.vy += 0.08; c.fillStyle = 'rgba(170,215,255,.95)'; c.globalAlpha = Math.min(1, p.t / 10); c.beginPath(); c.arc(p.x, p.y, 1.3, 0, 7); c.fill(); } else if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
+  rmCanopies(c); rmBirds(c); rmBubFlush(c); c.restore(); rmWxDraw(c, bw, bh);
   if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = bw / 2 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, bw / 2 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
   const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
   if (k !== RM.sent && RM.T - RM.sentT >= 5) { if (rmSend({ t: 'rm_pos', x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; } }
@@ -5756,12 +5970,16 @@ function rmOnMsg(d) {
   const T = d.t;
   if (T === 'rm_state') {
     RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
-    (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, dt: 0, ph: 0 }; });
+    (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    rmAvInit(d.myAv); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
-  } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, dt: 0, ph: 0 }; rmRenderMem(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
+    rmAvInit(d.myAv); rmMusicSet(d.music || null); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+  } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
-  else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmPrompt(false); }
+  else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
+  else if (T === 'rm_seatbusy') { const m = RM.me; if (m.sit || m.goal) { showToast('⛔ سبقك أحد على هذا المقعد'); m.goal = false; if (m.sit) rmStand(); else { m.seat = null; m.tx = m.x; m.ty = m.y; } rmPrompt(true); } }
+  else if (T === 'rm_music') { rmMusicSet(d.music || null); showToast(d.music ? '🎵 بدأ تشغيل الأغاني للجميع' : '⏹ توقفت الأغاني'); }
+  else if (T === 'rm_hid') { if (d.n === rmMe()) RM.me.hid = !!d.on; else { const o = RM.others[d.n]; if (o) o.hid = !!d.on; } rmHidUpd(); rmRenderMem(); }
+  else if (T === 'rm_umb') { const o = RM.others[d.n]; if (o) o.umbOn = d.on !== 0; }
   else if (T === 'rm_kiss') { rmKissFx(d.from, d.to); }
   else if (T === 'rm_av') { const o = RM.others[d.n]; if (o && d.av) o.av = AVT.norm(d.av); }
   else if (T === 'rm_emo') { const o = RM.others[d.n]; if (o) { o.dance = d.e | 0; o.dt = 0; } }
@@ -5785,8 +6003,9 @@ function rmAvInit(sv) {
 const RM_DANCES = [[1, '👋', 'تلويح'], [2, '💃', 'هز الخصر'], [3, '🤪', 'هز الراس'], [4, '🌀', 'دوران'], [5, '🙌', 'تصفيق'], [6, '🕺', 'تويست'], [7, '🎉', 'قفز احتفال'], [8, '✨', 'ديسكو']];
 function rmDanceMark() { const P = $('rmDance'); if (!P || P.hidden) return; P.querySelectorAll('button[data-e]').forEach(b => b.classList.toggle('on', +b.dataset.e === (RM.me.dance || 0))); }
 function rmDanceBuild() { const P = $('rmDance'); P.innerHTML = ''; RM_DANCES.forEach(d => { const b = document.createElement('button'); b.type = 'button'; b.dataset.e = d[0]; b.textContent = d[1] + ' ' + d[2]; b.onclick = () => { rmSetDance(d[0]); rmDanceMark(); if (RM.me.dance) P.hidden = true; }; P.appendChild(b); }); const st = document.createElement('button'); st.type = 'button'; st.className = 'stop'; st.textContent = '⏹ إيقاف الرقص'; st.onclick = () => { rmSetDance(0); P.hidden = true; }; P.appendChild(st); rmDanceMark(); }
-$('rmDanceBtn').onclick = () => { const P = $('rmDance'); if (P.hidden) { rmDanceBuild(); P.hidden = false; } else P.hidden = true; };
+$('rmDanceBtn').onclick = () => { const P = $('rmDance'); $('rmMus').hidden = true; if (P.hidden) { rmDanceBuild(); P.hidden = false; } else P.hidden = true; };
 $('rmAvBtn').onclick = () => avOpen(false);
+$('rmUmbBtn').onclick = () => { RM.me.umbOn = RM.me.umbOn === false; rmSend({ t: 'rm_umb', on: RM.me.umbOn ? 1 : 0 }); rmUmbBtn(); showToast(RM.me.umbOn ? '☂️ طلعت الشمسية' : '💧 شلت الشمسية... ملابسك رح تتبلل'); };
 const AV_PAL = ['#b83a52', '#e83a4a', '#ff7aa8', '#e8a030', '#ffd23a', '#3aa07a', '#2a7a9a', '#1e8ae8', '#5a4a9a', '#7a5cff', '#2a2a34', '#f2f2f6', '#8a5a3a', '#ff7a2b'], AV_PAL2 = ['#2f5fb0', '#1c1c26', '#8a6a4a', '#c8506a', '#4a8a5a', '#e8e8f0', '#5a5e6a', '#c8b890', '#7a3a2a', '#1c2c5a'], AV_PAL3 = ['#ffffff', '#1c1c26', '#ff7aa8', '#e8a030', '#5a8ad8', '#3a2a22', '#c0182e', '#e8c46a'];
 var EV = { av: null, tab: 'body', first: false, anim: 'idle', zoom: false, raf: 0, t: 0, ph: 0, dn: 0, cat: '' };
 function avOpen(first) { EV.first = !!first; EV.av = JSON.parse(JSON.stringify(AVT.norm(RM.me.av || {}))); EV.tab = 'body'; EV.anim = 'idle'; EV.zoom = false; EV.cat = ''; $('avEd').hidden = false; $('avCancel').hidden = !!first; avUI(); if (!EV.raf) EV.raf = requestAnimationFrame(avLoop); }
@@ -5821,9 +6040,9 @@ function avUI() {
     avChips(o, 'شكل العيون', 'es', AVT.ES.map((e, i) => [i, e[0]]));
     avSw(o, 'لون العيون', 'ey', AVT.EYES.map((e, i) => [i, e[1][0], i >= AVT.EYE_ADM, e[0]]));
     avChips(o, 'حجم العيون', 'ew', [[0, 'صغيرة'], [1, 'عادية'], [2, 'كبيرة']]); avChips(o, 'المسافة بين العيون', 'esp', [[0, 'قريبة'], [1, 'عادية'], [2, 'بعيدة']]);
-    avChips(o, 'الحواجب', 'br', [[0, 'رفيعة'], [1, 'عريضة'], [2, 'مستقيمة'], [3, 'مرفوعة'], [4, 'حادة'], [5, 'طويلة منحنية'], [6, 'قصيرة سميكة'], [7, 'حزينة'], [8, 'كثيفة'], [9, 'بدون']]);
+    avChips(o, 'الحواجب', 'br', (g === 'f' ? [[0, 'رفيعة'], [3, 'مرفوعة'], [5, 'طويلة منحنية'], [1, 'ناعمة'], [7, 'حزينة'], [2, 'مستقيمة'], [9, 'بدون']] : [[1, 'عريضة'], [2, 'مستقيمة'], [4, 'حادة'], [6, 'قصيرة سميكة'], [8, 'كثيفة'], [0, 'رفيعة'], [9, 'بدون']]));
     avChips(o, 'الأنف', 'nz', [[0, 'صغير'], [1, 'بدون'], [2, 'زرّ'], [3, 'مدبب'], [4, 'عريض'], [5, 'طويل']]);
-    avChips(o, 'الفم', 'mo', [[0, 'ابتسامة'], [1, 'هادئ'], [2, 'ضحكة'], [3, 'صغير'], [4, 'ابتسامة جانبية'], [5, 'شفايف ممتلئة'], [6, 'زعلان'], [7, 'قطّة'], [8, 'أسنان'], [9, 'لسان']]);
+    avChips(o, 'الفم', 'mo', [[0, 'ابتسامة'], [1, 'هادئ'], [2, 'ضحكة'], [3, 'صغير'], [4, 'ابتسامة جانبية'], ...(g === 'f' ? [[5, 'شفايف ممتلئة']] : []), [6, 'زعلان'], [7, 'قطّة'], [8, 'أسنان'], [9, 'لسان']]);
     avChips(o, 'الأذنين', 'er', [[0, 'عادية'], [1, 'صغيرة'], [2, 'مدببة (قزم)']]);
     avChips(o, 'رسومات الوجه', 'dc', N(AVT.DECO));
     if (g === 'm') avChips(o, 'اللحية', 'bear', [[0, 'بدون'], [1, 'خفيفة'], [2, 'كثة'], [3, 'ذقن'], [4, 'شنب']]);
@@ -5870,8 +6089,8 @@ $('avSave').onclick = () => {
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
 function rmShowRoom() { if (!RM.full) rmSetFull(true, true, true); $('rmFTtl').textContent = '🏝️ ' + RM.name; try { screen.orientation.lock(IS_TABLET ? 'any' : 'portrait').catch(() => {}); } catch (e) {} rmCheckRot(); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
 function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
-function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.menu = ''; RM.warnFor = ''; if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
-function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; $('rmZoom').textContent = '🔭 كل المكان'; rmJoinSend(); }
+function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.me.hid = false; RM.menu = ''; RM.warnFor = ''; try { rmMusicSet(null); } catch (e) {} if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
+function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; rmLbl('rmZoom', '🔭', 'كل المكان'); RM.wx0 = performance.now() / 1000; RM.wxLast = ''; RM.rainI = 0; RM.snowI = 0; RM.me.umbOn = true; RM.me.wet = 0; RM.me.cold = 0; setTimeout(() => { if (RM.on) rmNpcWelcome(); }, 2600); rmJoinSend(); }
 async function rmLoadList() {
   const L = $('rmList'); if (!L) return; try {
     const r = auth ? await api('/api/rooms') : await (await fetch('/api/rooms/public')).json(); if (!auth) { $('rmNew').hidden = true; } RM.list = r.rooms; $('rmCount').textContent = '🏝️ الغرف (' + r.rooms.filter(x => !x.perm).length + '/' + r.max + ')'; if (auth) { $('rmNew').hidden = false; $('rmNew').textContent = r.mine ? '🗑️ سكّر غرفتي' : '➕ غرفة جديدة'; $('rmNew').dataset.mine = r.mine || ''; }
@@ -5899,10 +6118,11 @@ $('rmCancel').onclick = () => { $('rmForm').hidden = true; };
 /* ---------- الواجهة: داخل الغرفة ---------- */
 function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) d.appendChild(crownIcon(m.adm)); const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
 RM.typOn = true; try { RM.typOn = localStorage.getItem('rmTyp') !== '0'; } catch (e) {} RM.typ = {}; RM.kiss = [];
-function rmTypLabel() { $('rmTypBtn').textContent = RM.typOn ? '✍️ يكتب الآن: شغّال' : '✍️ يكتب الآن: مطفي'; } rmTypLabel();
+function rmLbl(id, ic, lb, on) { const b = $(id); if (!b) return; b.innerHTML = '<i>' + ic + '</i><small>' + lb + '</small>'; b.classList.toggle('on', !!on); }
+function rmTypLabel() { rmLbl('rmTypBtn', '✍️', RM.typOn ? 'يكتب: شغّال' : 'يكتب: مطفي'); } rmTypLabel();
 $('rmTypBtn').onclick = () => { RM.typOn = !RM.typOn; try { localStorage.setItem('rmTyp', RM.typOn ? '1' : '0'); } catch (e) {} rmTypLabel(); showToast(RM.typOn ? '✍️ مؤشر «يكتب الآن» شغّال' : 'انطفى مؤشر «يكتب الآن»'); };
 $('rmChatIn').addEventListener('input', () => { if (RM.typOn && $('rmChatIn').value.trim() && performance.now() - (RM.typSent || 0) > 1400) { RM.typSent = performance.now(); rmSend({ t: 'rm_typing' }); } });
-$('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; $('rmLogBtn').textContent = RM.logOpen ? '📜 اغلاق السجل' : '📜 السجل'; rmRenderLog(); };
+$('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; rmLbl('rmLogBtn', '📜', RM.logOpen ? 'اغلاق' : 'السجل', RM.logOpen); rmRenderLog(); };
 function rmKissUpd() {
   const b = $('rmKiss'); if (!b) return; const o = RM.myAdm ? Object.values(RM.others).find(x => x.adm && x.adm !== RM.myAdm) : null;
   const near = !!(o && Math.hypot(o.x - RM.me.x, o.y - RM.me.y) < 62); RM.kissTo = near ? o.name : ''; b.hidden = !near; if (near) b.textContent = '😘 بوسة لـ ' + o.name;
@@ -5929,7 +6149,7 @@ function rmKissDraw(c) {
 }
 function rmRenderMem() {
   const P = $('rmMem'); if (!P) return; rmKissUpd(); P.innerHTML = ''; const me = rmMe();
-  const all = [{ name: me, own: me === RM.owner, me: true, adm: RM.myAdm, mod: RM.isMod, g: !auth }].concat(Object.values(RM.others).map(o => ({ name: o.name, own: !!o.own, adm: o.adm || 0, mod: RM.mods.includes(o.name), g: !!o.g })));
+  const stf = RM.myAdm || RM.isMod; const all = [{ name: me, own: me === RM.owner, me: true, adm: RM.myAdm, mod: RM.isMod, g: !auth }].concat(Object.values(RM.others).filter(o => !o.hid || stf).map(o => ({ name: o.name, own: !!o.own, adm: o.adm || 0, mod: RM.mods.includes(o.name), g: !!o.g })));
   $('rmCnt').textContent = '👥 ' + all.length + '/' + (RM.cap || 15); $('rmMemN').textContent = all.length; const h = document.createElement('div'); h.className = 'mh'; h.textContent = '👥 الموجودون (' + all.length + ')'; P.appendChild(h);
   all.sort((a, b) => ((a.adm || 9) - (b.adm || 9)) || (b.own - a.own) || (b.mod - a.mod) || a.name.localeCompare(b.name)).forEach(u => {
     const row = document.createElement('div'); const b = document.createElement('button'); b.type = 'button'; b.className = 'mb' + (u.me ? ' me' : '') + (u.adm ? ' adm' + u.adm : '');
@@ -5962,7 +6182,7 @@ $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { i
 $('rmExit').onclick = () => rmLeaveRoom();
 function rmMemToggle(open) { const P = $('rmMem'); P.hidden = open === undefined ? !P.hidden : !open; $('rmBox').classList.toggle('memOpen', !P.hidden); $('rmMemArr').firstChild.textContent = P.hidden ? '▶' : '◀'; }
 $('rmMemArr').onclick = () => rmMemToggle();
-$('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; $('rmZoom').textContent = RM.zoomAll ? '🔍 قرّب' : '🔭 كل المكان'; };
+$('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; rmLbl('rmZoom', RM.zoomAll ? '🔍' : '🔭', RM.zoomAll ? 'قرّب' : 'كل المكان'); };
 function rmLandscapeDevice() {
   try { if (screen.orientation && screen.orientation.type) return /landscape/.test(screen.orientation.type); } catch (e) {}
   if (typeof window.orientation === 'number') return Math.abs(window.orientation) === 90;
@@ -5978,7 +6198,7 @@ function rmSetFull(on, auto, soft) {
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
