@@ -345,6 +345,10 @@
   #dmForm { padding: 8px 10px 10px; }
 
   /* ===== شاشة البداية (عدّ تنازلي + كونفيتي + بابيتو) ===== */
+  #offBar { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 300; padding: 10px 12px; background: #b3541e; color: #fff; font-size: 13px; line-height: 1.6; box-shadow: 0 4px 14px rgba(0,0,0,.5); align-items: flex-start; gap: 10px; }
+  #offBar.show { display: flex; }
+  #offBar span { flex: 1; }
+  #offBar button { flex: none; width: auto; padding: 6px 14px; font-size: 13px; background: rgba(255,255,255,.22); color: #fff; border: 1px solid rgba(255,255,255,.5); border-radius: 10px; }
   #splash { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     background: radial-gradient(circle at 50% 40%, #2a1d6e, #0b1020 70%); color: #fff; text-align: center; transition: opacity .5s; overflow: hidden; }
   #splash.out { opacity: 0; pointer-events: none; }
@@ -496,6 +500,7 @@
 
 </div>
 
+<div id="offBar" role="alert"><span>📴 ما اكو إنترنت حالياً. تكدر تلعب لوحدك عادي، بس للوصول للرسائل والحديث والتواصل واللعب مع الأصدقاء لازم تشغّل الإنترنت وتتصل أونلاين. أول ما يرجع الاتصال اللعبة تتصل تلقائياً وتكمل طبيعي.</span><button id="offX" type="button">إلغاء</button></div>
 <button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
 <div class="page" id="pg-account"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">👤 حسابي</span></div><div class="pgBody">
   <!-- الحساب -->
@@ -744,7 +749,7 @@ async function api(path, opts) {
   opts = opts || {};
   const h = { 'Content-Type': 'application/json' };
   if (auth && auth.token) h.Authorization = 'Bearer ' + auth.token;
-  const r = await fetch(path, { method: opts.method || 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store' });
+  let r; try { r = await fetch(path, { method: opts.method || 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store' }); } catch (e) { offShow(false); const er = new Error('ما اكو اتصال بالإنترنت'); er.offline = true; throw er; }
   let j = null;
   try { j = await r.json(); } catch (e) {}
   if (!r.ok) { const err = new Error((j && j.error) || ('خطأ ' + r.status)); err.status = r.status; throw err; }
@@ -2452,6 +2457,7 @@ function connect() {
 }
 
 function enterRoom() {
+  if (!navigator.onLine) { offShow(true); setStatus('📴 تحتاج إنترنت حتى تدخل الشات'); return; }
   if (!auth) { setStatus('⚠️ سجّل دخول أول حتى تدخل الشات'); return; }
   const code = $('codeIn').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   try { localStorage.setItem('flappyCode', code); } catch (e) {}
@@ -3552,6 +3558,7 @@ function renderHome() {
 }
 function openPage(id) {
   const el = $('pg-' + id); if (!el) return;
+  if (!navigator.onLine && (id === 'friends' || id === 'lb')) offShow(true);
   if (document.body.classList.contains('full')) exitFull();   // وضع ملء الشاشة كان يخفي الصفحات خلف اللعبة
   autoPause();
   document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open'));
@@ -4277,6 +4284,28 @@ $('installBtn').onclick = async () => {
   installEv.prompt(); try { await installEv.userChoice; } catch (e) {}
   installEv = null; $('installBtn').style.display = 'none';
 };
+
+/* ================= وضع بدون إنترنت ================= */
+var offDismissed = false, offShown = false;
+function offShow(force) {
+  if (offDismissed && !force) return; const b = $('offBar'); if (!b) return;
+  if (force) offDismissed = false; b.classList.add('show'); offShown = true;
+}
+function offHide() { const b = $('offBar'); if (b) b.classList.remove('show'); offShown = false; }
+function netBack() {
+  offDismissed = false; const was = offShown; offHide();
+  if (!navigator.onLine) return;
+  if (was) showToast('✅ رجع الاتصال، جاري الاتصال بالسيرفر...');
+  if (auth) {   // الجلسة محفوظة بالجهاز: يتصل مباشرة بدون تسجيل دخول جديد
+    loadMe(); fRetry = 0; clearTimeout(fTimer); if (!fws || fws.readyState > 1) { fStop = false; connectPresence(); }
+    if (wantRoom && (!ws || ws.readyState > 1)) { clearTimeout(reconnT); connect(); }
+  }
+}
+window.addEventListener('offline', () => { offDismissed = false; offShow(false); });
+window.addEventListener('online', netBack);
+$('offX').onclick = () => { offDismissed = true; offHide(); };
+setInterval(() => { if (navigator.onLine && offShown) netBack(); }, 15000);
+if (!navigator.onLine) offShow(false);
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 </script>
 </body>
