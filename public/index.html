@@ -569,7 +569,7 @@
         <button id="tabReg" class="tab" type="button">حساب جديد</button>
       </div>
       <form id="authForm" class="col" style="margin-top:8px">
-        <input id="uIn" placeholder="اسم المستخدم" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false">
+        <input id="uIn" placeholder="اسم المستخدم (3-5 أحرف، حروف وأرقام فقط)" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false">
         <input id="pIn" type="password" placeholder="كلمة السر" maxlength="64" autocomplete="current-password">
         <input id="pIn2" type="password" placeholder="تأكيد كلمة السر" maxlength="64" autocomplete="new-password" style="display:none">
         <button id="authBtn" type="submit">دخول</button>
@@ -910,6 +910,7 @@ $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
   const u = $('uIn').value.trim(), p = $('pIn').value;
   if (!u || !p) { authSay('اكتب اسم المستخدم وكلمة السر'); return; }
+  if (mode === 'register') { if (u.length < 3 || u.length > 5) { authSay('⚠️ الاسم لازم من 3 إلى 5 أحرف فقط'); return; } if (!/^[\p{L}\p{N}]+(?: [\p{L}\p{N}]+)*$/u.test(u)) { authSay('⚠️ الاسم حروف وأرقام فقط، ممنوع الرموز مثل % $ # @ _ - .'); return; } }
   if (mode === 'register' && $('pIn2').value !== p) { authSay('⚠️ كلمة السر وتأكيدها مو متطابقين'); return; }
   $('authBtn').disabled = true; authSay('⏳ لحظة...', true);
   try {

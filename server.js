@@ -110,7 +110,37 @@ function safeEq(a, b) {
   const x = Buffer.from(a), y = Buffer.from(b);
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
-const NAME_RE = /^[\p{L}\p{N}_.\- ]+$/u;
+const NAME_RE = /^[\p{L}\p{N}_.\- ]+$/u;           // الحسابات القديمة قد تحتوي رموز، فتسجيل الدخول لا يتأثر
+const NEW_NAME_RE = /^[\p{L}\p{N}]+(?: [\p{L}\p{N}]+)*$/u;   // الأسماء الجديدة: حروف وأرقام فقط (ومسافة وحدة بين الكلمات)
+// تطبيع الاسم لمنع التكرار المقنّع (حروف متشابهة، فراغات، رموز، حالة الأحرف)
+function normName(n) {
+  return String(n || '').normalize('NFKC').toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[^\p{L}\p{N}]/gu, '');
+}
+const BAD_STRONG = ['كسمك','كسختك','كسام','كسها','كسك','منيوك','متناك','شرموط','قحب','عاهر','عاهره','خنيث','ابن الكلب','ابنالكلب','بنت الكلب','بنتالكلب','ابن الزاني','ديوث','فشخ','فشخه','لواط','لوطي','طيزك','عيري','عيرك','اخوك الشرموط','اغتصاب','سكس','كواد','قواد','ملعون الوالد','ولدالزنا','ولد الزنا','fuck','fuk','shit','bitch','cunt','pussy','whore','slut','nigg','asshole','porn','dickhead','bastard','rapist','motherf'];
+const BAD_TOKEN = new Set(['كس','عير','زب','طيز','طيزي','كحبه','قحبه','نيج','سكس','sex','dick','cock','ass','rape','anal','penis','vagina','boob','boobs','xxx','nazi','isis','تفو','نيك','نيج','خرا','خره','زبي','زبك','متناك','منيوك']);
+const RESERVED = ['admin','administrator','moderator','support','owner','system','ادمن','الادمن','مشرف','المشرف','الدعم','المالك','النظام','ربش','rbsh'];
+const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '$': 's', '@': 'a' };
+function badName(raw) {
+  const low = String(raw).normalize('NFKC').toLowerCase();
+  const toks = low.split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(t => normName(t));
+  const flat = normName(low), leet = flat.replace(/[01345788]/g, d => LEET[d] || d);
+  if (toks.some(t => BAD_TOKEN.has(t))) return true;
+  for (const w of BAD_STRONG) { const n = normName(w); if (n.length >= 3 && (flat.includes(n) || leet.includes(n))) return true; }
+  return false;
+}
+function checkNewName(raw) {
+  const u = String(raw || '').trim().replace(/\s+/g, ' ');
+  if (u.length < 3 || u.length > 5) return { error: 'الاسم لازم من 3 إلى 5 أحرف فقط' };
+  if (!NEW_NAME_RE.test(u)) return { error: 'الاسم لازم حروف وأرقام فقط، ممنوع الرموز مثل % $ # @ _ - .' };
+  if (/^(__proto__|constructor|prototype|hasownproperty|tostring|valueof)$/i.test(u)) return { error: 'اسم غير مسموح' };
+  if (badName(u)) return { error: '🚫 هذا الاسم غير لائق، اختار اسم محترم' };
+  const nn = normName(u);
+  if (RESERVED.some(r => normName(r) === nn)) return { error: 'هذا الاسم محجوز، اختار اسم ثاني' };
+  return { name: u };
+}
 function cleanName(u) {
   u = String(u || '').trim().replace(/\s+/g, ' ');
   if (u.length < 2 || u.length > 16 || !NAME_RE.test(u)) return null;
@@ -304,12 +334,14 @@ app.get('/health', (req, res) => res.send('ok'));
 app.post('/api/register', (req, res) => {
   if (limited('reg:' + req.ip, 10, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
   if (req.body && req.body.p2 !== undefined && String(req.body.p2) !== String(req.body.p)) return res.status(400).json({ error: 'كلمة السر وتأكيدها مو متطابقين' });
-  const name = cleanName(req.body && req.body.u);
+  const chk = checkNewName(req.body && req.body.u);
   const p = String((req.body && req.body.p) || '');
-  if (!name) return res.status(400).json({ error: 'الاسم لازم 2-16 حرف (حروف وأرقام ونقطة وشرطة فقط)' });
+  if (chk.error) return res.status(400).json({ error: chk.error });
+  const name = chk.name;
   if (p.length < 4 || p.length > 64) return res.status(400).json({ error: 'كلمة السر لازم 4 أحرف على الأقل' });
   const key = name.toLowerCase();
-  if (own(db.users, key)) return res.status(409).json({ error: 'هذا الاسم مستخدم، اختار اسم ثاني' });
+  const nk = normName(name);
+  if (own(db.users, key) || Object.keys(db.users).some(k => normName(db.users[k].name || k) === nk)) return res.status(409).json({ error: 'هذا الاسم مستخدم أو شبيه باسم موجود، اختار اسم ثاني' });
   const salt = crypto.randomBytes(16).toString('hex');
   const rc = String((req.body && req.body.ref) || '').trim().toUpperCase().slice(0, 8);
   const refBy = rc ? Object.keys(db.users).find(k => db.users[k].refCode === rc) : null;
