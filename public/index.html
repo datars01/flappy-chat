@@ -3287,6 +3287,7 @@ function hvHearts() { for (let i = 0; i < 12; i++) hFloats.push({ x: 30 + Math.r
 function hvMsg(d) {
   if (d.t === 'hv_state') { hOthers = {}; (d.members || []).forEach(hvPut); hLog = d.log || []; hLight = d.light !== false; hOvKey = ''; hRenderVis(); hRenderLog(); }
   else if (d.t === 'hv_light') { hLight = !!d.on; hOvKey = ''; if (d.n && d.n !== (auth && auth.name)) showToast('💡 ' + d.n + (d.on ? ' شغّل الضوء' : ' طفّى الضوء')); sfx('click'); }
+  else if (d.t === 'hv_clear') { hLog = []; hChatBub = {}; hRenderLog(); $('hLogBtn').textContent = '📜'; showToast('🗑️ ' + d.n + ' حذف سجل الشات'); }
   else if (d.t === 'hv_chat') { hLog.push(d.m); if (hLog.length > 100) hLog.shift(); hChatBub[d.m.n] = { txt: d.m.txt, t: 260 }; if (d.m.n !== (auth && auth.name)) sfx('click'); hRenderLog(); if ($('hLogP').hidden && d.m.n !== (auth && auth.name)) $('hLogBtn').textContent = '📜•'; }
   else if (d.t === 'hv_join') { hvPut(d.m); hRenderVis(); showToast('👋 ' + d.m.n + ' دخل البيت'); sfx('door'); }
   else if (d.t === 'hv_leave') { delete hOthers[d.n]; hRenderVis(); }
@@ -3320,6 +3321,7 @@ function hSendChat() {
 }
 function hRenderLog() {
   const P = $('hLogP'); if (!P) return; P.innerHTML = '';
+  if (!hVis && hLog.length) { const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'hOvB'; cb.textContent = '🗑️ حذف السجل للجميع'; cb.style.alignSelf = 'flex-start'; cb.onclick = () => { if (cb.dataset.arm) { hvSend({ t: 'hv_clear' }); } else { cb.dataset.arm = '1'; cb.textContent = 'تأكيد الحذف؟'; setTimeout(() => { delete cb.dataset.arm; cb.textContent = '🗑️ حذف السجل للجميع'; }, 3000); } }; P.appendChild(cb); }
   if (!hLog.length) { const e = document.createElement('div'); e.textContent = 'ما اكو رسائل بعد، ابدأ الحديث 💬'; e.style.opacity = '.7'; P.appendChild(e); return; }
   hLog.forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ':'; const t = document.createElement('span'); t.textContent = m.txt; const tm = document.createElement('span'); tm.className = 't'; tm.textContent = new Date(m.ts).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }); d.append(b, t, tm); P.appendChild(d); });
   P.scrollTop = P.scrollHeight;

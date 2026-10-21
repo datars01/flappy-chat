@@ -1126,6 +1126,9 @@ function hvOnMsg(ws, d) {
     const h = ws.hv; if (!h || now - (h.lt || 0) < 400) return; h.lt = now;
     const ou = db.users[h.owner]; ou.hlight = !!d.on; save();
     hvBc(h.owner, { t: 'hv_light', on: ou.hlight, n: me.name });
+  } else if (d.t === 'hv_clear') {   // صاحب البيت فقط يمسح سجل الشات للجميع
+    const h = ws.hv; if (!h || h.owner !== ws.key) return send(ws, { t: 'hv_err', error: 'بس صاحب البيت يكدر يحذف السجل' });
+    const ou = db.users[h.owner]; ou.hlog = []; save(); hvBc(h.owner, { t: 'hv_clear', n: me.name });
   } else if (d.t === 'hv_leave') hvLeave(ws);
 }
 function onMsg(ws, d) {
