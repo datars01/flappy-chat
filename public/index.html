@@ -1326,7 +1326,7 @@ function trackCanvas(sc) {
   return (_trackCv = c);
 }
 
-const zLevelN = l => 31 + 7 * l;
+const zLevelN = l => Math.round((31 + 7 * l) * 0.88);   // -12% كرات
 const zSpeed = l => (20 + 3.5 * Math.min(l, 12)) * Math.max(0.75, Math.min(1.3, PATH.L / 1881));   // نفس مدة الوصول للحفرة تقريباً مهما كان طول المسار          // px بالثانية
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function newZ(seed, startLv) {
@@ -3552,6 +3552,7 @@ function renderHome() {
 }
 function openPage(id) {
   const el = $('pg-' + id); if (!el) return;
+  if (document.body.classList.contains('full')) exitFull();   // وضع ملء الشاشة كان يخفي الصفحات خلف اللعبة
   autoPause();
   document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open'));
   el.classList.add('open'); el.querySelector('.pgBody').scrollTop = 0;
@@ -3584,7 +3585,7 @@ const hHouse = () => hVis ? hVis.house : ((auth && auth.house) || {});
 function hSetNow() {
   const s = Object.assign({}, hHouse().set || {});
   if (hPrev) { const it = hmap()[hPrev]; if (it) s[it.slot] = hPrev; }
-  return s;
+  hCT = hTier(s); return s;
 }
 function hVal(S, slot) { const id = S[slot], it = id && hmap()[id]; return it ? it.v : (HDEF[slot] && HDEF[slot][0] === '#' ? HDEF[slot] : null); }
 const hTier = S => { const id = S.home; const n = id ? parseInt(id.slice(1), 10) - 1 : 0; return n >= 0 && n < 4 ? n : 0; };
@@ -3596,11 +3597,21 @@ const EXT = [
   { x0: 110, x1: 210, top: 90, rt: 48, rx0: 100, rx1: 220, door: [142, 162, 36, 43], wins: [[120, 102, 22, 26], [178, 102, 22, 26], [122, 150, 18, 24], [180, 150, 18, 24]], chim: null }
 ];
 /* أماكن الأغراض التلقائية (والمستخدم يقدر يزيحها) */
-const HPOS = {
-  inside: [['tv', 166, 120, 60], ['shelf', 262, 178, 72], ['plant', 40, 192, 56], ['lamp', 234, 192, 44], ['seat', 120, 210, 74], ['pet', 204, 238, 32]],
-  garden: [['tree', 44, 194, 86], ['feature', 122, 204, 56], ['play', 212, 214, 52], ['car', 262, 244, 46], ['flowers', 30, 244, 20], ['flowers', 58, 244, 20], ['flowers', 86, 244, 20], ['flowers', 114, 244, 20], ['flowers', 142, 244, 20], ['lantern', 22, 236, 32], ['lantern', 298, 236, 32]]
-};
-const HLIM = { inside: [20, 300, 100, 247], garden: [20, 300, 150, 247] };
+var hCT = 0;   // مستوى البيت الحالي (0 كوخ ... 3 فيلا)
+const HPOS_T = [
+  { inside: [['tv', 130, 124, 48], ['shelf', 96, 174, 56], ['plant', 62, 200, 46], ['lamp', 190, 192, 38], ['seat', 140, 214, 64], ['pet', 236, 240, 28]],
+    garden: [['tree', 60, 196, 80], ['feature', 112, 206, 50], ['play', 190, 214, 48], ['car', 250, 244, 42], ['flowers', 36, 244, 18], ['flowers', 62, 244, 18], ['flowers', 88, 244, 18], ['flowers', 114, 244, 18], ['flowers', 140, 244, 18], ['lantern', 22, 236, 30], ['lantern', 298, 236, 30]] },
+  { inside: [['tv', 166, 120, 60], ['shelf', 262, 178, 72], ['plant', 40, 192, 56], ['lamp', 234, 192, 44], ['seat', 120, 210, 74], ['pet', 204, 238, 32]],
+    garden: [['tree', 44, 194, 86], ['feature', 122, 204, 56], ['play', 212, 214, 52], ['car', 262, 244, 46], ['flowers', 30, 244, 20], ['flowers', 58, 244, 20], ['flowers', 86, 244, 20], ['flowers', 114, 244, 20], ['flowers', 142, 244, 20], ['lantern', 22, 236, 32], ['lantern', 298, 236, 32]] },
+  { inside: [['tv', 170, 118, 68], ['shelf', 252, 178, 78], ['plant', 74, 196, 60], ['lamp', 116, 192, 46], ['seat', 150, 212, 80], ['pet', 216, 240, 34]],
+    garden: [['tree', 36, 192, 96], ['feature', 100, 206, 60], ['play', 224, 212, 58], ['car', 268, 246, 50], ['flowers', 26, 246, 20], ['flowers', 54, 246, 20], ['flowers', 82, 246, 20], ['flowers', 140, 246, 20], ['flowers', 168, 246, 20], ['lantern', 40, 238, 34], ['lantern', 280, 238, 34]] },
+  { inside: [['tv', 190, 112, 72], ['shelf', 276, 180, 80], ['plant', 104, 196, 62], ['lamp', 238, 196, 48], ['seat', 160, 214, 84], ['pet', 124, 242, 34]],
+    garden: [['tree', 30, 190, 100], ['feature', 92, 206, 62], ['play', 232, 216, 60], ['car', 278, 246, 52], ['flowers', 24, 246, 20], ['flowers', 52, 246, 20], ['flowers', 128, 246, 20], ['flowers', 156, 246, 20], ['flowers', 184, 246, 20], ['lantern', 52, 238, 36], ['lantern', 268, 238, 36]] }
+];
+const HPOS = { get inside() { return HPOS_T[hCT].inside; }, get garden() { return HPOS_T[hCT].garden; } };
+const HLIM_T = [{ inside: [56, 264, 100, 247], garden: [20, 300, 150, 247] }, { inside: [20, 300, 100, 247], garden: [20, 300, 150, 247] }, { inside: [24, 296, 100, 247], garden: [20, 300, 150, 247] }, { inside: [28, 292, 100, 247], garden: [20, 300, 150, 247] }];
+const HLIM = { get inside() { return HLIM_T[hCT].inside; }, get garden() { return HLIM_T[hCT].garden; } };
+const hWX = () => hView === 'inside' ? [HLIM_T[hCT].inside[0] - 4, HLIM_T[hCT].inside[1] + 4] : [14, 306];
 const HMOVE = { inside: ['tv', 'shelf', 'plant', 'lamp', 'seat', 'pet', 'rug'], garden: ['tree', 'feature', 'play', 'car', 'flowers', 'lantern'] };
 function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0]; }
 function hEntries(view, S, all) {
@@ -3711,7 +3722,7 @@ function hBurstSlot(slot) {
 }
 function hBurst(x, y, n) { const cols = ['#ffd166', '#fff', '#6ee7ff', '#9ff3b5', '#ff9bd0']; for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 0.8 + Math.random() * 2.6; hParts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, t: 30 + Math.random() * 20, col: cols[i % cols.length], sz: 1.5 + Math.random() * 2.5 }); } }
 /* ---- لمس المشهد: مشي حر + سحب الأغراض + تفاعل ---- */
-function hWalkTo(x, y) { hChar.sit = false; hChar.sitGoal = false; const W0 = HV[hView].walk; hChar.tx = Math.max(14, Math.min(306, x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
+function hWalkTo(x, y) { hChar.sit = false; hChar.sitGoal = false; const W0 = HV[hView].walk; const WX = hWX(); hChar.tx = Math.max(WX[0], Math.min(WX[1], x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
 function hHit(x, y, S) {
   const inR = r => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
   if (hView === 'home') {
@@ -3852,6 +3863,13 @@ function hWall(c, x, y, w, h, col, kind) {
   c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1.5; c.strokeRect(x, y, w, h);
 }
 function hSmoke(c, x, y) { for (let i = 0; i < 5; i++) { const k = ((hT * 0.5 + i * 12) % 60) / 60; c.fillStyle = 'rgba(235,235,240,' + (0.55 * (1 - k)) + ')'; c.beginPath(); c.arc(x + Math.sin(hT / 18 + i) * 4 + k * 10, y - k * 38, 3 + k * 6, 0, 7); c.fill(); } }
+
+function hHomeExtra(c, t) {   // محيط البيت من الخارج حسب المستوى
+  const tree = (x, y, s, col) => { c.fillStyle = '#5a3a1c'; c.fillRect(x - 3 * s, y - 10 * s, 6 * s, 12 * s); c.fillStyle = col; for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(x - (22 - i * 4) * s, y - (6 + i * 18) * s); c.lineTo(x, y - (34 + i * 18) * s); c.lineTo(x + (22 - i * 4) * s, y - (6 + i * 18) * s); c.fill(); } };
+  if (t === 0) { tree(24, 214, 1, '#2f7a3c'); tree(60, 206, 0.8, '#3a8a46'); tree(292, 214, 1.1, '#2f7a3c'); tree(258, 206, 0.8, '#3a8a46'); c.fillStyle = '#8a5a2a'; for (let i = 0; i < 4; i++) c.fillRect(236, 196 + i * 5, 20, 4); }
+  else if (t === 2) { c.fillStyle = '#f4f1ea'; for (let x = 4; x < 320; x += 12) { if (x > 100 && x < 230) continue; c.fillRect(x, 192, 7, 22); } c.fillRect(0, 198, 100, 3); c.fillRect(230, 198, 90, 3); c.fillStyle = '#c9483c'; c.fillRect(270, 176, 4, 22); c.fillRect(264, 170, 16, 10); }
+  else if (t === 3) { c.fillStyle = '#2f8a43'; c.beginPath(); c.ellipse(34, 210, 50, 14, 0, Math.PI, 0); c.ellipse(286, 210, 50, 14, 0, Math.PI, 0); c.fill(); [18, 302].forEach(x => { c.fillStyle = '#e4dccb'; c.fillRect(x - 8, 164, 16, 48); c.fillStyle = '#c9c0a8'; c.fillRect(x - 10, 160, 20, 7); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(x, 154, 6, 0, 7); c.fill(); }); c.fillStyle = '#3f9a52'; [70, 250].forEach(x => { c.beginPath(); c.arc(x, 200, 9, 0, 7); c.fill(); c.fillStyle = '#5a3a1c'; c.fillRect(x - 1, 206, 3, 8); c.fillStyle = '#3f9a52'; }); }
+}
 function hBackdrop(c, garden) {
   const sky = c.createLinearGradient(0, 0, 0, 205); sky.addColorStop(0, '#6cc0ff'); sky.addColorStop(1, '#eaf8ff'); c.fillStyle = sky; c.fillRect(0, 0, 320, 250);
   c.fillStyle = '#ffe27a'; c.beginPath(); c.arc(278, 36, 17, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,226,122,.5)'; c.lineWidth = 2;
@@ -3980,6 +3998,79 @@ function hDarkDraw(c, S) {
   if (tk) glow(tk.x, tk.y - 34, 48, 'rgba(90,200,255,.22)');
   glow(60, 72, 50, 'rgba(150,180,255,.18)'); c.restore();
 }
+
+/* ===== غرف مختلفة لكل مستوى بيت ===== */
+function hWin(c, x, y, w, h, arch) {
+  c.fillStyle = '#fbfbfb'; c.fillRect(x - 3, y - 3, w + 6, h + 6);
+  const g = c.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#7ec8ff'); g.addColorStop(1, '#d8f1ff'); c.fillStyle = g;
+  if (arch) { c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + w / 2); c.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0); c.lineTo(x + w, y + h); c.closePath(); c.fill(); } else c.fillRect(x, y, w, h);
+  c.fillStyle = '#7bc96f'; c.beginPath(); c.ellipse(x + w * 0.4, y + h, w * 0.6, h * 0.2, 0, Math.PI, 0); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(x + w * 0.5 + Math.sin(hT / 60) * 5, y + h * 0.28, w * 0.2, 5, 0, 0, 7); c.fill();
+  c.strokeStyle = '#fbfbfb'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x + w / 2, y + (arch ? w / 2 : 0)); c.lineTo(x + w / 2, y + h); c.moveTo(x, y + h * 0.55); c.lineTo(x + w, y + h * 0.55); c.stroke();
+}
+function hTierRoom(c, S) {
+  const t = hCT;
+  if (t === 0) {   // كوخ: جذوع خشب + مدفأة حجر + عوارض
+    c.fillStyle = 'rgba(70,40,15,.28)'; for (let y = 0; y < 168; y += 14) c.fillRect(0, y, 320, 2);
+    c.fillStyle = 'rgba(0,0,0,.16)'; for (let y = 7; y < 168; y += 14) c.fillRect(0, y, 320, 1);
+    c.fillStyle = '#4a2c14'; c.fillRect(0, 0, 320, 22); c.fillStyle = '#5e3a1c'; for (let x = 0; x < 320; x += 64) c.fillRect(x, 0, 8, 30);
+    c.fillStyle = '#3d2410'; c.fillRect(0, 0, 46, 250); c.fillRect(274, 0, 46, 250);
+    c.fillStyle = '#5a361a'; for (let y = 0; y < 250; y += 18) { c.beginPath(); c.arc(22, y + 9, 9, 0, 7); c.arc(298, y + 9, 9, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(44, 0, 3, 250); c.fillRect(273, 0, 3, 250);
+    hWin(c, 70, 42, 44, 52, false); c.fillStyle = '#7a4a2a'; c.fillRect(66, 94, 52, 5);
+    // مدفأة
+    c.fillStyle = '#8b8b92'; c.fillRect(208, 86, 56, 84); c.fillStyle = 'rgba(0,0,0,.2)'; for (let y = 92; y < 170; y += 12) { c.fillRect(208, y, 56, 1); } for (let y = 98; y < 170; y += 24) c.fillRect(224, y - 12, 1, 12);
+    c.fillStyle = '#2a1608'; c.fillRect(220, 122, 32, 48); c.fillStyle = '#4a2c14'; c.fillRect(204, 82, 64, 8);
+    const f = Math.sin(hT / 4) * 2; const fg = c.createRadialGradient(236, 160, 2, 236, 160, 22); fg.addColorStop(0, 'rgba(255,200,80,.9)'); fg.addColorStop(1, 'rgba(255,100,20,0)'); c.fillStyle = fg; c.fillRect(214, 136, 44, 34);
+    c.fillStyle = '#ff9a2a'; c.beginPath(); c.moveTo(228, 168); c.quadraticCurveTo(230, 150 + f, 236, 140 + f); c.quadraticCurveTo(242, 150 - f, 246, 168); c.fill(); c.fillStyle = '#ffe066'; c.beginPath(); c.moveTo(233, 168); c.quadraticCurveTo(236, 154, 238, 150 + f); c.quadraticCurveTo(241, 158, 242, 168); c.fill();
+    c.fillStyle = '#5a3a1c'; c.fillRect(224, 166, 24, 4);
+    // فانوس معلّق
+    c.strokeStyle = '#222'; c.lineWidth = 1; c.beginPath(); c.moveTo(150, 22); c.lineTo(150, 40); c.stroke(); c.fillStyle = '#ffd36b'; c.fillRect(144, 40, 12, 14); c.fillStyle = 'rgba(255,220,120,.25)'; c.beginPath(); c.arc(150, 47, 18 + Math.sin(hT / 9) * 1.5, 0, 7); c.fill();
+  } else if (t === 2) {   // بيت واسع: ألواح جدار + نافذتين كبيرتين + درج + برواز
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(0, 118, 320, 52); c.strokeStyle = 'rgba(0,0,0,.14)'; c.lineWidth = 1; for (let x = 0; x < 320; x += 40) c.strokeRect(x + 3, 122, 34, 42);
+    c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(0, 116, 320, 3);
+    hWin(c, 82, 30, 56, 70, false); hWin(c, 196, 30, 56, 70, false);
+    [[82, 56], [196, 56]].forEach(p => { c.fillStyle = '#b5413a'; c.fillRect(p[0] - 12, 24, 8, 84); c.fillRect(p[0] + p[1] + 4, 24, 8, 84); c.fillRect(p[0] - 14, 20, p[1] + 28, 6); });
+    c.fillStyle = '#e9e1d0'; c.fillRect(78, 100, 64, 4); c.fillRect(192, 100, 64, 4);
+    // درج على اليسار
+    c.fillStyle = '#7a5230'; for (let i = 0; i < 7; i++) c.fillRect(0, 170 - i * 14, 10 + (7 - i) * 6, 14); c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 0; i < 7; i++) c.fillRect(0, 183 - i * 14, 10 + (7 - i) * 6, 1);
+    c.fillStyle = '#4a2c14'; c.fillRect(0, 70, 8, 100);
+    // برواز
+    c.fillStyle = '#c99a3c'; c.fillRect(150, 34, 40, 30); c.fillStyle = '#9ad0f2'; c.fillRect(154, 38, 32, 22); c.fillStyle = '#6ab960'; c.fillRect(154, 52, 32, 8);
+    // ثريا بسيطة
+    c.strokeStyle = '#999'; c.beginPath(); c.moveTo(160, 0); c.lineTo(160, 14); c.stroke(); c.fillStyle = '#ffe9a8'; c.beginPath(); c.ellipse(160, 17, 14, 5, 0, 0, 7); c.fill();
+  } else {   // فيلا: رخام + أعمدة + 3 نوافذ مقوّسة + درج كبير + ثريا
+    c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(0, 0, 320, 170);
+    c.fillStyle = '#d9c9a0'; c.fillRect(0, 150, 320, 20); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(0, 150, 320, 2);
+    for (let r = 0; r < 4; r++) for (let x = -1; x < 12; x++) { if ((x + r) % 2) { const y0 = 170 + r * r * 3 + r * 6, y1 = 170 + (r + 1) * (r + 1) * 3 + (r + 1) * 6; c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(x * 28, y0, 28, y1 - y0); } }
+    [[52, 46], [136, 46], [220, 46]].forEach(p => hWin(c, p[0], 36, 44, 104, true));
+    c.fillStyle = '#7a1f2b'; [[44], [128], [212]].forEach(p => { c.fillRect(p[0], 30, 7, 116); c.fillRect(p[0] + 52, 30, 7, 116); });
+    c.fillStyle = '#c99a3c'; for (let x = 0; x < 320; x += 4) if (x % 8 === 0) c.fillRect(x, 0, 4, 6);
+    [14, 306].forEach(x => { c.fillStyle = '#f2ead8'; c.fillRect(x - 9, 10, 18, 160); c.fillStyle = '#d6cbb0'; c.fillRect(x - 12, 6, 24, 8); c.fillRect(x - 12, 164, 24, 8); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(x + 3, 14, 3, 150); });
+    // درج كبير مع سجادة حمراء
+    c.fillStyle = '#e8dfc6'; for (let i = 0; i < 6; i++) c.fillRect(24, 170 - i * 14, 60 + (6 - i) * 4, 14);
+    c.fillStyle = '#a3202e'; for (let i = 0; i < 6; i++) c.fillRect(30, 170 - i * 14, 18 + (6 - i) * 4, 14);
+    // ثريا
+    c.strokeStyle = '#c99a3c'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(160, 0); c.lineTo(160, 18); c.stroke();
+    const gl = c.createRadialGradient(160, 26, 2, 160, 26, 40); gl.addColorStop(0, 'rgba(255,235,160,' + (0.5 + 0.1 * Math.sin(hT / 7)) + ')'); gl.addColorStop(1, 'rgba(255,235,160,0)'); c.fillStyle = gl; c.fillRect(110, 0, 100, 70);
+    c.fillStyle = '#c99a3c'; c.beginPath(); c.ellipse(160, 22, 22, 5, 0, 0, 7); c.fill(); for (let i = -2; i <= 2; i++) { c.fillStyle = '#fff3c0'; c.beginPath(); c.arc(160 + i * 9, 18 + Math.abs(i), 2.2, 0, 7); c.fill(); }
+  }
+}
+/* ديكور الحديقة والواجهة حسب المستوى */
+function hGardenDecor(c, t, back) {
+  if (back) {   // خلف الأغراض
+    if (t === 0) { c.fillStyle = '#b89968'; [[40, 232, 26], [210, 236, 22], [300, 226, 18]].forEach(p => { c.beginPath(); c.ellipse(p[0], p[1], p[2], 5, 0, 0, 7); c.fill(); }); c.fillStyle = '#9a9a9a'; [[20, 214], [300, 212], [160, 240]].forEach(p => { c.beginPath(); c.ellipse(p[0], p[1], 6, 4, 0, 0, 7); c.fill(); }); c.fillStyle = '#8a5a2a'; for (let i = 0; i < 3; i++) c.fillRect(286, 190 + i * 5, 22, 4); }
+    if (t === 2) { c.fillStyle = '#2f8a43'; [[0, 70], [250, 70]].forEach(p => { c.beginPath(); c.ellipse(p[0] + 35, 208, 40, 10, 0, Math.PI, 0); c.fill(); }); c.fillStyle = '#9a9aa8'; c.fillRect(0, 214, 90, 4); c.fillRect(230, 214, 90, 4); c.fillStyle = '#bdbdc8'; for (let x = 150; x < 190; x += 14) { c.fillRect(x - 40, 224, 10, 5); c.fillRect(x - 20, 234, 10, 5); } }
+    if (t === 3) {
+      c.fillStyle = '#2f8a43'; [[0, 100], [220, 100]].forEach(p => { c.beginPath(); c.ellipse(p[0] + 50, 209, 56, 12, 0, Math.PI, 0); c.fill(); });
+      const pg = c.createLinearGradient(0, 180, 0, 200); pg.addColorStop(0, '#5ad0f0'); pg.addColorStop(1, '#2aa0d8'); c.fillStyle = '#e8ecef'; c.beginPath(); c.ellipse(236, 190, 56, 13, 0, 0, 7); c.fill(); c.fillStyle = pg; c.beginPath(); c.ellipse(236, 190, 50, 10, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; for (let i = 0; i < 3; i++) { const k = ((hT * 0.5 + i * 14) % 40) / 40; c.beginPath(); c.ellipse(236 + (i - 1) * 16, 190, 6 + k * 10, 2 + k * 3, 0, 0, 7); c.globalAlpha = 1 - k; c.stroke(); c.globalAlpha = 1; }
+      c.fillStyle = '#d6d0c0'; c.fillRect(150, 206, 20, 44);
+    }
+  } else {   // أمام الأغراض
+    if (t === 3) { [8, 306].forEach(x => { c.fillStyle = '#e4dccb'; c.fillRect(x - 6, 188, 12, 40); c.fillStyle = '#c9c0a8'; c.fillRect(x - 8, 184, 16, 6); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(x, 180, 5, 0, 7); c.fill(); }); }
+  }
+}
 function hInterior(c, S) {
   const paper = hVal(S, 'paper') || HDEF.paper, floor = hVal(S, 'floor') || HDEF.floor, rug = hVal(S, 'rug');
   c.fillStyle = paper; c.fillRect(0, 0, 320, 170); c.fillStyle = 'rgba(0,0,0,.05)'; for (let x = 0; x < 320; x += 20) c.fillRect(x, 0, 10, 170);
@@ -3988,12 +4079,14 @@ function hInterior(c, S) {
   for (let i = 0; i < 8; i++) { const y = 170 + i * i * 1.3 + i * 3; c.beginPath(); c.moveTo(0, y); c.lineTo(320, y); c.stroke(); }
   const fl = S.floor; if (fl === 'f2' || fl === 'f3') { for (let x = 0; x < 320; x += 32) { c.beginPath(); c.moveTo(x, 170); c.lineTo(x + (x - 160) * 0.5, 250); c.stroke(); } }
   c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(0, 166, 320, 5); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(0, 164, 320, 2);
+  if (hCT === 1) {
   // النافذة والستائر
   const wx = 26, wy = 34; c.fillStyle = '#fbfbfb'; c.fillRect(wx - 4, wy - 4, 76, 82); const g = c.createLinearGradient(0, wy, 0, wy + 74); g.addColorStop(0, '#7ec8ff'); g.addColorStop(1, '#d8f1ff'); c.fillStyle = g; c.fillRect(wx, wy, 68, 74);
   c.fillStyle = '#7bc96f'; c.beginPath(); c.ellipse(wx + 20, wy + 74, 40, 14, 0, Math.PI, 0); c.fill(); c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(wx + 20 + Math.sin(hT / 60) * 6, wy + 20, 14, 6, 0, 0, 7); c.fill();
   c.strokeStyle = '#fbfbfb'; c.lineWidth = 3; c.beginPath(); c.moveTo(wx + 34, wy); c.lineTo(wx + 34, wy + 74); c.moveTo(wx, wy + 37); c.lineTo(wx + 68, wy + 37); c.stroke();
   c.fillStyle = '#c9483c'; c.fillRect(wx - 10, wy - 8, 16, 90); c.fillRect(wx + 62, wy - 8, 16, 90); c.fillRect(wx - 12, wy - 10, 94, 6);
   c.fillStyle = '#e9e1d0'; c.fillRect(wx - 8, wy + 74, 84, 5);
+  } else hTierRoom(c, S);
   const rc = hRugC();
   if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(rc[0], rc[1], 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
   const list = hEntries('inside', S).map(e => [e.slot, e.x, e.y, e.s, 0]);
@@ -4004,8 +4097,9 @@ function hInterior(c, S) {
   hDarkDraw(c, S);
 }
 function hGarden(c, S) {
-  hBackdrop(c, true);
+  hBackdrop(c, true); hGardenDecor(c, hCT, true);
   c.save(); c.translate(150, 50); c.scale(0.58, 0.58); const bk = hBuild; hExterior(c, S, true); c.restore();
+  hGardenDecor(c, hCT, false);
   const fc = hVal(S, 'fence'); if (fc) { c.fillStyle = fc; c.fillRect(0, 211, 320, 3); c.fillRect(0, 218, 320, 3); for (let x = 3; x < 320; x += 10) { c.fillRect(x, 206, 5, 20); } }
   c.fillStyle = '#dcc9a0'; c.beginPath(); c.moveTo(140, 210); c.lineTo(180, 210); c.lineTo(196, 250); c.lineTo(126, 250); c.closePath(); c.fill();
   const sw = Math.sin(hT / 30) * 0.03;
@@ -4044,7 +4138,7 @@ function hDraw() {
   if (hView === 'inside') hInterior(c, S);
   else if (hView === 'garden') hGarden(c, S);
   else {
-    hBackdrop(c, false); hExterior(c, S, false); hOthersIn('home').forEach(o => hAvatar(c, o)); hChar_(c, S);
+    hBackdrop(c, false); hHomeExtra(c, hCT); hExterior(c, S, false); hOthersIn('home').forEach(o => hAvatar(c, o)); hChar_(c, S);
     c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(226, 14, 84, 26); c.font = 'bold 12px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#ffe9a8'; c.fillText('🔧 ترقية البيت', 268, 32);
   }
   hHilite(c, S);
