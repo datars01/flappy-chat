@@ -645,7 +645,7 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 const live = new Map(); // code -> Set<ws>
-const MAX_MSGS = 300;
+const MAX_MSGS = 20000;   // الرسائل تبقى للأبد (حد أمان فقط)
 const BG_IDS = ['night', 'sunset', 'forest', 'violet', 'sand', 'sky', 'dots', 'grid']; // خلفيات الغرفة الجاهزة
 
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); };
@@ -667,7 +667,7 @@ const pub = m => { const { hidden, ...r } = m; return r; };
 function roomOf(code) { return own(db.rooms, code) ? db.rooms[code] : (db.rooms[code] = { msgs: [] }); }
 
 /* ============ الأصدقاء والرسائل الخاصة ============ */
-const FRIEND_MAX = 100, DM_MAX = 200, DM_KEEP = 30 * 24 * 3600e3;
+const FRIEND_MAX = 100, DM_MAX = 20000;
 const isOnline = (key, except) => { for (const w of wss.clients) if (w !== except && w.key === key && w.readyState === 1) return true; return false; };
 function pushTo(key, msg) { const str = JSON.stringify(msg); for (const w of wss.clients) if (w.key === key && w.readyState === 1) w.send(str); }
 const flist = (u, f) => Array.isArray(u[f]) ? u[f] : (u[f] = []);
@@ -748,7 +748,7 @@ app.get('/api/dm', authMw, (req, res) => {
   if (!own(db.users, k) || !mutual(req.key, k)) return res.status(403).json({ error: 'مو صديقك' });
   const d = dmOf(req.key, k);
   d.reads[req.key] = Date.now(); save();
-  res.json({ msgs: d.msgs.slice(-100), friend: friendRow(req.key, k) });
+  res.json({ msgs: d.msgs.slice(-400), friend: friendRow(req.key, k) });
 });
 app.post('/api/dm', authMw, (req, res) => {
   const me = db.users[req.key], k = keyOfName(req.body && req.body.to);
@@ -1077,7 +1077,7 @@ function onMsg(ws, d) {
     if (distinct.size > 8) return send(ws, { t: 'err', fatal: true, error: 'الغرفة ممتلئة' });
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
-    const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-150).map(pub);
+    const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-600).map(pub);
     send(ws, { t: 'joined', code, msgs, members: membersOf(code), pins: pinsOf(roomOf(code)), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {}, duo: duoPub(code) });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
@@ -1218,19 +1218,13 @@ function cleanup() {
   const cut = Date.now() - KEEP;
   for (const code in db.rooms) {
     const r = db.rooms[code];
-    r.msgs = r.msgs.filter(m => { if (m.ts < cut) { delMedia(m); return false; } return true; });
-    if (!r.msgs.length && !(r.pins && r.pins.length) && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {
+    if (!r.msgs.length && !(r.pins && r.pins.length) && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {   // نحذف بس الغرف الفارغة تماماً
       if (r.bg && r.bg.mode === 'img') mediaDelUrl(r.bg.url);
       delete db.rooms[code];
     }
   }
   for (const h in db.sessions) if (db.sessions[h].t < Date.now() - 90 * 24 * 3600e3) delete db.sessions[h];
-  for (const pk in (db.dms || {})) { const d = db.dms[pk]; d.msgs = d.msgs.filter(m => m.ts > Date.now() - DM_KEEP); if (!d.msgs.length) delete db.dms[pk]; }
-  if (pool) {
-    // ملفات الشات اللي عمرها أكثر من 15 يوم (الأفاتار ما ينحذف)
-    pool.query('DELETE FROM media WHERE ts < $1 RETURNING name', [Date.now() - 15 * 24 * 3600e3])
-      .then(r => r.rows.forEach(x => mediaSet.delete(x.name))).catch(() => {});
-  }
+  // ما نحذف ملفات الشات (صور/صوت/فيديو) حتى تبقى الرسائل كاملة
   save();
 }
 setInterval(cleanup, 3600e3);
