@@ -404,7 +404,7 @@
   #hEmoji button { background: transparent; padding: 3px 0; font-size: 22px; width: auto; }
   #hLogP { position: absolute; left: 6px; right: 6px; bottom: 48px; max-height: 34%; overflow-y: auto; background: rgba(10,14,30,.88); color: #fff; border-radius: 12px; padding: 8px 10px; font-size: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 4px; }
   #hLogP .m b { color: #ffd166; margin-inline-end: 4px; } #hLogP .t { opacity: .5; font-size: 10px; margin-inline-start: 6px; }
-  #hPrompt { position: absolute; bottom: 52px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
+  #hPrompt { position: absolute; top: 70px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
   #hPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
   @keyframes hPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   #hFsTabs { display: none; }
@@ -427,8 +427,9 @@
   #nAlert.show { display: flex; }
   #nAlert .ni { font-size: 26px; flex: none; } #nAlert .nt { flex: 1; font-size: 13px; line-height: 1.5; } #nAlert .nt b { display: block; font-size: 14px; }
   #nAlert .nx { flex: none; width: auto; padding: 4px 10px; background: rgba(255,255,255,.22); border: 0; color: #fff; border-radius: 10px; }
-  #hStage.full { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; }
-  #hStage.full #hBox { width: min(100vw, calc(100vh * 1.28)); }
+  #hStage.full { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at center, #1a2336 0%, #05070d 100%); display: flex; align-items: center; justify-content: center; }
+  #hStage.full #hBox { width: min(var(--hvw, 100vw), calc(var(--hvh, 100vh) * 1.28)); max-width: 100vw; }
+  @media (orientation: landscape) and (max-height: 560px) { #pg-house #hStage:not(.full) #hBox { width: min(100%, calc((100vh - 130px) * 1.28)); margin: 0 auto; } }
   #hStage.full #houseCv { border-radius: 0; border: 0; }
   #hStage.full #hFsTabs { display: flex; flex-direction: column; gap: 6px; position: absolute; top: 52px; left: 6px; }
   .hTools { display: flex; gap: 6px; }
@@ -2922,6 +2923,10 @@ function sfx(kind, a) {
     if (kind === 'shoot' || kind === 'flap') {            // رمي كرة: ويييش قصير
       if (n - lastFlapSfx < 50) return; lastFlapSfx = n; const v = (a && a.v) || 1;
       blip('sine', 900, 260, 0.11, 0.1 * v); blip('triangle', 1400, 500, 0.07, 0.04 * v); burst(0.07, 0.035 * v, 0, 3000);
+    } else if (kind === 'sit') {
+      blip('sine', 240, 110, 0.13, 0.13); burst(0.09, 0.05, 0, 900); blip('triangle', 520, 340, 0.1, 0.04, 0.05);
+    } else if (kind === 'stand') {
+      blip('triangle', 280, 600, 0.12, 0.08); burst(0.06, 0.03, 0, 1400);
     } else if (kind === 'magic') {
       [0, 4, 7, 9].forEach((k, i) => blip('sine', nt(k + 5), nt(k + 5), 0.18, 0.09, i * 0.06)); blip('sine', 3000, 4200, 0.12, 0.03, 0.2);
     } else if (kind === 'use') {
@@ -3726,7 +3731,7 @@ function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0];
 function hEntries(view, S, all) {
   const out = []; (HPOS[view] || []).forEach((e, i) => {
     const v = hVal(S, e[0]); if (!all && (!v || v[0] === '#')) return;
-    const o = hOffOf(e[0]); out.push({ slot: e[0], x: e[1] + o[0], y: e[2] + o[1], s: (e[0] === 'pet' && v === '🐠') ? 64 : e[3], i });
+    const o = hOffOf(e[0]); out.push({ slot: e[0], x: e[1] + o[0], y: e[2] + o[1], s: (e[0] === 'pet' && v === '🐠') ? 64 : (e[0] === 'seat' && (v === '🛋️' || v === '🛏️')) ? Math.round(e[3] * 1.22) : e[3], i });
   }); return out;
 }
 const hRugC = () => { const o = hOffOf('rug'); return [150 + o[0], 214 + o[1]]; };
@@ -3761,7 +3766,7 @@ async function houseLoad() {
 function hStart() { if (!hRaf) hRaf = requestAnimationFrame(hLoop); }
 function hLoop() { if (curPage !== 'house') { hRaf = 0; if (hFull) hSetFull(false); if (hvOn) hvStop(); return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
 function hSetView(v, keep, pos) {
-  if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; hChar.sit = false; hChar.sitGoal = false; }
+  if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; hChar.sit = false; hChar.sitGoal = false; hChar.jump = null; hChar.seat = null; hChar.after = null; }
   hView = v; if (!keep || !HV[v].slots.includes(hSel)) hSel = HV[v].first; hPrev = null;
   document.querySelectorAll('#hTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   hRenderUi(); hOvKey = ''; hUpdateOv();
@@ -3839,7 +3844,10 @@ function hBurstSlot(slot) {
 }
 function hBurst(x, y, n) { const cols = ['#ffd166', '#fff', '#6ee7ff', '#9ff3b5', '#ff9bd0']; for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 0.8 + Math.random() * 2.6; hParts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, t: 30 + Math.random() * 20, col: cols[i % cols.length], sz: 1.5 + Math.random() * 2.5 }); } }
 /* ---- لمس المشهد: مشي حر + سحب الأغراض + تفاعل ---- */
-function hWalkTo(x, y) { hChar.sit = false; hChar.sitGoal = false; const W0 = HV[hView].walk; const WX = hWX(); hChar.tx = Math.max(WX[0], Math.min(WX[1], x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
+function hWalkTo(x, y) {
+  if (hChar.jump) { if (hChar.jump.kind === 'stand') hChar.after = [x, y]; return; }
+  if (hChar.sit) { hStand([x, y]); return; }
+  hChar.sit = false; hChar.sitGoal = false; hChar.seat = null; const W0 = HV[hView].walk; const WX = hWX(); hChar.tx = Math.max(WX[0], Math.min(WX[1], x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
 function hHit(x, y, S) {
   const inR = r => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
   if (hView === 'home') {
@@ -3858,19 +3866,47 @@ var hZ = 1, hCZ = 1, hCX = 0, hCY = 0, hZAuto = false;
 function hSetZoom(z, auto) { hZ = z; hZAuto = !!auto; const b = $('hZoomBtn'); if (b) b.textContent = hZ > 1.05 ? '🔎 رجّع' : '🔍 قرّب'; if (typeof hRenderLog === 'function') hRenderLog(); }
 function hShopOpen() { if (hVis || !auth) return; $('hShopBox').classList.add('open'); hRenderUi(); }
 function hShopClose() { $('hShopBox').classList.remove('open'); if (hPrev) { hPrev = null; hRenderUi(); } }
+const hVis0 = () => false;
 function hTap(slot, x, y) {
   const S = hSetNow(); hSelect(slot);
   if ((slot === 'home' || slot === 'upg') && !hVis) { hShopOpen(); return; }
   const e = hView !== 'home' && hEntries(hView, S).find(q => q.slot === slot);
+  if (e && !hVis0() && (slot === 'seat' || slot === 'tree' || slot === 'play') && !hChar.sit) { hSitAt(slot); return; }
   if (e) { hWalkTo(e.x, e.y + 12); if (slot === 'pet' && hVal(S, 'pet')) hPet(); return; }
   const rs = hAreas(hView, S)[slot]; if (rs) { const q = rs[0]; hWalkTo(q[0] + q[2] / 2, q[1] + q[3] + 8); }
 }
-/* جلوس جميل: يمشي للغرض ويجلس عليه، وقيام يرجع واقف */
-function hSitAt(slot) {
-  const e = hEntries(hView, hSetNow()).find(q => q.slot === slot); if (!e) return;
-  hChar.sit = false; hChar.sitGoal = true; hChar.tx = e.x; hChar.ty = Math.max(HV[hView].walk[0], slot === 'seat' ? e.y - 5 : slot === 'play' ? e.y - 2 : e.y + 6); sfx('click'); hOvKey = '';
+/* جلوس احترافي: مقاعد حقيقية (كرسي = مكان، قنفة/سرير = مكانين)، قفزة ناعمة + غبار + صوت، ومكان مشغول يتحدد حسب الأصدقاء */
+function hSeatsOf(slot, e) {
+  const W0 = HV[hView].walk[0];
+  if (slot === 'seat') {
+    const v = hVal(hSetNow(), 'seat'), y = Math.max(W0, e.y - e.s * 0.1);
+    if (v === '🪑') return [{ slot, i: 0, x: e.x, y }];
+    const o = e.s * (v === '🛏️' ? 0.25 : 0.2); return [{ slot, i: 0, x: e.x - o, y, d: 1 }, { slot, i: 1, x: e.x + o, y, d: -1 }];
+  }
+  return [{ slot, i: 0, x: e.x, y: Math.max(W0, slot === 'play' ? e.y - 2 : e.y + 6) }];
 }
-function hStand() { hChar.sit = false; hChar.sitGoal = false; hChar.tx = hChar.x; hChar.ty = Math.min(247, hChar.y + 16); sfx('click'); hOvKey = ''; }
+const hSeatBusy = s => hOthersIn(hView).some(o => o.sit && Math.hypot(o.x - s.x, o.y - s.y) < 14);
+function hSeatFree(slot) { const e = hEntries(hView, hSetNow()).find(q => q.slot === slot); return e ? hSeatsOf(slot, e).filter(s => !hSeatBusy(s)).length : 0; }
+function hDust(x, y) { for (let i = 0; i < 8; i++) hParts.push({ x: x + (Math.random() - .5) * 16, y: y - 1, vx: (Math.random() - .5) * 1.5, vy: -0.25 - Math.random() * 0.45, t: 16 + Math.random() * 12, col: 'rgba(255,255,255,.85)', sz: 1.6 + Math.random() * 2.2 }); }
+function hJump(x1, y1, dur, h, kind) {
+  hChar.jump = { x0: hChar.x, y0: hChar.y, x1, y1, t: 0, dur, h, kind }; hChar.tx = x1; hChar.ty = y1;
+  if (kind === 'sit' && hChar.seat && hChar.seat.d) hChar.dir = hChar.seat.d; else if (Math.abs(x1 - hChar.x) > 0.5) hChar.dir = x1 > hChar.x ? 1 : -1;
+  sfx(kind === 'sit' ? 'sit' : 'stand');
+}
+function hSitAt(slot) {
+  const e = hEntries(hView, hSetNow()).find(q => q.slot === slot); if (!e || hChar.jump || hChar.sit) return;
+  const free = hSeatsOf(slot, e).filter(s => !hSeatBusy(s));
+  if (!free.length) { showToast('⛔ المكان مشغول، انتظر صاحبك يقوم'); return; }
+  free.sort((a, b) => Math.hypot(a.x - hChar.x, a.y - hChar.y) - Math.hypot(b.x - hChar.x, b.y - hChar.y));
+  const s = free[0]; hChar.seat = s; hChar.sit = false; hChar.sitGoal = true; hChar.after = null;
+  hChar.tx = s.x; hChar.ty = Math.min(HV[hView].walk[1], s.y + 15); sfx('click'); hOvKey = '';
+}
+function hStand(after) {
+  if (hChar.jump) return;
+  if (!hChar.sit) { hChar.sitGoal = false; hChar.seat = null; hChar.tx = hChar.x; hChar.ty = hChar.y; hOvKey = ''; if (after) hWalkTo(after[0], after[1]); return; }
+  const s = hChar.seat; hChar.sit = false; hChar.after = after || null; hOvKey = '';
+  hJump(hChar.x + (s && s.d ? -s.d * 10 : 0), Math.min(HV[hView].walk[1], hChar.y + 16), 18, 9, 'stand');
+}
 function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.push({ slot, txt, t: 140 }); }
 function hPet() {
   const S = hSetNow(), v = hVal(S, 'pet'); if (!v) return;
@@ -3916,7 +3952,9 @@ document.querySelectorAll('#shTabs [data-sv]').forEach(b => b.onclick = () => { 
 $('hChatIn').addEventListener('focus', () => { setTimeout(() => { try { $('hStage').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 300); });
 ['hChatSend', 'hEmoBtn'].forEach(id => $(id).addEventListener('pointerdown', e => e.preventDefault()));
 setInterval(() => { if (hZ > 1.2 && curPage === 'house') hRenderLog(); }, 1200);
-if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
+function hFitFs() { const st = $('hStage'); if (!st) return; const vh = (window.visualViewport ? visualViewport.height : innerHeight); st.style.setProperty('--hvh', vh + 'px'); st.style.setProperty('--hvw', (window.visualViewport ? visualViewport.width : innerWidth) + 'px'); }
+hFitFs();
+if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; hFitFs(); if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
 document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 document.querySelectorAll('#hFsTabs [data-v]').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 /* ---- الانتقال بين المناظر (باب بصوت) ---- */
@@ -3937,13 +3975,19 @@ function hGo(v) {
 }
 /* ---- الضوء + التكبير + أزرار الواجهة ---- */
 function hSetLight(on) { hLight = on; try { localStorage.setItem('hLight', on ? '1' : '0'); } catch (e) {} sfx('click'); hvSend({ t: 'hv_light', on }); hOvKey = ''; hUpdateOv(); }
-function hSetFull(on) {
-  hFull = on; $('hStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
-  try { if (on) { const r = $('hStage').requestFullscreen && $('hStage').requestFullscreen(); if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  hOvKey = ''; hUpdateOv(); if (on && innerHeight > innerWidth) showToast('📱 دوّر الجوال بالعرض حتى تشوف المكان أكبر');
+var hAutoFull = false;
+function hSetFull(on, auto) {
+  hAutoFull = !!(on && auto); hFull = on; $('hStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
+  try { if (on) { const r = $('hStage').requestFullscreen && $('hStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  hOvKey = ''; hUpdateOv(); if (on && !auto && innerHeight > innerWidth) showToast('📱 دوّر الجوال بالعرض حتى تشوف المكان أكبر');
 }
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && hFull) { hFull = false; $('hStage').classList.remove('full'); document.body.style.overflow = ''; hOvKey = ''; hUpdateOv(); } });
 $('hFsBtn').onclick = () => hSetFull(!hFull);
+/* دوران الجهاز: بالعرض يفتح المشهد بوضع ملء الشاشة تلقائياً، وبالطول يرجع */
+const hLandMQ = window.matchMedia ? matchMedia('(orientation: landscape) and (max-height: 560px)') : null;
+function hOrient() { if (curPage !== 'house') return; if (hLandMQ && hLandMQ.matches) { if (!hFull) hSetFull(true, true); } else if (hFull && hAutoFull) hSetFull(false); hFitFs(); }
+if (hLandMQ) (hLandMQ.addEventListener ? hLandMQ.addEventListener('change', hOrient) : hLandMQ.addListener(hOrient));
+window.addEventListener('resize', () => { hFitFs(); }); window.addEventListener('orientationchange', () => setTimeout(() => { hOrient(); }, 250));
 $('hLightBtn').onclick = () => hSetLight(!hLight);
 $('hExitBtn').onclick = () => hGo('garden');
 $('hResetPos').onclick = () => {
@@ -3961,7 +4005,7 @@ function hUpdateOv() {
     else if (hView === 'garden') { const d = hDoorXY('garden'); if (Math.abs(hChar.x - d[0]) < 42 && hChar.y - d[1] < 52) near = 'garden'; }
   }
   const items = []; if (hView !== 'home') { const need = inn ? ['seat', 'tv', 'lamp', 'pet', 'plant'] : ['tree', 'play', 'flowers']; hEntries(hView, hSetNow()).forEach(e => { if (need.includes(e.slot) && !items.includes(e.slot) && (e.slot === 'tv' ? Math.abs(e.x - hChar.x) < 56 : Math.hypot(e.x - hChar.x, (e.y - hChar.y) * 1.2) < 46)) items.push(e.slot); }); }
-  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
+  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hChar.jump ? 1 : 0) + (items.includes('seat') ? hSeatFree('seat') : '') + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
   $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth; $('hPetBtn').hidden = !!hVis || !auth || !petPets.length;
   $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn;
   const P = $('hPrompt'); P.innerHTML = '';
@@ -3970,7 +4014,7 @@ function hUpdateOv() {
   else if (near === 'garden') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🏠 واجهة البيت', () => hGo('home')); }
   if (hChar.sit) mk('🧍 قيام', hStand);
   else items.forEach(sl => {
-    if (sl === 'seat') mk('🪑 اجلس', () => hSitAt('seat'));
+    if (sl === 'seat') { const sv = hVal(hSetNow(), 'seat'); mk(hSeatFree('seat') ? (sv === '🛋️' ? '🛋️ اجلس على القنفة' : sv === '🛏️' ? '🛏️ اجلس على السرير' : '🪑 اجلس على الكرسي') : '⛔ المكان مشغول', () => hSitAt('seat')); }
     else if (sl === 'tree') mk('🌳 اجلس تحت الشجرة', () => hSitAt('tree'));
     else if (sl === 'play') mk('🎠 اجلس', () => hSitAt('play'));
     else if (sl === 'tv') mk(hTvOn ? '📺 اطفي التلفاز' : '📺 شغّل التلفاز', () => { hTvOn = !hTvOn; sfx('click'); hOvKey = ''; });
@@ -4074,17 +4118,30 @@ function hExterior(c, S, small) {
   }
 }
 function hChar_(c, S) {
-  const W0 = HV[hView].walk; const dx = hChar.tx - hChar.x, dy = hChar.ty - hChar.y, d = Math.hypot(dx, dy); let mv = false;
-  if (d > 1.6) { const st = Math.min(d, 2.3); hChar.x += dx / d * st; hChar.y += dy / d * st; if (Math.abs(dx) > 0.5) hChar.dir = dx > 0 ? 1 : -1; mv = true; }
-  else if (hChar.sitGoal && !hChar.sit) hChar.sit = true;
-  const hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : hChar.sit ? 0 : Math.sin(hT / 24) * 0.8, sit = hChar.sit && !mv;
+  const W0 = HV[hView].walk; const dx = hChar.tx - hChar.x, dy = hChar.ty - hChar.y, d = Math.hypot(dx, dy); let mv = false, air = 0, jp = 0; const J = hChar.jump;
+  if (hChar.seat && !J && hT % 20 === 0) {   // الغرض انحذف أو انتقل → قيام
+    const e = hEntries(hView, S).find(q => q.slot === hChar.seat.slot), ns = e && hSeatsOf(hChar.seat.slot, e)[hChar.seat.i];
+    if (!ns || Math.hypot(ns.x - hChar.seat.x, ns.y - hChar.seat.y) > 3) { if (hChar.sit) hStand(); else { hChar.sitGoal = false; hChar.seat = null; } }
+  }
+  if (J) {
+    J.t++; jp = Math.min(1, J.t / J.dur); const e = jp < .5 ? 2 * jp * jp : 1 - Math.pow(-2 * jp + 2, 2) / 2;
+    hChar.x = J.x0 + (J.x1 - J.x0) * e; hChar.y = J.y0 + (J.y1 - J.y0) * e; air = Math.sin(Math.PI * jp) * J.h;
+    if (jp >= 1) {
+      hChar.jump = null; hChar.bn = 1; hDust(hChar.x, hChar.y);
+      if (J.kind === 'sit') { hChar.sit = true; hChar.sitGoal = true; hChar.dir = (hChar.seat && hChar.seat.d) || hChar.dir; hOvKey = ''; }
+      else { hChar.sit = false; hChar.sitGoal = false; hChar.seat = null; hOvKey = ''; const a = hChar.after; hChar.after = null; if (a) hWalkTo(a[0], a[1]); else { hChar.tx = hChar.x; hChar.ty = hChar.y; } }
+    }
+  } else if (d > 1.6) { const st = Math.min(d, 2.3); hChar.x += dx / d * st; hChar.y += dy / d * st; if (Math.abs(dx) > 0.5) hChar.dir = dx > 0 ? 1 : -1; mv = true; }
+  else if (hChar.sitGoal && !hChar.sit && hChar.seat) hJump(hChar.seat.x, hChar.seat.y, 20, 11, 'sit');
+  const hop = (mv ? Math.abs(Math.sin(hT / 3)) * 5 : hChar.sit ? 0 : Math.sin(hT / 24) * 0.8) + air, sit = hChar.sit && !mv;
   hChar.sk = (hChar.sk || 0) + ((sit ? 1 : 0) - (hChar.sk || 0)) * 0.18; const sk = hChar.sk;
-  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(hChar.x, hChar.y + 1, 13, 4, 0, 0, 7); c.fill();
-  c.save(); c.translate(hChar.x, hChar.y - 13 - hop + 7 * sk + Math.sin(hT / 30) * 0.7 * sk); c.rotate(-0.1 * hChar.dir * sk); c.scale(0.8 * hChar.dir, 0.8 * (1 - 0.12 * sk)); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
+  hChar.bn = Math.max(0, (hChar.bn || 0) - 0.07); const bn = hChar.bn, st2 = 1 + 0.1 * Math.sin(Math.PI * jp);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(hChar.x, hChar.y + 1, 13 * (1 - air / 40), 4 * (1 - air / 50), 0, 0, 7); c.fill();
+  c.save(); c.translate(hChar.x, hChar.y - 13 - hop + 7 * sk + Math.sin(hT / 30) * 0.7 * sk); c.rotate(-0.1 * hChar.dir * sk); c.scale(0.8 * hChar.dir * (1 + 0.1 * bn) / (st2 > 1 ? 1 + (st2 - 1) * 0.5 : 1), 0.8 * (1 - 0.12 * sk) * (1 - 0.2 * bn) * st2); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
   if (sk > 0.9 && hT % 150 < 2) hFloats.push({ x: hChar.x + 10, y: hChar.y - 36, txt: '💤', t: 60 });
-  if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + 5 * sk, true);
+  if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + 5 * sk - air * 0.6, true);
 }
-const hSortY = () => hChar.sit ? hChar.y + 10 : hChar.y;
+const hSortY = () => (hChar.sit || (hChar.jump && hChar.jump.kind === 'sit')) ? hChar.y + 10 : hChar.y;
 const hOthersIn = view => Object.values(hOthers).filter(o => o.view === view);
 function hNameTag(c, txt, x, y, me) {
   c.save(); c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(txt).width + 12;
@@ -4095,9 +4152,11 @@ function hAvatar(c, o) {
   if (!o) return; const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false;
   if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
   const sit = o.sit && !mv, hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : sit ? 0 : Math.sin(hT / 24) * 0.8, sk = ALL_SKINS.find(k => k.id === o.skin) || SKINS[0];
+  if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; hDust(o.x, o.y); o.bn = 1; }
+  o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 13, 4, 0, 0, 7); c.fill();
-  c.save(); c.translate(o.x, o.y - 13 - hop + (sit ? 4 : 0)); c.scale(0.8 * o.dir, 0.8 * (sit ? 0.94 : 1)); drawBirdSkin(c, 0, 0, 0, sk, hT / 2); c.restore();
-  hNameTag(c, o.name, o.x, o.y - 40 + (sit ? 4 : 0), false);
+  c.save(); c.translate(o.x, o.y - 13 - hop + 7 * k); c.rotate(-0.1 * o.dir * k); c.scale(0.8 * o.dir * (1 + 0.1 * o.bn), 0.8 * (1 - 0.12 * k) * (1 - 0.2 * o.bn)); drawBirdSkin(c, 0, 0, 0, sk, hT / 2); c.restore();
+  hNameTag(c, o.name, o.x, o.y - 40 + 5 * k, false);
 }
 
 /* الفأرة الأساسية 🐭: مرسومة بالكود، بأحمر شفاه ومكياج وفيونكة */
