@@ -571,9 +571,18 @@
   #rmGame .gr2 { display: flex; align-items: center; justify-content: center; gap: 14px; } #rmGD { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); } #rmGDs { font-size: 12px; opacity: .9; }
   #rmGame .gr3 { display: flex; gap: 8px; margin-top: 4px; } #rmGame .gr3 button { flex: 1; width: auto; padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.4); background: linear-gradient(180deg, #ff7ab8, #d6338f); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; } #rmGame .gr3 button[hidden] { display: none; } #rmGame .gr3 button:disabled { opacity: .5; } #rmGame .gr3 #rmGQ { background: rgba(255,255,255,.14); flex: 0 0 auto; font-size: 12px; font-weight: 600; }
 
-  #rmDockA { position: absolute; left: 8px; top: 40px; display: flex; flex-direction: column; gap: 8px; z-index: 4; direction: ltr; } #rmDockA[hidden] { display: none; }
+  #rmDockA { position: absolute; left: 8px; top: 40px; display: grid; grid-template-columns: repeat(2, 46px); gap: 8px; z-index: 4; direction: ltr; } #rmDockA[hidden] { display: none; }
+  #rmClk { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 4; pointer-events: none; direction: ltr; font: 700 11px sans-serif; color: #fff; } #rmClk span { background: rgba(10,14,40,.62); padding: 2px 7px; border-radius: 10px; white-space: nowrap; } #rmClk span.on { background: rgba(230,150,30,.9); }
+  .rc-day { background: rgba(240,180,30,.92); } .rc-night { background: rgba(50,50,130,.92); } .rc-fw { background: rgba(200,50,140,.92); }
   .rc-rain { background: rgba(40,110,190,.88); } .rc-snow { background: rgba(110,170,225,.9); } .rc-fast { background: rgba(230,130,20,.9); } .rc-rst { background: rgba(110,110,130,.9); }
   #rmBox.rmTiny #rmDockA { gap: 6px; top: 34px; }
+
+  .rc-rx { background: rgba(240,170,30,.9); }
+  #rmRx { position: absolute; right: 108px; top: 40px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.93); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 8px; display: grid; grid-template-columns: repeat(4, 44px); gap: 6px; } #rmRx[hidden] { display: none; }
+  #rmRx button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); font-size: 24px; cursor: pointer; padding: 0; } #rmRx button:active { transform: scale(1.15); background: rgba(255,255,255,.3); }
+  #rmPC { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); z-index: 6; pointer-events: auto; background: rgba(20,12,50,.95); border: 1px solid rgba(255,255,255,.45); border-radius: 16px; padding: 8px 10px; color: #fff; text-align: center; width: min(300px, 94%); box-shadow: 0 4px 18px rgba(0,0,0,.45); } #rmPC[hidden] { display: none; }
+  #rmPC b { display: block; font-size: 13px; margin-bottom: 6px; } #rmPC .pr { display: flex; gap: 6px; justify-content: center; } #rmPC button { width: auto; flex: 1; border-radius: 12px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.14); color: #fff; padding: 7px 4px; font-size: 13px; cursor: pointer; } #rmPC .wr { display: flex; gap: 6px; margin-top: 6px; } #rmPC .wr input { flex: 1; min-width: 0; padding: 7px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; font-size: 13px; } #rmPC .wr button { flex: 0 0 auto; background: linear-gradient(180deg, #b48cff, #7a4ae0); }
+  #rmLogP .m.whs { background: linear-gradient(90deg, rgba(150,110,255,.45), rgba(150,110,255,.12)); border-radius: 8px; padding: 3px 6px; font-style: italic; border: 1px dashed rgba(200,170,255,.6); }
   .rmC.on { background: #ffd166; color: #3a2a00; } .rmC[hidden] { display: none; }
   .rc-exit { background: rgba(170,30,55,.8); } .rc-view { background: rgba(20,95,170,.78); } .rc-soc { background: rgba(85,55,160,.78); } .rc-fun { background: rgba(205,115,20,.82); } .rc-me { background: rgba(25,125,95,.8); }
   #rmBox.rmTiny .rmC { width: 36px; height: 36px; } #rmBox.rmTiny .rmC small { display: none; } #rmBox.rmTiny .rmC i { font-size: 16px; } #rmBox.rmTiny #rmDock { grid-template-columns: repeat(2, 36px); gap: 6px; top: 34px; }
@@ -765,8 +774,8 @@
         <div class="hOvTop"><div class="hOvG"><span id="rmFTtl" class="hOvB"></span></div></div>
         <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><button id="rmKiss" type="button" hidden>😘 بوسة</button><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
-        <div id="rmDockA" hidden><button id="rmWxRain" class="rmC rc-rain" type="button"><i>🌧️</i><small>مطر الآن</small></button><button id="rmWxSnow" class="rmC rc-snow" type="button"><i>❄️</i><small>ثلج الآن</small></button><button id="rmWxFast" class="rmC rc-fast" type="button"><i>⏩</i><small>تسريع</small></button><button id="rmWxReset" class="rmC rc-rst" type="button"><i>↩️</i><small>افتراضي</small></button></div><div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
-        <div id="rmGame" hidden><div id="rmGH"></div><canvas id="rmGC" width="300" height="300"></canvas><div id="rmGM"></div><div class="gr2"><div id="rmGD">🎲</div><div id="rmGDs"></div></div><div class="gr3"><button id="rmGB" type="button" hidden>🎲</button><button id="rmGZ" type="button">🔍 تكبير</button><button id="rmGQ" type="button">🚪 انسحاب</button></div></div><div id="rmLogP" hidden></div>
+        <div id="rmDockA" hidden><button id="rmWxRain" class="rmC rc-rain" type="button"><i>🌧️</i><small>مطر الآن</small></button><button id="rmWxSnow" class="rmC rc-snow" type="button"><i>❄️</i><small>ثلج الآن</small></button><button id="rmWxDay" class="rmC rc-day" type="button"><i>☀️</i><small>نهار</small></button><button id="rmWxNight" class="rmC rc-night" type="button"><i>🌙</i><small>ليل</small></button><button id="rmWxFw" class="rmC rc-fw" type="button"><i>🎆</i><small>ألعاب</small></button><button id="rmWxFast" class="rmC rc-fast" type="button"><i>⏩</i><small>تسريع</small></button><button id="rmWxReset" class="rmC rc-rst" type="button"><i>↩️</i><small>افتراضي</small></button></div><div id="rmClk"></div><div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmRxBtn" class="rmC rc-rx" type="button"><i>😂</i><small>تفاعل</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmRx" hidden></div><div id="rmPC" hidden></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
+        <div id="rmGame" hidden><div id="rmGH"></div><canvas id="rmGC" width="300" height="300"></canvas><div id="rmGM"></div><div class="gr2" id="rmGR2"><div id="rmGD">🎲</div><div id="rmGDs"></div></div><div class="gr3"><button id="rmGB" type="button" hidden>🎲</button><button id="rmGB2" type="button" hidden>🎲</button><button id="rmGZ" type="button">🔍 تكبير</button><button id="rmGQ" type="button">🚪 انسحاب</button></div></div><div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="500" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
       </div>
     </div></div>
@@ -5537,13 +5546,13 @@ var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me:
 const RM_SEATS = [];
 (function () {
   const add = (kind, x, y, s) => RM_SEATS.push({ kind, x: Math.round(x), y: Math.round(y), s: s || 1, i: RM_SEATS.length });
-  [90, 175, 260, 345, 430, 515].forEach((x, i) => add('lounge', x, 262 + (i % 2) * 8));
+  [90, 175, 260, 515].forEach((x, i) => add('lounge', x, 262 + (i % 2) * 8));
   [[600, 258], [700, 258], [610, 340], [712, 340]].forEach(p => add('bench', p[0], p[1]));
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.5; add('log', 400 + Math.cos(a) * 70, 440 + Math.sin(a) * 36); }
   [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
   [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1])); add('swing2', 232, 392);
   [620, 648, 676, 704].forEach(x => add('stool', x, 492));
-  add('chair', 330, 520, 58); add('chair', 478, 560, 58); add('gtable', 538, 410);
+   [0, 1, 2, 3].forEach(i => { add('gtable', [118, 400, 385, 665][i], [418, 276, 552, 565][i]); RM_SEATS[RM_SEATS.length - 1].tb = i; });
 })();
 function rmSpots(sd) {
   const mk = (dx, dy, d) => ({ seat: sd, x: sd.x + dx, y: sd.y - dy, ey: sd.y, d });
@@ -5649,15 +5658,15 @@ function rmBg(c, t) {
 }
 function rmDecor() {
   const L = [];
-  [[44, 224, 1.1, 0], [304, 232, 1, 1.4], [520, 224, 1.15, 2.2], [782, 238, 1.05, 3.1], [70, 560, 1.2, 4], [748, 600, 1.1, 5.2], [450, 604, 0.9, 6]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));
+  [[44, 224, 1.1, 0], [304, 232, 1, 1.4], [520, 224, 1.15, 2.2], [782, 238, 1.05, 3.1], [70, 560, 1.2, 4], [748, 600, 1.1, 5.2], [532, 606, 0.9, 6]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));
   L.push({ y: 456, f: c => rmBar(c, 660, 456) }); L.push({ y: 440, f: c => rmFire(c, 400, 440) }); L.push({ y: 616, f: c => rmBoat(c, 300, 612) });
-  [[150, 296, '#ff4d6d'], [470, 316, '#4cc3ff'], [660, 296, '#ffd166']].forEach(u => L.push({ y: u[1], f: c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0 + u[0], u[1], 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 3; c.beginPath(); c.moveTo(u[0], u[1]); c.lineTo(u[0], u[1] - 64); c.stroke(); } }));
+  [[150, 296, '#ff4d6d'], [660, 296, '#ffd166']].forEach(u => L.push({ y: u[1], f: c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0 + u[0], u[1], 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 3; c.beginPath(); c.moveTo(u[0], u[1]); c.lineTo(u[0], u[1] - 64); c.stroke(); } }));
   RM_SEATS.forEach(sd => L.push({ y: sd.y, f: c => rmSeatDraw(c, sd) }));
   return L;
 }
 const RM_DECOR = rmDecor();
 function rmCanopies(c) {
-  [[150, 296, '#ff4d6d'], [470, 316, '#4cc3ff'], [660, 296, '#ffd166']].forEach(u => { c.save(); c.translate(u[0], u[1] - 64); c.fillStyle = u[2]; c.beginPath(); c.moveTo(-42, 8); c.quadraticCurveTo(0, -34, 42, 8); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(-14, -4); c.quadraticCurveTo(-3, -22, 0, -22); c.quadraticCurveTo(3, -22, 14, -4); c.quadraticCurveTo(0, -14, -14, -4); c.fill(); c.restore(); });
+  [[150, 296, '#ff4d6d'], [660, 296, '#ffd166']].forEach(u => { c.save(); c.translate(u[0], u[1] - 64); c.fillStyle = u[2]; c.beginPath(); c.moveTo(-42, 8); c.quadraticCurveTo(0, -34, 42, 8); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(-14, -4); c.quadraticCurveTo(-3, -22, 0, -22); c.quadraticCurveTo(3, -22, 14, -4); c.quadraticCurveTo(0, -14, -14, -4); c.fill(); c.restore(); });
   c.strokeStyle = 'rgba(60,40,20,.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(44, 150); c.quadraticCurveTo(170, 190, 304, 150); c.moveTo(304, 150); c.quadraticCurveTo(412, 186, 520, 150); c.stroke();
   [[100, 168], [170, 178], [240, 172], [370, 178], [440, 176]].forEach((p, i) => { c.fillStyle = ['#ffd166', '#ff7a8a', '#9be564', '#4cc3ff'][i % 4]; c.globalAlpha = 0.7 + 0.3 * Math.sin(RM.T / 12 + i); c.beginPath(); c.arc(p[0], p[1] - 14, 3, 0, 7); c.fill(); c.globalAlpha = 1; });
   for (let i = 0; i < 3; i++) { const x = ((RM.T * 0.5 + i * 300) % (RMW + 100)) - 50, y = 40 + i * 14 + Math.sin(RM.T / 30 + i) * 6; c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x - 6, y); c.quadraticCurveTo(x - 3, y - 4 + Math.sin(RM.T / 6 + i) * 2, x, y); c.quadraticCurveTo(x + 3, y - 4 + Math.sin(RM.T / 6 + i) * 2, x + 6, y); c.stroke(); }
@@ -5719,7 +5728,7 @@ function rmBurst(x, y, kind) { for (let i = 0; i < 46; i++) { const a = Math.ran
 function crownIcon(kind) { const k = document.createElement('canvas'); k.width = 30; k.height = 22; k.style.cssText = 'width:20px;height:15px;vertical-align:-2px;margin-inline-end:3px'; drawCrown(k.getContext('2d'), 15, 19, kind, 1.05); return k; }
 const AV_H = 76;
 function rmSetDance(e) { const m = RM.me; e = e | 0; if ((m.dance || 0) === e) return; if (e && (m.sit || m.jump)) { showToast('🧍 قوم من الكرسي أول'); return; } m.dance = e; m.dt = 0; rmSend({ t: 'rm_emo', e }); rmDanceMark(); }
-function rmDrawMe(c, st) { rmDrawMeH(c, st); rmBurnFx(c, RM.me); }
+function rmDrawMe(c, st) { rmDrawMeH(c, st); rmBurnFx(c, RM.me); if (RM.me.dance === 9) rmRodDraw(c, RM.me, RM.fish.st === 'bite', true); }
 function rmDrawMeH(c, st) { if (RM.me.hid) { c.save(); c.globalAlpha = 0.42; rmDrawMe0(c, st); c.restore(); rmGhost(c, RM.me.x, RM.me.y); return; } rmDrawMe0(c, st); }
 function rmGhost(c, x, y) { const t = RM.T / 30; c.save(); c.globalAlpha = 0.3 + 0.12 * Math.sin(t * 2); const g = c.createRadialGradient(x, y - 40, 5, x, y - 40, 62); g.addColorStop(0, 'rgba(160,200,255,.55)'); g.addColorStop(1, 'rgba(160,200,255,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(x, y - 40, 40, 66, 0, 0, 7); c.fill(); c.globalAlpha = 0.8; c.font = '12px sans-serif'; c.textAlign = 'center'; c.fillText('👻', x + 22, y - 92); c.restore(); }
 function rmDrawMe0(c, st) {
@@ -5730,10 +5739,10 @@ function rmDrawMe0(c, st) {
   if (RM.myAdm) rmAura(c, m.x, m.y, RM.myAdm);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 17 * (1 - st.air / 40), 5 * (1 - st.air / 50), 0, 0, 7); c.fill();
   const cold = rmCold(m), ui = rmUi(m), wet = rmWet(m); m.pseed = 3;
-  const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: m.dance || 0, dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
+  const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: (m.dance >= 9 ? 0 : m.dance || 0), dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
   const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm);
 }
-function rmDrawOther(c, o) { rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) rmBurnFx(c, o); }
+function rmDrawOther(c, o) { rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
 function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; c.save(); c.globalAlpha = 0.42; rmDrawOther0(c, o); c.restore(); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
 function rmDrawOther0(c, o) {
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
@@ -5743,7 +5752,7 @@ function rmDrawOther0(c, o) {
   if (o.adm) rmAura(c, o.x, o.y, o.adm);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 17, 5, 0, 0, 7); c.fill();
   if (!o.pseed) o.pseed = rmHash(o.name) % 30; const cold = rmCold(o), ui = rmUi(o), wet = rmWet(o);
-  const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: o.dance || 0, dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
+  const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: (o.dance >= 9 ? 0 : o.dance || 0), dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
   const lf = 16 * ui; rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf, o.adm); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
 }
 function rmTyping(c, name, x, y) {
@@ -5813,14 +5822,14 @@ function rmBubFlush(c) {
 }
 function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math.hypot(s.x - x, s.y - y) < 7); if (sp) return sp.ey + 0.5; } return sy; }
 /* ---------- الطقس (مطر/ثلج) + جربوع (موظف الاستقبال) ---------- */
-const RM_FIRE = { x: 400, y: 440 }, RM_WX_CYC = 1440;
+const RM_FIRE = { x: 400, y: 440 }, RM_WX_CYC = 600;
 RM.rainI = 0; RM.snowI = 0; RM.wxUmb = false; RM.wxRain = false; RM.rain = null; RM.flakes = null; RM.wx0 = 0; RM.wxOff = 0; RM.wxLast = '';
 RM.wxc = { el: 0, t: performance.now(), spd: 1 }; RM.wxSpd = 1;
-function rmWx() { const c = RM.wxc, el = ((c.el + (performance.now() - c.t) / 1000 * c.spd) % RM_WX_CYC + RM_WX_CYC) % RM_WX_CYC; return { el, rain: el >= 600 && el < 720, umb: el >= 600 && el < 840, snow: el >= 1320 }; }
+function rmWx() { const c = RM.wxc, el = ((c.el + (performance.now() - c.t) / 1000 * c.spd) % RM_WX_CYC + RM_WX_CYC) % RM_WX_CYC; return { el, rain: el >= 120 && el < 240, umb: el >= 120 && el < 270, snow: el >= 480 }; }
 function rmHash(s) { let h = 0; s = String(s || ''); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 function rmWxStep() {
-  const w = rmWx(); RM.rainI += ((w.rain ? 1 : 0) - RM.rainI) * 0.02; RM.snowI += ((w.snow ? 1 : 0) - RM.snowI) * 0.02; RM.wxUmb = w.umb; RM.wxRain = w.rain; rmUmbBtn();
-  const k = w.rain ? 'rain' : w.snow ? 'snow' : 'clear'; if (k !== RM.wxLast) { if (RM.wxLast) showToast(k === 'rain' ? '🌧️ بدأ المطر! الكل يطلع الشمسيات ☂️' : k === 'snow' ? '❄️ بدأ الثلج! تقرّبوا من النار 🔥' : (RM.wxLast === 'rain' ? '🌤️ توقف المطر' : '☀️ صفا الجو')); RM.wxLast = k; }
+  const w = rmWx(); RM.dn = rmDayCalc(); { const key = (w.el >= 340 && w.el < 370) ? 1 : 0; if (key && RM.fwKey !== key) { RM.fwKey = key; rmFwStart(30); } if (!key) RM.fwKey = 0; } RM.rainI += ((w.rain ? 1 : 0) - RM.rainI) * 0.02; RM.snowI += ((w.snow ? 1 : 0) - RM.snowI) * 0.02; RM.wxUmb = w.umb; RM.wxRain = w.rain; rmUmbBtn();
+  const k = w.rain ? 'rain' : w.snow ? 'snow' : (w.el >= 300 && w.el < 420) ? 'night' : 'clear'; if (RM.T % 15 === 0) rmClkUpd(); if (k !== RM.wxLast) { if (RM.wxLast) showToast(k === 'rain' ? '🌧️ بدأ المطر! الكل يطلع الشمسيات ☂️' : k === 'snow' ? '❄️ بدأ الثلج! تقرّبوا من النار 🔥' : k === 'night' ? '🌙 حلّ الليل! النار تنوّر المكان' : (RM.wxLast === 'night' ? '🌅 طلع الصبح' : RM.wxLast === 'rain' ? '🌤️ توقف المطر' : '☀️ صفا الجو')); RM.wxLast = k; }
 }
 function rmCold(o) {
   const near = Math.hypot(o.x - RM_FIRE.x, (o.y - RM_FIRE.y) * 1.25) < 82, tg = (RM.snowI > 0.4 && !near) ? 1 : 0; o.cold = (o.cold || 0) + (tg - (o.cold || 0)) * (tg ? 0.03 : 0.09); if (o.cold < 0.01) o.cold = 0;
@@ -5857,10 +5866,10 @@ function rmWxDraw(c, bw, bh) {
   if (RM.snowI > 0.02) { c.fillStyle = 'rgba(205,228,255,' + (0.2 * RM.snowI) + ')'; c.fillRect(0, 0, bw, bh); if (!RM.flakes) RM.flakes = Array.from({ length: 130 }, () => ({ x: Math.random(), y: Math.random(), v: 0.0015 + Math.random() * 0.0022, r: 1 + Math.random() * 2.2, ph: Math.random() * 6 })); c.fillStyle = 'rgba(255,255,255,' + (0.95 * RM.snowI) + ')'; c.beginPath(); RM.flakes.forEach(f => { f.y += f.v; f.ph += 0.02; f.x += Math.sin(f.ph) * 0.0009; if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); } const px = f.x * bw, py = f.y * bh; c.moveTo(px + f.r, py); c.arc(px, py, f.r, 0, 7); }); c.fill(); }
 }
 /* ----- جربوع ----- */
-const RM_NPC = { name: 'جربوع', x: 392, y: 330, hx: 392, hy: 330, dir: -1, wave: 0, ph: 0, cold: 0, mv: false, pseed: 7, greetT: 0 };
+const RM_NPC = { name: 'جربوع', x: 478, y: 352, hx: 478, hy: 352, dir: -1, wave: 0, ph: 0, cold: 0, mv: false, pseed: 7, greetT: 0 };
 function rmNpcSay(txt, t) { RM.bubs[RM_NPC.name] = { txt, t: t || 230, t0: t || 230 }; RM_NPC.wave = 130; }
 function rmNpcAdm(n) { rmNpcSay('أهلاً بمالك اللعبة ' + n + ' 👑', 260); }
-function rmNpcWelcome() { if (RM.myAdm && !RM.me.hid) { rmNpcAdm(rmMe()); rmJoinFx(RM.me.x, RM.me.y, RM.myAdm); } else rmNpcSay('مرحباً بكم في منتجع بابي للدردشة 😊', 230); }
+function rmNpcWelcome() { if (RM.myAdm && !RM.me.hid) { rmNpcAdm(rmMe()); rmJoinFx(RM.me.x, RM.me.y, RM.myAdm); return; } let v = 1; try { const k = 'rmVis_' + rmMe(); v = (+localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, v); } catch (e) {} if (v > 1) rmNpcSay('أهلاً بعودتك ' + rmMe() + '! هذي زيارتك رقم ' + v + ' 😊', 260); else rmNpcSay('مرحباً بكم في منتجع بابي للدردشة 😊', 230); }
 function rmNpcHit(x, y) { const n = RM_NPC; return Math.abs(x - n.x) < 24 && y > n.y - 96 && y < n.y + 10; }
 function rmNpcGreet() { if (RM.myAdm) { rmNpcAdm(rmMe()); return; } rmNpcSay('مرحباً ' + rmMe() + ' شكراً لزيارتك منتجع بابي 😊', 260); try { sfx('click'); } catch (e) {} }
 function rmDrawNpc(c) {
@@ -5896,7 +5905,7 @@ function rmDrawNpc(c) {
   c.beginPath(); c.moveTo(-12, -19); c.lineTo(-10, -30); c.lineTo(10, -30); c.lineTo(12, -19); c.closePath(); c.fillStyle = '#d8283e'; c.fill(); ln(1.5); c.fillStyle = '#ffd24a'; c.fillRect(-11.4, -22.6, 22.8, 3); c.beginPath(); c.arc(0, -30, 2.2, 0, 7); c.fill(); ln(1);
   c.restore();
   c.restore();
-  const lift = n.ui > 0.05 ? 48 * n.ui : 0; rmTag(c, 'جربوع 🤝', n.x, n.y - AV_H * 1.26 - lift, { mod: false }); rmBub(c, RM_NPC.name, n.x, n.y - AV_H * 1.34 - lift, 'npc'); if (!RM.tipAt) RM.tipAt = performance.now() + 30000; if (RM.on && performance.now() > RM.tipAt && !(RM.bubs[RM_NPC.name] && RM.bubs[RM_NPC.name].t > 0)) { RM.tipAt = performance.now() + 30000; rmNpcSay('تقدر تلعب السلم والثعبان مع صديقك: اجلسوا على مقعدي الطاولة اللي فيها اللعبة 🎲', 330); }
+  const lift = n.ui > 0.05 ? 48 * n.ui : 0; rmTag(c, 'جربوع 🤝', n.x, n.y - AV_H * 1.26 - lift, { mod: false }); rmBub(c, RM_NPC.name, n.x, n.y - AV_H * 1.34 - lift, 'npc'); if (!RM.tipAt) RM.tipAt = performance.now() + 30000; if (RM.on && performance.now() > RM.tipAt && !(RM.bubs[RM_NPC.name] && RM.bubs[RM_NPC.name].t > 0)) { RM.tipAt = performance.now() + 30000; rmNpcSay(rmNpcNext(), 330); }
   if (n.cold > 0.6 && Math.floor(T / 50) % 2 === 0) { c.font = '12px system-ui'; c.textAlign = 'center'; c.fillText('🥶', n.x + 18, n.y - AV_H * 0.95 + Math.sin(T / 5) * 1.5); }
 }
 
@@ -5904,11 +5913,11 @@ function rmDrawNpc(c) {
 RM.ambMute = false; try { RM.ambMute = localStorage.getItem('rmAmb') === '0'; } catch (e) {}
 RM.music = null; RM.mus = { p: null, vol: 60, mute: false, title: '', st: -1 }; try { RM.mus.vol = +(localStorage.getItem('rmMusVol') || 60); RM.mus.mute = localStorage.getItem('rmMusMute') === '1'; } catch (e) {}
 function rmChirp() {
-  if (RM.ambMute || !actx || actx.state !== 'running') return; const n = 3 + Math.floor(Math.random() * 3), b = 2900 + Math.random() * 1100;
+  if (RM.ambMute || !actx || actx.state !== 'running' || (RM.dn && RM.dn.d > 0.5)) return; const n = 3 + Math.floor(Math.random() * 3), b = 2900 + Math.random() * 1100;
   for (let i = 0; i < n; i++) { const f = b * (1 + (i % 2) * 0.18) + Math.random() * 120; blip('sine', f, f * 1.22, 0.07, 0.022, i * 0.1); blip('sine', f * 2, f * 2.3, 0.05, 0.006, i * 0.1); }
 }
 function rmBirds(c) {
-  const vis = 1 - Math.max(RM.rainI, RM.snowI); if (vis < 0.05) return;
+  const vis = (1 - Math.max(RM.rainI, RM.snowI)) * (1 - Math.min(1, ((RM.dn && RM.dn.d) || 0) * 1.6)); if (vis < 0.05) return;
   if (!RM.birds) RM.birds = [0, 1, 2].map(i => ({ x: 120 + i * 260, y: 80, dir: i % 2 ? -1 : 1, sp: 0.5 + i * 0.13, ph: i * 2, cy: 70 + i * 26, col: ['#8a5a3a', '#6a6e80', '#a87a4a'][i] }));
   RM.birds.forEach(b => {
     b.x += b.dir * b.sp; b.ph += 0.33; b.y = b.cy + Math.sin(b.x / 40) * 9; if (b.x > RMW + 30 || b.x < -30) { b.dir *= -1; b.cy = 55 + Math.random() * 100; }
@@ -5982,10 +5991,12 @@ function rmHidUpd() { const b = $('rmHidBtn'); if (!b) return; const ok = !!(RM.
 $('rmHidBtn').onclick = () => { const on = !RM.me.hid; rmSend({ t: 'rm_hide', on: on ? 1 : 0 }); showToast(on ? '👻 اختفيت: محد يشوفك غير المشرفين' : '👁️ رجعت ظاهر للجميع'); };
 setInterval(rmHidUpd, 1500);
 
-/* ---------- لعبة حية ودرج (طاولة الاثنين) ---------- */
+/* ---------- طاولات الالعاب (سلم وثعبان / إكس أو / منقلة / دومينو) ---------- */
+const GM_TB = [{ x: 118, y: 418, k: 'snake' }, { x: 400, y: 276, k: 'xo' }, { x: 385, y: 552, k: 'mancala' }, { x: 665, y: 565, k: 'domino' }];
+const GM_NM = { snake: 'السلم والثعبان', xo: 'إكس أو', mancala: 'المنقلة', domino: 'الدومينو' }, GM_IC = { snake: '🐍', xo: '❌', mancala: '🪨', domino: '🁢' };
 const GM_L = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 }, GM_S = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
 const GM_COL = ['#ff4d6d', '#3aa0ff'], GM_DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-RM.g = null; RM.gSide = null; RM.gd = [1, 1]; RM.gt = [[], []]; RM.gRoll = 0; RM.gSeq = -1; RM.gEndT = 0;
+RM.G = {}; RM.gTb = null; RM.gSide = null; RM.hand = []; RM.gd = [1, 1]; RM.gt = [[], []]; RM.gRoll = 0; RM.dSel = -1; RM.gSeq = {};
 function gmCell(n) { const r = Math.floor((n - 1) / 10), c = r % 2 === 0 ? (n - 1) % 10 : 9 - (n - 1) % 10; return [c, r]; }
 function gmXY(n, S) { n = Math.max(1, Math.min(100, n)); const lo = Math.floor(n), hi = Math.min(100, lo + 1), f = n - lo, a = gmCell(lo), b = gmCell(hi), c = a[0] + (b[0] - a[0]) * f, r = a[1] + (b[1] - a[1]) * f; return [(c + 0.5) * S, (9 - r + 0.5) * S]; }
 function rmGBoard(c, S, tiny) {
@@ -5997,43 +6008,88 @@ function rmGBoard(c, S, tiny) {
     c.fillStyle = '#3ed06a'; c.strokeStyle = '#1c6b34'; c.lineWidth = lw * 0.6; c.beginPath(); c.arc(a[0], a[1], S * 0.2, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(a[0] - S * 0.07, a[1] - S * 0.05, S * 0.06, 0, 7); c.arc(a[0] + S * 0.07, a[1] - S * 0.05, S * 0.06, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(a[0] - S * 0.07, a[1] - S * 0.05, S * 0.025, 0, 7); c.arc(a[0] + S * 0.07, a[1] - S * 0.05, S * 0.025, 0, 7); c.fill(); });
 }
 function rmGTokens(c, S, r) { [0, 1].forEach(i => { const p = gmXY(RM.gd[i], S), o = (i ? 1 : -1) * S * 0.18; c.fillStyle = GM_COL[i]; c.strokeStyle = '#fff'; c.lineWidth = Math.max(1, S * 0.07); c.beginPath(); c.arc(p[0] + o, p[1], r, 0, 7); c.fill(); c.stroke(); }); }
+/* --- رسم عناصر اللعب --- */
+function dmPips(c, x, y, s, n) { const P = { 1: [[.5, .5]], 2: [[.25, .25], [.75, .75]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.25, .22], [.75, .22], [.25, .5], [.75, .5], [.25, .78], [.75, .78]] }; c.fillStyle = '#222'; (P[n] || []).forEach(p => { c.beginPath(); c.arc(x + p[0] * s, y + p[1] * s, Math.max(0.9, s * 0.09), 0, 7); c.fill(); }); }
+function dmTile(c, x, y, w, h, a, b, hi) { c.fillStyle = '#fffdf3'; c.strokeStyle = hi ? '#ff3d8a' : '#5a4630'; c.lineWidth = hi ? 2.4 : 1.2; c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, 3); else c.rect(x, y, w, h); c.fill(); c.stroke(); c.strokeStyle = '#5a4630'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + w / 2, y + 2); c.lineTo(x + w / 2, y + h - 2); c.stroke(); dmPips(c, x, y, h, a); dmPips(c, x + w / 2, y, h, b); }
+function gmXO(c, g, S, me) { c.fillStyle = '#fff4d6'; c.fillRect(0, 0, S * 3, S * 3); c.strokeStyle = '#8a5a2e'; c.lineWidth = Math.max(2, S * 0.06); c.lineCap = 'round'; [1, 2].forEach(i => { c.beginPath(); c.moveTo(i * S, S * 0.08); c.lineTo(i * S, S * 2.92); c.moveTo(S * 0.08, i * S); c.lineTo(S * 2.92, i * S); c.stroke(); });
+  g.b.forEach((v, i) => { if (!v) return; const x = (i % 3 + 0.5) * S, y = (Math.floor(i / 3) + 0.5) * S, r = S * 0.28; c.lineWidth = Math.max(2, S * 0.1); if (v === 'X') { c.strokeStyle = GM_COL[0]; c.beginPath(); c.moveTo(x - r, y - r); c.lineTo(x + r, y + r); c.moveTo(x + r, y - r); c.lineTo(x - r, y + r); c.stroke(); } else { c.strokeStyle = GM_COL[1]; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); } });
+  if (g.line) { const a = g.line[0], b = g.line[2]; c.strokeStyle = '#ffd23a'; c.lineWidth = Math.max(3, S * 0.09); c.beginPath(); c.moveTo((a % 3 + 0.5) * S, (Math.floor(a / 3) + 0.5) * S); c.lineTo((b % 3 + 0.5) * S, (Math.floor(b / 3) + 0.5) * S); c.stroke(); } }
+function gmMpos(idx, side, W, H) { let col, row; if (side === 0) { if (idx <= 5) { col = idx; row = 1; } else if (idx === 6) return [W - 22, H / 2, 1]; else if (idx <= 12) { col = 5 - (idx - 7); row = 0; } else return [22, H / 2, 1]; } else { if (idx >= 7 && idx <= 12) { col = idx - 7; row = 1; } else if (idx === 13) return [W - 22, H / 2, 1]; else if (idx <= 5) { col = 5 - idx; row = 0; } else return [22, H / 2, 1]; } const cw = (W - 88) / 6; return [44 + (col + 0.5) * cw, H * (row ? 0.72 : 0.28), 0]; }
+function gmMancala(c, g, W, H, side) {
+  c.fillStyle = '#8a5a2e'; c.beginPath(); if (c.roundRect) c.roundRect(0, 0, W, H, 16); else c.rect(0, 0, W, H); c.fill(); c.fillStyle = '#c28a50'; c.beginPath(); if (c.roundRect) c.roundRect(4, 4, W - 8, H - 8, 13); else c.rect(4, 4, W - 8, H - 8); c.fill();
+  for (let i = 0; i < 14; i++) { const p = gmMpos(i, side, W, H), st = p[2], seeds = g.pits[i], mine = side === 0 ? (i <= 6) : (i >= 7); c.fillStyle = '#5a3515'; c.beginPath(); if (st) c.ellipse(p[0], p[1], 17, H * 0.38, 0, 0, 7); else c.arc(p[0], p[1], 20, 0, 7); c.fill(); c.strokeStyle = g.last === i ? '#ffe36a' : 'rgba(0,0,0,.35)'; c.lineWidth = g.last === i ? 3 : 1; c.stroke();
+    const cols = ['#ff6b8a', '#4cc3ff', '#ffd23a', '#7ae27a', '#c58cff']; for (let k = 0; k < Math.min(seeds, st ? 24 : 12); k++) { const a = k * 2.4, rr = (st ? 4 + (k % 6) * 4 : 3 + (k % 4) * 3.2), sx = p[0] + Math.cos(a) * rr * (st ? 0.8 : 1), sy = p[1] + Math.sin(a) * rr * (st ? 1.5 : 1) * (st ? 1 : 1); c.fillStyle = cols[k % 5]; c.beginPath(); c.arc(sx, sy, 3.2, 0, 7); c.fill(); }
+    c.fillStyle = '#fff'; c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = 2.5; const ty = st ? p[1] + (H * 0.38) + 11 : p[1] + 31; if (st) { c.strokeText(seeds, p[0], H / 2 + 4); c.fillText(seeds, p[0], H / 2 + 4); } else { c.strokeText(seeds, p[0], ty); c.fillText(seeds, p[0], ty); } }
+}
+function gmDomino(c, g, W, H) {
+  c.fillStyle = '#2e7a4a'; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, 0, W, 3);
+  c.fillStyle = '#fff'; c.font = 'bold 10px sans-serif'; c.textAlign = 'center'; c.fillText(g.chain.length ? 'الطاولة' : 'ضع أي حجر للبدء', W / 2, 13);
+  const tw = 28, th = 14, per = 10, x0 = (W - per * tw) / 2; g.chain.forEach((t, i) => { const row = Math.floor(i / per), col = i % per; dmTile(c, x0 + col * tw, 22 + row * (th + 4), tw, th, t[0], t[1], false); });
+  const sy = 112; c.strokeStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(8, sy - 6); c.lineTo(W - 8, sy - 6); c.stroke(); c.fillStyle = '#fff'; c.font = '10px sans-serif'; c.fillText('أحجارك (اضغط على حجر)', W / 2, sy + 4);
+  const e = g.chain.length ? [g.chain[0][0], g.chain[g.chain.length - 1][1]] : null; RM.hand.forEach((t, i) => { const row = Math.floor(i / 7), col = i % 7, x = 8 + col * 41, y = sy + 12 + row * 26, ok = !e || t.includes(e[0]) || t.includes(e[1]); c.globalAlpha = ok ? 1 : 0.55; dmTile(c, x, y, 38, 19, t[0], t[1], RM.dSel === i); c.globalAlpha = 1; });
+}
 function rmGTable(c, sd) {
-  const g = RM.g, act = g && g.ph !== 'idle', T = RM.T;
-  c.save(); c.translate(sd.x, sd.y); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 1, 40, 8, 0, 0, 7); c.fill();
+  const tb = sd.tb, g = RM.G[tb], k = GM_TB[tb].k, act = g && g.ph !== 'idle', T = RM.T;
+  c.save(); c.translate(sd.x, sd.y);
+  const rug = { snake: ['#d8584a', '#f4d8a0'], xo: ['#3a78c8', '#cfe4ff'], mancala: ['#8a4aa8', '#f2d8ff'], domino: ['#2f8a5a', '#d4f2dc'] }[k]; c.fillStyle = rug[0]; c.beginPath(); c.ellipse(0, 2, 82, 22, 0, 0, 7); c.fill(); c.strokeStyle = rug[1]; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.ellipse(0, 2, 76, 19, 0, 0, 7); c.stroke(); c.setLineDash([]);
+  [-1, 1].forEach(sg => { const px = sg * 72, py = -2; if (sg < 0) { c.fillStyle = '#7a4a22'; c.beginPath(); c.moveTo(px - 6, py); c.lineTo(px + 6, py); c.lineTo(px + 4, py - 9); c.lineTo(px - 4, py - 9); c.closePath(); c.fill(); c.strokeStyle = '#2f9e44'; c.lineWidth = 2; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(px, py - 9); c.quadraticCurveTo(px + i * 5, py - 22, px + i * 9, py - 17); c.stroke(); } c.fillStyle = ['#ff7aa8', '#ffd23a', '#9bd0ff', '#ff9a4a'][tb % 4]; c.beginPath(); c.arc(px + 2, py - 20, 2.4, 0, 7); c.fill(); } else { c.strokeStyle = '#5a3a22'; c.lineWidth = 2; c.beginPath(); c.moveTo(px, py); c.lineTo(px, py - 34); c.stroke(); c.fillStyle = 'rgba(255,200,90,' + (0.2 + 0.1 * Math.sin(T / 12 + tb)) + ')'; c.beginPath(); c.arc(px, py - 38, 12, 0, 7); c.fill(); c.fillStyle = '#ffb347'; c.fillRect(px - 3.5, py - 42, 7, 8); c.strokeStyle = '#5a3a22'; c.lineWidth = 1; c.strokeRect(px - 3.5, py - 42, 7, 8); } });
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 1, 40, 8, 0, 0, 7); c.fill();
   [-48, 48].forEach(dx => { c.fillStyle = '#6f4524'; c.fillRect(dx - 6, -10, 3, 10); c.fillRect(dx + 3, -10, 3, 10); c.fillStyle = '#b8743a'; c.beginPath(); c.ellipse(dx, -10, 12, 4.2, 0, 0, 7); c.fill(); c.fillStyle = '#e8a35f'; c.beginPath(); c.ellipse(dx, -11, 10, 3.2, 0, 0, 7); c.fill(); });
   rmRR(c, -17, -22, 34, 22, 6, '#a8552a'); c.strokeStyle = '#ffd98a'; c.lineWidth = 1.4; for (let i = -12; i <= 12; i += 8) { c.beginPath(); c.moveTo(i, -22); c.lineTo(i + 4, 0); c.stroke(); } c.fillStyle = '#ffd98a'; c.beginPath(); c.ellipse(0, -1, 17, 3, 0, 0, 7); c.fill(); c.fillStyle = '#a8552a'; c.beginPath(); c.ellipse(0, -2, 17, 3, 0, 0, 7); c.fill();
   c.fillStyle = '#7a3a1a'; c.beginPath(); c.ellipse(0, -24, 40, 15, 0, 0, 7); c.fill(); c.fillStyle = '#ffe9b0'; c.beginPath(); c.ellipse(0, -25, 37, 13, 0, 0, 7); c.fill();
-  c.save(); c.beginPath(); c.ellipse(0, -25, 36, 12.5, 0, 0, 7); c.clip(); c.translate(-25, -25 - 9); c.scale(0.5, 0.18); rmGBoard(c, 10, true); c.restore();
-  c.save(); c.translate(-25, -25 - 9); c.scale(0.5, 0.18); rmGTokens(c, 10, 5); c.restore();
-  const dv = act && g.die ? g.die : 0; if (dv) { c.fillStyle = '#fff'; c.strokeStyle = '#555'; c.lineWidth = 0.8; rmRR(c, 26, -34, 8, 8, 2, '#fff'); c.fillStyle = '#222'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillText(dv, 30, -27.4); }
-  if (act || RM.gSide !== null) { c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 2.5; const t = '🎲 حية ودرج'; c.strokeText(t, 0, -46 + Math.sin(T / 15) * 1.2); c.fillText(t, 0, -46 + Math.sin(T / 15) * 1.2); }
+  c.save(); c.beginPath(); c.ellipse(0, -25, 36, 12.5, 0, 0, 7); c.clip(); c.translate(0, -25); c.scale(1, 0.36);
+  if (k === 'snake') { c.translate(-26, -26); c.scale(0.52, 0.52); rmGBoard(c, 10, true); rmGTokens(c, 10, 5); }
+  else if (k === 'xo') { c.translate(-24, -24); gmXO(c, g && g.b ? g : { b: Array(9).fill(''), line: null }, 16, 0); }
+  else if (k === 'mancala') { c.translate(-34, -20); c.scale(0.24, 0.24); gmMancala(c, g && g.pits ? g : { pits: [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0], last: null }, 280, 160, 0); }
+  else { c.fillStyle = '#2e7a4a'; c.fillRect(-36, -34, 72, 68); const ch = g && g.chain ? g.chain : []; for (let i = 0; i < 12; i++) { const t = ch[i]; const x = -30 + (i % 4) * 16, y = -20 + Math.floor(i / 4) * 16; if (t) dmTile(c, x, y, 15, 7.5, t[0], t[1], false); else { c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x, y, 15, 7.5); } } }
+  c.restore();
+  if (k === 'snake' && g && g.die) { rmRR(c, 26, -34, 8, 8, 2, '#fff'); c.fillStyle = '#222'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillText(g.die, 30, -27.4); }
+  c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 2.5; const lab = GM_IC[k] + ' ' + GM_NM[k] + (act && g.ph === 'play' ? ' • جارية' : g && (g.p0 || (g.n && (g.n[0] || g.n[1]))) && g.ph !== 'play' ? ' • بانتظار' : ''); const ly = -46 + Math.sin(T / 15 + tb) * 1.2; c.strokeText(lab, 0, ly); c.fillText(lab, 0, ly);
   c.restore();
 }
 /* --- المزامنة والواجهة --- */
 function rmGameTick() {
-  const m = RM.me, sp = m.sit && m.seat; const side = (sp && sp.seat && sp.seat.kind === 'gtable') ? sp.i : null;
-  if (side !== RM.gSide) { RM.gSide = side; if (side !== null) { RM.gd = [1, 1]; rmSend({ t: 'rm_gj', side }); } else rmSend({ t: 'rm_gl' }); rmGameUI(); }
-  const g = RM.g; if (g) { [0, 1].forEach(i => { const L = RM.gt[i]; if (L.length) { const tg = L[0], d = tg - RM.gd[i]; if (Math.abs(d) < 0.25) { RM.gd[i] = tg; L.shift(); } else RM.gd[i] += Math.sign(d) * Math.min(Math.abs(d), Math.abs(tg - RM.gd[i]) > 12 ? 1.1 : 0.3); } else RM.gd[i] = g.pos[i]; }); }
+  const m = RM.me, sp = m.sit && m.seat; const sdk = (sp && sp.seat && sp.seat.kind === 'gtable') ? sp.seat : null, side = sdk ? sp.i : null, tb = sdk ? sdk.tb : null;
+  if (side !== RM.gSide || tb !== RM.gTb) { const had = RM.gSide !== null; RM.gSide = side; RM.gTb = tb; RM.hand = []; RM.dSel = -1; if (side !== null) { RM.gd = [1, 1]; rmSend({ t: 'rm_gj', tb, side }); } else if (had) rmSend({ t: 'rm_gl' }); rmGameUI(); }
+  const g = RM.G[RM.gTb]; if (g && g.k === 'snake') { [0, 1].forEach(i => { const L = RM.gt[i]; if (L.length) { const tg = L[0], d = tg - RM.gd[i]; if (Math.abs(d) < 0.25) { RM.gd[i] = tg; L.shift(); } else RM.gd[i] += Math.sign(d) * Math.min(Math.abs(d), Math.abs(tg - RM.gd[i]) > 12 ? 1.1 : 0.3); } else RM.gd[i] = g.pos[i]; }); }
   const P = $('rmGame'); if (P && !P.hidden) { rmGPaint(); if (RM.gRoll && performance.now() - RM.gRoll < 1500) $('rmGD').textContent = GM_DIE[1 + Math.floor(Math.random() * 6)]; }
 }
-function rmGPaint() { const cv = $('rmGC'), c = cv.getContext('2d'); if (!RM.g || RM.g.ph === 'idle' || RM.g.ph === 'ready') { c.clearRect(0, 0, cv.width, cv.height); } c.save(); rmGBoard(c, 30); rmGTokens(c, 30, 7); c.restore(); }
+function rmGPaint() {
+  const g = RM.G[RM.gTb], s = RM.gSide; if (!g || s === null) return; const cv = $('rmGC'); const want = g.k === 'mancala' ? 170 : 300; if (cv.height !== want) cv.height = want; const c = cv.getContext('2d'); c.clearRect(0, 0, 300, want); c.save();
+  if (g.k === 'snake') { rmGBoard(c, 30); rmGTokens(c, 30, 7); } else if (g.k === 'xo') gmXO(c, g.b ? g : { b: Array(9).fill(''), line: null }, 100, s); else if (g.k === 'mancala') { if (g.pits) gmMancala(c, g, 300, 170, s); else gmMancala(c, { pits: [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0], last: null }, 300, 170, s); } else gmDomino(c, g.chain ? g : { chain: [] }, 300, 300);
+  c.restore();
+}
 function rmGameUI() {
-  const P = $('rmGame'); if (!P) return; const g = RM.g, s = RM.gSide; if (s === null || !g) { P.hidden = true; return; } P.hidden = false;
-  const opp = g.n[1 - s] || '', me = g.n[s] || rmMe(), H = $('rmGH'), M = $('rmGM'), B = $('rmGB'), D = $('rmGD'); B.hidden = true; B.disabled = false; $('rmGDs').textContent = '';
-  H.innerHTML = '<span style="color:' + GM_COL[s] + '">● ' + me + '</span> ⚔️ <span style="color:' + GM_COL[1 - s] + '">● ' + (opp || '...') + '</span>';
+  const P = $('rmGame'); if (!P) return; const g = RM.G[RM.gTb], s = RM.gSide; if (s === null || !g) { P.hidden = true; return; } P.hidden = false;
+  const opp = g.n[1 - s] || '', me = g.n[s] || rmMe(), H = $('rmGH'), M = $('rmGM'), B = $('rmGB'), B2 = $('rmGB2'), D = $('rmGD'), snake = g.k === 'snake';
+  B.hidden = true; B.disabled = false; B2.hidden = true; B2.disabled = false; $('rmGDs').textContent = ''; $('rmGR2').style.display = snake ? '' : 'none';
+  H.innerHTML = GM_IC[g.k] + ' ' + GM_NM[g.k] + '<br><span style="color:' + GM_COL[s] + '">● ' + me + '</span> ⚔️ <span style="color:' + GM_COL[1 - s] + '">● ' + (opp || '...') + '</span>';
+  const mine = g.turn === s;
   if (g.ph === 'idle') { M.textContent = '⏳ بانتظار لاعب ثاني يجلس بالمقعد المقابل...'; D.textContent = '🎲'; }
   else if (g.ph === 'ready') { M.textContent = g.rd[s] ? '✅ أنت مستعد — بانتظار ' + opp : 'اضغط «مستعد» لما تكون جاهز'; D.textContent = '🎲'; B.hidden = false; B.textContent = g.rd[s] ? '⏳ بانتظار الخصم' : '✅ أنا مستعد'; B.disabled = !!g.rd[s]; B.dataset.a = 'ready'; $('rmGDs').textContent = (g.rd[s] ? '✅' : '⏳') + ' أنت   ' + (g.rd[1 - s] ? '✅' : '⏳') + ' ' + opp; }
   else if (g.ph === 'first') { M.textContent = g.msg || 'كل واحد يرمي الزار — الأعلى يبدأ أولاً'; D.textContent = g.fr[s] ? GM_DIE[g.fr[s]] : '🎲'; $('rmGDs').textContent = opp + ': ' + (g.fr[1 - s] ? GM_DIE[g.fr[1 - s]] + ' ' + g.fr[1 - s] : '؟'); B.hidden = false; B.dataset.a = 'roll'; B.textContent = g.fr[s] ? '⏳ بانتظار الخصم' : '🎲 ارمِ الزار'; B.disabled = !!g.fr[s]; }
-  else if (g.ph === 'play') { const mine = g.turn === s; M.textContent = (g.msg ? g.msg + ' • ' : '') + (mine ? '🎯 دورك!' : '⌛ دور ' + opp); D.textContent = g.die ? GM_DIE[g.die] : '🎲'; B.hidden = false; B.dataset.a = 'roll'; B.textContent = '🎲 ارمِ الزار'; B.disabled = !mine; }
-  else if (g.ph === 'over') { M.textContent = (g.win === s ? '🏆 مبروك فزت!' : '😅 خسرت، حظ أوفر') + (g.msg ? ' — ' + g.msg : ''); D.textContent = g.die ? GM_DIE[g.die] : '🎲'; }
+  else if (g.ph === 'play') {
+    const turnTxt = mine ? '🎯 دورك!' : '⌛ دور ' + opp; M.textContent = (g.msg ? g.msg + ' • ' : '') + turnTxt;
+    if (snake) { D.textContent = g.die ? GM_DIE[g.die] : '🎲'; B.hidden = false; B.dataset.a = 'roll'; B.textContent = '🎲 ارمِ الزار'; B.disabled = !mine; }
+    if (g.k === 'domino') { const e = g.chain.length ? [g.chain[0][0], g.chain[g.chain.length - 1][1]] : null, can = !e || RM.hand.some(t => t.includes(e[0]) || t.includes(e[1])); M.textContent += ' • أحجار الخصم: ' + g.cnt[1 - s] + ' • السحب: ' + g.yard; if (mine && !can) { if (g.yard) { B.hidden = false; B.dataset.a = 'draw'; B.textContent = '📥 اسحب حجر'; } else { B.hidden = false; B.dataset.a = 'pass'; B.textContent = '⏭️ مرّر'; } } if (mine && RM.dSel >= 0 && e) { const t = RM.hand[RM.dSel]; if (t) { const l = t.includes(e[0]), r = t.includes(e[1]); if (l && r && e[0] !== e[1]) { B.hidden = false; B.dataset.a = 'L'; B.textContent = '⬅️ يسار'; B2.hidden = false; B2.dataset.a = 'R'; B2.textContent = 'يمين ➡️'; } } } }
+  }
+  else if (g.ph === 'over') { M.textContent = (g.win === -2 ? '🤝 تعادل' : g.win === s ? '🏆 مبروك فزت!' : '😅 خسرت، حظ أوفر') + (g.msg ? ' — ' + g.msg : ''); D.textContent = g.die ? GM_DIE[g.die] : '🎲'; }
 }
 function rmGOn(g) {
-  const old = RM.g, ns = !old || g.seq !== RM.gSeq; RM.gSeq = g.seq; RM.gRoll = 0;
-  if (old && g.ph === 'play' && g.last) { const l = g.last, L = RM.gt[l.side]; if (old.pos[l.side] !== g.pos[l.side] || l.land !== l.to) { L.length = 0; L.push(l.land); if (l.to !== l.land) L.push(l.to); } if (l.to !== l.land) sfx(l.to > l.land ? 'win' : 'hit'); }
-  if (!old || g.ph === 'idle' || g.ph === 'ready') { RM.gt = [[], []]; RM.gd = g.pos.slice(); }
-  RM.g = g; try { if (g.ph === 'over') sfx(g.win === RM.gSide ? 'win' : 'hit'); } catch (e) {} rmGameUI();
+  const old = RM.G[g.tb]; RM.G[g.tb] = g; if (g.tb !== RM.gTb) return; RM.gRoll = 0;
+  if (g.k === 'snake') { if (old && g.ph === 'play' && g.last) { const l = g.last, L = RM.gt[l.side]; if (old.pos[l.side] !== g.pos[l.side] || l.land !== l.to) { L.length = 0; L.push(l.land); if (l.to !== l.land) L.push(l.to); } if (l.to !== l.land) sfx(l.to > l.land ? 'win' : 'hit'); } if (!old || g.ph === 'idle' || g.ph === 'ready') { RM.gt = [[], []]; RM.gd = g.pos ? g.pos.slice() : [1, 1]; } }
+  if (g.ph === 'idle' || g.ph === 'ready') RM.dSel = -1;
+  try { if (g.ph === 'over') sfx(g.win === RM.gSide ? 'win' : 'hit'); } catch (e) {} rmGameUI();
 }
-$('rmGB').onclick = () => { const a = $('rmGB').dataset.a; if (a === 'ready') rmSend({ t: 'rm_gready' }); else if (a === 'roll') { RM.gRoll = performance.now(); sfx('click'); $('rmGB').disabled = true; rmSend({ t: 'rm_groll' }); } };
+function rmGAct(a) { if (RM.gTb === null) return; rmSend({ t: 'rm_gact', tb: RM.gTb, a }); }
+$('rmGB').onclick = () => { const a = $('rmGB').dataset.a; if (a === 'ready') rmSend({ t: 'rm_gready', tb: RM.gTb }); else if (a === 'roll') { RM.gRoll = performance.now(); sfx('click'); $('rmGB').disabled = true; rmGAct({ a: 'roll' }); } else if (a === 'draw') rmGAct({ a: 'draw' }); else if (a === 'pass') rmGAct({ a: 'pass' }); else if (a === 'L' || a === 'R') { rmGAct({ a: 'play', t: RM.dSel, e: a }); RM.dSel = -1; } };
+$('rmGB2').onclick = () => { const a = $('rmGB2').dataset.a; if (a === 'R' || a === 'L') { rmGAct({ a: 'play', t: RM.dSel, e: a }); RM.dSel = -1; } };
+$('rmGC').addEventListener('pointerdown', ev => {
+  const g = RM.G[RM.gTb], s = RM.gSide; if (!g || s === null || g.ph !== 'play' || g.turn !== s) return; const cv = $('rmGC'), r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * cv.width, y = (ev.clientY - r.top) / r.height * cv.height; sfx('click');
+  if (g.k === 'xo') { const i = Math.floor(y / 100) * 3 + Math.floor(x / 100); if (i >= 0 && i < 9 && !g.b[i]) rmGAct({ a: 'put', i }); }
+  else if (g.k === 'mancala') { for (let i = 0; i < 6; i++) { const p = gmMpos(s * 7 + i, s, 300, 170); if (Math.hypot(x - p[0], y - p[1]) < 24 && g.pits[s * 7 + i]) { rmGAct({ a: 'pit', i }); break; } } }
+  else if (g.k === 'domino') { const sy = 112; RM.hand.forEach((t, i) => { const row = Math.floor(i / 7), col = i % 7, bx = 8 + col * 41, by = sy + 12 + row * 26; if (x >= bx && x <= bx + 38 && y >= by && y <= by + 19) { const e = g.chain.length ? [g.chain[0][0], g.chain[g.chain.length - 1][1]] : null; if (!e) { rmGAct({ a: 'play', t: i, e: 'R' }); return; } const l = t[0] === e[0] || t[1] === e[0], rr = t[0] === e[1] || t[1] === e[1]; if (l && rr && e[0] !== e[1]) { RM.dSel = i; rmGameUI(); } else if (l || rr) rmGAct({ a: 'play', t: i, e: rr ? 'R' : 'L' }); else showToast('هذا الحجر ما يركب'); } }); }
+});
 $('rmGQ').onclick = () => rmStand();
 RM.gBig = false; try { RM.gBig = localStorage.getItem('rmGBig') === '1'; } catch (e) {}
 function rmGZUpd() { $('rmGame').classList.toggle('big', RM.gBig); $('rmGZ').textContent = RM.gBig ? '🔎 تصغير' : '🔍 تكبير'; }
@@ -6045,6 +6101,7 @@ rmGZUpd();
 function rmWxSync(w) { if (!w) return; RM.wxc = { el: +w.el || 0, t: performance.now(), spd: +w.spd || 1 }; RM.wxSpd = RM.wxc.spd; rmLbl('rmWxFast', RM.wxSpd > 1 ? '⏹' : '⏩', RM.wxSpd > 1 ? 'إيقاف التسريع' : 'تسريع', RM.wxSpd > 1); }
 function rmWxAdmUpd() { const b = $('rmDockA'); if (b) b.hidden = !(RM.on && (RM.myAdm || RM.isMod)); }
 setInterval(rmWxAdmUpd, 1500);
+$('rmWxDay').onclick = () => rmSend({ t: 'rm_wx', mode: 'day' }); $('rmWxNight').onclick = () => rmSend({ t: 'rm_wx', mode: 'night' }); $('rmWxFw').onclick = () => rmSend({ t: 'rm_wx', mode: 'fw' });
 $('rmWxRain').onclick = () => rmSend({ t: 'rm_wx', mode: 'rain' });
 $('rmWxSnow').onclick = () => rmSend({ t: 'rm_wx', mode: 'snow' });
 $('rmWxFast').onclick = () => rmSend({ t: 'rm_wx', mode: RM.wxSpd > 1 ? 'slow' : 'fast' });
@@ -6079,6 +6136,146 @@ function rmFxDraw(c) {
   }); RM.fx = keep; c.restore();
 }
 
+
+/* ---------- تفاعل: إيموجي + همس + مصافحة/عناق ---------- */
+const RM_RX = ['😂', '❤️', '👍', '😮', '😢', '😡', '🎉', '🔥'];
+RM.rx = []; RM.pc = '';
+(function () { const P = $('rmRx'); RM_RX.forEach(e => { const b = document.createElement('button'); b.type = 'button'; b.textContent = e; b.onclick = () => { rmSend({ t: 'rm_react', e }); P.hidden = true; }; P.appendChild(b); }); })();
+$('rmRxBtn').onclick = () => { const P = $('rmRx'); $('rmMus').hidden = true; $('rmDance').hidden = true; P.hidden = !P.hidden; };
+function rmReactAdd(n, e) { RM.rx.push({ n, e, t0: RM.T, ph: Math.random() * 6 }); if (RM.rx.length > 40) RM.rx.shift(); }
+function rmReactDraw(c) {
+  RM.rx = RM.rx.filter(r => RM.T - r.t0 < 170); RM.rx.forEach(r => { const p = rmPosOf(r.n); if (!p) return; const age = RM.T - r.t0, pop = age < 10 ? 0.4 + age * 0.08 : 1, a = age > 130 ? (170 - age) / 40 : 1; c.save(); c.globalAlpha = Math.max(0, a); c.translate(p[0] + Math.sin(age / 12 + r.ph) * 6, p[1] - AV_H * 1.62 - age * 0.45); c.scale(pop * 1.15, pop * 1.15); c.font = '22px sans-serif'; c.textAlign = 'center'; c.shadowColor = 'rgba(0,0,0,.4)'; c.shadowBlur = 5; c.fillText(r.e, 0, 0); c.restore(); });
+}
+function rmPcClose() { RM.pc = ''; $('rmPC').hidden = true; }
+function rmPcOpen(name) {
+  const o = RM.others[name]; if (!o) return; RM.pc = name; const P = $('rmPC'); P.innerHTML = ''; P.hidden = false; const b = document.createElement('b'); b.textContent = '👤 ' + name; P.appendChild(b);
+  const r = document.createElement('div'); r.className = 'pr'; const mk = (t, f) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = t; x.onclick = f; r.appendChild(x); };
+  mk('🤝 مصافحة', () => { rmSend({ t: 'rm_hug', n: name, k: 'shake' }); rmPcClose(); }); mk('🤗 عناق', () => { rmSend({ t: 'rm_hug', n: name, k: 'hug' }); rmPcClose(); });
+  mk('🤫 همس', () => { const w = P.querySelector('.wr'); if (w) { w.remove(); return; } const d = document.createElement('div'); d.className = 'wr'; const i = document.createElement('input'); i.maxLength = 200; i.placeholder = 'اكتب همسة لـ ' + name + '...'; const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = 'ارسل'; const go = () => { const t = i.value.trim(); if (!t) return; rmSend({ t: 'rm_whisper', n: name, txt: t }); rmPcClose(); }; sb.onclick = go; i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }); d.append(i, sb); P.appendChild(d); i.focus(); });
+  mk('✖', rmPcClose); P.appendChild(r);
+}
+function rmAvHit(x, y) { let best = null, bd = 1e9; Object.values(RM.others).forEach(o => { if (o.hid && !(RM.myAdm || RM.isMod)) return; if (Math.abs(x - o.x) < 20 && y > o.y - AV_H * 1.3 && y < o.y + 8) { const d = Math.abs(x - o.x) + Math.abs(y - o.y); if (d < bd) { bd = d; best = o; } } }); return best; }
+function rmHugFx(from, to, kind) {
+  const a = rmPosOf(from), b = rmPosOf(to); if (!a || !b) return; const mx = (a[0] + b[0]) / 2, my = Math.min(a[1], b[1]) - AV_H * 0.55; const em = kind === 'hug' ? ['💖', '🤗', '💕', '✨'] : ['🤝', '✨', '👏'];
+  for (let i = 0; i < 14; i++) RM.fx.push({ x: mx + (Math.random() - 0.5) * 18, y: my + (Math.random() - 0.5) * 14, vx: (Math.random() - 0.5) * 1.6, vy: -0.7 - Math.random() * 1.1, g: -0.004, t: 0, life: 70 + Math.random() * 40, col: '#fff', e: em[i % em.length], r: 3 + Math.random() * 2, rot: 0, vr: 0 });
+  try { if (!RM.ambMute) { [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.32]].forEach(q => blip('sine', q[0], q[0], 0.3, 0.06, q[1])); } } catch (e) {}
+}
+
+/* ---------- نهار/ليل + حيوانات + صيد + قلعة رمل + ألعاب نارية ---------- */
+function rmDayCalc() {
+  const el = rmWx().el; let d = 0; if (el >= 300 && el < 325) d = (el - 300) / 25; else if (el >= 325 && el < 395) d = 1; else if (el >= 395 && el < 420) d = 1 - (el - 395) / 25;
+  let wm = 0; if (el >= 282 && el < 318) wm = Math.sin((el - 282) / 36 * Math.PI); else if (el >= 402 && el < 438) wm = 0.8 * Math.sin((el - 402) / 36 * Math.PI); return { d, wm, q: el / 600, el };
+}
+RM.dn = { d: 0, wm: 0, q: 0.15, el: 0 }; RM.stars = Array.from({ length: 80 }, () => [Math.random() * 800, Math.random() * 185, 0.6 + Math.random() * 1.4, Math.random() * 6]); RM.ff = Array.from({ length: 16 }, () => ({ x: 60 + Math.random() * 680, y: 250 + Math.random() * 330, ph: Math.random() * 6, sp: 0.3 + Math.random() * 0.5 }));
+function rmGlow(c, x, y, r, a, col) { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+RM.nm = document.createElement('canvas'); RM.nm.width = 400; RM.nm.height = 310;
+function rmNight(c) {
+  const D = RM.dn, d = D.d, wm = D.wm; if (d < 0.01 && wm < 0.02) return; const T = RM.T, calm = 1 - Math.max(RM.rainI, RM.snowI * 0.6);
+  if (wm > 0.02) { c.save(); const g = c.createLinearGradient(0, 90, 0, 420); g.addColorStop(0, 'rgba(255,110,40,' + 0.34 * wm + ')'); g.addColorStop(1, 'rgba(255,170,90,0)'); c.fillStyle = g; c.fillRect(0, 0, RMW, 420); c.fillStyle = 'rgba(255,150,60,' + 0.07 * wm + ')'; c.fillRect(0, 0, RMW, RMH); c.restore(); }
+  if (d < 0.01) return;
+  const m = RM.nm.getContext('2d'), fl = 0.93 + 0.07 * Math.sin(T / 4) + 0.03 * Math.sin(T / 1.7); m.setTransform(0.5, 0, 0, 0.5, 0, 0); m.globalCompositeOperation = 'source-over'; m.clearRect(0, 0, RMW, RMH);
+  m.fillStyle = 'rgba(6,9,42,' + (0.8 * d) + ')'; m.fillRect(0, 0, RMW, RMH); const sg = m.createLinearGradient(0, 0, 0, 230); sg.addColorStop(0, 'rgba(2,3,26,' + 0.55 * d + ')'); sg.addColorStop(1, 'rgba(2,3,26,0)'); m.fillStyle = sg; m.fillRect(0, 0, RMW, 230);
+  m.globalCompositeOperation = 'destination-out';
+  const hole = (x, y, r, a) => { const g = m.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(0.55, 'rgba(0,0,0,' + a * 0.6 + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); m.fillStyle = g; m.beginPath(); m.arc(x, y, r, 0, 7); m.fill(); };
+  hole(RM_FIRE.x, RM_FIRE.y - 6, 230 * fl, 1); GM_TB.forEach(t => hole(t.x, t.y - 10, 78, 0.8)); hole(RM_NPC.x, RM_NPC.y - 10, 60, 0.6);
+  c.drawImage(RM.nm, 0, 0, RMW, RMH);
+  c.save(); c.globalCompositeOperation = 'lighter';
+  rmGlow(c, RM_FIRE.x, RM_FIRE.y - 8, 210 * fl, 0.34 * d, '255,140,40'); rmGlow(c, RM_FIRE.x, RM_FIRE.y - 14, 80 * fl, 0.4 * d, '255,205,110'); GM_TB.forEach(t => rmGlow(c, t.x, t.y - 20, 70, 0.22 * d, '255,200,110'));
+  if (d > 0.3) { const sa = Math.min(1, (d - 0.3) / 0.5) * calm; c.fillStyle = '#fff'; RM.stars.forEach(s => { c.globalAlpha = sa * (0.45 + 0.55 * Math.sin(T / 25 + s[3])); c.beginPath(); c.arc(s[0], s[1], s[2], 0, 7); c.fill(); }); c.globalAlpha = sa; c.globalCompositeOperation = 'source-over'; c.fillStyle = '#f6f3d6'; c.beginPath(); c.arc(690, 62, 20, 0, 7); c.fill(); c.fillStyle = 'rgba(8,12,48,1)'; c.beginPath(); c.arc(699, 56, 17, 0, 7); c.fill(); c.globalAlpha = 1; c.globalCompositeOperation = 'lighter'; }
+  if (calm > 0.3) RM.ff.forEach(f => { f.ph += 0.02 * f.sp; const x = f.x + Math.sin(f.ph * 1.3) * 22, y = f.y + Math.cos(f.ph) * 14, al = (0.5 + 0.5 * Math.sin(f.ph * 4)) * d * calm; rmGlow(c, x, y, 7, 0.9 * al, '230,255,110'); });
+  c.restore();
+}
+/* --- حيوانات (مواقعها محسوبة من الوقت فتظهر نفس المكان عند الجميع) --- */
+function rmH(n) { n |= 0; n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n ^= n >>> 16; return (n >>> 0) / 4294967296; }
+const RM_FORB = [[400, 440, 95], [118, 418, 66], [400, 276, 66], [385, 552, 66], [665, 565, 66], [660, 400, 100], [62, 372, 40], [232, 392, 60]];
+function rmPetWp(id, k, reg) { for (let t = 0; t < 10; t++) { const x = reg[0] + rmH(k * 977 + id * 131 + t * 17 + 1) * (reg[1] - reg[0]), y = reg[2] + rmH(k * 613 + id * 71 + t * 29 + 5) * (reg[3] - reg[2]); if (!RM_FORB.some(f => Math.hypot(x - f[0], (y - f[1]) * 1.4) < f[2])) return [x, y]; } return [reg[0], reg[2]]; }
+function rmPetPos(id, reg, seg, mv, now) { const k = Math.floor(now / seg), fr = (now % seg) / seg, A = rmPetWp(id, k, reg), B = rmPetWp(id, k + 1, reg), u = Math.min(1, fr / mv), e = u * u * (3 - 2 * u), x = A[0] + (B[0] - A[0]) * e, y = A[1] + (B[1] - A[1]) * e; return { x, y, mv: fr < mv && Math.hypot(B[0] - A[0], B[1] - A[1]) > 8, dir: B[0] >= A[0] ? 1 : -1 }; }
+RM.pets = { cat: { name: 'ميمي', x: 300, y: 300, dir: 1, mv: false, sleep: false }, tur: { name: 'سلحوفة', x: 200, y: 232, dir: 1, mv: true } };
+function rmPetStep() {
+  const now = Date.now(), cat = RM.pets.cat, D = RM.dn; const sl = D.d > 0.75 || RM.snowI > 0.4; if (sl) { cat.x = 340; cat.y = 482; cat.mv = false; cat.dir = 1; cat.sleep = true; } else { const p = rmPetPos(1, [40, 760, 238, 600], 11000, 0.5, now); cat.x = p.x; cat.y = p.y; cat.mv = p.mv; cat.dir = p.dir; cat.sleep = false; }
+  const t = RM.pets.tur, q = rmPetPos(2, [30, 770, 222, 246], 26000, 0.85, now); t.x = q.x; t.y = q.y; t.mv = q.mv; t.dir = q.dir;
+}
+function rmDrawCat(c) {
+  const p = RM.pets.cat, T = RM.T, OL = '#2e2030'; c.save(); c.translate(p.x, p.y); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 0, 13, 4, 0, 0, 7); c.fill(); c.scale(p.dir * 0.95, 0.95); c.lineJoin = 'round'; c.lineWidth = 1.4; c.strokeStyle = OL;
+  const body = '#f1a45a', dk = '#c7742c', ph = T / 5;
+  if (p.sleep) { c.fillStyle = body; c.beginPath(); c.ellipse(0, -7, 15, 8, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = dk; for (let i = -1; i <= 1; i++) { c.beginPath(); c.ellipse(i * 5, -12, 1.6, 3, 0, 0, 7); c.fill(); } c.fillStyle = body; c.beginPath(); c.arc(11, -8, 6, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.moveTo(8, -13); c.lineTo(9, -18); c.lineTo(12, -13); c.closePath(); c.fill(); c.stroke(); c.beginPath(); c.moveTo(12, -12); c.lineTo(15, -16); c.lineTo(16, -10); c.closePath(); c.fill(); c.stroke(); c.beginPath(); c.moveTo(11, -8.6); c.lineTo(15, -8.6); c.stroke(); c.beginPath(); c.moveTo(-14, -6); c.quadraticCurveTo(-20, -2, -8, 0); c.strokeStyle = body; c.lineWidth = 4; c.stroke(); c.restore(); c.save(); c.font = 'bold 9px sans-serif'; c.fillStyle = '#fff'; c.textAlign = 'center'; c.globalAlpha = 0.5 + 0.5 * Math.sin(T / 20); c.fillText('z', p.x + 8, p.y - 26 - (T % 40) / 5); c.fillText('Z', p.x + 16, p.y - 34 - (T % 40) / 6); c.restore(); rmBub(c, 'ميمي', p.x, p.y - 22); return; }
+  c.beginPath(); c.moveTo(-10, -16); c.quadraticCurveTo(-20 + Math.sin(T / 12) * 3, -22 - Math.sin(T / 9) * 3, -16 + Math.sin(T / 12) * 4, -32); c.strokeStyle = OL; c.lineWidth = 5.2; c.stroke(); c.strokeStyle = body; c.lineWidth = 3.2; c.stroke(); c.lineWidth = 1.4; c.strokeStyle = OL;
+  if (p.mv) { [[-7, 0], [7, Math.PI]].forEach(q => [0, 5].forEach(o => { const s = Math.sin(ph + q[1] + (o ? 1.6 : 0)) * 4; c.fillStyle = dk; c.beginPath(); c.roundRect ? c.roundRect(q[0] + o - 2 + s, -9, 4, 9, 2) : c.rect(q[0] + o - 2 + s, -9, 4, 9); c.fill(); c.stroke(); })); c.translate(0, -Math.abs(Math.sin(ph)) * 1.2); }
+  else { c.fillStyle = dk; [[-5, -3], [4, -3]].forEach(q => { c.beginPath(); c.ellipse(q[0], q[1], 3.6, 3, 0, 0, 7); c.fill(); c.stroke(); }); }
+  c.fillStyle = body; c.beginPath(); c.ellipse(0, p.mv ? -15 : -12, p.mv ? 13 : 9, p.mv ? 7.5 : 11, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = dk; for (let i = -1; i <= 1; i++) { c.beginPath(); c.ellipse(i * 4.5, p.mv ? -20 : -19, 1.5, 3, 0, 0, 7); c.fill(); }
+  const hx = p.mv ? 12 : 3, hy = p.mv ? -21 : -27; c.fillStyle = body; c.beginPath(); c.arc(hx, hy, 7, 0, 7); c.fill(); c.stroke(); [[-1, 0], [1, 0]].forEach(q => { c.beginPath(); c.moveTo(hx + q[0] * 6.5, hy - 3); c.lineTo(hx + q[0] * 5, hy - 11); c.lineTo(hx + q[0] * 1.5, hy - 6.5); c.closePath(); c.fill(); c.stroke(); });
+  c.fillStyle = '#222'; c.beginPath(); c.arc(hx - 2.4, hy - 1, 1.1, 0, 7); c.arc(hx + 2.4, hy - 1, 1.1, 0, 7); c.fill(); c.fillStyle = '#ff7a8a'; c.beginPath(); c.arc(hx, hy + 1.4, 1, 0, 7); c.fill(); c.strokeStyle = 'rgba(46,32,48,.7)'; c.lineWidth = 0.8; [[-1], [1]].forEach(q => { c.beginPath(); c.moveTo(hx + q[0] * 3, hy + 2); c.lineTo(hx + q[0] * 9, hy + 1); c.moveTo(hx + q[0] * 3, hy + 3); c.lineTo(hx + q[0] * 9, hy + 4.5); c.stroke(); });
+  c.restore(); rmBub(c, 'ميمي', p.x, p.y - 38);
+}
+function rmDrawTur(c) {
+  const p = RM.pets.tur, T = RM.T, OL = '#2e2030'; c.save(); c.translate(p.x, p.y); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 1, 13, 3.6, 0, 0, 7); c.fill(); c.scale(p.dir, 1); c.lineJoin = 'round'; c.lineWidth = 1.3; c.strokeStyle = OL; const ph = T / 14;
+  [[-8, 0], [7, 1]].forEach(q => { const s = p.mv ? Math.sin(ph + q[1] * 3) * 2 : 0; c.fillStyle = '#7ab55a'; c.beginPath(); c.ellipse(q[0] + s, -2, 3.2, 3, 0, 0, 7); c.fill(); c.stroke(); });
+  c.fillStyle = '#7ab55a'; c.beginPath(); c.ellipse(14, -8 + (p.mv ? Math.sin(ph) * 0.8 : 0), 5, 4, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#111'; c.beginPath(); c.arc(16, -9, 0.9, 0, 7); c.fill(); c.beginPath(); c.moveTo(-12, -5); c.lineTo(-17, -3); c.lineTo(-12, -3); c.closePath(); c.fillStyle = '#7ab55a'; c.fill(); c.stroke();
+  c.fillStyle = '#3f8f4a'; c.beginPath(); c.ellipse(0, -7, 13, 9, 0, Math.PI, 0); c.lineTo(13, -7); c.closePath(); c.fill(); c.stroke(); c.strokeStyle = 'rgba(20,70,30,.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-4, -15); c.lineTo(-6, -8); c.moveTo(4, -15); c.lineTo(6, -8); c.moveTo(0, -16); c.lineTo(0, -8); c.moveTo(-9, -11); c.lineTo(9, -11); c.stroke();
+  c.restore(); rmBub(c, 'سلحوفة', p.x, p.y - 20);
+}
+function rmPetHit(x, y) {
+  const c = RM.pets.cat, t = RM.pets.tur; if (Math.abs(x - c.x) < 18 && y > c.y - 34 && y < c.y + 6) { RM.bubs['ميمي'] = { txt: c.sleep ? 'zzz... 😴' : 'مياو 😺', t: 140, t0: 140 }; try { if (!RM.ambMute && !c.sleep) { blip('triangle', 700, 1100, 0.18, 0.07); blip('triangle', 1100, 600, 0.25, 0.06, 0.16); } } catch (e) {} RM.fx.push({ x: c.x, y: c.y - 34, vx: 0, vy: -0.5, g: 0, t: 0, life: 60, col: '#fff', e: '💗', r: 4, rot: 0, vr: 0 }); return true; }
+  if (Math.abs(x - t.x) < 16 && y > t.y - 22 && y < t.y + 6) { RM.bubs['سلحوفة'] = { txt: 'ببطء بس أوصل 🐢', t: 140, t0: 140 }; return true; } return false;
+}
+/* --- قلاع الرمل --- */
+RM.castles = [];
+function rmCastleSet(list) { const now = performance.now(); RM.castles = (list || []).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, born: now - (c.age || 0) * 1000, grown: RM.castles.find(o => o.id === c.id) ? 1 : 0, t0: RM.T })); }
+function rmDrawCastle(c, k) {
+  const age = (performance.now() - k.born) / 1000; if (age > 480) return; const gr = Math.min(1, (RM.T - k.t0) / 40), s = 0.2 + 0.8 * (1 - Math.pow(1 - gr, 3)), fade = age > 450 ? (480 - age) / 30 : 1, OL = '#7a5a28';
+  c.save(); c.globalAlpha = fade; c.translate(k.x, k.y); c.scale(s, s); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0, 1, 26, 6, 0, 0, 7); c.fill(); c.lineJoin = 'round'; c.lineWidth = 1.2; c.strokeStyle = OL;
+  c.fillStyle = '#e8c27a'; c.beginPath(); c.ellipse(0, -3, 24, 7, 0, 0, 7); c.fill(); c.stroke();
+  const tw = (x, w, h) => { c.fillStyle = '#f2d08a'; c.beginPath(); c.rect(x - w / 2, -3 - h, w, h); c.fill(); c.stroke(); for (let i = 0; i < 3; i++) { c.fillStyle = '#f2d08a'; c.fillRect(x - w / 2 + i * (w / 3) + 0.5, -3 - h - 4, w / 3 - 1.5, 4); c.strokeRect(x - w / 2 + i * (w / 3) + 0.5, -3 - h - 4, w / 3 - 1.5, 4); } };
+  tw(-15, 10, 17); tw(15, 10, 17); tw(0, 14, 25); c.fillStyle = '#9a6a30'; c.beginPath(); c.moveTo(-4, -3); c.lineTo(-4, -10); c.quadraticCurveTo(0, -15, 4, -10); c.lineTo(4, -3); c.closePath(); c.fill(); c.stroke();
+  const col = 'hsl(' + (rmHash(k.by) % 360) + ',80%,58%)'; c.strokeStyle = '#6a4a20'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(0, -36); c.lineTo(0, -46); c.stroke(); c.fillStyle = col; c.beginPath(); const w2 = Math.sin(RM.T / 8) * 1.6; c.moveTo(0, -46); c.quadraticCurveTo(5, -47 + w2, 10, -44 + w2); c.quadraticCurveTo(5, -41, 0, -41); c.closePath(); c.fill();
+  c.font = '7px sans-serif'; c.textAlign = 'center'; c.fillText('🐚', -17, 1); c.fillText('⭐', 17, 0); c.restore();
+}
+function rmCastleHit(x, y) {
+  const k = RM.castles.find(c => Math.abs(x - c.x) < 22 && y > c.y - 48 && y < c.y + 8); if (!k) return false; if (k.by === rmMe() || RM.myAdm || RM.isMod) { rmSend({ t: 'rm_castle_del', id: k.id }); showToast('💥 هدمت القلعة'); } else showToast('🏰 قلعة ' + k.by); return true;
+}
+function rmCastleBuild() { const m = RM.me; rmSend({ t: 'rm_castle', x: Math.round(m.x + m.dir * 24), y: Math.round(m.y) }); try { if (!RM.ambMute) { blip('triangle', 300, 500, 0.1, 0.06); blip('triangle', 400, 650, 0.1, 0.06, 0.12); } } catch (e) {} }
+/* --- صيد السمك --- */
+RM.fish = { st: 'idle', bite: 0, end: 0, n: 0 }; try { RM.fish.n = +(localStorage.getItem('rmFish') || 0); } catch (e) {}
+const RM_FISH = [[0.55, '🐟', 'سمكة'], [0.8, '🐠', 'سمكة ملونة'], [0.92, '🦀', 'سلطعون'], [0.975, '🐡', 'سمكة منتفخة'], [1.01, '🏆', 'سمكة ذهبية نادرة']];
+function rmFishStart() { const m = RM.me; if (m.sit || m.jump || m.y >= 262) return; RM.fish.st = 'wait'; RM.fish.bite = performance.now() + 4000 + Math.random() * 7000; rmSetDance(9); showToast('🎣 رميت السنارة... انتظر السمكة'); rmPrompt(true); }
+function rmFishStop() { RM.fish.st = 'idle'; if (RM.me.dance === 9) rmSetDance(0); rmPrompt(true); }
+function rmFishTick() {
+  const F = RM.fish; if (F.st === 'idle') return; if (RM.me.dance !== 9) { F.st = 'idle'; rmPrompt(true); return; } const n = performance.now();
+  if (F.st === 'wait' && n > F.bite) { F.st = 'bite'; F.end = n + 2300; try { blip('sine', 520, 280, 0.12, 0.08); } catch (e) {} showToast('🐟 سمكة عضّت! اسحب بسرعة'); rmPrompt(true); }
+  else if (F.st === 'bite' && n > F.end) { F.st = 'wait'; F.bite = n + 3500 + Math.random() * 6000; showToast('😅 هربت السمكة، ننتظر غيرها'); rmPrompt(true); }
+}
+function rmFishPull() {
+  const F = RM.fish; if (F.st !== 'bite') return; const r = Math.random(), f = RM_FISH.find(x => r < x[0]), kg = (0.2 + Math.random() * 2.2).toFixed(1); F.st = 'wait'; F.bite = performance.now() + 4000 + Math.random() * 6000; F.n++; try { localStorage.setItem('rmFish', F.n); } catch (e) {}
+  rmSend({ t: 'rm_react', e: f[1] }); showToast('🎣 صدت ' + f[1] + ' ' + f[2] + ' (' + kg + ' كغم) — مجموع صيدك ' + F.n); try { blip('sine', 660, 990, 0.15, 0.08); blip('sine', 990, 1320, 0.2, 0.07, 0.12); } catch (e) {} if (f[1] === '🏆') rmJoinFx(RM.me.x, RM.me.y, 1); rmPrompt(true);
+}
+function rmRodDraw(c, o, bite, me) {
+  const d = o.dir || 1, T = RM.T, hx = o.x + d * 12, hy = o.y - AV_H * 0.52, tx = o.x + d * 46, ty = o.y - AV_H * 1.18, bx = o.x + d * 62, by = o.y - 92 + (bite ? 7 : Math.sin(T / 14 + o.x) * 1.4);
+  c.save(); c.strokeStyle = '#6a4220'; c.lineWidth = 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo((tx + bx) / 2 + d * 4, Math.min(ty, by) - 6, bx, by - 3); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(bx, by + 2, 7 + Math.sin(T / 10) * 1.5, 2.4, 0, 0, 7); c.fill(); c.fillStyle = '#ff3d4a'; c.beginPath(); c.arc(bx, by, 3, Math.PI, 0); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 3, 0, Math.PI); c.fill();
+  if (bite && me) { c.font = 'bold 16px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ff2d4a'; c.strokeStyle = '#fff'; c.lineWidth = 3; c.strokeText('!', bx, by - 14 - Math.abs(Math.sin(T / 4)) * 4); c.fillText('!', bx, by - 14 - Math.abs(Math.sin(T / 4)) * 4); } c.restore();
+}
+/* --- ألعاب نارية --- */
+RM.fwUntil = 0; RM.fwR = []; RM.fwP = []; RM.fwKey = 0;
+function rmFwStart(sec) { RM.fwUntil = performance.now() + sec * 1000; showToast('🎆 ألعاب نارية بالسماء!'); }
+function rmFwDraw(c) {
+  const now = performance.now(), on = now < RM.fwUntil && RM.rainI < 0.3 && RM.snowI < 0.3; if (!on && !RM.fwR.length && !RM.fwP.length) return; const cols = ['255,90,110', '255,210,70', '90,200,255', '170,255,120', '220,130,255', '255,255,255'];
+  if (on && RM.T % 24 === 0 && RM.fwR.length < 4) RM.fwR.push({ x: 90 + Math.random() * 620, y: 212, vy: -3.2 - Math.random() * 0.9, ty: 36 + Math.random() * 95, col: cols[Math.floor(Math.random() * cols.length)] });
+  c.save(); c.globalCompositeOperation = 'lighter';
+  RM.fwR = RM.fwR.filter(r => { r.y += r.vy; if (RM.T % 2 === 0) RM.fwP.push({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * 0.3, vy: 0.4, a: 0.7, l: 16, col: '255,200,120', s: 1.2 }); rmGlow(c, r.x, r.y, 6, 0.8, '255,220,150'); if (r.y <= r.ty) { const n = 44, v = 1.6 + Math.random() * 1.3; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + Math.random() * 0.1, sp = v * (0.7 + Math.random() * 0.5); RM.fwP.push({ x: r.x, y: r.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a: 1, l: 70 + Math.random() * 30, col: r.col, s: 1.8, g: 0.03 }); } rmGlow(c, r.x, r.y, 60, 0.35, r.col); try { if (!RM.ambMute && actx && actx.state === 'running') { blip('sawtooth', 220, 60, 0.28, 0.05); for (let k = 0; k < 4; k++) blip('square', 1800 + Math.random() * 1500, 600, 0.04, 0.02, 0.05 + k * 0.05); } } catch (e) {} return false; } return true; });
+  RM.fwP = RM.fwP.filter(p => { p.x += p.vx; p.y += p.vy; p.vy += p.g || 0; p.vx *= 0.985; p.l--; if (p.l <= 0) return false; const al = Math.min(1, p.l / 40) * p.a; c.fillStyle = 'rgba(' + p.col + ',' + al + ')'; c.beginPath(); c.arc(p.x, p.y, p.s, 0, 7); c.fill(); return true; });
+  c.restore();
+}
+function rmAmbList(list) { rmPetStep(); list.push([RM.pets.cat.y, rmDrawCat]); list.push([RM.pets.tur.y, rmDrawTur]); RM.castles.forEach(k => list.push([k.y, cc => rmDrawCastle(cc, k)])); }
+/* --- جربوع: نكت ونصائح --- */
+const RM_TIPS = ['تقدر تلعب السلم والثعبان أو إكس أو أو المنقلة أو الدومينو مع صديقك: اجلسوا على مقعدي أي طاولة 🎲', 'دوس على أي شخص وصافحه أو عانقه أو همسله 🤝', 'جرب الصيد قرب الرصيف، يمكن تصيد سمكة نادرة 🎣', 'ابنِ قلعة رمل عالشاطئ وخلي علمك فوقها 🏰', 'شفت ميمي القطة وسلحوفة؟ دوس عليهم 🐱', 'ليش السمكة ما تلعب كرة؟ لأنها تخاف من الشبكة 😄', 'سألوا الدجاجة: شنو تحبين؟ كالت: أحب الأيام اللي بيها بيض 🐔', 'الطماطة ما تحجي لأنها خجولة وتحمر 🍅', 'بالليل نسوي ألعاب نارية فوق البحر، لا تفوتها 🎆', 'تعبان؟ اجلس عالمرجوحة وخذ لك استراحة 🌴', 'الشمسية مو بس للمطر، بس هنا نلبسها وقته ☂️', 'إذا برد الجو تعال يم النار وادفى 🔥'];
+RM.tipI = Math.floor(Math.random() * RM_TIPS.length);
+function rmNpcNext() { const D = RM.dn; if (D && D.d > 0.7 && Math.random() < 0.4) return 'الليل هادي وحلو، شوف النجوم فوق ✨'; RM.tipI = (RM.tipI + 1) % RM_TIPS.length; return RM_TIPS[RM.tipI]; }
+
+function rmClkUpd() {
+  const e = document.getElementById('rmClk'); if (!e) return; const w = rmWx(), sp = RM.wxc.spd || 1, f = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const ev = [['🌧️', 120, 240], ['🌙', 300, 420], ['❄️', 480, 600]]; e.innerHTML = ev.map(v => { const on = w.el >= v[1] && w.el < v[2], t = on ? (v[2] - w.el) / sp : (((v[1] - w.el) % 600 + 600) % 600) / sp; return '<span class="' + (on ? 'on' : '') + '">' + v[0] + ' ' + (on ? '⏳' : '') + f(t) + '</span>'; }).join('') + (sp > 1 ? '<span class="on">⏩</span>' : '');
+}
+
 /* ---------- الحلقة الرئيسية ---------- */
 function rmDraw() {
   const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
@@ -6094,10 +6291,10 @@ function rmDraw() {
   c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
   rmBg(c, RM.T);
   const list = RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
-  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]); list.push([RM_NPC.y, rmDrawNpc]);
+  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]); list.push([RM_NPC.y, rmDrawNpc]); rmAmbList(list);
   list.sort((a, b) => a[0] - b[0]).forEach(it => it[1](c)); rmKissDraw(c);
   RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.puff) { p.vy *= 0.98; c.fillStyle = 'rgba(255,255,255,.85)'; c.globalAlpha = Math.min(0.7, p.t / 60); c.beginPath(); c.arc(p.x, p.y, 1.5 + (50 - p.t) * 0.07, 0, 7); c.fill(); } else if (p.drop) { p.vy += 0.08; c.fillStyle = 'rgba(170,215,255,.95)'; c.globalAlpha = Math.min(1, p.t / 10); c.beginPath(); c.arc(p.x, p.y, 1.3, 0, 7); c.fill(); } else if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
-  rmCanopies(c); rmBirds(c); rmFxDraw(c); rmBubFlush(c); c.restore(); rmWxDraw(c, bw, bh);
+  rmCanopies(c); rmNight(c); rmBirds(c); rmFwDraw(c); rmFxDraw(c); rmReactDraw(c); rmBubFlush(c); c.restore(); rmWxDraw(c, bw, bh);
   if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = bw / 2 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, bw / 2 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
   const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
   if (k !== RM.sent && RM.T - RM.sentT >= 5) { if (rmSend({ t: 'rm_pos', x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; } }
@@ -6106,7 +6303,7 @@ function rmDraw() {
 }
 function rmLoop() {
   if (curPage !== 'rooms' || !RM.on) { RM.raf = 0; if (RM.on) rmLeaveRoom(true); return; }
-  try { rmDraw(); rmGameTick(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
+  try { rmDraw(); rmGameTick(); rmFishTick(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
 }
 function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return K; }
 /* ---------- أزرار الجلوس القريبة ---------- */
@@ -6114,11 +6311,11 @@ var rmPrKey = '';
 function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
-  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('');
+  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l');
   if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (m.sit || (m.goal && m.jump)) { if (m.sit) mk('🧍 قيام', () => rmStand()); return; }
-  if (!near) return;
+  if (!near) { if (m.jump || m.goal) return; if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart); if (m.y >= 262 && RM.fish.st === 'idle') mk('🏰 قلعة رمل', rmCastleBuild); return; }
   if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
@@ -6130,14 +6327,19 @@ function rmOnMsg(d) {
     RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
     (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); RM.g = null; RM.gSide = null; if (d.g) rmGOn(d.g); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+    rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
   } else if (T === 'rm_join') { if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
   else if (T === 'rm_seatbusy') { const m = RM.me; if (m.sit || m.goal) { showToast('⛔ سبقك أحد على هذا المقعد'); m.goal = false; if (m.sit) rmStand(); else { m.seat = null; m.tx = m.x; m.ty = m.y; } rmPrompt(true); } }
-  else if (T === 'rm_wx') { rmWxSync(d);  showToast(({ rain: '🌧️ المشرف استدعى المطر', snow: '❄️ المشرف استدعى الثلج', fast: '⏩ المشرف سرّع الوقت', slow: '⏹ توقف التسريع', reset: '↩️ رجع الوقت للوضع الافتراضي' })[d.mode] || ''); }
+  else if (T === 'rm_wx') { rmWxSync(d); if (d.mode === 'fw') rmFwStart(30);  showToast(({ rain: '🌧️ المشرف استدعى المطر', day: '☀️ المشرف جعل الوقت نهار', night: '🌙 المشرف جعل الوقت ليل', fw: '🎆 المشرف أطلق ألعاب نارية', snow: '❄️ المشرف استدعى الثلج', fast: '⏩ المشرف سرّع الوقت', slow: '⏹ توقف التسريع', reset: '↩️ رجع الوقت للوضع الافتراضي' })[d.mode] || ''); }
+  else if (T === 'rm_castles') rmCastleSet(d.list);
+  else if (T === 'rm_react') rmReactAdd(d.n, d.e);
+  else if (T === 'rm_hug') { rmHugFx(d.from, d.to, d.k); if (d.to === rmMe()) showToast((d.k === 'hug' ? '🤗 ' : '🤝 ') + d.from + (d.k === 'hug' ? ' عانقك' : ' صافحك')); }
+  else if (T === 'rm_whisper') { RM.log.push({ n: d.from, txt: d.txt, whs: d.to === rmMe() ? 1 : 2, to: d.to, ts: Date.now() }); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); if (d.to === rmMe()) { showToast('🤫 همسة من ' + d.from + ': ' + d.txt.slice(0, 60)); try { if (!RM.ambMute) { blip('sine', 880, 1175, 0.12, 0.06); blip('sine', 1175, 1568, 0.16, 0.05, 0.1); } } catch (e) {} } }
   else if (T === 'rm_g') rmGOn(d.g);
-  else if (T === 'rm_gend') { RM.g = null; RM.gt = [[], []]; if (RM.me.sit) rmStand(); showToast('🎲 انتهت اللعبة — رجعتوا للمنتجع'); rmGameUI(); }
+  else if (T === 'rm_gh') { if (d.tb === RM.gTb) { RM.hand = d.hand || []; if (RM.dSel >= RM.hand.length) RM.dSel = -1; rmGameUI(); } }
+  else if (T === 'rm_gend') { if (d.tb === RM.gTb) { RM.hand = []; RM.dSel = -1; if (RM.me.sit) rmStand(); showToast('🎲 انتهت اللعبة — رجعتوا للمنتجع'); } rmGameUI(); }
   else if (T === 'rm_music') { rmMusicSet(d.music || null); showToast(d.music ? '🎵 بدأ تشغيل الأغاني للجميع' : '⏹ توقفت الأغاني'); }
   else if (T === 'rm_hid') { if (d.n === rmMe()) RM.me.hid = !!d.on; else { const o = RM.others[d.n]; if (o) o.hid = !!d.on; } rmHidUpd(); rmRenderMem(); }
   else if (T === 'rm_umb') { const o = RM.others[d.n]; if (o) o.umbOn = d.on !== 0; }
@@ -6277,7 +6479,7 @@ $('rmCreate').onclick = async () => {
 };
 $('rmCancel').onclick = () => { $('rmForm').hidden = true; };
 /* ---------- الواجهة: داخل الغرفة ---------- */
-function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) { d.classList.add('admM'); d.appendChild(crownIcon(m.adm)); } const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
+function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.whs) { d.className = 'm whs'; d.textContent = m.whs === 1 ? '🤫 همسة من ' + m.n + ': ' + m.txt : '🤫 همستَ لـ ' + m.to + ': ' + m.txt; L.appendChild(d); return; } if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) { d.classList.add('admM'); d.appendChild(crownIcon(m.adm)); } const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
 RM.typOn = true; try { RM.typOn = localStorage.getItem('rmTyp') !== '0'; } catch (e) {} RM.typ = {}; RM.kiss = [];
 function rmLbl(id, ic, lb, on) { const b = $(id); if (!b) return; b.innerHTML = '<i>' + ic + '</i><small>' + lb + '</small>'; b.classList.toggle('on', !!on); }
 function rmTypLabel() { rmLbl('rmTypBtn', '✍️', RM.typOn ? 'يكتب: شغّال' : 'يكتب: مطفي'); } rmTypLabel();
@@ -6359,7 +6561,7 @@ function rmSetFull(on, auto, soft) {
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y) || rmCastleHit(x, y)) return; { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
