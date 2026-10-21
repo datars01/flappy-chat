@@ -111,7 +111,7 @@ function safeEq(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 const NAME_RE = /^[\p{L}\p{N}_.\- ]+$/u;           // الحسابات القديمة قد تحتوي رموز، فتسجيل الدخول لا يتأثر
-const NEW_NAME_RE = /^[\p{L}\p{N}]+(?: [\p{L}\p{N}]+)*$/u;   // الأسماء الجديدة: حروف وأرقام فقط (ومسافة وحدة بين الكلمات)
+const NEW_NAME_RE = /^[\p{L}\p{N}]+$/u;   // الأسماء الجديدة: حروف وأرقام فقط (ومسافة وحدة بين الكلمات)
 // تطبيع الاسم لمنع التكرار المقنّع (حروف متشابهة، فراغات، رموز، حالة الأحرف)
 function normName(n) {
   return String(n || '').normalize('NFKC').toLowerCase()
@@ -132,9 +132,9 @@ function badName(raw) {
   return false;
 }
 function checkNewName(raw) {
-  const u = String(raw || '').trim().replace(/\s+/g, ' ');
+  const u = String(raw || '').trim();
   if (u.length < 3 || u.length > 5) return { error: 'الاسم لازم من 3 إلى 5 أحرف فقط' };
-  if (!NEW_NAME_RE.test(u)) return { error: 'الاسم لازم حروف وأرقام فقط، ممنوع الرموز مثل % $ # @ _ - .' };
+  if (!NEW_NAME_RE.test(u)) return { error: 'الاسم لازم حروف وأرقام فقط، ممنوع المسافات والرموز مثل % $ # @ _ - .' };
   if (/^(__proto__|constructor|prototype|hasownproperty|tostring|valueof)$/i.test(u)) return { error: 'اسم غير مسموح' };
   if (badName(u)) return { error: '🚫 هذا الاسم غير لائق، اختار اسم محترم' };
   const nn = normName(u);
@@ -338,6 +338,7 @@ app.post('/api/register', (req, res) => {
   const p = String((req.body && req.body.p) || '');
   if (chk.error) return res.status(400).json({ error: chk.error });
   const name = chk.name;
+  if (/\s/.test(p)) return res.status(400).json({ error: 'الرمز ممنوع فيه مسافات' });
   if (p.length < 4 || p.length > 64) return res.status(400).json({ error: 'كلمة السر لازم 4 أحرف على الأقل' });
   const key = name.toLowerCase();
   const nk = normName(name);
