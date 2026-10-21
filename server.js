@@ -1377,11 +1377,19 @@ function rmOnMsg(ws, d) {
     const members = [...r.mem].filter(w => w.readyState === 1).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws);
     send(ws, { t: 'rm_state', id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
+    const am = rmAdm(ws); r.wel = r.wel || {};
+    if (am && now - (r.wel[ws.key] || 0) > 60e3) {   // ترحيب مميز بدخول الادمنية
+      r.wel[ws.key] = now;
+      const txt = am === 1 ? '👑✨ أهلاً وسهلاً بمالك اللعبة «' + me.name + '» في غرفته الملكية، حيّاكم الله جميعاً 🌹' : '🌟💙 أهلاً وسهلاً بالمشرف «' + me.name + '»، نوّرت الغرفة 💫';
+      const wm = { n: '👑', sys: 1, adm: am, txt, ts: now }; r.log.push(wm); while (r.log.length > 80) r.log.shift(); rmBc(r, { t: 'rm_chat', m: wm });
+    }
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
     const h = ws.rm; if (!h || now - h.t < 90) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     h.x = Math.max(0, Math.min(800, x)); h.y = Math.max(0, Math.min(620, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
+  } else if (d.t === 'rm_typing') {
+    const h = ws.rm; if (!h || now - (h.tt || 0) < 1500) return; h.tt = now; const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_typing', n: me.name }, ws);
   } else if (d.t === 'rm_chat') {
     const h = ws.rm; if (!h || now - h.ct < (ws.guest ? 1500 : 600)) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return;
     const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return;

@@ -423,8 +423,8 @@
   .rmRow .ra { display: flex; gap: 6px; align-items: center; flex: none; } .rmRow .ra button { width: auto; padding: 7px 14px; } .rmCodeIn { width: 74px; padding: 7px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 16px; direction: ltr; }
   .rmForm { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 8px; } .rmForm input { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 16px; }
   .rmFB { display: flex; gap: 8px; } .rmFB button { flex: 1; } .rmMsg { color: #ff8a8a; font-size: 13px; }
-  #rmCv { width: 100%; aspect-ratio: 640 / 500; display: block; border-radius: 14px; border: 2px solid var(--line); touch-action: none; background: #7fd0f2; flex-shrink: 0; }
-  #rmBox { position: relative; width: 100%; } #rmOv { position: absolute; inset: 0; pointer-events: none; } #rmOv button, #rmOv input { pointer-events: auto; width: auto; }
+  #rmCv { width: 100%; height: 100%; box-sizing: border-box; display: block; border-radius: 14px; border: 2px solid var(--line); touch-action: none; background: #7fd0f2; flex-shrink: 0; }
+  #rmBox { position: relative; width: 100%; aspect-ratio: 640 / 500; } #rmOv { position: absolute; inset: 0; pointer-events: none; } #rmOv button, #rmOv input { pointer-events: auto; width: auto; }
   #rmPrompt { position: absolute; top: 70px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
   #rmPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
   #rmChatRow { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; gap: 5px; pointer-events: none; } #rmChatRow > * { pointer-events: auto; }
@@ -438,11 +438,12 @@
   .devTxt b { color: #000; } .devEnd { margin-top: 14px; font-size: 26px; color: #000; }
   .devTg { color: #000; font-family: system-ui, Arial, sans-serif; font-weight: 800; font-size: 20px; letter-spacing: .5px; text-decoration: underline; text-decoration-thickness: 2px; background: #ffe9a8; padding: 1px 10px; border-radius: 10px; }
   .devBtn { display: block; margin: 14px auto 4px; width: fit-content; background: #229ed9; color: #fff; padding: 10px 22px; border-radius: 24px; font-weight: 800; text-decoration: none; font-family: Cairo, system-ui; }
+  #rmBox.rmTiny .hOvTop, #rmBox.rmTiny #rmMem, #rmBox.rmTiny #rmPrompt { display: none !important; } #rmBox.rmTiny #rmLogP { max-height: 38%; bottom: 44px; }
   .rmRow.rmPerm { border: 1px solid #ffc83d; background: linear-gradient(90deg, rgba(255,200,61,.18), rgba(255,200,61,.04)); }
   #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
   #rmMem .wf { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .wf input { width: 100%; padding: 4px 6px; font-size: 14px; border-radius: 8px; border: 0; box-sizing: border-box; } #rmMem .wf button { background: #2d9aa5; }
   #rmMem .ban { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 11px; } #rmMem .ban button { width: auto; background: #2d9aa5; } #rmMem .mclose { margin-top: 6px; background: #7a1f1f; }
-  #rmStage.full { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at center, #1a2336 0%, #05070d 100%); display: flex; align-items: center; justify-content: center; } #rmStage.full #rmBox { width: min(var(--hvw, 100vw), calc(var(--hvh, 100vh) * 1.28)); max-width: 100vw; } #rmStage.full #rmCv { border-radius: 0; border: 0; }
+  #rmStage.full { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at center, #1a2336 0%, #05070d 100%); display: flex; align-items: center; justify-content: center; } #rmStage.full #rmBox { width: var(--hvw, 100vw); height: var(--hvh, 100vh); aspect-ratio: auto; max-width: 100vw; } #rmStage.full #rmCv { border-radius: 0; border: 0; }
   @media (orientation: landscape) and (max-height: 560px) { #pg-rooms #rmStage:not(.full) #rmBox { width: min(100%, calc((100vh - 130px) * 1.28)); margin: 0 auto; } }
   #rmWarn { display: none; position: fixed; inset: 0; z-index: 10010; background: rgba(0,0,0,.72); align-items: center; justify-content: center; padding: 16px; } #rmWarn.show { display: flex; }
   #rmWarn .rw { width: min(92vw, 380px); background: linear-gradient(160deg, #3a1020, #7a1f3a); border: 3px solid #ffd166; border-radius: 20px; padding: 22px 18px; text-align: center; color: #fff; box-shadow: 0 14px 50px rgba(0,0,0,.7); animation: hPop .3s ease-out; }
@@ -690,7 +691,7 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
+        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
         <div id="rmMem"></div>
         <div id="rmPrompt"></div>
         <div id="rmLogP" hidden></div>
@@ -5237,7 +5238,16 @@ function rmDrawOther(c, o) {
   if (o.adm) rmAura(c, o.x, o.y, o.adm);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 13, 4, 0, 0, 7); c.fill();
   c.save(); c.translate(o.x, o.y - 13 - hop + 7 * k); c.rotate(-0.1 * o.dir * k); c.scale(0.8 * o.dir * (1 + 0.1 * o.bn), 0.8 * (1 - 0.12 * k) * (1 - 0.2 * o.bn)); drawBirdSkin(c, 0, 0, 0, sk, RM.T / 2); c.restore();
-  rmTag(c, o.name, o.x, o.y - 40 + 5 * k, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - 44 + 5 * k);
+  rmTag(c, o.name, o.x, o.y - 40 + 5 * k, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - 44 + 5 * k); rmTyping(c, o.name, o.x, o.y - 44 + 5 * k);
+}
+function rmTyping(c, name, x, y) {
+  if (!RM.typOn) return; const e = RM.typ[name]; if (!e) return; const now = performance.now(); if (now > e) { delete RM.typ[name]; return; }
+  const b = RM.bubs[name]; if (b && b.t > 0) return;
+  c.save(); const by = y - 34, w = 64; c.fillStyle = 'rgba(255,255,255,.95)'; c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(x - w / 2, by, w, 18, 9); else c.rect(x - w / 2, by, w, 18); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(x - 4, by + 18); c.lineTo(x, by + 24); c.lineTo(x + 4, by + 18); c.fill();
+  c.font = 'bold 8px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#555'; c.fillText('يكتب', x + 11, by + 12);
+  for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(60,60,60,' + (0.35 + 0.65 * Math.max(0, Math.sin(now / 160 - i * 0.9))) + ')'; c.beginPath(); c.arc(x - 20 + i * 5, by + 9.5, 1.7, 0, 7); c.fill(); }
+  c.restore();
 }
 function rmBub(c, name, x, y) {
   const b = RM.bubs[name]; if (!b || b.t <= 0) return; b.t--; let txt = b.txt.length > 26 ? b.txt.slice(0, 25) + '…' : b.txt;
@@ -5248,11 +5258,16 @@ function rmBub(c, name, x, y) {
 function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math.hypot(s.x - x, s.y - y) < 7); if (sp) return sp.ey + 0.5; } return sy; }
 /* ---------- الحلقة الرئيسية ---------- */
 function rmDraw() {
-  const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 640, 500);
+  const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
+  // الكانفاس يتبع حجم الصندوق الفعلي (يتوافق مع اي جهاز: طولي/عرضي/مع الكيبورد)
+  const bb = $('rmBox').getBoundingClientRect(), bw = Math.max(200, Math.round(bb.width)), bh = Math.max(110, Math.round(bb.height)), dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
+  $('rmBox').classList.toggle('rmTiny', bh < 250); RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; const m = RM.me, st = rmUpdMe();
-  RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = 640 / z, vh = 500 / z;
-  const tx = Math.max(0, Math.min(RMW - vw, m.x - vw / 2)), ty = Math.max(0, Math.min(RMH - vh, m.y - 20 - vh / 2));
-  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (z < 0.9) { RM.cx = (RMW - vw) / 2; RM.cy = (RMH - vh) / 2; }
+  const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / RMW, bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (!RM.z) RM.z = RM.zt;
+  RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
+  const tx = vw >= RMW ? (RMW - vw) / 2 : Math.max(0, Math.min(RMW - vw, m.x - vw / 2)), ty = vh >= RMH ? (RMH - vh) / 2 : Math.max(0, Math.min(RMH - vh, m.y - 20 - vh / 2));
+  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (RM.zoomAll) { RM.cx = tx; RM.cy = ty; }
   c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
   rmBg(c, RM.T);
   const list = RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
@@ -5260,7 +5275,7 @@ function rmDraw() {
   list.sort((a, b) => a[0] - b[0]).forEach(it => it[1](c));
   RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
   rmCanopies(c); c.restore();
-  if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = 320 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, 320 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
+  if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = bw / 2 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, bw / 2 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
   const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
   if (k !== RM.sent && RM.T - RM.sentT >= 5) { if (rmSend({ t: 'rm_pos', x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; } }
   if (RM.T % 20 === 0) rmPrompt(false);
@@ -5295,7 +5310,8 @@ function rmOnMsg(d) {
   } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g }; rmRenderMem(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmPrompt(false); }
-  else if (T === 'rm_chat') { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); RM.bubs[d.m.n] = { txt: d.m.txt, t: 240 }; rmRenderLog(); if (d.m.n !== rmMe()) { try { ding(); } catch (e) {} } }
+  else if (T === 'rm_typing') { RM.typ[d.n] = performance.now() + 3200; }
+  else if (T === 'rm_chat') { if (d.m.sys) { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); showToast(d.m.txt); return; } delete RM.typ[d.m.n]; RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); RM.bubs[d.m.n] = { txt: d.m.txt, t: 240 }; rmRenderLog(); if (d.m.n !== rmMe()) { try { ding(); } catch (e) {} } }
   else if (T === 'rm_warn') { rmModal('⚠️', 'تحذير من صاحب الغرفة (' + d.from + ')', d.txt); try { sfx('warn'); } catch (e) {} }
   else if (T === 'rm_kicked') { const b = !!d.banned; rmLeaveRoom(true); rmModal(b ? '⛔' : '👢', b ? 'تم حظرك من الغرفة' : 'تم طردك من الغرفة', d.txt || (b ? 'صاحب الغرفة منعك من الدخول' : 'صاحب الغرفة طردك')); }
   else if (T === 'rm_closed') { rmLeaveRoom(true); rmModal('🚪', 'انسكّرت الغرفة', d.txt || ''); }
@@ -5309,7 +5325,7 @@ function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true;
 function rmShowRoom() { $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
 function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
 function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.menu = ''; RM.warnFor = ''; if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
-function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zt = 2; RM.z = 2; rmJoinSend(); }
+function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; $('rmZoom').textContent = '🔭 كل المكان'; rmJoinSend(); }
 async function rmLoadList() {
   const L = $('rmList'); if (!L) return; try {
     const r = auth ? await api('/api/rooms') : await (await fetch('/api/rooms/public')).json(); if (!auth) { $('rmNew').hidden = true; } RM.list = r.rooms; $('rmCount').textContent = '🏝️ الغرف (' + r.rooms.filter(x => !x.perm).length + '/' + r.max + ')'; if (auth) { $('rmNew').hidden = false; $('rmNew').textContent = r.mine ? '🗑️ سكّر غرفتي' : '➕ غرفة جديدة'; $('rmNew').dataset.mine = r.mine || ''; }
@@ -5335,7 +5351,11 @@ $('rmCreate').onclick = async () => {
 };
 $('rmCancel').onclick = () => { $('rmForm').hidden = true; };
 /* ---------- الواجهة: داخل الغرفة ---------- */
-function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.adm) d.appendChild(crownIcon(m.adm)); const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
+function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) d.appendChild(crownIcon(m.adm)); const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
+RM.typOn = true; try { RM.typOn = localStorage.getItem('rmTyp') !== '0'; } catch (e) {} RM.typ = {};
+function rmTypLabel() { $('rmTypBtn').textContent = RM.typOn ? '✍️ يكتب الآن: شغّال' : '✍️ يكتب الآن: مطفي'; } rmTypLabel();
+$('rmTypBtn').onclick = () => { RM.typOn = !RM.typOn; try { localStorage.setItem('rmTyp', RM.typOn ? '1' : '0'); } catch (e) {} rmTypLabel(); showToast(RM.typOn ? '✍️ مؤشر «يكتب الآن» شغّال' : 'انطفى مؤشر «يكتب الآن»'); };
+$('rmChatIn').addEventListener('input', () => { if (RM.typOn && $('rmChatIn').value.trim() && performance.now() - (RM.typSent || 0) > 1400) { RM.typSent = performance.now(); rmSend({ t: 'rm_typing' }); } });
 $('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; $('rmLogBtn').textContent = RM.logOpen ? '📜 اغلاق السجل' : '📜 السجل'; rmRenderLog(); };
 function rmRenderMem() {
   const P = $('rmMem'); if (!P) return; P.innerHTML = ''; const me = rmMe();
@@ -5371,7 +5391,7 @@ $('rmSend').addEventListener('pointerdown', e => { if (document.activeElement ==
 $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { if (e.key === 'Enter') rmChat(); });
 $('rmExit').onclick = () => rmLeaveRoom();
 $('rmMemBtn').onclick = () => { $('rmMem').hidden = !$('rmMem').hidden; };
-$('rmZoom').onclick = () => { RM.zt = RM.zt > 1 ? 0.8 : 2; $('rmZoom').textContent = RM.zt > 1 ? '🔭 كل المكان' : '🔍 قرّب'; };
+$('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; $('rmZoom').textContent = RM.zoomAll ? '🔍 قرّب' : '🔭 كل المكان'; };
 function rmSetFull(on, auto, soft) {
   RM.full = on; RM.soft = !!(on && soft); if (!on) RM.softFocus = false; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
   try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
@@ -5381,7 +5401,7 @@ $('rmFs').onclick = () => rmSetFull(!RM.full);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && RM.full) { RM.full = false; $('rmStage').classList.remove('full'); document.body.style.overflow = ''; $('rmFs').textContent = '⛶ تكبير'; } });
 (function () {
   const cv = $('rmCv'); if (!cv) return;
-  const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z, vw = 640 / z, vh = 500 / z; return [RM.cx + (e.clientX - r.left) / r.width * vw, RM.cy + (e.clientY - r.top) / r.height * vh]; };
+  const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
   cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
