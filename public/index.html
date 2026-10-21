@@ -367,7 +367,25 @@
   .hBuy.hint { color: var(--muted); font-size: 12px; text-align: center; }
   .hBuy .bt { font-weight: 700; }
   .hBuy button.cant { opacity: .6; }
-  .hRow, .hSlots, #houseCv, .hBuy, #hTabs { flex-shrink: 0; }
+  .hRow, .hSlots, #houseCv, .hBuy, #hTabs, #hStage, .hTools { flex-shrink: 0; }
+  #houseCv { touch-action: none; }
+  #hBox { position: relative; width: 100%; }
+  #hOv { position: absolute; inset: 0; pointer-events: none; }
+  #hOv button { pointer-events: auto; width: auto; }
+  [hidden] { display: none !important; }
+  .hOvTop { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; gap: 6px; }
+  .hOvG { display: flex; gap: 6px; }
+  .hOvB { background: rgba(10,14,30,.62); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 12px; padding: 6px 10px; font-size: 13px; font-weight: 700; flex: none; backdrop-filter: blur(3px); }
+  #hPrompt { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
+  #hPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
+  @keyframes hPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #hFsTabs { display: none; }
+  #hStage.full { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; }
+  #hStage.full #hBox { width: min(100vw, calc(100vh * 1.28)); }
+  #hStage.full #houseCv { border-radius: 0; border: 0; }
+  #hStage.full #hFsTabs { display: flex; flex-direction: column; gap: 6px; position: absolute; top: 52px; left: 6px; }
+  .hTools { display: flex; gap: 6px; }
+  .hTools button { flex: 1; }
   .hSlot { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); }
   .hSlot .hn { font-weight: 700; font-size: 13px; }
   .hRow { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
@@ -546,12 +564,23 @@
 <div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
   <div class="card">
     <div class="lbHead"><span id="houseTtl">🏠 بيتك</span><span id="brickBal" class="coinBal">🧱 0</span></div>
-    <canvas id="houseCv" width="640" height="500"></canvas>
+    <div id="hStage"><div id="hBox">
+      <canvas id="houseCv" width="640" height="500"></canvas>
+      <div id="hOv">
+        <div class="hOvTop">
+          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button></div>
+          <div class="hOvG"><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
+        </div>
+        <div id="hFsTabs"><button class="hOvB" data-v="home" type="button">🏠</button><button class="hOvB" data-v="inside" type="button">🛋️</button><button class="hOvB" data-v="garden" type="button">🌳</button></div>
+        <div id="hPrompt"></div>
+      </div>
+    </div></div>
     <div class="tabs hTabs" id="hTabs">
       <button class="tab on" data-v="home" type="button">🏠 البيت</button>
       <button class="tab" data-v="inside" type="button">🛋️ داخل البيت</button>
       <button class="tab" data-v="garden" type="button">🌳 الحديقة</button>
     </div>
+    <div class="hTools"><button id="hResetPos" class="ghost" type="button">↺ رجّع الأغراض لأماكنها</button></div>
     <div id="hSlots" class="hSlots"></div>
     <div id="hOpts" class="hRow"></div>
     <div id="hBuy" class="hBuy hint"></div>
@@ -2539,6 +2568,17 @@ function sfx(kind, a) {
       [4, 7, 9].forEach(k => blip('sine', nt(k + 5), nt(k + 5), 0.8, 0.07, 0.5));
       for (let i = 0; i < 7; i++) blip('sine', 2200 + Math.random() * 2400, 0, 0.12, 0.035, 0.45 + i * 0.07);
       burst(0.5, 0.04, 0.45, 6000);
+    } else if (kind === 'door') {                           // باب ينفتح بصريرة وينسد بطقة
+      blip('sawtooth', 130, 240, 0.4, 0.045); blip('square', 135, 250, 0.4, 0.02, 0.01); burst(0.3, 0.03, 0.05, 900);
+      blip('square', 1300, 900, 0.03, 0.08, 0.42);
+      blip('sine', 110, 38, 0.2, 0.28, 0.6); burst(0.1, 0.12, 0.6, 350);
+    } else if (kind === 'pet') {
+      const t = a && a.t;
+      if (t === 'dog') [0, 0.22].forEach(d => { blip('sawtooth', 520, 200, 0.13, 0.14, d); blip('square', 260, 120, 0.1, 0.05, d); burst(0.06, 0.05, d, 1200); });
+      else if (t === 'cat') { blip('triangle', 560, 980, 0.2, 0.12); blip('triangle', 980, 520, 0.3, 0.12, 0.18); }
+      else [0, 0.09, 0.18].forEach(d => blip('sine', 420 + d * 900, 900 + d * 900, 0.07, 0.1, d));
+    } else if (kind === 'click') {
+      blip('square', 1400, 700, 0.03, 0.07);
     } else if (kind === 'warn') {
       if (n - lastFlapSfx < 120) return; blip('square', 520, 520, 0.07, 0.04); blip('square', 390, 390, 0.07, 0.04, 0.1);
     } else {                                                // خسارة
@@ -3160,10 +3200,12 @@ window.addEventListener('popstate', () => { if (curPage) hidePage(); });
 /* ================= البيت والحديقة (تفاعلي) ================= */
 var houseCat = null, hMapC = null, hView = 'home', hSel = 'home', hPrev = null, hT = 0, hRaf = 0, hFade = 0, hBuild = 0, hPlaced = {}, hParts = [];
 var hChar = { x: 160, y: 222, tx: 160, ty: 222, dir: 1 };
+var hLight = true; try { hLight = localStorage.getItem('hLight') !== '0'; } catch (e) {}
+var hFull = false, hDown = null, hHold = false, hGoing = false, hDoorT = 0, hPetT = 0, hBubs = [], hFloats = [], hLastBark = -9999, hOvKey = '', hDk = null, hKeys = {};
 const HV = {
-  home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [200, 240], start: [160, 224] },
-  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [190, 240], start: [196, 222] },
-  garden: { slots: ['tree', 'flowers', 'feature', 'play', 'car', 'fence', 'lantern'], first: 'tree', walk: [214, 242], start: [160, 226] }
+  home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [208, 247], start: [160, 224] },
+  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [174, 247], start: [196, 222] },
+  garden: { slots: ['tree', 'flowers', 'feature', 'play', 'car', 'fence', 'lantern'], first: 'tree', walk: [180, 247], start: [160, 226] }
 };
 const HDEF = { home: 'h1', walls: '#f4efe6', roof: '#c9483c', door: '#7a4a2a', paper: '#f3e6cf', floor: '#b98a5a' };
 const HTIERS = ['كوخ', 'بيت صغير', 'بيت واسع', 'فيلا'];
@@ -3182,11 +3224,35 @@ const EXT = [
   { x0: 60, x1: 220, top: 100, rt: 56, rx0: 50, rx1: 230, door: [127, 167, 30, 38], wins: [[78, 112, 30, 26], [170, 112, 30, 26], [78, 160, 30, 28], [178, 160, 30, 28]], chim: [192, 66, 14, 30] },
   { x0: 110, x1: 210, top: 90, rt: 48, rx0: 100, rx1: 220, door: [142, 162, 36, 43], wins: [[120, 102, 22, 26], [178, 102, 22, 26], [122, 150, 18, 24], [180, 150, 18, 24]], chim: null }
 ];
+/* أماكن الأغراض التلقائية (والمستخدم يقدر يزيحها) */
+const HPOS = {
+  inside: [['tv', 166, 120, 60], ['shelf', 262, 178, 72], ['plant', 40, 192, 56], ['lamp', 234, 192, 44], ['seat', 120, 210, 74], ['pet', 204, 238, 32]],
+  garden: [['tree', 44, 194, 86], ['feature', 122, 204, 56], ['play', 212, 214, 52], ['car', 262, 244, 46], ['flowers', 30, 244, 20], ['flowers', 58, 244, 20], ['flowers', 86, 244, 20], ['flowers', 114, 244, 20], ['flowers', 142, 244, 20], ['lantern', 22, 236, 32], ['lantern', 298, 236, 32]]
+};
+const HLIM = { inside: [20, 300, 100, 247], garden: [20, 300, 150, 247] };
+const HMOVE = { inside: ['tv', 'shelf', 'plant', 'lamp', 'seat', 'pet', 'rug'], garden: ['tree', 'feature', 'play', 'car', 'flowers', 'lantern'] };
+function hOffOf(slot) { const p = auth && auth.house && auth.house.pos; return (p && p[slot]) || [0, 0]; }
+function hEntries(view, S, all) {
+  const out = []; (HPOS[view] || []).forEach((e, i) => {
+    const v = hVal(S, e[0]); if (!all && (!v || v[0] === '#')) return;
+    const o = hOffOf(e[0]); out.push({ slot: e[0], x: e[1] + o[0], y: e[2] + o[1], s: e[3], i });
+  }); return out;
+}
+const hRugC = () => { const o = hOffOf('rug'); return [150 + o[0], 214 + o[1]]; };
+const hRectOf = e => { const s = Math.max(e.s, 30); return [e.x - s * 0.6, e.y - s * 0.95, s * 1.2, s * 1.05]; };
+function hClampOff(slot, o) {
+  const L = HLIM[hView]; let x0 = -999, x1 = 999, y0 = -999, y1 = 999;
+  if (slot === 'rug') { x0 = 96 - 150; x1 = 224 - 150; y0 = 190 - 214; y1 = 246 - 214; }
+  else (HPOS[hView] || []).filter(e => e[0] === slot).forEach(e => { x0 = Math.max(x0, L[0] - e[1]); x1 = Math.min(x1, L[1] - e[1]); y0 = Math.max(y0, L[2] - e[2]); y1 = Math.min(y1, L[3] - e[2]); });
+  return [Math.round(Math.max(x0, Math.min(x1, o[0]))), Math.round(Math.max(y0, Math.min(y1, o[1])))];
+}
 /* مناطق اللمس لكل منظر */
 function hAreas(view, S) {
   if (view === 'home') { const E = EXT[hTier(S)]; return { door: [E.door], upg: [[E.rx0, E.rt - 14, E.rx1 - E.rx0, 22]], roof: [[E.rx0, E.rt, E.rx1 - E.rx0, E.top - E.rt]], walls: [[E.x0, E.top, E.x1 - E.x0, 205 - E.top]], home: [[226, 14, 84, 26]] }; }
-  if (view === 'inside') return { tv: [[128, 58, 74, 66]], shelf: [[226, 104, 68, 74]], lamp: [[212, 146, 44, 48]], seat: [[78, 158, 84, 54]], pet: [[180, 216, 44, 30]], plant: [[14, 138, 54, 58]], rug: [[60, 206, 180, 22]], floor: [[0, 230, 320, 20]], paper: [[0, 0, 320, 44]] };
-  return { tree: [[8, 96, 72, 98]], feature: [[92, 148, 58, 58]], play: [[184, 166, 54, 52]], car: [[228, 206, 66, 36]], flowers: [[16, 224, 168, 20]], fence: [[0, 206, 320, 14]], lantern: [[8, 198, 26, 40], [290, 198, 26, 40]] };
+  const A = view === 'inside' ? { floor: [[0, 230, 320, 20]], paper: [[0, 0, 320, 44]] } : { fence: [[0, 206, 320, 14]] };
+  hEntries(view, S, true).forEach(e => { (A[e.slot] = A[e.slot] || []).push(hRectOf(e)); });
+  if (view === 'inside') { const r = hRugC(); A.rug = [[r[0] - 86, r[1] - 12, 172, 26]]; }
+  return A;
 }
 function hSlotName(slot) { const sl = (houseCat || []).find(x => x.slot === slot); return sl ? sl.name : slot; }
 async function houseLoad() {
@@ -3194,12 +3260,12 @@ async function houseLoad() {
   hSetView(hView, true); hStart();
 }
 function hStart() { if (!hRaf) hRaf = requestAnimationFrame(hLoop); }
-function hLoop() { if (curPage !== 'house') { hRaf = 0; return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
-function hSetView(v, keep) {
-  if (!keep && v !== hView) { hFade = 1; hChar.x = hChar.tx = HV[v].start[0]; hChar.y = hChar.ty = HV[v].start[1]; }
+function hLoop() { if (curPage !== 'house') { hRaf = 0; if (hFull) hSetFull(false); return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
+function hSetView(v, keep, pos) {
+  if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; }
   hView = v; if (!keep || !HV[v].slots.includes(hSel)) hSel = HV[v].first; hPrev = null;
   document.querySelectorAll('#hTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  hRenderUi();
+  hRenderUi(); hOvKey = ''; hUpdateOv();
 }
 /* ---- قوائم الاختيار ---- */
 function hRenderUi() {
@@ -3236,7 +3302,7 @@ function hRenderUi() {
 function hRenderBuy() {
   const el = $('hBuy'); if (!el) return; el.innerHTML = '';
   if (!auth || !houseCat) return;
-  if (!hPrev) { el.textContent = 'اضغط على أي غرض بالصورة أو من القائمة لمعاينته، وتقدر تمشّي الشخصية بالضغط على الأرض 🐾'; el.className = 'hBuy hint'; return; }
+  if (!hPrev) { el.textContent = hView === 'home' ? 'اضغط على الأرض لتمشّي الشخصية، وقرّبها من الباب حتى تدخل البيت أو تروح للحديقة 🚪' : 'اسحب أي غرض لتغيّر مكانه 🖐️ • اضغط الحيوان الأليف (pet) حتى يرحّب بيك 🐾 • اضغط الأرض لتمشّي الشخصية'; el.className = 'hBuy hint'; return; }
   el.className = 'hBuy'; const it = hmap()[hPrev]; if (!it) return;
   const need = it.price - (auth.bricks || 0);
   const t = document.createElement('div'); t.className = 'bt'; t.textContent = '👀 معاينة: ' + it.name + ' — 🧱 ' + it.price; el.appendChild(t);
@@ -3264,23 +3330,115 @@ function hBurstSlot(slot) {
   hBurst(r[0] + r[2] / 2, r[1] + r[3] / 2, slot === 'home' ? 40 : 18);
 }
 function hBurst(x, y, n) { const cols = ['#ffd166', '#fff', '#6ee7ff', '#9ff3b5', '#ff9bd0']; for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 0.8 + Math.random() * 2.6; hParts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, t: 30 + Math.random() * 20, col: cols[i % cols.length], sz: 1.5 + Math.random() * 2.5 }); } }
-/* ---- لمس المشهد ---- */
+/* ---- لمس المشهد: مشي حر + سحب الأغراض + تفاعل ---- */
+function hWalkTo(x, y) { const W0 = HV[hView].walk; hChar.tx = Math.max(14, Math.min(306, x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
+function hHit(x, y, S) {
+  const inR = r => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
+  if (hView === 'home') {
+    const areas = hAreas('home', S);
+    for (const slot of ['door', 'upg', 'home', 'roof', 'walls']) { const rs = areas[slot]; if (rs && rs.some(inR)) return { slot, drag: false }; }
+    return null;
+  }
+  const ents = hEntries(hView, S, true).sort((a, b) => b.y - a.y);
+  for (const e of ents) { if (inR(hRectOf(e))) return { slot: e.slot, drag: !!(auth && hVal(S, e.slot) && hVal(S, e.slot)[0] !== '#') }; }
+  if (hView === 'inside') { const r = hRugC(); if (hVal(S, 'rug') && inR([r[0] - 86, r[1] - 12, 172, 26])) return { slot: 'rug', drag: !!auth }; }
+  const A = hAreas(hView, S); for (const slot of hView === 'inside' ? ['rug', 'floor', 'paper'] : ['fence']) { const rs = A[slot]; if (rs && rs.some(inR)) return { slot, drag: false }; }
+  return null;
+}
+function hTap(slot, x, y) {
+  const S = hSetNow(); hSelect(slot);
+  const rs = hAreas(hView, S)[slot]; if (rs) { const q = rs[0]; hWalkTo(q[0] + q[2] / 2, q[1] + q[3] + 8); }
+  if (hView === 'inside' && slot === 'pet' && hVal(S, 'pet')) hPet();
+}
+function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.push({ slot, txt, t: 140 }); }
+function hPet() {
+  const S = hSetNow(), v = hVal(S, 'pet'); if (!v) return;
+  const e = hEntries('inside', S).find(q => q.slot === 'pet'); if (!e) return;
+  const nm = (auth && auth.name) || 'صديقي', kind = v === '🐕' ? 'dog' : v === '🐈' ? 'cat' : 'fish';
+  sfx('pet', { t: kind }); hPetT = 40;
+  for (let i = 0; i < 4; i++) hFloats.push({ x: e.x + (Math.random() - 0.5) * 24, y: e.y - e.s * 0.8 - i * 4, t: 55 + i * 6, txt: i % 2 ? '💕' : '❤️' });
+  hSay('pet', kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + nm + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + nm + '!' : 'بلوب بلوب 🫧 أهلاً ' + nm + '!');
+  try { if (sfxOn && 'speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('أهلاً ' + nm); u.lang = 'ar'; u.rate = 1.05; u.volume = 0.8; speechSynthesis.speak(u); } } catch (er) {}
+}
+async function hSavePos(slots) {
+  if (!auth) return; const pos = {}; slots.forEach(s => { pos[s] = (auth.house && auth.house.pos && auth.house.pos[s]) || null; });
+  try { await api('/api/house/pos', { method: 'POST', body: { pos } }); } catch (e) { showToast('⚠️ ما انحفظ مكان الغرض'); }
+}
 (function () {
   const cvh = $('houseCv'); if (!cvh) return;
+  const sc = e => { const r = cvh.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 320, (e.clientY - r.top) / r.height * 250]; };
   cvh.addEventListener('pointerdown', e => {
-    const r = cvh.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 320, y = (e.clientY - r.top) / r.height * 250;
-    const S = hSetNow(), areas = hAreas(hView, S), order = hView === 'home' ? ['door', 'upg', 'home', 'roof', 'walls'] : hView === 'inside' ? ['tv', 'shelf', 'lamp', 'seat', 'pet', 'plant', 'rug', 'floor', 'paper'] : ['lantern', 'car', 'play', 'feature', 'tree', 'flowers', 'fence'];
-    for (const slot of order) {
-      const rs = areas[slot]; if (!rs) continue;
-      if (rs.some(q => x >= q[0] && x <= q[0] + q[2] && y >= q[1] && y <= q[1] + q[3])) {
-        hSelect(slot); const q = rs[0]; const W0 = HV[hView].walk;
-        hChar.tx = Math.max(24, Math.min(296, q[0] + q[2] / 2)); hChar.ty = Math.max(W0[0], Math.min(W0[1], q[1] + q[3] + 8)); return;
-      }
-    }
-    const W0 = HV[hView].walk; hChar.tx = Math.max(24, Math.min(296, x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y));
+    const [x, y] = sc(e), S = hSetNow(); hDown = null; hHold = false;
+    const hit = hHit(x, y, S);
+    if (hit && hit.drag) { hDown = { slot: hit.slot, sx: x, sy: y, o0: hOffOf(hit.slot).slice(), moved: false }; try { cvh.setPointerCapture(e.pointerId); } catch (er) {} return; }
+    if (hit) { hTap(hit.slot, x, y); return; }
+    hWalkTo(x, y); hHold = true; try { cvh.setPointerCapture(e.pointerId); } catch (er) {}
   });
+  cvh.addEventListener('pointermove', e => {
+    const [x, y] = sc(e);
+    if (hDown) {
+      if (!hDown.moved && Math.hypot(x - hDown.sx, y - hDown.sy) > 5) { hDown.moved = true; sfx('click'); hSelect(hDown.slot); }
+      if (hDown.moved) { const o = hClampOff(hDown.slot, [hDown.o0[0] + x - hDown.sx, hDown.o0[1] + y - hDown.sy]); auth.house = auth.house || {}; auth.house.pos = auth.house.pos || {}; auth.house.pos[hDown.slot] = o; }
+    } else if (hHold) hWalkTo(x, y);
+  });
+  const up = e => {
+    hHold = false; if (!hDown) return; const d = hDown; hDown = null;
+    if (d.moved) { hPlaced[d.slot] = hT; sfx('swap'); const q = hAreas(hView, hSetNow())[d.slot]; if (q) hBurst(q[0][0] + q[0][2] / 2, q[0][1] + q[0][3] / 2, 10); hSavePos([d.slot]); }
+    else hTap(d.slot, d.sx, d.sy);
+  };
+  cvh.addEventListener('pointerup', up); cvh.addEventListener('pointercancel', up);
 })();
-document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) { sfx('swap'); hSetView(b.dataset.v); } });
+document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
+document.querySelectorAll('#hFsTabs [data-v]').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
+/* ---- الانتقال بين المناظر (باب بصوت) ---- */
+function hDoorXY(view) {
+  const E = EXT[hTier(hSetNow())], d = E.door;
+  return view === 'garden' ? [150 + 0.58 * (d[0] + d[2] / 2), 50 + 0.58 * (d[1] + d[3])] : [d[0] + d[2] / 2, d[1] + d[3]];
+}
+function hGo(v) {
+  if (hGoing || v === hView) return; hGoing = true;
+  const fromIn = hView === 'inside', toIn = v === 'inside';
+  const place = () => {
+    let pos = null;
+    if (fromIn) { const g = hDoorXY('garden'); pos = v === 'garden' ? [g[0], g[1] + 26] : null; }
+    else if (v === 'home' && hView === 'garden') { const g = hDoorXY('home'); pos = [g[0], g[1] + 26]; }
+    hSetView(v, false, pos); hGoing = false;
+  };
+  if (fromIn || toIn) { sfx('door'); hDoorT = 40; setTimeout(place, 430); } else { sfx('swap'); place(); }
+}
+/* ---- الضوء + التكبير + أزرار الواجهة ---- */
+function hSetLight(on) { hLight = on; try { localStorage.setItem('hLight', on ? '1' : '0'); } catch (e) {} sfx('click'); hOvKey = ''; hUpdateOv(); }
+function hSetFull(on) {
+  hFull = on; $('hStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
+  try { if (on) { const r = $('hStage').requestFullscreen && $('hStage').requestFullscreen(); if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  hOvKey = ''; hUpdateOv(); if (on && innerHeight > innerWidth) showToast('📱 دوّر الجوال بالعرض حتى تشوف المكان أكبر');
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && hFull) { hFull = false; $('hStage').classList.remove('full'); document.body.style.overflow = ''; hOvKey = ''; hUpdateOv(); } });
+$('hFsBtn').onclick = () => hSetFull(!hFull);
+$('hLightBtn').onclick = () => hSetLight(!hLight);
+$('hExitBtn').onclick = () => hGo('garden');
+$('hResetPos').onclick = () => {
+  if (!auth) return; const sl = (HMOVE[hView] || []); if (!sl.length) { showToast('هذا المنظر ما بيه أغراض تتحرك'); return; }
+  auth.house = auth.house || {}; auth.house.pos = auth.house.pos || {}; sl.forEach(s => { delete auth.house.pos[s]; hPlaced[s] = hT; });
+  const pos = {}; sl.forEach(s => { pos[s] = null; }); sfx('swap');
+  api('/api/house/pos', { method: 'POST', body: { pos } }).then(() => showToast('↺ رجعت الأغراض لأماكنها')).catch(() => showToast('⚠️ صار خطأ'));
+};
+document.addEventListener('keydown', e => { if (curPage === 'house') { if (e.key === 'Escape' && hFull) hSetFull(false); hKeys[e.key.toLowerCase()] = 1; } });
+document.addEventListener('keyup', e => { delete hKeys[e.key.toLowerCase()]; });
+function hUpdateOv() {
+  const inn = hView === 'inside'; let near = '';
+  if (!hGoing && hDoorT <= 0) {
+    if (hView === 'home') { const d = hDoorXY('home'); if (Math.hypot(hChar.x - d[0], hChar.y - d[1]) < 46) near = 'home'; }
+    else if (hView === 'garden') { const d = hDoorXY('garden'); if (Math.abs(hChar.x - d[0]) < 42 && hChar.y - d[1] < 52) near = 'garden'; }
+  }
+  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
+  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير';
+  $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn;
+  const P = $('hPrompt'); P.innerHTML = '';
+  const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
+  if (near === 'home') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🌳 روح للحديقة', () => hGo('garden')); }
+  else if (near === 'garden') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🏠 واجهة البيت', () => hGo('home')); }
+}
 /* ---- الرسم ---- */
 function hRect(c, x, y, w, h, fill, stroke) { c.fillStyle = fill; c.fillRect(x, y, w, h); if (stroke) { c.strokeStyle = stroke; c.lineWidth = 1.2; c.strokeRect(x, y, w, h); } }
 function hWin(c, x, y, w, h, glow) {
@@ -3291,7 +3449,15 @@ function hWin(c, x, y, w, h, glow) {
   c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.strokeRect(x - 2, y - 2, w + 4, h + 4);
 }
 function hDoorDraw(c, d, col) {
-  const [x, y, w, h] = d; c.fillStyle = col; c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + 9); c.quadraticCurveTo(x + w / 2, y - 5, x + w, y + 9); c.lineTo(x + w, y + h); c.fill();
+  const [x, y, w, h] = d;
+  if (hDoorT > 0 && hView !== 'inside') {   // الباب ينفتح: فتحة دافية وضلفة تنطوي
+    const k = Math.min(1, (40 - hDoorT) / 12) * (hDoorT < 12 ? hDoorT / 12 : 1);
+    c.fillStyle = '#2a1a10'; c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + 9); c.quadraticCurveTo(x + w / 2, y - 5, x + w, y + 9); c.lineTo(x + w, y + h); c.fill();
+    const g = c.createLinearGradient(x, y, x, y + h); g.addColorStop(0, 'rgba(255,210,120,.0)'); g.addColorStop(1, 'rgba(255,210,120,.55)'); c.fillStyle = g; c.fillRect(x, y + 8, w, h - 8);
+    c.fillStyle = col; c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + 9); c.quadraticCurveTo(x + w * (1 - 0.8 * k) / 2, y - 3, x + w * (1 - 0.8 * k), y + 9 + 3 * k); c.lineTo(x + w * (1 - 0.8 * k), y + h - 3 * k); c.fill();
+    return;
+  }
+  c.fillStyle = col; c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + 9); c.quadraticCurveTo(x + w / 2, y - 5, x + w, y + 9); c.lineTo(x + w, y + h); c.fill();
   c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1.2; c.stroke(); c.strokeStyle = 'rgba(0,0,0,.22)'; c.strokeRect(x + 4, y + 12, w / 2 - 6, h * .32); c.strokeRect(x + w / 2 + 2, y + 12, w / 2 - 6, h * .32); c.strokeRect(x + 4, y + h * .5, w - 8, h * .38);
   c.fillStyle = '#ffd96a'; c.beginPath(); c.arc(x + w - 6, y + h * .55, 1.8, 0, 7); c.fill();
 }
@@ -3366,15 +3532,32 @@ function hChar_(c, S) {
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(hChar.x, hChar.y + 1, 13, 4, 0, 0, 7); c.fill();
   c.save(); c.translate(hChar.x, hChar.y - 13 - hop); c.scale(0.8 * hChar.dir, 0.8); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
 }
-function hItem(c, S, slot, x, y, size) {
-  const v = hVal(S, slot); if (!v || v[0] === '#') return;
+function hItem(c, S, slot, x, y, size, ex) {
+  const v = hVal(S, slot); if (!v || v[0] === '#') return; ex = ex || {};
   const k = Math.min(1, (hT - (hPlaced[slot] === undefined ? -99 : hPlaced[slot])) / 22), e = k >= 1 ? 1 : 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
-  const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = 0.65 + 0.35 * e;
+  const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1);
   c.save(); c.globalAlpha = (prev ? 0.7 : 1) * Math.min(1, k * 3);
-  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
-  c.translate(x, y - (1 - k) * 36); c.scale(sc, sc); c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0);
-  if (prev) { c.setLineDash([4, 3]); c.strokeStyle = '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-size * 0.55, -size * 0.9, size * 1.1, size * 1.0); }
+  c.fillStyle = 'rgba(0,0,0,' + (ex.lift ? 0.18 : 0.25) + ')'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
+  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc, sc); c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0);
+  if (prev || ex.lift) { c.setLineDash([4, 3]); c.strokeStyle = ex.lift ? '#fff' : '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-size * 0.55, -size * 0.9, size * 1.1, size * 1.0); }
   c.restore();
+}
+const hEx = slot => ({ lift: !!(hDown && hDown.moved && hDown.slot === slot), hop: slot === 'pet' ? (hPetT > 0 ? Math.abs(Math.sin(hPetT / 3)) * 9 : Math.abs(Math.sin(hT / 22)) * 1.2) : 0 });
+function hDarkDraw(c, S) {
+  if (hLight) return;
+  hDk = hDk || (() => { const q = document.createElement('canvas'); q.width = 320; q.height = 250; return q; })();
+  const d = hDk.getContext('2d'); d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = 'source-over'; d.clearRect(0, 0, 320, 250); d.fillStyle = 'rgba(5,8,26,0.86)'; d.fillRect(0, 0, 320, 250);
+  d.globalCompositeOperation = 'destination-out';
+  const hole = (x, y, r, a) => { const g = d.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); d.fillStyle = g; d.fillRect(x - r, y - r, 2 * r, 2 * r); };
+  hole(hChar.x, hChar.y - 14, 44, 0.9); hole(60, 72, 52, 0.5);
+  const ents = hEntries('inside', S), lamp = ents.find(q => q.slot === 'lamp'), tv = ents.find(q => q.slot === 'tv');
+  if (lamp) hole(lamp.x, lamp.y - 22, 38, 0.95); if (tv) hole(tv.x, tv.y - 30, 56, 0.5);
+  c.drawImage(hDk, 0, 0, 320, 250);
+  c.save(); c.globalCompositeOperation = 'lighter';
+  const glow = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
+  if (lamp) glow(lamp.x, lamp.y - 22, 70, 'rgba(255,190,100,' + (0.3 + 0.05 * Math.sin(hT / 9)) + ')');
+  if (tv) glow(tv.x, tv.y - 30, 60, 'rgba(110,160,255,' + (0.18 + 0.07 * Math.sin(hT / 5)) + ')');
+  glow(60, 72, 50, 'rgba(150,180,255,.18)'); c.restore();
 }
 function hInterior(c, S) {
   const paper = hVal(S, 'paper') || HDEF.paper, floor = hVal(S, 'floor') || HDEF.floor, rug = hVal(S, 'rug');
@@ -3390,11 +3573,13 @@ function hInterior(c, S) {
   c.strokeStyle = '#fbfbfb'; c.lineWidth = 3; c.beginPath(); c.moveTo(wx + 34, wy); c.lineTo(wx + 34, wy + 74); c.moveTo(wx, wy + 37); c.lineTo(wx + 68, wy + 37); c.stroke();
   c.fillStyle = '#c9483c'; c.fillRect(wx - 10, wy - 8, 16, 90); c.fillRect(wx + 62, wy - 8, 16, 90); c.fillRect(wx - 12, wy - 10, 94, 6);
   c.fillStyle = '#e9e1d0'; c.fillRect(wx - 8, wy + 74, 84, 5);
-  if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(150, 214, 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(150, 214, 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(150, 214, 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
-  const list = [['tv', 166, 120, 60, 0], ['shelf', 262, 178, 72, 0], ['plant', 40, 192, 56, 0], ['lamp', 234, 192, 44, 0], ['seat', 120, 210, 74, 0], ['pet', 204, 238, 32, 0]];
+  const rc = hRugC();
+  if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(rc[0], rc[1], 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
+  const list = hEntries('inside', S).map(e => [e.slot, e.x, e.y, e.s, 0]);
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
-  list.forEach(it => { if (!charDone && hChar.y < it[2]) { hChar_(c, S); charDone = true; } hItem(c, S, it[0], it[1], it[2], it[3]); });
+  list.forEach(it => { if (!charDone && hChar.y < it[2]) { hChar_(c, S); charDone = true; } hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); });
   if (!charDone) hChar_(c, S);
+  hDarkDraw(c, S);
 }
 function hGarden(c, S) {
   hBackdrop(c, true);
@@ -3402,18 +3587,15 @@ function hGarden(c, S) {
   const fc = hVal(S, 'fence'); if (fc) { c.fillStyle = fc; c.fillRect(0, 211, 320, 3); c.fillRect(0, 218, 320, 3); for (let x = 3; x < 320; x += 10) { c.fillRect(x, 206, 5, 20); } }
   c.fillStyle = '#dcc9a0'; c.beginPath(); c.moveTo(140, 210); c.lineTo(180, 210); c.lineTo(196, 250); c.lineTo(126, 250); c.closePath(); c.fill();
   const sw = Math.sin(hT / 30) * 0.03;
-  const list = [];
-  list.push(['tree', 44, 194, 86]); list.push(['feature', 122, 204, 56]); list.push(['play', 212, 214, 52]); list.push(['car', 262, 244, 46]);
-  const fl = hVal(S, 'flowers'); if (fl) [30, 58, 86, 114, 142].forEach((x, i) => list.push(['flowers', x, 244, 20, i]));
-  list.push(['lantern', 22, 236, 32, 0]); list.push(['lantern', 298, 236, 32, 1]);
+  const list = hEntries('garden', S).map(e => [e.slot, e.x, e.y, e.s, e.i]);
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
   list.forEach(it => {
     if (!charDone && hChar.y < it[2]) { hChar_(c, S); charDone = true; }
-    if (it[0] === 'tree') { c.save(); c.translate(it[1], it[2]); c.rotate(sw); c.translate(-it[1], -it[2]); hItem(c, S, 'tree', it[1], it[2], it[3]); c.restore(); }
-    else hItem(c, S, it[0], it[1], it[2], it[3]);
+    if (it[0] === 'tree') { c.save(); c.translate(it[1], it[2]); c.rotate(sw); c.translate(-it[1], -it[2]); hItem(c, S, 'tree', it[1], it[2], it[3], hEx('tree')); c.restore(); }
+    else hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0]));
   });
   if (!charDone) hChar_(c, S);
-  if (hVal(S, 'lantern')) { [[22, 214], [298, 214]].forEach(p => { const gl = c.createRadialGradient(p[0], p[1], 2, p[0], p[1], 26); gl.addColorStop(0, 'rgba(255,220,120,' + (0.35 + 0.15 * Math.sin(hT / 12)) + ')'); gl.addColorStop(1, 'rgba(255,220,120,0)'); c.fillStyle = gl; c.fillRect(p[0] - 28, p[1] - 28, 56, 56); }); }
+  if (hVal(S, 'lantern')) { hEntries('garden', S).filter(e => e.slot === 'lantern').map(e => [e.x, e.y - 22]).forEach(p => { const gl = c.createRadialGradient(p[0], p[1], 2, p[0], p[1], 26); gl.addColorStop(0, 'rgba(255,220,120,' + (0.35 + 0.15 * Math.sin(hT / 12)) + ')'); gl.addColorStop(1, 'rgba(255,220,120,0)'); c.fillStyle = gl; c.fillRect(p[0] - 28, p[1] - 28, 56, 56); }); }
   if (hVal(S, 'feature') === '⛲') for (let i = 0; i < 4; i++) { const k = ((hT * 0.8 + i * 9) % 36) / 36; c.fillStyle = 'rgba(170,225,255,' + (1 - k) + ')'; c.beginPath(); c.arc(122 + (i - 1.5) * 4 * k, 176 - Math.sin(k * 3.14) * 16 + k * 14, 1.8, 0, 7); c.fill(); }
 }
 function hHilite(c, S) {
@@ -3423,7 +3605,15 @@ function hHilite(c, S) {
 }
 function hDraw() {
   const cv = $('houseCv'); if (!cv) return; const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0);
-  const S = hSetNow(); c.save();
+  const S = hSetNow();
+  if (hDoorT > 0) hDoorT--; if (hPetT > 0) hPetT--;
+  if (hKeys.arrowleft || hKeys.a || hKeys.arrowright || hKeys.d || hKeys.arrowup || hKeys.w || hKeys.arrowdown || hKeys.s) {
+    hWalkTo(hChar.x + ((hKeys.arrowright || hKeys.d ? 1 : 0) - (hKeys.arrowleft || hKeys.a ? 1 : 0)) * 30, hChar.y + ((hKeys.arrowdown || hKeys.s ? 1 : 0) - (hKeys.arrowup || hKeys.w ? 1 : 0)) * 30);
+  }
+  if (hView === 'inside' && hVal(S, 'pet') === '🐕' && hT - hLastBark > 900) {
+    const pe = hEntries('inside', S).find(q => q.slot === 'pet'); if (pe && Math.hypot(pe.x - hChar.x, pe.y - hChar.y) < 34) { hLastBark = hT; sfx('pet', { t: 'dog' }); hPetT = 24; hSay('pet', 'هاو! 🐶 ' + ((auth && auth.name) ? 'أهلاً ' + auth.name : 'أهلاً')); }
+  }
+  c.save();
   if (hFade > 0) { const z = 1 + hFade * 0.1; c.translate(160, 125); c.scale(z, z); c.translate(-160, -125); }
   c.beginPath(); c.rect(0, 0, 320, 250); c.clip();
   if (hBuild > 0) hBuild--;
@@ -3434,6 +3624,17 @@ function hDraw() {
     c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(226, 14, 84, 26); c.font = 'bold 12px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#ffe9a8'; c.fillText('🔧 ترقية البيت', 268, 32);
   }
   hHilite(c, S);
+  hBubs = hBubs.filter(b => b.t > 0); hFloats = hFloats.filter(f => f.t > 0);
+  hBubs.forEach(b => {
+    b.t--; const e = hEntries(hView, S).find(q => q.slot === b.slot); if (!e) return;
+    c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(b.txt).width + 16, bx = Math.max(4, Math.min(316 - w, e.x - w / 2)), by = Math.max(4, e.y - e.s - 30);
+    c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1;
+    c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, 20, 8); else c.rect(bx, by, w, 20); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(e.x - 5, by + 20); c.lineTo(e.x, by + 27); c.lineTo(e.x + 5, by + 20); c.fillStyle = '#fff'; c.fill();
+    c.fillStyle = '#222'; c.fillText(b.txt, bx + w / 2, by + 14); c.globalAlpha = 1;
+  });
+  hFloats.forEach(f => { f.t--; f.y -= 0.7; c.globalAlpha = Math.min(1, f.t / 20); c.font = '14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(f.txt, f.x, f.y); c.globalAlpha = 1; });
+  hUpdateOv();
   for (const p of hParts) { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t--; c.globalAlpha = Math.min(1, p.t / 14); c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.sz, 0, 7); c.fill(); }
   c.globalAlpha = 1; if (hParts.length) hParts = hParts.filter(p => p.t > 0);
   c.restore();
