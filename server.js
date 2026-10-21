@@ -1318,49 +1318,64 @@ function hvOnMsg(ws, d) {
 const RM_MAX = 15, RM_CAP = 15, rmRooms = new Map();   // id -> {id,name,owner,code,created,mem:Set(ws),bans:Set,log:[],emptyAt}
 let rmSeq = 1;
 const RM_TTL = 24 * 3600e3;   // غرفة ما دخلها أحد أكثر من يوم تنحذف تلقائياً
-function rmPersist() { db.hrooms = {}; for (const r of rmRooms.values()) db.hrooms[r.id] = { id: r.id, name: r.name, owner: r.owner, code: r.code, created: r.created, lastActive: r.mem.size ? Date.now() : (r.lastActive || r.created), bans: [...r.bans] }; save(); }
-function rmLoad() { const H = db.hrooms || {}; for (const id in H) { const x = H[id]; if (!x || !db.users[x.owner]) continue; rmRooms.set(id, { id, name: x.name, owner: x.owner, code: x.code || '', created: x.created || Date.now(), lastActive: x.lastActive || Date.now(), mem: new Set(), bans: new Set(x.bans || []), log: [] }); rmSeq = Math.max(rmSeq, (parseInt(String(id).slice(1)) || 0) + 1); } rmClean(); }
-function rmClean() { let ch = false; for (const r of [...rmRooms.values()]) if (!r.mem.size && Date.now() - (r.lastActive || r.created) > RM_TTL) { rmRooms.delete(r.id); ch = true; } if (ch) rmPersist(); }
+function rmPersist() { db.hrooms = {}; for (const r of rmRooms.values()) db.hrooms[r.id] = { id: r.id, name: r.name, owner: r.owner, code: r.code, created: r.created, lastActive: r.mem.size ? Date.now() : (r.lastActive || r.created), bans: [...r.bans], banNm: [...(r.banNm || new Map())], perm: !!r.perm, mods: [...(r.mods || [])] }; save(); }
+function rmLoad() { const H = db.hrooms || {}; for (const id in H) { const x = H[id]; if (!x || !db.users[x.owner]) continue; rmRooms.set(id, { id, name: x.name, owner: x.owner, code: x.code || '', created: x.created || Date.now(), lastActive: x.lastActive || Date.now(), mem: new Set(), bans: new Set(x.bans || []), banNm: new Map(x.banNm || []), mods: new Set(x.mods || []), log: [] }); rmSeq = Math.max(rmSeq, (parseInt(String(id).slice(1)) || 0) + 1); } rmEnsurePerm(); rmClean(); }
+// الغرفة الدائمة «بابي»: ما تنحذف ابداً، 50 شخص، مفتوحة للجميع (حتى الضيوف)، صاحبها الادمن بابي
+function rmEnsurePerm() {
+  let r = rmRooms.get('babi'); const ok = 'بابي'.toLowerCase();
+  if (!r) { r = { id: 'babi', created: Date.now(), lastActive: Date.now(), mem: new Set(), bans: new Set(), banNm: new Map(), mods: new Set(), log: [] }; rmRooms.set('babi', r); }
+  r.perm = true; r.cap = 50; r.name = 'بابي'; r.owner = ok; r.code = ''; if (!r.banNm) r.banNm = new Map(); if (!r.mods) r.mods = new Set();
+}
+function rmClean() { let ch = false; for (const r of [...rmRooms.values()]) if (!r.perm && !r.mem.size && Date.now() - (r.lastActive || r.created) > RM_TTL) { rmRooms.delete(r.id); ch = true; } if (ch) rmPersist(); }
 const rmIsOwner = (r, key) => r.owner === key || !!(db.users[key] && db.users[key].admin);
-const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', locked: !!r.code, count: new Set([...r.mem].map(w => w.key)).size, cap: RM_CAP });
+const rmCanMod = (r, key) => rmIsOwner(r, key) || !!(r.mods && r.mods.has(key));
+const rmModNames = r => [...(r.mods || [])].map(k => db.users[k] ? db.users[k].name : k);
+const rmNm = w => w.guest ? w.gname : (db.users[w.key] ? db.users[w.key].name : '؟');
+const rmAdm = w => { const u = !w.guest && db.users[w.key]; return u && u.admin ? (u.name === 'بابي' ? 1 : 2) : 0; };   // 1 = بابي (تاج ذهبي)، 2 = بابيتو (تاج ملكي أزرق)
+const rmBanNm = (r, k) => (r.banNm && r.banNm.get(k)) || (db.users[k] ? db.users[k].name : k);
+const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', locked: !!r.code, count: new Set([...r.mem].map(w => w.key)).size, cap: r.cap || RM_CAP, perm: !!r.perm });
 function rmBc(r, msg, except) { const str = JSON.stringify(msg); for (const w of r.mem) if (w !== except && w.readyState === 1) w.send(str); }
-function rmPubM(w) { const h = w.rm; return { n: db.users[w.key].name, skin: skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner }; }
+function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
-  if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), u = db.users[ws.key]; ws.rm = null; if (!r) return;
-  r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) rmBc(r, { t: 'rm_leave', n: u && u.name });
-  r.lastActive = Date.now(); rmPersist();
+  if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws); ws.rm = null; if (!r) return;
+  r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) rmBc(r, { t: 'rm_leave', n: nm });
+  r.lastActive = Date.now(); if (!ws.guest) rmPersist();
 }
 function rmCloseRoom(r, why) { for (const w of [...r.mem]) { send(w, { t: 'rm_closed', txt: why || 'صاحب الغرفة سكّر الغرفة' }); w.rm = null; } r.mem.clear(); rmRooms.delete(r.id); rmPersist(); }
 setInterval(rmClean, 10 * 60e3);
-app.get('/api/rooms', authMw, (req, res) => { res.json({ rooms: [...rmRooms.values()].map(rmPub), max: RM_MAX, mine: ([...rmRooms.values()].find(r => r.owner === req.key) || {}).id || '' }); });
+const rmSorted = () => [...rmRooms.values()].sort((a, b) => (b.perm ? 1 : 0) - (a.perm ? 1 : 0));
+app.get('/api/rooms', authMw, (req, res) => { res.json({ rooms: rmSorted().map(rmPub), max: RM_MAX, mine: ([...rmRooms.values()].find(r => !r.perm && r.owner === req.key) || {}).id || '' }); });
+app.get('/api/rooms/public', (req, res) => { res.json({ rooms: rmSorted().filter(r => r.perm).map(rmPub), max: RM_MAX, mine: '' }); });
 app.post('/api/rooms/create', authMw, (req, res) => {
   if (limited('rmc:' + req.key, 6, 600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
   const name = String((req.body && req.body.name) || '').trim().replace(/\s+/g, ' ').slice(0, 24);
   if (name.length < 2 || !/^[\p{L}\p{N}_.\- ]+$/u.test(name)) return res.status(400).json({ error: 'اسم الغرفة 2-24 حرف (حروف وأرقام ومسافة فقط)' });
   const code = String((req.body && req.body.code) || '').trim().slice(0, 12);
   if (code && !/^[A-Za-z0-9٠-٩]{3,12}$/.test(code)) return res.status(400).json({ error: 'الرمز 3-12 حرف أو رقم إنكليزي' });
-  if ([...rmRooms.values()].some(r => r.owner === req.key)) return res.status(400).json({ error: 'عندك غرفة مفتوحة بالفعل، سكّرها أول' });
-  if (rmRooms.size >= RM_MAX) return res.status(400).json({ error: 'وصلنا الحد الأعلى (' + RM_MAX + ' غرفة)، انتظر وحدة تنسكّر' });
-  const r = { id: 'r' + (rmSeq++), name, owner: req.key, code, created: Date.now(), lastActive: Date.now(), mem: new Set(), bans: new Set(), log: [] };
+  if ([...rmRooms.values()].some(r => !r.perm && r.owner === req.key)) return res.status(400).json({ error: 'عندك غرفة مفتوحة بالفعل، سكّرها أول' });
+  if ([...rmRooms.values()].filter(r => !r.perm).length >= RM_MAX) return res.status(400).json({ error: 'وصلنا الحد الأعلى (' + RM_MAX + ' غرفة)، انتظر وحدة تنسكّر' });
+  const r = { id: 'r' + (rmSeq++), name, owner: req.key, code, created: Date.now(), lastActive: Date.now(), mem: new Set(), bans: new Set(), mods: new Set(), log: [] };
   rmRooms.set(r.id, r); rmPersist(); res.json({ room: rmPub(r) });
 });
 app.post('/api/rooms/close', authMw, (req, res) => {
   const r = rmRooms.get(String((req.body && req.body.id) || '')); if (!r) return res.status(404).json({ error: 'الغرفة غير موجودة' });
+  if (r.perm) return res.status(403).json({ error: 'هذي غرفة دائمة ما تنسكّر' });
   if (!rmIsOwner(r, req.key)) return res.status(403).json({ error: 'بس صاحب الغرفة' });
   rmCloseRoom(r); res.json({ ok: true });
 });
 function rmOnMsg(ws, d) {
-  const me = db.users[ws.key]; if (!me) return; const now = Date.now();
+  const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'rm_join') {
     const r = rmRooms.get(String(d.id || '')); if (!r) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة غير موجودة أو انسكّرت' });
+    if (ws.guest && !r.perm) return send(ws, { t: 'rm_err', fatal: true, error: 'سجّل حساب حتى تدخل هذي الغرفة' });
     const owner = rmIsOwner(r, ws.key);
-    if (r.bans.has(ws.key)) return send(ws, { t: 'rm_err', fatal: true, error: '⛔ صاحب الغرفة منعك من دخولها' });
+    if (r.bans.has(ws.key) || (ws.guest && r.bans.has('ip:' + ws.ip))) return send(ws, { t: 'rm_err', fatal: true, error: '⛔ صاحب الغرفة منعك من دخولها' });
     if (r.code && !owner && !safeEq(String(d.code || ''), r.code)) return send(ws, { t: 'rm_err', fatal: true, bad: true, error: 'الرمز غلط' });
     if (ws.rm && ws.rm.id === r.id) rmLeave(ws); else rmLeave(ws);
-    const distinct = new Set([...r.mem].map(w => w.key)); if (!distinct.has(ws.key) && distinct.size >= RM_CAP) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة ممتلئة (' + RM_CAP + ' شخص)' });
+    const distinct = new Set([...r.mem].map(w => w.key)); if (!distinct.has(ws.key) && distinct.size >= (r.cap || RM_CAP)) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة ممتلئة (' + (r.cap || RM_CAP) + ' شخص)' });
     ws.rm = { id: r.id, owner: r.owner, x: 380 + Math.random() * 40, y: 300 + Math.random() * 30, dir: 1, sit: false, t: 0, ct: 0 };
     const members = [...r.mem].filter(w => w.readyState === 1).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws);
-    send(ws, { t: 'rm_state', id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.slice(-40), bans: owner ? [...r.bans].map(k => db.users[k] ? db.users[k].name : k) : undefined, me: { x: ws.rm.x, y: ws.rm.y } });
+    send(ws, { t: 'rm_state', id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
@@ -1368,23 +1383,37 @@ function rmOnMsg(ws, d) {
     h.x = Math.max(0, Math.min(800, x)); h.y = Math.max(0, Math.min(620, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
   } else if (d.t === 'rm_chat') {
-    const h = ws.rm; if (!h || now - h.ct < 600) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return;
+    const h = ws.rm; if (!h || now - h.ct < (ws.guest ? 1500 : 600)) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return;
     const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return;
-    const m = { n: me.name, txt, ts: now }; r.log.push(m); while (r.log.length > 80) r.log.shift(); rmBc(r, { t: 'rm_chat', m });
+    const m = { n: me.name, txt, ts: now, adm: rmAdm(ws) }; r.log.push(m); while (r.log.length > 80) r.log.shift(); rmBc(r, { t: 'rm_chat', m });
   } else if (d.t === 'rm_leave') rmLeave(ws);
-  else if (d.t === 'rm_kick' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة يكدر يسوي هذا' });
-    const k = keyOfName(d.n); if (!own(db.users, k) || k === ws.key || (k === r.owner)) return;
-    const tn = db.users[k].name;
+  else if (d.t === 'rm_kick' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmCanMod(r, ws.key)) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة أو المميزين يكدرون يسوون هذا' });
+    const isOwn = rmIsOwner(r, ws.key); if ((d.t === 'rm_unban' || d.t === 'rm_mod' || d.t === 'rm_unmod') && !isOwn) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة' });
+    const tname = String(d.n || '');
+    const tws = [...r.mem].find(w => rmNm(w) === tname);
+    let k = tws ? (tws.guest ? 'ip:' + tws.ip : tws.key) : (d.t === 'rm_unban' ? ([...(r.banNm || [])].find(e => e[1] === tname) || [])[0] || keyOfName(tname) : keyOfName(tname));
+    if (!k || (!tws && !own(db.users, k) && !r.bans.has(k))) return;
+    if (tws && tws.key === ws.key) return; if (k === ws.key || k === r.owner) return;
+    const tn = tws ? rmNm(tws) : rmBanNm(r, k);
+    if (db.users[k] && db.users[k].admin) return send(ws, { t: 'rm_err', error: 'ما تكدر تتعامل مع ادمن' });
+    if (d.t === 'rm_mod' || d.t === 'rm_unmod') {
+      if (!tws || tws.guest || !db.users[k]) return send(ws, { t: 'rm_err', error: 'الرتبة للأعضاء المسجلين اللي داخل الغرفة بس' });
+      if (d.t === 'rm_mod') r.mods.add(k); else r.mods.delete(k); rmPersist();
+      rmBc(r, { t: 'rm_mods', mods: rmModNames(r), who: tn, on: d.t === 'rm_mod' });
+      return send(ws, { t: 'rm_ok', msg: d.t === 'rm_mod' ? '⭐ أعطيت ' + tn + ' رتبة مميز (طرد وحظر وتحذير)' : 'شلت رتبة مميز من ' + tn });
+    }
+    if (r.mods.has(k) && !isOwn) return send(ws, { t: 'rm_err', error: 'ما تكدر تتعامل مع عضو مميز' });
+    const banList = () => [...r.bans].map(x => rmBanNm(r, x));
     if (d.t === 'rm_warn') {
       const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 160); if (!txt) return;
-      for (const w of r.mem) if (w.key === k) send(w, { t: 'rm_warn', from: me.name, txt });
+      for (const w of r.mem) if (w === tws || (tws && !tws.guest && w.key === k)) send(w, { t: 'rm_warn', from: me.name, txt });
       send(ws, { t: 'rm_ok', msg: '⚠️ انرسل التحذير إلى ' + tn });
-    } else if (d.t === 'rm_unban') { r.bans.delete(k); rmPersist(); send(ws, { t: 'rm_bans', bans: [...r.bans].map(x => db.users[x] ? db.users[x].name : x), msg: '✅ رجّعت ' + tn });
+    } else if (d.t === 'rm_unban') { r.bans.delete(k); if (r.banNm) r.banNm.delete(k); rmPersist(); send(ws, { t: 'rm_bans', bans: banList(), msg: '✅ رجّعت ' + tn });
     } else {
-      const ban = d.t === 'rm_ban'; if (ban) { r.bans.add(k); rmPersist(); }
-      for (const w of [...r.mem]) if (w.key === k) { send(w, { t: 'rm_kicked', banned: ban, txt: String(d.txt || '').slice(0, 160) }); r.mem.delete(w); w.rm = null; }
-      rmBc(r, { t: 'rm_leave', n: tn }); send(ws, { t: 'rm_bans', bans: [...r.bans].map(x => db.users[x] ? db.users[x].name : x), msg: (ban ? '⛔ منعت ' : '👢 طردت ') + tn });
+      const ban = d.t === 'rm_ban'; if (ban) { r.bans.add(k); if (r.banNm) r.banNm.set(k, tn + (tws && tws.guest ? ' (ضيف)' : '')); rmPersist(); }
+      for (const w of [...r.mem]) if (w === tws || (tws && !tws.guest && w.key === k)) { send(w, { t: 'rm_kicked', banned: ban, txt: String(d.txt || '').slice(0, 160) }); r.mem.delete(w); w.rm = null; }
+      rmBc(r, { t: 'rm_leave', n: tn }); send(ws, { t: 'rm_bans', bans: banList(), msg: (ban ? '⛔ منعت ' : '👢 طردت ') + tn });
     }
   }
 }
@@ -1531,6 +1560,18 @@ function onMsg(ws, d) {
 wss.on('connection', (ws, req) => {
   let key = null;
   try { key = keyFromToken(new URL(req.url, 'http://x').searchParams.get('token')); } catch (e) {}
+  const isGuest = !key && (() => { try { return new URL(req.url, 'http://x').searchParams.get('guest') === '1'; } catch (e) { return false; } })();
+  if (isGuest) {   // ضيف: يدخل غرفة «بابي» الدائمة فقط (بدون حساب)
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    if (limited('gws:' + ip, 30, 600e3)) { send(ws, { t: 'err', fatal: true, error: 'محاولات كثيرة' }); return ws.close(); }
+    let gname; const used = new Set([...wss.clients].filter(w => w.guest).map(w => w.gname));
+    do { gname = 'ضيف' + (100 + Math.floor(Math.random() * 900)); } while (used.has(gname) || own(db.users, gname.toLowerCase()));
+    ws.guest = true; ws.gname = gname; ws.ip = ip; ws.key = 'g:' + crypto.randomBytes(6).toString('hex'); ws.alive = true; ws.bucket = { n: 0, t: Date.now() }; ws.room = null;
+    ws.on('pong', () => { ws.alive = true; });
+    ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (!d || typeof d.t !== 'string' || !d.t.startsWith('rm_')) return; try { rmOnMsg(ws, d); } catch (e) { console.error(e); } });
+    ws.on('close', () => { rmLeave(ws); }); ws.on('error', () => {});
+    return send(ws, { t: 'rm_guest', name: gname });
+  }
   if (!key) { send(ws, { t: 'err', fatal: true, error: 'سجّل دخول من جديد' }); return ws.close(); }
   ws.key = key; ws.room = null; ws.alive = true; ws.bucket = { n: 0, t: Date.now() };
   if (!isOnline(key, ws)) presenceChange(key, true);
