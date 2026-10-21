@@ -641,7 +641,7 @@
       <div id="hOv">
         <div class="hOvTop">
           <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button><button id="hZoomBtn" class="hOvB" type="button">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button><button id="hPetBtn" class="hOvB" type="button" hidden>🐾 بيت الحيوان</button></div>
-          <div class="hOvG"><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
+          <div class="hOvG"><button id="hMineBtn" class="hOvB" type="button" hidden>🏠 رجوع لبيتي</button><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
         </div>
         <div id="hFsTabs"><button class="hOvB" data-v="home" type="button">🏠</button><button class="hOvB" data-v="inside" type="button">🛋️</button><button class="hOvB" data-v="garden" type="button">🌳</button></div>
         <div id="hPrompt"></div>
@@ -4045,6 +4045,7 @@ if (hLandMQ) (hLandMQ.addEventListener ? hLandMQ.addEventListener('change', hOri
 window.addEventListener('resize', () => { hFitFs(); }); window.addEventListener('orientationchange', () => setTimeout(() => { hOrient(); }, 250));
 $('hLightBtn').onclick = () => hSetLight(!hLight);
 $('hExitBtn').onclick = () => hGo('garden');
+$('hMineBtn').onclick = () => { if (!hVis) return; sfx('click'); hTarget = ''; hVis = null; hOthers = {}; hOvKey = ''; houseLoad(); showToast('🏠 رجعت لبيتك'); };
 $('hResetPos').onclick = () => {
   if (!auth) return; const sl = (HMOVE[hView] || []); if (!sl.length) { showToast('هذا المنظر ما بيه أغراض تتحرك'); return; }
   auth.house = auth.house || {}; auth.house.pos = auth.house.pos || {}; sl.forEach(s => { delete auth.house.pos[s]; hPlaced[s] = hT; });
@@ -4062,7 +4063,7 @@ function hUpdateOv() {
   const items = []; if (hView !== 'home') { const need = inn ? ['seat', 'tv', 'lamp', 'pet', 'plant'] : ['tree', 'play', 'flowers']; hEntries(hView, hSetNow()).forEach(e => { if (need.includes(e.slot) && !items.includes(e.slot) && (e.slot === 'tv' ? Math.abs(e.x - hChar.x) < 56 : Math.hypot(e.x - hChar.x, (e.y - hChar.y) * 1.2) < 46 + Math.max(0, e.s - 60) * 0.5)) items.push(e.slot); }); }
   const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hChar.jump ? 1 : 0) + (items.includes('seat') ? hSeatFree('seat') + '' + (function () { const se = hEntries(hView, hSetNow()).find(q => q.slot === 'seat'); return se ? hSeatsOf('seat', se).map(x => hSeatBusy(x) ? 1 : 0).join('') : ''; })() : '') + '|' + hSclSel + hSclOf(hSclSel || 'x') + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
   $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth; $('hPetBtn').hidden = !!hVis || !auth || !petPets.length;
-  $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn;
+  $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn; $('hMineBtn').hidden = !hVis;
   const sb = $('hSclBox'); if (sb) { const ok = !hVis && !!auth && hView !== 'home' && !!hSclSel; sb.hidden = !ok; if (ok) { $('hSclName').textContent = hSlotName(hSclSel); $('hSclV').textContent = Math.round(hSclOf(hSclSel) * 100) + '%'; const cid = auth.house && auth.house.set && auth.house.set[hSclSel], cit = cid && hmap()[cid]; $('hSclS').hidden = !(cit && cit.price > 0); } }
   const P = $('hPrompt'); P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
