@@ -40,7 +40,13 @@ async function initStorage() {
     console.log('storage: postgres | users: ' + Object.keys(db.users).length + ' | files: ' + mediaSet.size);
   } else {
     fs.mkdirSync(UP_DIR, { recursive: true });
-    try { db = Object.assign(db, JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))); } catch (e) {}
+    if (fs.existsSync(DB_FILE)) {
+      try { db = Object.assign(db, JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))); }
+      catch (e) {   // ملف موجود بس خربان: ننسخه ونوقف حتى ما نمسح الحسابات
+        try { fs.copyFileSync(DB_FILE, DB_FILE + '.corrupt-' + Date.now()); } catch (e2) {}
+        throw new Error('db.json خربان، انسخته للمراجعة وما راح أمسحه: ' + e.message);
+      }
+    }
     console.log('storage: files at ' + DATA_DIR + ' | users: ' + Object.keys(db.users).length);
   }
 }
@@ -54,6 +60,7 @@ async function writeNow() {
     if (pool) {
       await pool.query("INSERT INTO kv (key, value) VALUES ('db', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [json]);
     } else {
+      try { if (fs.existsSync(DB_FILE) && Date.now() - (writeNow.bak || 0) > 6 * 3600e3) { fs.copyFileSync(DB_FILE, DB_FILE + '.bak'); writeNow.bak = Date.now(); } } catch (e) {}   // نسخة احتياطية كل 6 ساعات
       const tmp = DB_FILE + '.tmp';
       fs.writeFileSync(tmp, json); fs.renameSync(tmp, DB_FILE);
     }
@@ -66,6 +73,7 @@ function save() {
   saveTimer = setTimeout(() => { saveTimer = null; writeNow(); }, 500);
 }
 async function flushAndExit() {
+  try { if (typeof rmPersist === 'function') rmPersist(); } catch (e) {}   // تحديث نشاط الغرف قبل الإغلاق
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   const t0 = Date.now();
   await writeNow();
