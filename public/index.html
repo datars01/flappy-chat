@@ -5712,7 +5712,7 @@ function rmDrawMe0(c, st) {
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 17 * (1 - st.air / 40), 5 * (1 - st.air / 50), 0, 0, 7); c.fill();
   const cold = rmCold(m), ui = rmUi(m), wet = rmWet(m); m.pseed = 3;
   const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: m.dance || 0, dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
-  const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf);
+  const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm);
 }
 function rmDrawOther(c, o) { rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) rmBurnFx(c, o); }
 function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; c.save(); c.globalAlpha = 0.42; rmDrawOther0(c, o); c.restore(); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
@@ -5725,7 +5725,7 @@ function rmDrawOther0(c, o) {
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 17, 5, 0, 0, 7); c.fill();
   if (!o.pseed) o.pseed = rmHash(o.name) % 30; const cold = rmCold(o), ui = rmUi(o), wet = rmWet(o);
   const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: o.dance || 0, dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
-  const lf = 16 * ui; rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
+  const lf = 16 * ui; rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf, o.adm); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
 }
 function rmTyping(c, name, x, y) {
   if (!RM.typOn) return; const e = RM.typ[name]; if (!e) return; const now = performance.now(); if (now > e) { delete RM.typ[name]; return; }
@@ -5745,11 +5745,24 @@ function rmWrap(c, txt, maxW) {
   });
   if (cur) lines.push(cur); return lines;
 }
-function rmBub(c, name, x, y) {
+function rmBub(c, name, x, y, adm) {
   const b = RM.bubs[name]; if (!b || b.t <= 0) return; b.t--; if (!b.st) b.st = ++RM.bubN;
-  (RM.bubQ || (RM.bubQ = [])).push({ b, x, y });
+  (RM.bubQ || (RM.bubQ = [])).push({ b, x, y, adm });
 }
 RM.bubN = 0;
+function rmAdmBub(c, it, b, bx, by, w, h, LH) {
+  const T = RM.T, x = it.x, pul = 0.5 + 0.5 * Math.sin(T / 8); c.save(); c.globalAlpha = Math.min(1, b.t / 20);
+  c.shadowColor = 'rgba(255,60,150,' + (0.55 + 0.35 * pul) + ')'; c.shadowBlur = 8 + 8 * pul;
+  const g = c.createLinearGradient(bx, by, bx + w, by + h); g.addColorStop(0, '#ff9ccf'); g.addColorStop(0.5, '#ff5fae'); g.addColorStop(1, '#d6338f');
+  c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 11); else c.rect(bx, by, w, h); c.fill(); c.shadowBlur = 0;
+  c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1.4; c.stroke();
+  const ty = it.y - 16; if (by + h < ty - 2) { c.strokeStyle = 'rgba(255,255,255,.7)'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.stroke(); c.setLineDash([]); } else { c.fillStyle = '#d6338f'; c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 8); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
+  c.save(); c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 11); else c.rect(bx, by, w, h); c.clip(); const sx = bx + ((T * 1.6) % (w + 60)) - 30; const sg = c.createLinearGradient(sx - 14, 0, sx + 14, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,.55)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = sg; c.fillRect(sx - 14, by, 28, h); c.restore();
+  c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(150,20,90,.85)'; c.fillStyle = '#fff';
+  b.lines.forEach((l, k) => { const yy = by + 4 + LH * (k + 1) - 3; c.strokeText(l, bx + w / 2, yy, w - 8); c.fillText(l, bx + w / 2, yy, w - 8); });
+  [[bx + 4, by - 1, 0], [bx + w - 4, by + 2, 2], [bx + w / 2, by - 3, 4]].forEach((p, i) => { const a = 0.5 + 0.5 * Math.sin(T / 6 + p[2]); c.globalAlpha = Math.min(1, b.t / 20) * a; c.fillStyle = '#fff'; c.font = '8px sans-serif'; c.fillText(i === 1 ? '💖' : '✦', p[0], p[1] - a * 3); });
+  c.restore();
+}
 function rmBubFlush(c) {
   const Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = [];
   c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const LH = 14, placed = [];
@@ -5758,6 +5771,7 @@ function rmBubFlush(c) {
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
     for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = hit.y - h - 4; }
     placed.push({ x: bx, y: by, w, h });
+    if (it.adm) { rmAdmBub(c, it, b, bx, by, w, h, LH); return; }
     c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
     const ty = it.y - 16; if (by + h < ty - 2) { c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.strokeStyle = 'rgba(0,0,0,.25)'; c.setLineDash([2, 3]); c.stroke(); c.setLineDash([]); }
     else { c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 7); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
