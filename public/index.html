@@ -540,6 +540,22 @@
     font-size: 22px; line-height: 1; background: linear-gradient(135deg, #ffd166, #f5a623); color: #3a2a00; box-shadow: 0 4px 14px rgba(0,0,0,.5); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
   #gameFab span { font-size: 9px; font-weight: 700; margin-top: 1px; }
   #gameFab.drag { cursor: grabbing; transform: scale(1.12); }
+
+  #rmSide { position: absolute; right: 6px; top: 84px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; z-index: 3; } #rmSide .hOvB { padding: 6px 10px; font-size: 12px; }
+  #rmBox.rmTiny #rmSide { display: none; }
+  #rmDance { position: absolute; right: 6px; top: 146px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.92); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: min(230px, 70%); } #rmDance[hidden] { display: none; }
+  #rmDance button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; padding: 7px 4px; font-size: 13px; font-weight: 700; width: 100%; cursor: pointer; } #rmDance button.on { background: #ffd166; color: #3a2a00; } #rmDance button.stop { grid-column: 1 / -1; background: #c0392b; }
+  #avEd { position: fixed; inset: 0; z-index: 100000; background: rgba(10,8,30,.94); display: flex; justify-content: center; color: #fff; } #avEd[hidden] { display: none; }
+  .avBox { display: flex; flex-direction: column; width: 100%; max-width: 920px; height: 100%; } .avMain { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .avPrev { flex: none; display: flex; flex-direction: column; align-items: center; padding: 8px 8px 4px; background: linear-gradient(#4a3592,#2a1d5e); } .avPrev canvas { width: auto; height: 34vh; max-height: 300px; aspect-ratio: 300/380; border-radius: 14px; background: linear-gradient(#ffe9c9,#c9b6ff 60%,#8f7ae0); }
+  .avAct { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; justify-content: center; } .avAct button { width: auto; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 10px; padding: 5px 10px; font-size: 12px; font-weight: 700; } .avAct button.on { background: #ffd166; color: #3a2a00; }
+  .avPan { flex: 1; min-height: 0; display: flex; flex-direction: column; } #avTabs { display: flex; gap: 5px; overflow-x: auto; padding: 8px; flex: none; background: #1d1448; } #avTabs button { width: auto; flex: none; background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 700; } #avTabs button.on { background: #ffd166; color: #3a2a00; }
+  #avOpts { flex: 1; overflow-y: auto; padding: 8px 10px 14px; } #avOpts h4 { margin: 10px 0 6px; color: #ffd166; font-size: 13px; } #avOpts h4.adm { color: #ffe27a; background: linear-gradient(90deg,rgba(255,200,60,.35),transparent); padding: 3px 8px; border-radius: 8px; }
+  .avRow { display: flex; flex-wrap: wrap; gap: 6px; } .avC { width: auto; background: rgba(255,255,255,.12); color: #fff; border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; } .avC.on { background: #ffd166; color: #3a2a00; border-color: #fff; } .avC.adm { border-color: #ffd166; } .avS { width: 32px; height: 32px; border-radius: 50%; border: 3px solid rgba(255,255,255,.35); cursor: pointer; padding: 0; } .avS.on { border-color: #fff; box-shadow: 0 0 0 3px #ffd166; } .avS.adm { box-shadow: 0 0 0 2px #ffd166aa; }
+  .avG { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; } .avCard { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.2); border-radius: 12px; padding: 4px; text-align: center; font-size: 11px; cursor: pointer; } .avCard.on { border-color: #ffd166; background: rgba(255,209,102,.22); } .avCard canvas { width: 100%; height: auto; display: block; } .avCard.adm { border-color: #ffd166; box-shadow: 0 0 10px #ffd16688; }
+  .avGen { display: flex; gap: 10px; } .avGen button { flex: 1; width: auto; padding: 14px 6px; font-size: 18px; font-weight: 800; border-radius: 14px; border: 3px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; } .avGen button.on { background: #ffd166; color: #3a2a00; border-color: #fff; }
+  .avBar { flex: none; display: flex; gap: 8px; padding: 8px; background: #1d1448; } .avBar button { flex: 1; width: auto; padding: 12px; font-size: 15px; font-weight: 800; border-radius: 12px; border: 0; } #avSave { background: linear-gradient(135deg,#ffd166,#ff9f1c); color: #3a2200; } #avCancel { background: #5a3a7a; color: #fff; }
+  @media (min-width: 760px) { .avMain { flex-direction: row; } .avPrev { width: 340px; justify-content: center; } .avPrev canvas { height: 62vh; max-height: 560px; } }
 </style>
 </head>
 <body>
@@ -711,12 +727,14 @@
         <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><span id="rmFTtl" class="hOvB"></span></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button></div></div>
         <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><button id="rmKiss" type="button" hidden>😘 بوسة</button><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
+        <div id="rmSide"><button id="rmDanceBtn" class="hOvB" type="button">💃 رقص</button><button id="rmAvBtn" class="hOvB" type="button">👗 شخصيتي</button></div><div id="rmDance" hidden></div>
         <div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="500" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
       </div>
     </div></div>
   </div>
 </div></div>
+<div id="avEd" hidden><div class="avBox"><div class="avMain"><div class="avPrev"><canvas id="avCv" width="300" height="380"></canvas><div class="avAct"><button id="avWalk" type="button">🚶 مشي</button><button id="avSit" type="button">🪑 جلوس</button><button id="avDnc" type="button">💃 رقصة</button><button id="avZm" type="button">🔍 الوجه</button></div></div><div class="avPan"><div id="avTabs"></div><div id="avOpts"></div></div></div><div class="avBar"><button id="avSave" type="button">✅ حفظ</button><button id="avCancel" type="button">✖ إلغاء</button></div></div></div>
 <div id="rmWarn" role="alert"><div class="rw"><div id="rmWI">⚠️</div><b id="rmWT"></b><p id="rmWS"></p><button id="rmWOk" type="button">حسناً</button></div></div>
 <div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
   <div class="card">
@@ -5062,6 +5080,282 @@ setInterval(async () => {
   try { const r = await api('/api/pet/tick', { method: 'POST', body: { sec: 60 } }); if (r.pet) { petDirtyMine = r.pet.dirty; if (r.justDirty) showToast('🪰 ' + (r.pet.name || 'حيوانك') + ' توصّخ! خذه لحمام الحيوان 🛁'); if (curPage === 'pet' && PT.pet && PT.pet.isOwner) petApply(r.pet); } } catch (e) {}
 }, 60000);
 
+/* ===== AVT: شخصيات المنتجع (ذكر/انثى + مكياج + متجر ملابس + انيميشن) ===== */
+var AVT = (function () {
+  const LN = 'rgba(70,35,50,.6)';
+  const HAIRC = { black: ['#14100f', '#2a2220', '#6a5a58'], brown: ['#3a1f12', '#5a3220', '#b88458'], chest: ['#5a2e14', '#8a4e24', '#d89a58'], blonde: ['#a07a2a', '#d4aa4c', '#f6e19a'], red: ['#6a1c10', '#a8381c', '#f08a5a'], pink: ['#a8346a', '#e0609a', '#ffb0d0'], blue: ['#1a3a8a', '#3a6ad8', '#9ac0ff'], white: ['#9a9aa8', '#d8d8e4', '#ffffff'], gold: ['#8a5a00', '#ffc83d', '#fff4b0'], galaxy: ['#1a0f4a', '#6a3ad8', '#ff7ae0'], fire: ['#7a1000', '#ff5a1a', '#ffd060'], ice: ['#1a4a8a', '#5ac8ff', '#eaffff'] };
+  const ADMHC = ['gold', 'galaxy', 'fire', 'ice'];
+  const SKINS = { fair: ['#f0c09a', '#dba07a', '#b97a58', '#f8d6b8'], light: ['#e8b48c', '#cf9068', '#a86a48', '#f2c9a4'], tan: ['#d29a70', '#b87a52', '#8e5836', '#e4b08a'], dark: ['#a8704c', '#8a5434', '#62381e', '#c08860'] };
+  const EYES = [['بني', ['#a8743c', '#5a3416']], ['أخضر', ['#4aa058', '#1a4a22']], ['أزرق', ['#5a8ad8', '#1a3a7a']], ['عسلي', ['#c8923a', '#6a4210']], ['رمادي', ['#9a9aa8', '#3a3a48']], ['بنفسجي', ['#9a5ad8', '#3a1a6a']], ['ذهبي 👑', ['#ffd24a', '#8a5a00']], ['أحمر ملكي 👑', ['#ff5a5a', '#7a0a14']]];
+  const EW = [13, 15, 17];
+  const LIPS = [null, '#d8506a', '#c0283c', '#e87a96', '#8a2a4a', '#b86a50'];
+  const SHADOWS = [null, '#e8a8c8', '#a88ae0', '#7ac0e8', '#e8b86a', '#8a5a4a', '#5aa890'];
+  const BLUSH = [0, .28, .55];
+  const HS = { f: ['long', 'bob', 'ponytail', 'short', 'puff', 'bun'], m: ['crop', 'side', 'spike', 'puff', 'long'] };
+  const OUTFITS = {
+    f_wed1: { n: 'فستان عروس أبيض', g: 'f', cat: 'wed', k: 'gown', c1: '#ffffff', c2: '#e9dcff', sh: '#ffffff' },
+    f_wed2: { n: 'فستان عروس ذهبي', g: 'f', cat: 'wed', k: 'gown', c1: '#fff1d6', c2: '#e8c46a', sh: '#f4e0b0' },
+    f_wed3: { n: 'فستان عروس وردي', g: 'f', cat: 'wed', k: 'gown', c1: '#ffe2ee', c2: '#ff9ec2', sh: '#ffffff' },
+    f_eve1: { n: 'فستان سهرة أزرق', g: 'f', cat: 'party', k: 'evening', c1: '#1f3f9a', c2: '#6a8ae8', sh: '#1c1c26' },
+    f_eve2: { n: 'فستان سهرة أحمر', g: 'f', cat: 'party', k: 'evening', c1: '#c0182e', c2: '#ff6a7a', sh: '#1c1c26' },
+    f_eve3: { n: 'فستان سهرة زمردي', g: 'f', cat: 'party', k: 'evening', c1: '#0f7a58', c2: '#4ae0a8', sh: '#e8c46a' },
+    f_par1: { n: 'فستان حفلة وردي', g: 'f', cat: 'party', k: 'party', c1: '#ff7aa8', c2: '#ffc0d8', sh: '#ffffff' },
+    f_par2: { n: 'فستان حفلة أسود', g: 'f', cat: 'party', k: 'party', c1: '#22222c', c2: '#6a6a88', sh: '#e8c46a' },
+    f_par3: { n: 'فستان حفلة فيروزي', g: 'f', cat: 'party', k: 'party', c1: '#18b8c8', c2: '#9af0f8', sh: '#ffffff' },
+    f_swm1: { n: 'مايوه أزرق', g: 'f', cat: 'beach', k: 'swim', c1: '#1e8ae8', c2: '#9ad4ff', sh: '#ffd6a0' },
+    f_swm2: { n: 'مايوه أحمر', g: 'f', cat: 'beach', k: 'swim', c1: '#e02848', c2: '#ff8aa0', sh: '#ffd6a0' },
+    f_swm3: { n: 'مايوه مع بارو وردي', g: 'f', cat: 'beach', k: 'swim', c1: '#ff7aa8', c2: '#ffffff', pareo: '#ffb8d0', sh: '#ffd6a0' },
+    f_swm4: { n: 'مايوه أسود مع بارو أبيض', g: 'f', cat: 'beach', k: 'swim', c1: '#22222c', c2: '#e8c46a', pareo: '#f4f4fa', sh: '#ffd6a0' },
+    m_tux1: { n: 'بدلة عريس سوداء', g: 'm', cat: 'wed', k: 'suit', c1: '#17171f', c2: '#17171f', c3: '#17171f', bow: 1, sh: '#17171f' },
+    m_tux2: { n: 'بدلة عريس بيضاء', g: 'm', cat: 'wed', k: 'suit', c1: '#f4f2ee', c2: '#c0182e', c3: '#f4f2ee', bow: 1, sh: '#f4f2ee' },
+    m_suit1: { n: 'بدلة كحلية', g: 'm', cat: 'party', k: 'suit', c1: '#1c2c5a', c2: '#c0182e', c3: '#1c2c5a', sh: '#17171f' },
+    m_suit2: { n: 'بدلة عنابية', g: 'm', cat: 'party', k: 'suit', c1: '#6a1c3a', c2: '#e8c46a', c3: '#2a1a24', sh: '#17171f' },
+    m_suit3: { n: 'بدلة رمادية', g: 'm', cat: 'party', k: 'suit', c1: '#6a6e7a', c2: '#2a3a8a', c3: '#5a5e6a', sh: '#2a2a32' },
+    m_par1: { n: 'قميص حفلة مع جيليه', g: 'm', cat: 'party', k: 'vest', c1: '#2a2a3a', c2: '#c0182e', c3: '#1c1c26', sh: '#17171f' },
+    m_swm1: { n: 'شورت سباحة أزرق', g: 'm', cat: 'beach', k: 'swimM', c1: '#1e8ae8', c2: '#ffffff', sh: '#ffd6a0' },
+    m_swm2: { n: 'شورت سباحة أحمر', g: 'm', cat: 'beach', k: 'swimM', c1: '#e02848', c2: '#ffe08a', sh: '#ffd6a0' },
+    f_adm1: { n: 'فستان الملكة', g: 'f', cat: 'adm', adm: 1, k: 'gown', c1: '#3a1f7a', c2: '#ffd24a', sh: '#ffd24a' },
+    f_adm2: { n: 'فستان سهرة ذهبي ملكي', g: 'f', cat: 'adm', adm: 1, k: 'evening', c1: '#d4a017', c2: '#fff3b0', sh: '#5a0f1f' },
+    m_adm1: { n: 'بدلة الملك', g: 'm', cat: 'adm', adm: 1, k: 'suit', c1: '#5a0f1f', c2: '#ffd24a', c3: '#5a0f1f', bow: 1, sh: '#ffd24a' },
+    m_adm2: { n: 'بدلة بلاتينية', g: 'm', cat: 'adm', adm: 1, k: 'suit', c1: '#dfe6f2', c2: '#3a6ad8', c3: '#c8d0e0', sh: '#3a6ad8' },
+    m_haw1: { n: 'قميص هاواي وشورت', g: 'm', cat: 'beach', k: 'hawaii', c1: '#ff8a2a', c2: '#ffffff', c3: '#e8d6a0', sh: '#ffd6a0' }
+  };
+  const CATS = [['', 'ملابسي (تعديل)'], ['wed', '💍 زفاف'], ['party', '🎉 حفلات'], ['beach', '🏖️ شاطئ'], ['adm', '👑 للمشرفين فقط']];
+  const DEF = { g: 'f', hs: 'long', hc: 'brown', sk: 'light', ey: 0, wg: 0, ew: 1, br: 0, mo: 0, bd: 1, ht: 1, bear: 0, mk: [0, 0, 0, 0], tp: 'tee', bt: 'jeans', tc: '#b83a52', bc: '#2f5fb0', sc: '#ffffff', o: '' };
+  const hex = s => typeof s === 'string' && /^#[0-9a-fA-F]{6}$/.test(s);
+  const pick = (v, arr, d) => arr.includes(v) ? v : d;
+  const ni = (v, lo, hi, d) => { v = Number(v); return Number.isInteger(v) && v >= lo && v <= hi ? v : d; };
+  function norm(a) {
+    a = a || {}; const g = a.g === 'm' ? 'm' : 'f', mk = Array.isArray(a.mk) ? a.mk : [];
+    const o = { g, hs: pick(a.hs, HS[g], HS[g][0]), hc: HAIRC[a.hc] ? a.hc : 'brown', sk: SKINS[a.sk] ? a.sk : 'light', ey: ni(a.ey, 0, 7, 0), wg: ni(a.wg, 0, 2, 0), ew: ni(a.ew, 0, 2, 1), br: ni(a.br, 0, 3, g === 'm' ? 1 : 0), mo: ni(a.mo, 0, 3, 0), bd: ni(a.bd, 0, 2, 1), ht: ni(a.ht, 0, 2, 1), bear: g === 'm' ? ni(a.bear, 0, 2, 0) : 0,
+      mk: g === 'f' ? [ni(mk[0], 0, 5, 0), ni(mk[1], 0, 6, 0), ni(mk[2], 0, 2, 0), ni(mk[3], 0, 2, 0)] : [0, 0, 0, 0],
+      tp: pick(a.tp, ['tee', 'tank', 'hoodie', 'long'], 'tee'), bt: pick(a.bt, ['jeans', 'shorts', 'skirt', 'track'], 'jeans'), tc: hex(a.tc) ? a.tc : '#b83a52', bc: hex(a.bc) ? a.bc : '#2f5fb0', sc: hex(a.sc) ? a.sc : '#ffffff', o: (typeof a.o === 'string' && OUTFITS[a.o] && OUTFITS[a.o].g === g) ? a.o : '' };
+    if (o.g === 'm' && o.bt === 'skirt') o.bt = 'jeans'; if (g === 'm' && o.tp === 'tank') o.tp = 'tee';
+    return o;
+  }
+  function sh(h, f) { const n = parseInt(h.slice(1), 16); let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.min(255, Math.round(r * f)); g = Math.min(255, Math.round(g * f)); b = Math.min(255, Math.round(b * f)); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
+  const gl = (c, x0, y0, x1, y1, st) => { const g = c.createLinearGradient(x0, y0, x1, y1); st.forEach(s => g.addColorStop(s[0], s[1])); return g; };
+  const rg = (c, x, y, r, st) => { const g = c.createRadialGradient(x, y, 0, x, y, r); st.forEach(s => g.addColorStop(s[0], s[1])); return g; };
+  function fp(c, d, fill, lw) { const p = new Path2D(d); if (fill) { c.fillStyle = fill; c.fill(p); } if (lw !== 0) { c.strokeStyle = LN; c.lineWidth = lw || 2.2; c.lineJoin = 'round'; c.stroke(p); } return p; }
+  function ov(c, x, y, rx, ry, f, rot) { c.fillStyle = f; c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.fill(); }
+  function gloss(c, x, y, w, rot, al) { c.save(); c.translate(x, y); c.rotate(rot || 0); c.globalAlpha = al || .5; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(0, 0, w, w * .16, 0, 0, 7); c.fill(); c.restore(); }
+
+  /* ---------- الشعر ---------- */
+  function hairBack(c, O, H) {
+    const st = O.hs, f = d => fp(c, d, gl(c, 150, 80, 450, 480, [[0, H[1]], [.55, H[0]], [1, H[1]]]), 2.4);
+    if (st === 'long') f(O.g === 'm' ? 'M164,236 C146,150 192,84 300,82 C408,84 454,150 436,236 C446,300 436,352 450,404 L372,380 L228,380 L150,404 C164,352 154,300 164,236Z' : 'M160,230 C140,150 190,80 300,78 C410,80 460,150 440,230 C452,300 440,380 462,470 C440,520 400,510 384,470 L216,470 C200,510 160,520 138,470 C160,380 148,300 160,230Z');
+    if (st === 'bob') f('M156,240 C140,150 190,84 300,82 C410,84 460,150 444,240 C450,330 440,384 410,404 L190,404 C160,384 150,330 156,240Z');
+    if (st === 'ponytail') { f('M400,130 C500,110 548,220 524,330 C514,390 526,446 484,506 C462,446 484,400 474,334 C464,250 440,190 400,130Z'); f('M170,230 C160,140 210,92 300,90 C390,92 440,140 430,230Z'); }
+    if (st === 'short' || st === 'crop' || st === 'side' || st === 'spike') f('M168,236 C160,140 210,92 300,90 C390,92 440,140 432,236Z');
+    if (st === 'bun') { f('M170,230 C160,140 210,92 300,90 C390,92 440,140 430,230Z'); const p = new Path2D(); p.ellipse(300, 66, 52, 44, 0, 0, 7); c.fillStyle = gl(c, 250, 20, 350, 110, [[0, H[1]], [1, H[0]]]); c.fill(p); c.strokeStyle = LN; c.lineWidth = 2.4; c.stroke(p); }
+    if (st === 'puff') [[300, 170, 170, 130], [150, 200, 50, 60], [450, 200, 50, 60], [190, 110, 60, 50], [410, 110, 60, 50], [300, 70, 70, 50]].forEach(e => { const p = new Path2D(); p.ellipse(e[0], e[1], e[2], e[3], 0, 0, 7); c.fillStyle = gl(c, e[0] - e[2], e[1] - e[3], e[0] + e[2], e[1] + e[3], [[0, H[1]], [1, H[0]]]); c.fill(p); c.strokeStyle = LN; c.lineWidth = 2.2; c.stroke(p); });
+  }
+  function hairFront(c, O, H) {
+    const st = O.hs, f = d => fp(c, d, gl(c, 160, 80, 440, 230, [[0, H[1]], [.5, H[0]], [1, H[1]]]), 2.4);
+    if (st === 'long') { f('M168,250 C150,130 220,84 300,84 C390,84 456,130 432,250 C430,200 400,160 366,150 C340,190 270,196 232,170 C200,196 178,230 168,250Z'); gloss(c, 260, 118, 60, -.25, .55); }
+    if (st === 'bob') { f('M170,244 C156,130 220,86 300,86 C384,86 450,130 430,244 C420,204 400,188 370,190 L230,190 C200,188 180,206 170,244Z'); gloss(c, 250, 116, 56, -.2, .55); }
+    if (st === 'ponytail' || st === 'bun') { f('M170,240 C160,140 220,92 300,92 C380,92 440,140 430,240 C410,170 370,150 330,150 C280,160 220,180 170,240Z'); gloss(c, 250, 120, 58, -.25, .55); }
+    if (st === 'ponytail') fp(c, 'M392,126 C420,118 440,134 432,160 C416,160 400,148 392,126Z', '#ff7aa8', 2);
+    if (st === 'short') { f('M168,240 C156,130 220,88 300,88 C384,88 448,130 432,240 L410,190 L392,222 L360,174 L330,214 L296,170 L262,214 L234,176 L206,222 L186,190Z'); gloss(c, 250, 118, 56, -.2, .5); }
+    if (st === 'crop') { f('M170,236 C158,132 222,90 300,90 C380,90 446,132 430,236 C420,190 380,172 300,172 C220,172 180,190 170,236Z'); gloss(c, 250, 120, 56, -.2, .5); }
+    if (st === 'side') { f('M170,240 C156,128 224,86 304,86 C390,86 450,130 430,240 C426,196 400,168 350,160 C300,150 230,170 196,214 C186,222 176,232 170,240Z'); gloss(c, 262, 112, 54, -.3, .5); }
+    if (st === 'spike') { f('M168,240 C154,140 214,100 300,100 C386,100 448,140 432,240 C426,196 404,176 380,170 L372,110 L344,164 L316,98 L290,164 L250,104 L236,170 C206,184 178,208 168,240Z'); gloss(c, 262, 124, 50, -.2, .5); }
+    if (st === 'puff') { f('M190,216 C190,150 240,118 300,118 C360,118 410,150 410,216 C380,172 340,162 300,162 C260,162 220,172 190,216Z'); gloss(c, 260, 134, 46, -.15, .5); }
+  }
+  /* ---------- العين / الحاجب / الفم ---------- */
+  function eye(c, x, y, f, flip, iris, mkS, ln, male) {
+    if (mkS) { c.save(); c.translate(x, y); c.scale(flip * f, f); const g = rg(c, 0, -20, 48, [[0, mkS + 'dd'], [1, mkS + '00']]); c.fillStyle = g; c.beginPath(); c.ellipse(0, -18, 46, 30, 0, 0, 7); c.fill(); c.restore(); }
+    c.save(); c.translate(x, y); c.scale(flip * f, f);
+    const sh_ = new Path2D('M-32,4 C-30,-30 26,-44 34,-6 C38,26 -4,46 -26,32 C-32,24 -34,12 -32,4Z');
+    c.fillStyle = '#fff'; c.fill(sh_); c.save(); c.clip(sh_);
+    c.fillStyle = rg(c, 2, 6, 34, [[0, iris[0]], [.55, iris[1]], [1, '#0c0a1a']]); c.beginPath(); c.ellipse(2, 6, 22, 28, 0, 0, 7); c.fill();
+    c.fillStyle = '#07060d'; c.beginPath(); c.ellipse(2, 8, 10, 14, 0, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(-8, -4, 8, 9, 0, 0, 7); c.fill(); c.beginPath(); c.arc(12, 16, 4.2, 0, 7); c.fill();
+    c.fillStyle = 'rgba(40,20,40,.28)'; c.fillRect(-40, -50, 80, 26); c.restore();
+    c.strokeStyle = '#1a0e22'; c.lineCap = 'round'; c.lineWidth = 7 + (ln ? 2 : 0); c.beginPath(); c.moveTo(-34, 6); c.bezierCurveTo(-32, -32, 28, -46, 38, -6); c.stroke();
+    if (!male) { c.lineWidth = ln === 2 ? 5 : 4; c.beginPath(); c.moveTo(34, -8); c.lineTo(ln === 2 ? 60 : 48, ln === 2 ? -30 : -18); c.moveTo(-31, -4); c.lineTo(-44, -8); c.stroke(); }
+    if (ln) { c.lineWidth = 2.4; for (let i = 0; i < 4; i++) { const t = -20 + i * 14; c.beginPath(); c.moveTo(t, -36 + Math.abs(t) * .1); c.lineTo(t - 3, -48 + Math.abs(t) * .1); c.stroke(); } }
+    c.restore();
+  }
+  function brows(c, O, H) { c.strokeStyle = sh(H[0], 1.2); c.lineCap = 'round'; const b = O.br, L = (x0, y0, cx, cy, x1, y1) => { c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(cx, cy, x1, y1); c.stroke(); };
+    if (b === 0) { c.lineWidth = 5; L(214, 238, 246, 222, 282, 232); L(318, 232, 354, 222, 386, 238); }
+    if (b === 1) { c.lineWidth = 9; L(212, 238, 246, 226, 284, 232); L(316, 232, 354, 226, 388, 238); }
+    if (b === 2) { c.lineWidth = 6; L(214, 234, 282, 230, 282, 230); L(318, 230, 386, 234, 386, 234); }
+    if (b === 3) { c.lineWidth = 5.5; L(214, 244, 246, 212, 286, 226); L(314, 226, 354, 212, 386, 244); } }
+  function mouth(c, O) {
+    const m = O.mo, lp = LIPS[O.mk[0]] || (O.g === 'm' ? '#c0605a' : '#c8304e'), lg = sh(lp, 1.3); c.lineCap = 'round';
+    if (m === 0) { fp(c, 'M270,340 C284,356 316,356 330,340 C320,372 280,372 270,340Z', lp, 1.8); ov(c, 300, 357, 12, 4, lg); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(276, 344); c.quadraticCurveTo(300, 352, 324, 344); c.quadraticCurveTo(300, 360, 276, 344); c.fill(); }
+    if (m === 1) { c.strokeStyle = lp; c.lineWidth = 5; c.beginPath(); c.moveTo(278, 346); c.quadraticCurveTo(300, 360, 322, 346); c.stroke(); ov(c, 300, 354, 8, 2.4, 'rgba(255,255,255,.45)'); }
+    if (m === 2) { fp(c, 'M262,336 C282,328 318,328 338,336 C336,376 264,376 262,336Z', '#7a1428', 1.8); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(268, 338); c.quadraticCurveTo(300, 332, 332, 338); c.lineTo(330, 348); c.quadraticCurveTo(300, 342, 270, 348); c.fill(); ov(c, 300, 366, 14, 6, '#ff6a86'); }
+    if (m === 3) { fp(c, 'M288,344 C294,334 306,334 312,344 C308,354 292,354 288,344Z', lp, 1.6); ov(c, 298, 342, 4, 1.6, 'rgba(255,255,255,.6)'); }
+  }
+  /* ---------- الحركة ---------- */
+  function pose(P) {
+    const t = P.t || 0, ph = P.ph || 0, mv = P.mv ? 1 : 0, d = P.dance || 0, dt = P.dt || t, s = Math.sin(ph);
+    const o = { bob: 0, bx: 0, rot: 0, headR: 0, aL: .06, aR: .06, lL: 0, lR: 0, hip: 0, spin: 1, hair: 0, liftL: 0, liftR: 0, hop: 0 };
+    o.bob = mv ? -Math.abs(Math.sin(ph)) * 12 : -(Math.sin(t / 30) + 1) * 2;
+    if (mv) { o.lL = s * .3; o.lR = -s * .3; o.aL = .08 + s * .42; o.aR = .08 - s * .42; o.liftL = Math.max(0, s) * .08; o.liftR = Math.max(0, -s) * .08; o.hair = s * .05; o.headR = s * .03; o.hip = s * 3; }
+    else if (!d) { o.hair = Math.sin(t / 40) * .02; o.aL += Math.sin(t / 34) * .03; o.aR -= Math.sin(t / 34) * .03; }
+    if (d && !mv) {
+      const q = dt;
+      if (d === 1) { o.aR = 2.5 + Math.sin(q / 5) * .35; o.aL = .1; o.headR = Math.sin(q / 10) * .07; o.hair = Math.sin(q / 10) * .06; }
+      else if (d === 2) { const w = Math.sin(q / 6); o.hip = w * 16; o.rot = -w * .07; o.aL = .8 + w * .25; o.aR = .8 - w * .25; o.bob = -Math.abs(w) * 5; o.hair = w * .07; o.liftL = Math.max(0, w) * .04; o.liftR = Math.max(0, -w) * .04; }
+      else if (d === 3) { const w = Math.sin(q / 3.5); o.headR = w * .24; o.hair = w * .12; o.bob = -Math.abs(Math.sin(q / 7)) * 6; o.aL = .2; o.aR = .2; }
+      else if (d === 4) { o.spin = Math.cos(q / 6); o.aL = 1.3; o.aR = 1.3; o.hair = .1; o.bob = -Math.abs(Math.sin(q / 12)) * 4; }
+      else if (d === 5) { const w = Math.sin(q / 4); o.aL = 2.6 + w * .25; o.aR = 2.6 - w * .25; o.bob = -Math.abs(w) * 8; o.hair = w * .05; o.lL = w * .1; o.lR = -w * .1; }
+      else if (d === 6) { const w = Math.sin(q / 8); o.rot = w * .12; o.hip = -w * 12; o.aL = 1.0 + w * .5; o.aR = 1.0 - w * .5; o.hair = w * .1; o.headR = -w * .08; }
+      else if (d === 7) { const w = Math.abs(Math.sin(q / 6)); o.bob = -w * 46; o.aL = 2.4; o.aR = 2.4; o.liftL = w * .2; o.liftR = w * .2; o.hair = Math.sin(q / 6) * .08; }
+      else if (d === 8) { const w = Math.sin(q / 5); o.aR = 1.7 + w * .9; o.aL = .35; o.hip = Math.sin(q / 10) * 8; o.rot = Math.sin(q / 10) * .05; o.bob = -Math.abs(w) * 4; o.hair = w * .05; o.headR = Math.sin(q / 10) * .08; }
+    }
+    return o;
+  }
+  /* ---------- القطعة السفلية والأرجل ---------- */
+  function skirtPath(top, hem, wt, wb, sw, wob) { return `M${300 - wt},${top} L${300 + wt},${top} C${300 + wt + 14},${top + (hem - top) * .5} ${300 + wb + sw * .5},${hem - 30} ${300 + wb + sw},${hem} Q${300 + wb * .5 + sw},${hem + 8 + wob} ${300 + sw},${hem + 2} Q${300 - wb * .5 + sw},${hem + 8 - wob} ${300 - wb + sw},${hem} C${300 - wb + sw * .5},${hem - 30} ${300 - wt - 14},${top + (hem - top) * .5} ${300 - wt},${top}Z`; }
+  /* ---------- الرسم الرئيسي ---------- */
+  function draw(c, av, P) {
+    P = P || {}; const O = norm(av), t = P.t || 0, pz = pose(P), male = O.g === 'm', t1 = O.bd - 1, hk = [.9, 1, 1.12][O.ht], sit = P.sit || 0;
+    const tw = male ? 1.12 + .06 * t1 : 1 + .07 * t1, lw = 1 + (male ? .08 : .13) * t1, bust = male ? 0 : [17, 24, 32][t1 + 1];
+    const SK = SKINS[O.sk], H = HAIRC[O.hc], iris = EYES[O.ey][1], Lk = hk * (1 - .58 * sit), ly = 584 + 288 * Lk;
+    const OF = O.o ? OUTFITS[O.o] : null, kind = OF ? OF.k : 'casual';
+    const wind = P.wind || 0, breeze = Math.sin(t / 37) * 5 + wind;
+    const shoeC = OF ? (OF.sh || '#ffffff') : O.sc;
+    c.save(); c.scale(pz.spin, 1); c.translate(-300, -ly + pz.bob);
+    /* حجاب العروس (خلف الجسم) */
+    const wedG = kind === 'gown';
+    if (wedG) { c.save(); c.translate(300, 140); c.rotate(pz.hair * .6 + breeze * .004); c.translate(-300, -140); fp(c, 'M236,110 C150,200 130,420 180,640 C240,700 360,700 420,640 C470,420 450,200 364,110Z', 'rgba(255,255,255,.35)', 1.4); c.restore(); }
+    /* أجنحة (للمشرفين) */
+    if (O.wg) { const fl = Math.sin(t / 12) * .08 + (P.mv ? Math.sin(P.ph || 0) * .1 : 0), g1 = O.wg === 2 ? ['#fff3b0', '#e8a817', '#8a5a00'] : ['#ffffff', '#cfe6ff', '#8ab8f0'];
+      [-1, 1].forEach(s_ => { c.save(); c.translate(300 + s_ * 26, 480); c.scale(s_, 1); c.rotate(fl); const wp = 'M0,0 C70,-140 210,-230 330,-190 C280,-140 300,-100 230,-60 C262,-20 220,30 140,52 C100,34 46,26 0,0Z'; const p = new Path2D(wp); c.fillStyle = gl(c, 0, -200, 330, 40, [[0, g1[0]], [.6, g1[1]], [1, g1[2]]]); c.fill(p); c.strokeStyle = LN; c.lineWidth = 2.4; c.stroke(p); c.save(); c.clip(p); c.strokeStyle = 'rgba(80,60,40,.25)'; c.lineWidth = 3; for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(20, -4); c.quadraticCurveTo(120 + i * 22, -150 + i * 20, 330 - i * 14, -190 + i * 34); c.stroke(); } c.restore(); c.restore(); }); }
+    /* شعر خلفي */
+    c.save(); c.translate(300, 130); c.rotate(pz.hair + breeze * .003); c.translate(-300, -130); hairBack(c, O, H); c.restore();
+    /* ===== الجزء السفلي ===== */
+    c.save(); c.translate(pz.hip, 0);
+    c.save(); c.translate(300, 584); c.scale(lw, 1); c.translate(-300, -584);
+    const legL = 'M236,584 L298,584 C298,700 296,800 292,872 L246,872 C242,800 232,700 236,584Z', legR = 'M302,584 L364,584 C368,700 358,800 354,872 L308,872 C304,800 302,700 302,584Z';
+    let pcol = null, pend = 872, pstripe = false;
+    if (kind === 'casual') { if (O.bt === 'jeans' || O.bt === 'track') { pcol = O.bc; } else if (O.bt === 'shorts') { pcol = O.bc; pend = 700; } }
+    else if (kind === 'suit' || kind === 'vest') pcol = OF.c3; else if (kind === 'swimM' || kind === 'hawaii') { pcol = kind === 'swimM' ? OF.c1 : OF.c3; pend = 700; pstripe = kind === 'swimM'; }
+    const legDraw = (i) => {
+      const L = i === 0, px = L ? 268 : 332, a = L ? pz.lL : pz.lR, lift = L ? pz.liftL : pz.liftR, sy = Lk * (1 - lift);
+      c.save(); c.translate(px, 584); c.rotate(a); c.scale(1, sy); c.translate(-px, -584);
+      fp(c, L ? legL : legR, gl(c, L ? 236 : 302, 0, L ? 298 : 364, 0, [[0, SK[1]], [.5, SK[0]], [1, SK[1]]]), 2.2);
+      if (pcol) { const d = L ? `M236,584 L298,584 C298,${pend - 172} 297,${pend - 72} ${pend === 872 ? 292 : 297},${pend} L${pend === 872 ? 246 : 240},${pend} C${pend === 872 ? 242 : 238},${pend - 72} ${pend === 872 ? 232 : 236},${pend - 172} 236,584Z` : `M302,584 L364,584 C${pend === 872 ? 368 : 364},${pend - 172} ${pend === 872 ? 358 : 361},${pend - 72} ${pend === 872 ? 354 : 360},${pend} L${pend === 872 ? 308 : 303},${pend} C${pend === 872 ? 304 : 302},${pend - 72} 302,${pend - 172} 302,584Z`;
+        fp(c, d, gl(c, L ? 236 : 302, 0, L ? 298 : 364, 0, [[0, sh(pcol, .8)], [.5, sh(pcol, 1.1)], [1, sh(pcol, .85)]]), 2.2);
+        if (pstripe) { c.fillStyle = OF.c2; c.fillRect(L ? 237 : 361, 600, 3, pend - 604); }
+        if (kind === 'casual' && O.bt === 'track') { c.fillStyle = '#fff'; c.fillRect(L ? 238 : 359, 600, 3, 270); }
+        if (kind === 'casual' && O.bt === 'jeans') { c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 5; c.beginPath(); c.moveTo(L ? 250 : 350, 620); c.lineTo(L ? 254 : 346, 860); c.stroke(); } }
+      // حذاء
+      const fx = L ? 270 : 330; c.save(); c.translate(fx, 872); c.scale(1, 1 / sy); const hi = kind === 'gown' || kind === 'evening' || kind === 'party';
+      fp(c, 'M-34,0 L34,0 C44,18 40,34 10,36 L-30,36 C-42,28 -40,8 -34,0Z', gl(c, 0, 0, 0, 36, [[0, shoeC], [1, sh(shoeC, .8)]]), 2.2); c.fillStyle = 'rgba(255,255,255,.85)'; c.fillRect(-38, 28, 76, 6); if (hi) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(-38, 28, 76, 6); }
+      c.restore(); c.restore();
+    };
+    legDraw(0); legDraw(1);
+    c.restore();
+    /* تنانير وفساتين */
+    const sk2 = Math.sin(t / 15 + (P.ph || 0)) * 4, swk = (P.mv ? Math.sin(P.ph || 0) * 16 : 0) + breeze * .5 + pz.hip * .5, wob = Math.sin(t / 12) * 4;
+    const sq = (d, f2, a) => { c.save(); c.translate(300, 584); c.scale(1, Math.max(.45, Lk / 1)); c.translate(-300, -584); fp(c, d, f2, a); c.restore(); };
+    if (kind === 'gown') { sq(skirtPath(584, 864, 70, 150, swk, wob), gl(c, 150, 584, 450, 864, [[0, OF.c1], [1, sh(OF.c1, .82)]]), 2.4); c.save(); c.translate(300, 584); c.scale(1, Lk); c.translate(-300, -584); c.strokeStyle = OF.c2; c.lineWidth = 3; c.globalAlpha = .6; [-70, -35, 0, 35, 70].forEach(x => { c.beginPath(); c.moveTo(300 + x * .5, 600); c.quadraticCurveTo(300 + x * 1.2 + swk * .4, 740, 300 + x * 1.9 + swk, 856); c.stroke(); }); c.globalAlpha = 1; c.restore(); }
+    if (kind === 'evening') { sq(skirtPath(584, 862, 64, 96, swk, wob), gl(c, 200, 584, 400, 862, [[0, OF.c1], [1, sh(OF.c1, .7)]]), 2.4); c.save(); c.translate(300, 584); c.scale(1, Lk); c.translate(-300, -584); fp(c, `M${300 + 64},640 C${300 + 78 + swk * .3},720 ${300 + 90 + swk * .6},800 ${300 + 96 + swk},862`, null, 3); c.restore(); }
+    if (kind === 'party') { sq(skirtPath(584, 716, 62, 106, swk * .7, wob), gl(c, 190, 584, 410, 716, [[0, OF.c1], [1, sh(OF.c1, .75)]]), 2.4); c.save(); c.translate(300, 584); c.scale(1, Lk); c.translate(-300, -584); c.fillStyle = OF.c2; c.globalAlpha = .55; for (let i = 0; i < 9; i++) ov(c, 300 + (i - 4) * 18 + swk * .3, 640 + (i % 3) * 22, 3, 3, OF.c2); c.globalAlpha = 1; c.restore(); }
+    if (kind === 'casual' && O.bt === 'skirt') sq(skirtPath(584, 740, 66, 108, swk * .8, wob), gl(c, 190, 584, 410, 740, [[0, sh(O.bc, 1.15)], [1, sh(O.bc, .75)]]), 2.4);
+    if (kind === 'swim') { fp(c, 'M236,584 L364,584 L368,640 C340,660 316,640 300,628 C284,640 260,660 232,640Z', OF.c1, 2.2); if (OF.pareo) sq(`M236,590 L364,590 C386,640 392,700 380,742 C340,730 300,746 262,730 C222,742 214,640 236,590Z`.replace(/(\d+),(\d+)/g, (m_, x, y) => (+x + (+y > 700 ? swk * .8 : 0)) + ',' + y), gl(c, 220, 590, 390, 740, [[0, OF.pareo], [1, sh(OF.pareo, .8)]]), 2.2); }
+    c.restore();
+    /* ===== الجزء العلوي (يدور مع الرقص) ===== */
+    c.save(); c.translate(300, 584); c.rotate(pz.rot); c.translate(-300, -584);
+    /* رقبة */
+    fp(c, 'M278,392 L322,392 L326,436 L274,436Z', gl(c, 0, 392, 0, 436, [[0, SK[2]], [1, SK[0]]]), 2);
+    c.save(); c.translate(300, 584); c.scale(tw, 1); c.translate(-300, -584);
+    const cc = kind === 'casual' ? O.tc : (OF.c1), longSl = (kind === 'casual' && (O.tp === 'hoodie' || O.tp === 'long')) || kind === 'suit' || kind === 'vest' && false;
+    // ذراعين
+    [0, 1].forEach(i => {
+      const L = i === 0, a = L ? pz.aL : pz.aR; c.save(); if (!L) { c.translate(600, 0); c.scale(-1, 1); } c.translate(240, 440); c.rotate(a); c.translate(-240, -440);
+      fp(c, 'M240,440 C214,472 204,530 212,592 L238,594 C236,544 244,498 256,460Z', gl(c, 204, 0, 256, 0, [[0, SK[1]], [1, SK[3]]]), 2.2);
+      if (longSl) { fp(c, 'M240,438 C214,470 204,530 210,594 L240,596 C236,544 246,498 258,456Z', gl(c, 204, 0, 258, 0, [[0, sh(kind === 'suit' ? OF.c1 : cc, .85)], [1, sh(kind === 'suit' ? OF.c1 : cc, 1.1)]]), 2.2); c.fillStyle = kind === 'suit' ? '#fff' : sh(cc, .8); c.fillRect(208, 584, 32, 12); }
+      else if (kind === 'casual' && O.tp === 'tee' || kind === 'hawaii' || kind === 'vest') fp(c, 'M242,438 C220,456 206,480 204,506 C220,514 240,508 252,494 C254,476 256,458 258,446Z', gl(c, 0, 438, 0, 514, [[0, sh(kind === 'hawaii' ? OF.c1 : kind === 'vest' ? '#f4f4fa' : cc, 1.1)], [1, sh(kind === 'hawaii' ? OF.c1 : kind === 'vest' ? '#f4f4fa' : cc, .8)]]), 2.2);
+      else if (kind === 'vest') { }
+      ov(c, 226, 604, 15, 17, SK[0]); c.strokeStyle = LN; c.lineWidth = 2; c.beginPath(); c.ellipse(226, 604, 15, 17, 0, 0, 7); c.stroke();
+      if (kind === 'gown' && !L) { /* باقة ورد */ ov(c, 224, 590, 22, 18, '#7ac06a'); [[-10, -10, '#ff7aa8'], [8, -12, '#fff'], [0, -4, '#ffb8d0'], [-12, 4, '#fff'], [12, 0, '#ff7aa8']].forEach(f => { ov(c, 224 + f[0], 592 + f[1], 8, 8, f[2]); c.strokeStyle = 'rgba(70,35,50,.5)'; c.lineWidth = 1.4; c.beginPath(); c.arc(224 + f[0], 592 + f[1], 8, 0, 7); c.stroke(); }); }
+      c.restore();
+    });
+    // الجذع
+    const torsoD = male ? 'M232,436 C266,422 334,422 368,436 C376,486 372,548 366,596 L234,596 C228,548 224,486 232,436Z' : `M236,436 C266,424 334,424 364,436 C${376 + 3 * t1},486 ${370 - (6 - 3 * t1) * .5},548 366,596 L234,596 C${230 + (6 - 3 * t1) * .5},548 ${224 - 3 * t1},486 236,436Z`;
+    let tcol = cc; if (kind === 'swimM' || kind === 'hawaii') tcol = null;
+    if (kind === 'swim') tcol = OF.c1;
+    if (kind === 'suit' || kind === 'vest') tcol = '#f4f4fa';
+    fp(c, torsoD, tcol ? gl(c, 236, 424, 364, 596, [[0, sh(tcol, 1.18)], [.6, tcol], [1, sh(tcol, .72)]]) : gl(c, 236, 424, 364, 596, [[0, SK[3]], [1, SK[0]]]), 2.4);
+    // صدر
+    if (!male) { ov(c, 276, 486, bust, bust * .68, 'rgba(255,255,255,.16)'); ov(c, 324, 486, bust, bust * .68, 'rgba(255,255,255,.12)'); c.strokeStyle = 'rgba(40,10,40,.28)'; c.lineWidth = 3; c.beginPath(); c.moveTo(300 - bust * 1.4, 486 + bust * .62); c.quadraticCurveTo(300, 486 + bust * .9 + 10, 300 + bust * 1.4, 486 + bust * .62); c.stroke(); }
+    else { c.strokeStyle = 'rgba(60,20,20,.2)'; c.lineWidth = 3; c.beginPath(); c.moveTo(262, 486); c.quadraticCurveTo(278, 500, 298, 490); c.moveTo(302, 490); c.quadraticCurveTo(322, 500, 338, 486); c.stroke(); }
+    // تفاصيل القميص
+    const neckV = col => { c.fillStyle = col; c.beginPath(); c.moveTo(270, 426); c.quadraticCurveTo(300, 452, 330, 426); c.lineTo(330, 434); c.quadraticCurveTo(300, 462, 270, 434); c.fill(); };
+    if (kind === 'casual') {
+      if (O.tp === 'tank') { fp(c, 'M244,436 L262,430 L268,452 L250,458Z', cc, 1.6); fp(c, 'M356,436 L338,430 L332,452 L350,458Z', cc, 1.6); c.fillStyle = SK[0]; c.beginPath(); c.moveTo(270, 426); c.quadraticCurveTo(300, 470, 330, 426); c.lineTo(334, 452); c.quadraticCurveTo(300, 490, 266, 452); c.fill(); }
+      if (O.tp === 'hoodie') { fp(c, 'M262,430 C280,456 320,456 338,430 C334,420 266,420 262,430Z', sh(cc, .85), 2); c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(288, 448); c.lineTo(286, 486); c.moveTo(312, 448); c.lineTo(314, 486); c.stroke(); fp(c, 'M252,540 L348,540 L360,590 L240,590Z', sh(cc, .82), 2); }
+      if (O.tp === 'long') { c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 4; c.beginPath(); c.moveTo(236, 520); c.lineTo(364, 520); c.moveTo(232, 560); c.lineTo(368, 560); c.stroke(); }
+      if (O.tp === 'tee' || O.tp === 'long') neckV(sh(cc, 1.25));
+      if (O.bt !== 'track' && O.tp !== 'hoodie') { fp(c, 'M232,584 L368,584 L368,604 L232,604Z', '#3a2a22', 2); ov(c, 300, 594, 10, 8, '#e8c050'); }
+    }
+    if (kind === 'gown' || kind === 'evening' || kind === 'party') {
+      // فستان: صدرية مع حمّالات/كتف مكشوف
+      const sl = kind === 'party' || kind === 'evening';
+      fp(c, 'M232,520 C270,534 330,534 368,520 L370,584 L230,584Z', gl(c, 0, 520, 0, 584, [[0, OF.c1], [1, sh(OF.c1, .8)]]), 2.2);
+      c.fillStyle = SK[0]; c.beginPath(); c.moveTo(232, 440); c.quadraticCurveTo(300, 420, 368, 440); c.lineTo(366, 478); c.quadraticCurveTo(300, 500, 234, 478); c.closePath(); c.fill();
+      fp(c, 'M234,478 C270,510 330,510 366,478 L368,524 C330,540 270,540 232,524Z', gl(c, 0, 478, 0, 530, [[0, sh(OF.c1, 1.1)], [1, OF.c1]]), 2.2);
+      if (kind === 'gown') { c.strokeStyle = OF.c2; c.lineWidth = 3; c.beginPath(); c.moveTo(234, 500); c.quadraticCurveTo(300, 540, 366, 500); c.stroke(); for (let i = 0; i < 7; i++) ov(c, 250 + i * 17, 508 + Math.sin(i) * 3, 2.6, 2.6, '#fff'); }
+      if (kind === 'evening') { c.strokeStyle = OF.sh; c.lineWidth = 6; c.beginPath(); c.moveTo(236, 560); c.lineTo(364, 560); c.stroke(); }
+      if (kind === 'party') { fp(c, 'M262,430 L262,470 M338,430 L338,470', null, 0); c.strokeStyle = OF.c1; c.lineWidth = 8; c.beginPath(); c.moveTo(262, 432); c.lineTo(268, 480); c.moveTo(338, 432); c.lineTo(332, 480); c.stroke(); }
+      if (kind === 'party' || kind === 'evening') { ov(c, 300, 584, 16, 8, OF.c2); }
+    }
+    if (kind === 'swim') { // مايوه قطعة محتشم
+      c.fillStyle = SK[0]; c.beginPath(); c.moveTo(250, 430); c.quadraticCurveTo(300, 420, 350, 430); c.lineTo(340, 470); c.quadraticCurveTo(300, 484, 260, 470); c.closePath(); c.fill();
+      fp(c, 'M258,430 L268,470 M342,430 L332,470', null, 0); c.strokeStyle = OF.c1; c.lineWidth = 9; c.beginPath(); c.moveTo(262, 432); c.lineTo(270, 472); c.moveTo(338, 432); c.lineTo(330, 472); c.stroke();
+      c.strokeStyle = OF.c2; c.lineWidth = 4; c.beginPath(); c.moveTo(240, 548); c.lineTo(360, 548); c.stroke(); c.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 5; i++) ov(c, 262 + i * 19, 520 + (i % 2) * 14, 3, 3, 'rgba(255,255,255,.4)');
+    }
+    if (kind === 'swimM') { fp(c, 'M232,584 L368,584 L368,600 L232,600Z', OF.c1, 2); c.strokeStyle = OF.c2; c.lineWidth = 3; c.beginPath(); c.moveTo(270, 590); c.lineTo(330, 590); c.stroke(); }
+    if (kind === 'hawaii') { [-1, 1].forEach(s => { const d = s < 0 ? 'M236,436 C260,424 288,426 296,436 L290,590 L236,590 C226,548 226,486 236,436Z' : 'M364,436 C340,424 312,426 304,436 L310,590 L364,590 C374,548 374,486 364,436Z'; const p = fp(c, d, gl(c, 230, 430, 370, 590, [[0, sh(OF.c1, 1.15)], [1, sh(OF.c1, .8)]]), 2.2); c.save(); c.clip(p); c.fillStyle = OF.c2; [[260, 470], [250, 520], [275, 560], [340, 470], [352, 524], [326, 566]].forEach(f => ov(c, f[0], f[1], 6, 6, OF.c2)); c.restore(); }); }
+    if (kind === 'suit' || kind === 'vest') {
+      if (kind === 'suit') {
+        [-1, 1].forEach(s => { const d = s < 0 ? 'M232,436 C262,424 290,428 300,440 L296,470 L270,590 L232,590 C224,548 224,486 232,436Z' : 'M368,436 C338,424 310,428 300,440 L304,470 L330,590 L368,590 C376,548 376,486 368,436Z'; fp(c, d, gl(c, 230, 430, 370, 590, [[0, sh(OF.c1, 1.12)], [1, sh(OF.c1, .78)]]), 2.4); });
+        fp(c, 'M300,440 L270,470 L296,520 L270,590 L330,590 L304,520 L330,470Z', '#f4f4fa', 1.8); // قميص
+        // طية
+        fp(c, 'M296,436 L262,470 L282,486 L296,470Z', sh(OF.c1, 1.2), 1.8); fp(c, 'M304,436 L338,470 L318,486 L304,470Z', sh(OF.c1, 1.2), 1.8);
+        if (OF.bow) { fp(c, 'M300,452 L276,440 L276,466Z', OF.c2, 1.6); fp(c, 'M300,452 L324,440 L324,466Z', OF.c2, 1.6); ov(c, 300, 452, 6, 7, sh(OF.c2, .8)); }
+        else { fp(c, 'M300,452 L291,472 L300,540 L309,472Z', OF.c2, 1.6); fp(c, 'M294,448 L306,448 L309,460 L291,460Z', sh(OF.c2, .85), 1.4); }
+        ov(c, 300, 560, 3.4, 3.4, '#e8c46a'); ov(c, 300, 530, 3.4, 3.4, '#e8c46a');
+        if (OF.c1 === '#f4f2ee') { c.fillStyle = '#e8c46a'; c.beginPath(); c.arc(318, 484, 4, 0, 7); c.fill(); }
+      } else { // قميص + جيليه
+        fp(c, 'M236,436 L300,444 L364,436 C374,486 372,548 366,590 L234,590 C228,548 226,486 236,436Z', '#f4f4fa', 2.2);
+        fp(c, 'M244,440 L296,448 L284,590 L238,590 C232,548 232,486 244,440Z', OF.c1, 2.2); fp(c, 'M356,440 L304,448 L316,590 L362,590 C368,548 368,486 356,440Z', OF.c1, 2.2);
+        fp(c, 'M300,450 L292,466 L300,520 L308,466Z', OF.c2, 1.6);
+      }
+    }
+    c.restore(); /* tw */
+    /* ===== الرأس ===== */
+    c.save(); c.translate(300, 430); c.rotate(pz.headR); c.translate(-300, -430);
+    const face = male ? 'M170,250 C170,150 230,112 300,112 C370,112 430,150 430,250 C430,330 396,396 300,408 C204,396 170,330 170,250Z' : 'M170,250 C170,150 230,112 300,112 C370,112 430,150 430,250 C430,340 372,404 300,408 C228,404 170,340 170,250Z';
+    fp(c, face, gl(c, 170, 110, 430, 408, [[0, SK[3]], [.55, SK[0]], [1, SK[1]]]), 2.6);
+    [[168, 290], [432, 290]].forEach(e => ov(c, e[0], e[1], 14, 24, SK[1]));
+    const bl = BLUSH[O.mk[2]]; ov(c, 226, 332, 34, 22, 'rgba(255,100,120,' + (.3 + bl * .5) + ')'); ov(c, 374, 332, 34, 22, 'rgba(255,100,120,' + (.3 + bl * .5) + ')');
+    if (male && O.bear) { c.save(); c.globalAlpha = O.bear === 2 ? .85 : .32; c.fillStyle = sh(H[0], 1); c.beginPath(); c.moveTo(176, 290); c.bezierCurveTo(180, 380, 240, 410, 300, 410); c.bezierCurveTo(360, 410, 420, 380, 424, 290); c.bezierCurveTo(420, 330, 380, 322, 360, 326); c.quadraticCurveTo(300, 308, 240, 326); c.bezierCurveTo(220, 322, 180, 330, 176, 290); c.fill(); c.restore(); }
+    ov(c, 300, 372, 60, 22, 'rgba(120,50,40,.1)');
+    const fz = EW[O.ew] / 15 * (male ? .92 : 1), mS = SHADOWS[O.mk[1]]; eye(c, 244, 292, fz, 1, iris, mS, O.mk[3], male); eye(c, 356, 292, fz, -1, iris, mS, O.mk[3], male);
+    brows(c, O, H);
+    c.strokeStyle = 'rgba(150,80,60,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(294, 330); c.quadraticCurveTo(300, 336, 308, 330); c.stroke(); ov(c, 298, 322, 3, 4, 'rgba(255,255,255,.4)');
+    mouth(c, O);
+    if (male && O.bear === 2) { c.fillStyle = H[0]; c.beginPath(); c.moveTo(268, 338); c.quadraticCurveTo(300, 326, 332, 338); c.quadraticCurveTo(300, 332, 268, 338); c.fill(); }
+    hairFront(c, O, H);
+    if (wedG) { fp(c, 'M200,140 C230,100 370,100 400,140 L388,160 C340,130 260,130 212,160Z', 'rgba(255,255,255,.55)', 1.6); c.fillStyle = '#ffd96a'; c.beginPath(); c.moveTo(250, 124); c.lineTo(262, 96); c.lineTo(280, 118); c.lineTo(300, 88); c.lineTo(320, 118); c.lineTo(338, 96); c.lineTo(350, 124); c.closePath(); c.fill(); c.strokeStyle = LN; c.lineWidth = 2; c.stroke(); }
+    if (kind === 'party' || kind === 'evening') { ov(c, 372, 132, 16, 12, OF.c2); ov(c, 372, 132, 8, 6, '#fff'); }
+    c.restore(); /* head */
+    c.restore(); /* upper */
+    c.restore();
+    return O;
+  }
+  /* رسم صغير في العالم: x,y عند القدمين، h ارتفاع بالبكسل */
+  function drawAt(c, av, x, y, h, P) { c.save(); c.translate(x, y); const k = h / 830; c.scale(k, k); draw(c, av, P); c.restore(); }
+  return { draw, drawAt, norm, DEF, HAIRC, SKINS, EYES, EW, LIPS, SHADOWS, BLUSH, HS, OUTFITS, CATS, hex };
+})();
+
 /* ================= نظام الغرف 🏝️ ================= */
 const RMW = 800, RMH = 620;
 var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
@@ -5199,7 +5493,7 @@ function rmUpdMe() {
 function rmJump(x1, y1, dur, h, kind) { const m = RM.me; m.jump = { x0: m.x, y0: m.y, x1, y1, t: 0, dur, h, kind }; m.tx = x1; m.ty = y1; if (kind === 'sit' && m.seat && m.seat.d) m.dir = m.seat.d; else if (Math.abs(x1 - m.x) > 0.5) m.dir = x1 > m.x ? 1 : -1; sfx(kind === 'sit' ? 'sit' : 'stand'); }
 function rmDust(x, y) { for (let i = 0; i < 8; i++) RM.sparks.push({ x: x + (Math.random() - .5) * 16, y: y - 1, vx: (Math.random() - .5) * 1.5, vy: -0.25 - Math.random() * 0.45, t: 18 + Math.random() * 12, dust: 1 }); }
 function rmWalkTo(x, y) { const m = RM.me; if (m.jump) { if (m.jump.kind === 'stand') m.after = [x, y]; return; } if (m.sit) { rmStand([x, y]); return; } m.sit = false; m.goal = false; m.seat = null; m.tx = Math.max(24, Math.min(776, x)); m.ty = Math.max(212, Math.min(604, y)); }
-function rmSitAt(sp) { const m = RM.me; if (m.jump || m.sit || rmBusy(sp)) { if (rmBusy(sp)) showToast('⛔ هذا المكان مشغول'); return; } m.seat = sp; m.sit = false; m.goal = true; m.after = null; m.tx = sp.x; m.ty = Math.min(606, sp.ey + 10); sfx('click'); rmPrompt(true); }
+function rmSitAt(sp) { const m = RM.me; if (m.dance) rmSetDance(0); if (m.jump || m.sit || rmBusy(sp)) { if (rmBusy(sp)) showToast('⛔ هذا المكان مشغول'); return; } m.seat = sp; m.sit = false; m.goal = true; m.after = null; m.tx = sp.x; m.ty = Math.min(606, sp.ey + 10); sfx('click'); rmPrompt(true); }
 function rmStand(after) { const m = RM.me; if (m.jump) return; if (!m.sit) { m.goal = false; m.seat = null; m.tx = m.x; m.ty = m.y; rmPrompt(true); if (after) rmWalkTo(after[0], after[1]); return; } const s = m.seat; m.sit = false; m.after = after || null; rmPrompt(true); rmJump(m.x + (s && s.d ? -s.d * 10 : 0), Math.min(606, (s ? s.ey : m.y) + 10), 18, 9, 'stand'); }
 /* ---------- تيجان وهالات الادمن + رتبة مميز ---------- */
 function drawCrown(c, x, y, kind, s) {
@@ -5240,23 +5534,27 @@ function rmAura(c, x, y, kind) {
 }
 function rmBurst(x, y, kind) { for (let i = 0; i < 46; i++) { const a = Math.random() * 6.283, v = 0.6 + Math.random() * 2.2; RM.sparks.push({ x, y: y - 16, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.6, t: 34 + Math.random() * 26 }); } }
 function crownIcon(kind) { const k = document.createElement('canvas'); k.width = 30; k.height = 22; k.style.cssText = 'width:20px;height:15px;vertical-align:-2px;margin-inline-end:3px'; drawCrown(k.getContext('2d'), 15, 19, kind, 1.05); return k; }
+const AV_H = 54;
+function rmSetDance(e) { const m = RM.me; e = e | 0; if ((m.dance || 0) === e) return; if (e && (m.sit || m.jump)) { showToast('🧍 قوم من الكرسي أول'); return; } m.dance = e; m.dt = 0; rmSend({ t: 'rm_emo', e }); rmDanceMark(); }
 function rmDrawMe(c, st) {
   const m = RM.me, sit = m.sit && !st.mv;
-  m.sk += ((sit ? 1 : 0) - m.sk) * 0.18; m.bn = Math.max(0, m.bn - 0.07); const hop = (st.mv ? Math.abs(Math.sin(RM.T / 3)) * 5 : m.sit ? 0 : Math.sin(RM.T / 24) * 0.8) + st.air, sk = m.sk, bn = m.bn, st2 = 1 + 0.1 * Math.sin(Math.PI * st.jp);
+  m.sk += ((sit ? 1 : 0) - m.sk) * 0.18; m.bn = Math.max(0, m.bn - 0.07);
+  if (st.mv) m.ph = (m.ph || 0) + 0.3; if (m.dance && (st.mv || m.sit || m.jump)) rmSetDance(0); if (m.dance) m.dt = (m.dt || 0) + 1;
+  const sk = m.sk, up = st.air * 0.8;
   if (RM.myAdm) rmAura(c, m.x, m.y, RM.myAdm);
-  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 13 * (1 - st.air / 40), 4 * (1 - st.air / 50), 0, 0, 7); c.fill();
-  c.save(); c.translate(m.x, m.y - 13 - hop + 7 * sk + Math.sin(RM.T / 30) * 0.7 * sk); c.rotate(-0.1 * m.dir * sk); c.scale(0.8 * m.dir * (1 + 0.1 * bn) / (st2 > 1 ? 1 + (st2 - 1) * 0.5 : 1), 0.8 * (1 - 0.12 * sk) * (1 - 0.2 * bn) * st2); drawBirdSkin(c, 0, 0, 0, curSkin(), RM.T / 2); c.restore();
-  rmTag(c, rmMe(), m.x, m.y - 40 + 5 * sk - st.air * 0.6, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - 44 + 5 * sk);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 12 * (1 - st.air / 40), 3.6 * (1 - st.air / 50), 0, 0, 7); c.fill();
+  c.save(); c.translate(m.x, m.y + 8 * sk - up); c.scale(m.dir, 1); AVT.drawAt(c, m.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: m.dance || 0, dt: m.dt || 0 }); c.restore();
+  rmTag(c, rmMe(), m.x, m.y - 68 + 8 * sk - up, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - 72 + 8 * sk - up);
 }
 function rmDrawOther(c, o) {
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
-  const sit = o.sit && !mv, hop = mv ? Math.abs(Math.sin(RM.T / 3)) * 5 : sit ? 0 : Math.sin(RM.T / 24) * 0.8, sk = ALL_SKINS.find(k => k.id === o.skin) || SKINS[0];
-  if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
+  const sit = o.sit && !mv; if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
   o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
+  if (mv) { o.ph = (o.ph || 0) + 0.3; o.dance = 0; } if (o.sit) o.dance = 0; if (o.dance) o.dt = (o.dt || 0) + 1;
   if (o.adm) rmAura(c, o.x, o.y, o.adm);
-  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 13, 4, 0, 0, 7); c.fill();
-  c.save(); c.translate(o.x, o.y - 13 - hop + 7 * k); c.rotate(-0.1 * o.dir * k); c.scale(0.8 * o.dir * (1 + 0.1 * o.bn), 0.8 * (1 - 0.12 * k) * (1 - 0.2 * o.bn)); drawBirdSkin(c, 0, 0, 0, sk, RM.T / 2); c.restore();
-  rmTag(c, o.name, o.x, o.y - 40 + 5 * k, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - 44 + 5 * k); rmTyping(c, o.name, o.x, o.y - 44 + 5 * k);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 12, 3.6, 0, 0, 7); c.fill();
+  c.save(); c.translate(o.x, o.y + 8 * k); c.scale(o.dir, 1); AVT.drawAt(c, o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: o.dance || 0, dt: o.dt || 0 }); c.restore();
+  rmTag(c, o.name, o.x, o.y - 68 + 8 * k, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - 72 + 8 * k); rmTyping(c, o.name, o.x, o.y - 72 + 8 * k);
 }
 function rmTyping(c, name, x, y) {
   if (!RM.typOn) return; const e = RM.typ[name]; if (!e) return; const now = performance.now(); if (now > e) { delete RM.typ[name]; return; }
@@ -5330,18 +5628,20 @@ function rmPrompt(force) {
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
 /* ---------- الشبكة ---------- */
-function rmJoinSend() { if (!RM.on) return; if (!auth) { if (gws && gws.readyState === 1) rmSend({ t: 'rm_join', id: RM.id, code: '' }); else rmGuestConnect(); return; } if (fws && fws.readyState === 1) rmSend({ t: 'rm_join', id: RM.id, code: RM.code }); else if (!fws || fws.readyState > 1) presenceSync(); }
+function rmJoinSend() { if (!RM.on) return; if (!auth) { if (gws && gws.readyState === 1) rmSend({ t: 'rm_join', id: RM.id, code: '', av: rmLocalAv() }); else rmGuestConnect(); return; } if (fws && fws.readyState === 1) rmSend({ t: 'rm_join', id: RM.id, code: RM.code }); else if (!fws || fws.readyState > 1) presenceSync(); }
 function rmOnMsg(d) {
   const T = d.t;
   if (T === 'rm_state') {
     RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
-    (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g }; });
+    (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
-  } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g }; rmRenderMem(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
+    rmAvInit(d.myAv); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+  } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, dt: 0, ph: 0 }; rmRenderMem(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmPrompt(false); }
   else if (T === 'rm_kiss') { rmKissFx(d.from, d.to); }
+  else if (T === 'rm_av') { const o = RM.others[d.n]; if (o && d.av) o.av = AVT.norm(d.av); }
+  else if (T === 'rm_emo') { const o = RM.others[d.n]; if (o) { o.dance = d.e | 0; o.dt = 0; } }
   else if (T === 'rm_typing') { RM.typ[d.n] = performance.now() + 3200; }
   else if (T === 'rm_chat') { if (d.m.sys) { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); showToast(d.m.txt); return; } delete RM.typ[d.m.n]; RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); RM.bubs[d.m.n] = { txt: d.m.txt, t: Math.min(900, 220 + String(d.m.txt).length * 5) }; rmRenderLog(); if (d.m.n !== rmMe()) { try { ding(); } catch (e) {} } }
   else if (T === 'rm_warn') { rmModal('⚠️', 'تحذير من صاحب الغرفة (' + d.from + ')', d.txt); try { sfx('warn'); } catch (e) {} }
@@ -5352,6 +5652,86 @@ function rmOnMsg(d) {
   else if (T === 'rm_ok') showToast(d.msg || '✅');
   else if (T === 'rm_err') { showToast('⚠️ ' + d.error); if (d.fatal && RM.on) { RM.on = false; rmShowLobby(); } }
 }
+
+/* ---------- شخصية المنتجع: المحرر + المتجر + الرقصات ---------- */
+function rmLocalAv() { try { const a = JSON.parse(localStorage.getItem('rmAv') || 'null'); return a ? AVT.norm(a) : null; } catch (e) { return null; } }
+function rmAvInit(sv) {
+  let a = sv; if (!a) { a = rmLocalAv(); if (a) rmSend({ t: 'rm_av', av: a }); }
+  if (a) RM.me.av = AVT.norm(a); else { RM.me.av = AVT.norm({}); setTimeout(() => { if (RM.on) avOpen(true); }, 400); }
+}
+const RM_DANCES = [[1, '👋', 'تلويح'], [2, '💃', 'هز الخصر'], [3, '🤪', 'هز الراس'], [4, '🌀', 'دوران'], [5, '🙌', 'تصفيق'], [6, '🕺', 'تويست'], [7, '🎉', 'قفز احتفال'], [8, '✨', 'ديسكو']];
+function rmDanceMark() { const P = $('rmDance'); if (!P || P.hidden) return; P.querySelectorAll('button[data-e]').forEach(b => b.classList.toggle('on', +b.dataset.e === (RM.me.dance || 0))); }
+function rmDanceBuild() { const P = $('rmDance'); P.innerHTML = ''; RM_DANCES.forEach(d => { const b = document.createElement('button'); b.type = 'button'; b.dataset.e = d[0]; b.textContent = d[1] + ' ' + d[2]; b.onclick = () => { rmSetDance(d[0]); rmDanceMark(); if (RM.me.dance) P.hidden = true; }; P.appendChild(b); }); const st = document.createElement('button'); st.type = 'button'; st.className = 'stop'; st.textContent = '⏹ إيقاف الرقص'; st.onclick = () => { rmSetDance(0); P.hidden = true; }; P.appendChild(st); rmDanceMark(); }
+$('rmDanceBtn').onclick = () => { const P = $('rmDance'); if (P.hidden) { rmDanceBuild(); P.hidden = false; } else P.hidden = true; };
+$('rmAvBtn').onclick = () => avOpen(false);
+const AVN = { hs: { long: 'طويل', bob: 'كاريه', ponytail: 'ذيل حصان', short: 'قصير', puff: 'كيرلي', bun: 'كعكة', crop: 'حليق خفيف', side: 'جانبي', spike: 'مدبب' } };
+const AV_PAL = ['#b83a52', '#2a7a9a', '#e8a030', '#5a4a9a', '#3aa07a', '#e86a8a', '#2a2a34', '#f2f2f6', '#ff7aa8', '#1e8ae8'], AV_PAL2 = ['#2f5fb0', '#1c1c26', '#8a6a4a', '#c8506a', '#4a8a5a', '#e8e8f0'], AV_PAL3 = ['#ffffff', '#1c1c26', '#ff7aa8', '#e8a030', '#5a8ad8'];
+var EV = { av: null, tab: 'body', first: false, anim: 'idle', zoom: false, raf: 0, t: 0, ph: 0, dn: 0, cat: '' };
+function avOpen(first) { EV.first = !!first; EV.av = JSON.parse(JSON.stringify(AVT.norm(RM.me.av || {}))); EV.tab = 'body'; EV.anim = 'idle'; EV.zoom = false; EV.cat = ''; $('avEd').hidden = false; $('avCancel').hidden = !!first; avUI(); if (!EV.raf) EV.raf = requestAnimationFrame(avLoop); }
+function avClose() { $('avEd').hidden = true; cancelAnimationFrame(EV.raf); EV.raf = 0; }
+function avLoop() {
+  if ($('avEd').hidden) { EV.raf = 0; return; } EV.t++; const cv = $('avCv'), c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height);
+  const P = { t: EV.t }; if (EV.anim === 'walk') { P.mv = 1; EV.ph += 0.3; P.ph = EV.ph; } if (EV.anim === 'sit') P.sit = 1; if (EV.anim === 'dance') { P.dance = EV.dn; P.dt = EV.t; }
+  c.save(); if (EV.zoom) AVT.drawAt(c, EV.av, 150, 701, 747, P); else AVT.drawAt(c, EV.av, 150, 354, 340, P); c.restore();
+  EV.raf = requestAnimationFrame(avLoop);
+}
+function avSet(k, v) { EV.av[k] = v; if (k !== 'o' && ['tp', 'bt', 'tc', 'bc', 'sc'].includes(k)) EV.av.o = ''; avUI(); }
+function avChips(box, title, key, items, adm) { const h = document.createElement('h4'); h.textContent = title; box.appendChild(h); const r = document.createElement('div'); r.className = 'avRow'; items.forEach(it => { const lock = it[2] && !RM.myAdm; if (lock) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'avC' + (EV.av[key] === it[0] ? ' on' : '') + (it[2] ? ' adm' : ''); b.textContent = it[1] + (it[2] ? ' 👑' : ''); b.onclick = () => avSet(key, it[0]); r.appendChild(b); }); box.appendChild(r); }
+function avSw(box, title, key, items) { const h = document.createElement('h4'); h.textContent = title; box.appendChild(h); const r = document.createElement('div'); r.className = 'avRow'; items.forEach(it => { if (it[2] && !RM.myAdm) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'avS' + (EV.av[key] === it[0] ? ' on' : '') + (it[2] ? ' adm' : ''); b.style.background = it[1]; b.title = it[2] ? 'للمشرفين فقط' : ''; b.onclick = () => avSet(key, it[0]); r.appendChild(b); }); box.appendChild(r); }
+function avUI() {
+  const T = [['body', '🧍 الجسم'], ['face', '😊 الوجه'], ['hair', '💇 الشعر']]; if (EV.av.g === 'f') T.push(['mk', '💄 المكياج']); T.push(['cl', '👕 ملابسي'], ['store', '🛍️ المتجر']);
+  const tb = $('avTabs'); tb.innerHTML = ''; T.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t[1]; b.className = EV.tab === t[0] ? 'on' : ''; b.onclick = () => { EV.tab = t[0]; avUI(); }; tb.appendChild(b); });
+  if (EV.tab === 'mk' && EV.av.g !== 'f') EV.tab = 'body';
+  const o = $('avOpts'), keep = o.scrollTop; o.innerHTML = ''; const a = EV.av, g = a.g;
+  if (EV.tab === 'body') {
+    const h = document.createElement('h4'); h.textContent = 'اختر الشخصية'; o.appendChild(h); const gr = document.createElement('div'); gr.className = 'avGen';
+    [['m', '👦 ولد'], ['f', '👧 بنت']].forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.textContent = x[1]; b.className = g === x[0] ? 'on' : ''; b.onclick = () => { if (EV.av.g !== x[0]) { EV.av = JSON.parse(JSON.stringify(AVT.norm({ g: x[0], sk: EV.av.sk, hc: EV.av.hc, ey: EV.av.ey, bd: EV.av.bd, ht: EV.av.ht }))); } avUI(); }; gr.appendChild(b); }); o.appendChild(gr);
+    avChips(o, 'بنية الجسم', 'bd', [[0, 'نحيف'], [1, 'متوسط'], [2, 'ممتلئ']]); avChips(o, 'الطول', 'ht', [[0, 'قصير'], [1, 'عادي'], [2, 'طويل']]); avSw(o, 'لون البشرة', 'sk', [['fair', '#f0c09a'], ['light', '#e8b48c'], ['tan', '#d29a70'], ['dark', '#a8704c']]);
+  }
+  if (EV.tab === 'face') {
+    avSw(o, 'لون العيون', 'ey', AVT.EYES.map((e, i) => [i, e[1][0], i > 5])); avChips(o, 'حجم العيون', 'ew', [[0, 'صغيرة'], [1, 'عادية'], [2, 'كبيرة']]); avChips(o, 'الحواجب', 'br', [[0, 'رفيعة'], [1, 'عريضة'], [2, 'مستقيمة'], [3, 'مرفوعة']]); avChips(o, 'الحلك (الفم)', 'mo', [[0, 'ابتسامة'], [1, 'هادئ'], [2, 'ضحكة'], [3, 'صغير']]);
+    if (g === 'm') avChips(o, 'اللحية', 'bear', [[0, 'بدون'], [1, 'خفيفة'], [2, 'كثة']]);
+  }
+  if (EV.tab === 'hair') {
+    avChips(o, 'تسريحة الشعر', 'hs', AVT.HS[g].map(k => [k, AVN.hs[k]]));
+    avSw(o, 'لون الشعر', 'hc', [['black', '#2a2220'], ['brown', '#5a3220'], ['chest', '#8a4e24'], ['blonde', '#d4aa4c'], ['red', '#a8381c'], ['pink', '#e0609a'], ['blue', '#3a6ad8'], ['white', '#d8d8e4'], ['gold', '#ffc83d', 1], ['galaxy', '#6a3ad8', 1], ['fire', '#ff5a1a', 1], ['ice', '#5ac8ff', 1]]);
+    avChips(o, 'أجنحة', 'wg', [[0, 'بدون'], [1, 'أجنحة ملائكية', 1], [2, 'أجنحة ذهبية', 1]]);
+    if (RM.myAdm) { const n = document.createElement('div'); n.style.cssText = 'margin-top:8px;font-size:12px;color:#ffe27a'; n.textContent = '👑 العناصر اللي بتاجها 👑 حصرية للمشرفين فقط'; o.appendChild(n); }
+  }
+  if (EV.tab === 'mk') {
+    const h = document.createElement('h4'); h.textContent = 'مكياج جاهز'; o.appendChild(h); const r = document.createElement('div'); r.className = 'avRow';
+    [['💄 مكياج كامل', [2, 2, 2, 2]], ['🌸 ناعم', [3, 1, 1, 1]], ['🖤 سهرة', [4, 5, 2, 2]], ['✖ بدون مكياج', [0, 0, 0, 0]]].forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.className = 'avC'; b.textContent = x[0]; b.onclick = () => { EV.av.mk = x[1].slice(); avUI(); }; r.appendChild(b); }); o.appendChild(r);
+    const mkRow = (title, i, items, sw) => { const h2 = document.createElement('h4'); h2.textContent = title; o.appendChild(h2); const rr = document.createElement('div'); rr.className = 'avRow'; items.forEach((it, v) => { const b = document.createElement('button'); b.type = 'button'; if (sw) { b.className = 'avS' + (EV.av.mk[i] === v ? ' on' : ''); b.style.background = it || '#555'; b.textContent = it ? '' : '✖'; b.style.color = '#fff'; } else { b.className = 'avC' + (EV.av.mk[i] === v ? ' on' : ''); b.textContent = it; } b.onclick = () => { EV.av.mk[i] = v; avUI(); }; rr.appendChild(b); }); o.appendChild(rr); };
+    mkRow('أحمر الشفاه', 0, AVT.LIPS, 1); mkRow('ظلال العيون', 1, AVT.SHADOWS, 1); mkRow('أحمر الخدود', 2, ['بدون', 'خفيف', 'قوي']); mkRow('الكحل والرموش', 3, ['بدون', 'عادي', 'دراماتيكي']);
+  }
+  if (EV.tab === 'cl') {
+    avChips(o, 'القميص', 'tp', [['tee', 'تيشرت'], ...(g === 'f' ? [['tank', 'حمّالات']] : []), ['hoodie', 'هودي'], ['long', 'كم طويل']]);
+    avChips(o, 'البنطلون', 'bt', [['jeans', 'جينز'], ['shorts', 'شورت'], ...(g === 'f' ? [['skirt', 'تنورة']] : []), ['track', 'رياضي']]);
+    avSw(o, 'لون القميص', 'tc', AV_PAL.map(x => [x, x])); avSw(o, 'لون البنطلون', 'bc', AV_PAL2.map(x => [x, x])); avSw(o, 'لون الحذاء', 'sc', AV_PAL3.map(x => [x, x]));
+    if (a.o) { const n = document.createElement('div'); n.style.cssText = 'margin-top:10px;color:#ffd166;font-size:13px'; n.textContent = '🛍️ لابس حالياً: ' + AVT.OUTFITS[a.o].n + ' (أي تعديل هنا يرجعك للملابس العادية)'; o.appendChild(n); }
+  }
+  if (EV.tab === 'store') {
+    const h = document.createElement('h4'); h.textContent = 'متجر الملابس 🛍️'; o.appendChild(h); const r = document.createElement('div'); r.className = 'avRow';
+    AVT.CATS.forEach(cx => { if (cx[0] === 'adm' && !RM.myAdm) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'avC' + (EV.cat === cx[0] ? ' on' : ''); b.textContent = cx[1]; b.onclick = () => { EV.cat = cx[0]; avUI(); }; r.appendChild(b); }); o.appendChild(r);
+    const gd = document.createElement('div'); gd.className = 'avG'; gd.style.marginTop = '8px'; o.appendChild(gd);
+    const card = (id, name, adm) => { const d = document.createElement('div'); d.className = 'avCard' + (a.o === id ? ' on' : '') + (adm ? ' adm' : ''); const cv = document.createElement('canvas'); cv.width = 84; cv.height = 118; d.appendChild(cv); const t = document.createElement('div'); t.textContent = (adm ? '👑 ' : '') + name; d.appendChild(t); d.onclick = () => { EV.av.o = id; avUI(); }; gd.appendChild(d); const cx = cv.getContext('2d'); AVT.drawAt(cx, Object.assign({}, EV.av, { o: id }), 42, 108, 104, { t: 0 }); };
+    card('', 'ملابسي', 0);
+    Object.keys(AVT.OUTFITS).forEach(id => { const f = AVT.OUTFITS[id]; if (f.g !== g) return; if (f.adm && !RM.myAdm) return; if (EV.cat && f.cat !== EV.cat) return; card(id, f.n, f.adm); });
+    const n = document.createElement('div'); n.style.cssText = 'margin-top:10px;font-size:12px;opacity:.8'; n.textContent = 'كل الملابس مجانية حالياً، اضغط على اللبسة وتنلبس مباشرة.'; o.appendChild(n);
+  }
+  o.scrollTop = keep;
+  $('avWalk').className = EV.anim === 'walk' ? 'on' : ''; $('avSit').className = EV.anim === 'sit' ? 'on' : ''; $('avDnc').className = EV.anim === 'dance' ? 'on' : ''; $('avZm').className = EV.zoom ? 'on' : '';
+}
+$('avWalk').onclick = () => { EV.anim = EV.anim === 'walk' ? 'idle' : 'walk'; avUI(); };
+$('avSit').onclick = () => { EV.anim = EV.anim === 'sit' ? 'idle' : 'sit'; avUI(); };
+$('avDnc').onclick = () => { EV.dn = EV.anim === 'dance' ? (EV.dn % 8) + 1 : 1; EV.anim = 'dance'; avUI(); };
+$('avZm').onclick = () => { EV.zoom = !EV.zoom; avUI(); };
+$('avCancel').onclick = () => avClose();
+$('avSave').onclick = () => {
+  const a = AVT.norm(EV.av); if (!RM.myAdm) { if (['gold', 'galaxy', 'fire', 'ice'].includes(a.hc)) a.hc = 'brown'; if (a.ey > 5) a.ey = 0; a.wg = 0; if (a.o && AVT.OUTFITS[a.o].adm) a.o = ''; }
+  RM.me.av = a; try { localStorage.setItem('rmAv', JSON.stringify(a)); } catch (e) {} rmSend({ t: 'rm_av', av: a }); avClose(); showToast('✅ انحفظ شكل شخصيتك');
+};
+
 /* ---------- الواجهة: اللوبي ---------- */
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
 function rmShowRoom() { if (!RM.full) rmSetFull(true, true, true); $('rmFTtl').textContent = '🏝️ ' + RM.name; try { screen.orientation.lock(IS_TABLET ? 'any' : 'portrait').catch(() => {}); } catch (e) {} rmCheckRot(); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
