@@ -512,6 +512,89 @@ app.post('/api/house/set', authMw, (req, res) => {
   save(); res.json({ user: userInfo(req.key) });
 });
 
+// بيع غرض من البيت: يرجع نفس سعره (مواد بناء)
+app.post('/api/house/sell', authMw, (req, res) => {
+  const id = String((req.body && req.body.id) || ''), it = HOUSE_ITEM[id], u = db.users[req.key], h = houseOf(u);
+  if (!it || it.price <= 0 || it.slot === 'home') return res.status(400).json({ error: 'هذا الغرض ما ينباع' });
+  if (!h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' });
+  const set = Object.assign({}, h.set); if (set[it.slot] === id) delete set[it.slot];
+  u.house = { own: h.own.filter(i => i !== id && HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set, pos: h.pos };
+  u.bricks = (u.bricks || 0) + it.price; save();
+  res.json({ refund: it.price, name: it.name, user: userInfo(req.key) });
+});
+
+/* ================= الحيوان الأليف: رعاية، حمام، نوم، مستويات، مشاركة ================= */
+const PET_MAXLV = 30, petNeed = l => 40 + 15 * (l - 1), petIvl = l => (15 + (l - 1) * 3) * 60;   // ثواني: مستوى 1 = 15 دقيقة، وكل مستوى +3 دقايق
+function petOf(u) {
+  if (!u.pet || typeof u.pet !== 'object') u.pet = {};
+  const p = u.pet; p.name = String(p.name || ''); p.lvl = Math.max(1, Math.min(PET_MAXLV, Math.floor(p.lvl) || 1)); p.xp = Math.max(0, Number(p.xp) || 0); p.t = Math.max(0, Number(p.t) || 0);
+  p.dirty = !!p.dirty; p.light = p.light !== false; p.bed = !!p.bed; p.cover = !!p.cover; p.sleep = !!p.sleep; p.sleepAt = Number(p.sleepAt) || 0;
+  if (!Array.isArray(p.partners)) p.partners = []; p.at = String(p.at || ''); p.atUntil = Number(p.atUntil) || 0; p.pw = Number(p.pw) || 0; p.pn = Number(p.pn) || 0;
+  return p;
+}
+function petSpecies(u) { const id = houseOf(u).set.pet, it = id && HOUSE_ITEM[id]; return it ? it.v : ''; }
+function petFix(k) { const u = db.users[k], p = petOf(u); if (p.at && Date.now() > p.atUntil) { p.at = ''; p.atUntil = 0; } return p; }
+function petCan(me, k, p) { return me === k || (mutual(me, k) && (p.partners.includes(me) || p.at === me)); }
+function petAddXp(p, n) { if (p.lvl >= PET_MAXLV) { p.xp = 0; return false; } p.xp += n; let up = false; while (p.lvl < PET_MAXLV && p.xp >= petNeed(p.lvl)) { p.xp -= petNeed(p.lvl); p.lvl++; up = true; } if (p.lvl >= PET_MAXLV) p.xp = 0; return up; }
+function petSleepSync(p) { const ns = !p.light && p.bed && p.cover, now = Date.now(); let up = false; if (ns && !p.sleep) { p.sleep = true; p.sleepAt = now; } else if (!ns && p.sleep) { p.sleep = false; if (now - p.sleepAt >= 60e3) up = petAddXp(p, 15); } return up; }
+function petView(k, me) {
+  const u = db.users[k], p = petFix(k), sp = petSpecies(u); if (!sp) return null;
+  const at = p.at && db.users[p.at] ? db.users[p.at].name : '';
+  return { owner: u.name, name: p.name, species: sp, lvl: p.lvl, xp: Math.round(p.xp), need: p.lvl >= PET_MAXLV ? 0 : petNeed(p.lvl), t: Math.round(p.t), ivl: petIvl(p.lvl), dirty: p.dirty, light: p.light, bed: p.bed, cover: p.cover, sleep: p.sleep,
+    partners: me === k ? p.partners.filter(x => db.users[x]).map(x => db.users[x].name) : [], at, atLeft: p.at ? Math.max(0, Math.round((p.atUntil - Date.now()) / 1000)) : 0, isOwner: me === k, canCare: petCan(me, k, p) };
+}
+function petNotify(k, p, exceptKey) { const who = new Set([k, ...p.partners, p.at]); who.delete(''); who.delete(exceptKey); who.forEach(x => pushTo(x, { t: 'pet_upd', owner: db.users[k].name })); }
+app.get('/api/pet/list', authMw, (req, res) => {
+  const out = [];
+  for (const k in db.users) {
+    const u = db.users[k]; if (!u.pet && k !== req.key) continue;
+    const p = petFix(k); if (!petSpecies(u)) continue;
+    if (k === req.key || (mutual(req.key, k) && (p.partners.includes(req.key) || p.at === req.key))) { const v = petView(k, req.key); out.push({ owner: v.owner, name: v.name, species: v.species, mine: k === req.key, guest: p.at === req.key && k !== req.key }); }
+  }
+  res.json({ pets: out });
+});
+app.get('/api/pet/of', authMw, (req, res) => {
+  let nm = ''; try { nm = new URL(req.url, 'http://x').searchParams.get('name') || ''; } catch (e) {}
+  const k = keyOfName(nm); if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيت الحيوان' });
+  const p = petFix(k); if (!petCan(req.key, k, p)) return res.status(403).json({ error: 'ما عندك إذن' });
+  const v = petView(k, req.key); if (!v) return res.status(404).json({ error: 'ما عنده حيوان' });
+  res.json({ pet: v });
+});
+app.post('/api/pet/tick', authMw, (req, res) => {   // وقت اللعب يوسّخ الحيوان (للمالك فقط)
+  const u = db.users[req.key]; if (!petSpecies(u)) return res.json({ pet: null });
+  const p = petFix(req.key), sec = Math.max(0, Math.min(75, Math.floor(Number(req.body && req.body.sec)) || 0)), was = p.dirty;
+  if (!p.sleep) p.t += sec; if (p.t >= petIvl(p.lvl)) p.dirty = true;
+  save(); res.json({ pet: petView(req.key, req.key), justDirty: p.dirty && !was });
+});
+app.post('/api/pet/act', authMw, (req, res) => {
+  const k = keyOfName(req.body && req.body.owner); if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيت الحيوان' });
+  const u = db.users[k], p = petFix(k); if (!petSpecies(u)) return res.status(400).json({ error: 'ما عنده حيوان' });
+  const me = req.key; if (!petCan(me, k, p)) return res.status(403).json({ error: 'بس صاحب الحيوان أو شريكه يكدر يعتني به' });
+  if (limited('pet:' + me, 90, 60e3)) return res.status(429).json({ error: 'بطّء شوي' });
+  const act = String((req.body && req.body.act) || ''), b = req.body || {}; let up = false, gain = 0;
+  if (act === 'bath') { const need = p.dirty || p.t >= petIvl(p.lvl) * 0.5; p.dirty = false; p.t = 0; if (need) { up = petAddXp(p, 30); gain = 30; } }
+  else if (act === 'bed') { p.bed = !!b.on; if (!p.bed) p.cover = false; up = petSleepSync(p); }
+  else if (act === 'cover') { if (!p.bed) return res.status(400).json({ error: 'حطّه بالسرير أول' }); p.cover = !!b.on; up = petSleepSync(p); }
+  else if (act === 'light') { p.light = !!b.on; up = petSleepSync(p); }
+  else if (act === 'name') { if (k !== me) return res.status(403).json({ error: 'بس صاحبه يسمّيه' }); p.name = String(b.name || '').replace(/[<>&"]/g, '').trim().slice(0, 14); }
+  else if (act === 'play') { const now = Date.now(); if (now - p.pw > 3600e3) { p.pw = now; p.pn = 0; } if (p.pn < 10) { p.pn++; up = petAddXp(p, 2); gain = 2; } }
+  else return res.status(400).json({ error: 'أمر غير معروف' });
+  save(); petNotify(k, p, me); res.json({ pet: petView(k, me), up, gain });
+});
+app.post('/api/pet/share', authMw, (req, res) => {   // صاحب الحيوان يضيف/يشيل شريك
+  const u = db.users[req.key], p = petOf(u); if (!petSpecies(u)) return res.status(400).json({ error: 'ما عندك حيوان' });
+  const t = keyOfName(req.body && req.body.name); if (!own(db.users, t) || t === req.key || !mutual(req.key, t)) return res.status(400).json({ error: 'لازم يكون صديقك' });
+  if (req.body && req.body.on) { if (!p.partners.includes(t)) { if (p.partners.length >= 5) return res.status(400).json({ error: 'أقصى شي 5 شركاء' }); p.partners.push(t); } }
+  else { p.partners = p.partners.filter(x => x !== t); if (p.at === t) { p.at = ''; p.atUntil = 0; } }
+  save(); pushTo(t, { t: 'pet_upd', owner: u.name }); res.json({ pet: petView(req.key, req.key) });
+});
+app.post('/api/pet/send', authMw, (req, res) => {   // يرسل الحيوان لبيت شريك 10 دقايق (ويرجع تلقائياً)
+  const u = db.users[req.key], p = petFix(req.key); if (!petSpecies(u)) return res.status(400).json({ error: 'ما عندك حيوان' });
+  if (req.body && req.body.recall) { p.at = ''; p.atUntil = 0; save(); return res.json({ pet: petView(req.key, req.key) }); }
+  const t = keyOfName(req.body && req.body.name); if (!p.partners.includes(t) || !mutual(req.key, t)) return res.status(400).json({ error: 'ضيفه شريك أول' });
+  p.at = t; p.atUntil = Date.now() + 600e3; save(); pushTo(t, { t: 'pet_upd', owner: u.name, toast: '🐾 ' + u.name + ' أرسل لك حيوانه ' + (p.name || '') + ' لمدة 10 دقايق، اعتنوا به سوا!' }); res.json({ pet: petView(req.key, req.key) });
+});
+
 app.post('/api/score', authMw, (req, res) => {
   const gid = String((req.body && req.body.gid) || '');
   const score = parseInt(req.body && req.body.score, 10);

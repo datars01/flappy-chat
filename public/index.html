@@ -415,6 +415,14 @@
   #hShopBox .shTabs { display: flex; gap: 6px; }
   #hShopBox .shTabs button { flex: 1; padding: 8px 4px; font-size: 13px; }
   #hShopBox .shTabs button.on { background: var(--teal, #2d9aa5); color: #fff; }
+  #pg-pet .ptB { background: var(--card2, #1d2b3a); color: var(--text, #fff); border: 1px solid var(--line, rgba(255,255,255,.2)); border-radius: 12px; padding: 7px 12px; font-size: 13px; font-weight: 700; width: auto; }
+  #pg-pet .ptB.on { background: #2d9aa5; color: #fff; border-color: #fff; }
+  #ptSel, #ptTools, #ptOwn, #ptPanel, #ptTabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  #ptPanel { padding: 8px; border: 1px dashed var(--line); border-radius: 12px; } #ptPanel input { flex: 1; min-width: 120px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--card2, #111); color: var(--text, #fff); font-size: 16px; }
+  #ptInfo { display: flex; flex-direction: column; gap: 5px; font-size: 13px; } .ptL1 { font-weight: 700; font-size: 15px; }
+  .ptBar { display: flex; align-items: center; gap: 8px; font-size: 12px; } .ptBar span { width: 96px; flex: none; } .ptBar .tr { flex: 1; height: 9px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; } .ptBar .fl { height: 100%; border-radius: 6px; transition: width .4s; }
+  .ptNote { font-size: 12px; color: var(--muted); }
+  #petCv { width: 100%; aspect-ratio: 320 / 250; border-radius: 14px; border: 2px solid var(--line); display: block; touch-action: none; background: #16212e; }
   #nAlert { display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); width: min(92vw, 400px); z-index: 10005; background: linear-gradient(135deg, #1f6f8b, #2d9aa5); color: #fff; border: 2px solid #fff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,.6); align-items: center; gap: 10px; cursor: pointer; animation: hPop .3s ease-out; }
   #nAlert.show { display: flex; }
   #nAlert .ni { font-size: 26px; flex: none; } #nAlert .nt { flex: 1; font-size: 13px; line-height: 1.5; } #nAlert .nt b { display: block; font-size: 14px; }
@@ -627,7 +635,7 @@
       <canvas id="houseCv" width="640" height="500"></canvas>
       <div id="hOv">
         <div class="hOvTop">
-          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button><button id="hZoomBtn" class="hOvB" type="button">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button></div>
+          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button><button id="hZoomBtn" class="hOvB" type="button">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button><button id="hPetBtn" class="hOvB" type="button" hidden>🐾 بيت الحيوان</button></div>
           <div class="hOvG"><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
         </div>
         <div id="hFsTabs"><button class="hOvB" data-v="home" type="button">🏠</button><button class="hOvB" data-v="inside" type="button">🛋️</button><button class="hOvB" data-v="garden" type="button">🌳</button></div>
@@ -649,6 +657,18 @@
     <div id="hBuy" class="hBuy hint"></div>
     <div class="help">🧱 تكسب مواد البناء من إنهاء المراحل بالفردي (وأكثر كل ما تتقدم)، ومن كل 3 كومبوهات تجيبها بنفس اللعبة (+8)، وبعد كل 7 مراحل مكافأة كبيرة. «ترقية البيت» تحوّله من كوخ لبيت لفيلا بحركة بناء.</div>
     </div>
+  </div>
+</div></div>
+<div class="page" id="pg-pet"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🐾 بيت الحيوان</span></div><div class="pgBody">
+  <div class="card col" style="gap:10px">
+    <div id="ptSel"></div>
+    <div id="ptInfo">⏳</div>
+    <canvas id="petCv" width="640" height="500"></canvas>
+    <div id="ptTabs"><button class="ptB" data-sc="bath" type="button">🛁 الحمام</button><button class="ptB" data-sc="bed" type="button">🛏️ غرفة النوم</button></div>
+    <div id="ptTools"></div>
+    <div id="ptOwn"></div>
+    <div id="ptPanel" hidden></div>
+    <div class="help">🐾 اعتن بحيوانك: يتوصّخ بعد فترة لعب (15 دقيقة بالمستوى 1، وتزيد كل مستوى) فيحتاج حمام. كل عناية تعطيه خبرة ويطلع مستوى (لين 30). تكدر تسمّيه، وتشاركه مع أصدقائك حتى يساعدونك، وترسله لبيت صديق 10 دقايق.</div>
   </div>
 </div></div>
 <div class="page" id="pg-levels"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">📍 خريطة المراحل</span></div><div class="pgBody">
@@ -3335,6 +3355,7 @@ function onFriendMsg(d) {
     const f = fData.friends.find(x => x.name.toLowerCase() === String(d.name).toLowerCase());
     if (f) { f.online = !!d.online; f.lastSeen = d.lastSeen || f.lastSeen; if (!d.online) f.room = ''; renderFriends(); if (dmWith && dmWith.toLowerCase() === f.name.toLowerCase()) dmHeader(f); }
   } else if (d.t === 'dm') onDmPush(d);
+  else if (d.t === 'pet_upd') petPush(d);
   else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
 }
 /* ---- زيارة البيوت: حضور حي ---- */
@@ -3646,7 +3667,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') houseLoad(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') houseLoad(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
@@ -3725,6 +3746,7 @@ function hAreas(view, S) {
 }
 function hSlotName(slot) { const sl = (houseCat || []).find(x => x.slot === slot); return sl ? sl.name : slot; }
 async function houseLoad() {
+  petListLoad();
   if (auth) { try { const r = await api('/api/house'); houseCat = r.catalog; hMapC = null; syncUser(r.user); renderHome(); } catch (e) { showToast('⚠️ ما قدرت أحمّل البيت'); } }
   hVis = null; hOthers = {};
   if (hTarget) {
@@ -3772,9 +3794,15 @@ function hRenderUi() {
   sl.items.forEach(it => {
     const has = own.has(it.id), on = set[sl.slot] === it.id && !hPrev, pv = hPrev === it.id, col = it.v[0] === '#' ? it.v : null;
     const sub = on ? '✓ مركّب' : has ? 'تركيب' : '🧱 ' + it.price;
-    OP.appendChild(mkBtn(on ? 'on' : pv ? 'confirm' : (!has && (auth.bricks || 0) < it.price ? 'cant' : ''), it.v, col, it.name, sub, () => {
+    const card = mkBtn(on ? 'on' : pv ? 'confirm' : (!has && (auth.bricks || 0) < it.price ? 'cant' : ''), it.v, col, it.name, sub, () => {
       if (has) { if (!on) houseSet(sl.slot, it.id); } else { hPrev = it.id; hPlaced[it.slot] = hT; hRenderUi(); }
-    }));
+    });
+    if (has && it.price > 0 && it.slot !== 'home') {
+      const w = document.createElement('div'); w.style.cssText = 'display:flex;flex-direction:column;gap:4px;align-items:stretch'; const sb = document.createElement('button'); sb.type = 'button'; sb.className = 'ghost'; sb.style.cssText = 'padding:4px 6px;font-size:12px;width:auto'; sb.textContent = '💰 بيع +' + it.price;
+      sb.onclick = async () => { if (!sb.dataset.arm) { sb.dataset.arm = '1'; sb.textContent = 'تأكيد البيع؟'; setTimeout(() => { delete sb.dataset.arm; sb.textContent = '💰 بيع +' + it.price; }, 3000); return; }
+        try { const r = await api('/api/house/sell', { method: 'POST', body: { id: it.id } }); hPrev = null; syncUser(r.user); renderHome(); sfx('magic'); showToast('💰 بعت ' + r.name + ' ورجعلك ' + r.refund + ' 🧱'); if (it.slot === 'pet') petListLoad(); hRenderUi(); } catch (e) { showToast('⚠️ ' + e.message); } };
+      w.append(card, sb); OP.appendChild(w);
+    } else OP.appendChild(card);
   });
   hRenderBuy();
 }
@@ -3796,7 +3824,7 @@ async function houseBuy(it) {
   try {
     const r = await api('/api/house/buy', { method: 'POST', body: { id: it.id } }); hPrev = null; syncUser(r.user); renderHome(); hPlaced[it.slot] = hT;
     if (it.slot === 'home') { hBuild = 110; sfx('level'); showToast('🏗️ جاري ترقية بيتك إلى ' + it.name + '...'); } else { sfx('magic'); showToast('🏠 اشتريت ' + it.name); }
-    hBurstSlot(it.slot);
+    hBurstSlot(it.slot); if (it.slot === 'pet') petListLoad();
   } catch (e) { showToast('⚠️ ' + e.message); }
   hRenderUi();
 }
@@ -3884,8 +3912,7 @@ async function hSavePos(slots) {
 $('hZoomBtn').onclick = () => { sfx('click'); hSetZoom(hZ > 1.05 ? 1 : 2.1, false); };
 $('hEditBtn').onclick = hShopOpen; $('hShopX').onclick = hShopClose;
 document.querySelectorAll('#shTabs [data-sv]').forEach(b => b.onclick = () => { if (b.dataset.sv !== hView) hGo(b.dataset.sv); hRenderUi(); });
-$('hChatIn').addEventListener('focus', () => { if (hZ < 1.05) hSetZoom(1.8, true); setTimeout(() => { try { $('hStage').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 300); });
-$('hChatIn').addEventListener('blur', () => { if (hZAuto) hSetZoom(1, false); });
+$('hChatIn').addEventListener('focus', () => { setTimeout(() => { try { $('hStage').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 300); });
 ['hChatSend', 'hEmoBtn'].forEach(id => $(id).addEventListener('pointerdown', e => e.preventDefault()));
 setInterval(() => { if (hZ > 1.2 && curPage === 'house') hRenderLog(); }, 1200);
 if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
@@ -3933,8 +3960,8 @@ function hUpdateOv() {
     else if (hView === 'garden') { const d = hDoorXY('garden'); if (Math.abs(hChar.x - d[0]) < 42 && hChar.y - d[1] < 52) near = 'garden'; }
   }
   const items = []; if (hView !== 'home') { const need = inn ? ['seat', 'tv', 'lamp', 'pet', 'plant'] : ['tree', 'play', 'flowers']; hEntries(hView, hSetNow()).forEach(e => { if (need.includes(e.slot) && !items.includes(e.slot) && (e.slot === 'tv' ? Math.abs(e.x - hChar.x) < 56 : Math.hypot(e.x - hChar.x, (e.y - hChar.y) * 1.2) < 46)) items.push(e.slot); }); }
-  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
-  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth;
+  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
+  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth; $('hPetBtn').hidden = !!hVis || !auth || !petPets.length;
   $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn;
   const P = $('hPrompt'); P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
@@ -4404,6 +4431,216 @@ $('installBtn').onclick = async () => {
   installEv.prompt(); try { await installEv.userChoice; } catch (e) {}
   installEv = null; $('installBtn').style.display = 'none';
 };
+
+/* ================= بيت الحيوان الأليف: حمام + نوم + مستويات + مشاركة ================= */
+var petPets = [], PT = { owner: '', pet: null, scene: 'bath', tool: '', foam: 0, dip: -1, bubs: [], parts: [], px: 232, py: 186, onBed: false, drag: false, say: null, nextSay: 0, T: 0, mx: 0, my: 0, raf: 0, panel: '', poll: 0, lastPlay: 0 };
+const PT_SAY = { dog: ['هاو 🐾', '😊 هاو', 'ووف!'], cat: ['مياو 😺', '🐾 مياو', 'مرررر 😸'], fish: ['🫧', 'بلوب 🫧', '🫧 🫧'] };
+const ptKind = sp => sp === '🐕' ? 'dog' : sp === '🐈' ? 'cat' : 'fish';
+async function petListLoad() {
+  if (!auth) { petPets = []; return; }
+  try { const r = await api('/api/pet/list'); petPets = r.pets || []; } catch (e) {}
+  hOvKey = '';
+}
+function petPush(d) {
+  if (d.toast) showToast(d.toast);
+  petListLoad();
+  if (curPage === 'pet' && PT.owner && String(d.owner).toLowerCase() === PT.owner.toLowerCase()) petLoad(PT.owner, true);
+}
+async function petLoad(owner, quiet) {
+  try { const r = await api('/api/pet/of?name=' + encodeURIComponent(owner)); PT.owner = owner; petApply(r.pet); }
+  catch (e) { if (!quiet) showToast('⚠️ ' + e.message); }
+}
+function petApply(p) {
+  const was = PT.pet; PT.pet = p; if (!p) return;
+  if (!PT.drag) PT.onBed = !!p.bed;
+  petDirtyMine = petPets.some(x => x.mine) && p.isOwner ? p.dirty : petDirtyMine;
+  ptUi();
+}
+var petDirtyMine = false;
+function petOpen() {
+  PT.scene = 'bath'; PT.tool = ''; PT.foam = 0; PT.panel = ''; PT.bubs = [];
+  petListLoad().then(() => {
+    const mine = petPets.find(x => x.mine), first = mine || petPets[0];
+    if (!first) { $('ptInfo').textContent = 'ما عندك حيوان! اشتر حيوان من «تعديل البيت» ثم ارجع هنا 🐾'; PT.pet = null; ptUi(); return; }
+    petLoad(PT.owner && petPets.some(x => x.owner === PT.owner) ? PT.owner : first.owner);
+  });
+  clearInterval(PT.poll); PT.poll = setInterval(() => { if (curPage === 'pet' && PT.owner && !PT.drag) petLoad(PT.owner, true); }, 5000);
+  if (!PT.raf) PT.raf = requestAnimationFrame(petLoop);
+  const cv = $('petCv'); if (cv && !cv._bound) { cv._bound = true; ptBind(cv); }
+}
+async function petAct(act, extra) {
+  if (!PT.pet) return null;
+  try {
+    const r = await api('/api/pet/act', { method: 'POST', body: Object.assign({ owner: PT.pet.owner, act }, extra || {}) });
+    petApply(r.pet); if (r.up) { showToast('🎉 ' + (r.pet.name || 'الحيوان') + ' وصل المستوى ' + r.pet.lvl + '!'); sfx('level'); ptBurst(160, 100, 24); } return r;
+  } catch (e) { showToast('⚠️ ' + e.message); petLoad(PT.owner, true); return null; }
+}
+function ptBurst(x, y, n) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 0.8 + Math.random() * 2.4; PT.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.2, t: 36 + Math.random() * 20, c: ['#fff', '#ffe27a', '#8fe3ff', '#ffb3d9'][i % 4], s: 2 + Math.random() * 3 }); } }
+function ptSay(txt) { PT.say = { txt, t: 150 }; }
+/* ---- الواجهة ---- */
+function ptUi() {
+  const p = PT.pet, sel = $('ptSel'); sel.innerHTML = '';
+  petPets.forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB' + (p && x.owner === p.owner ? ' on' : ''); b.textContent = x.species + ' ' + (x.mine ? 'حيواني' : 'حيوان ' + x.owner) + (x.guest ? ' (عندك)' : ''); b.onclick = () => { PT.owner = x.owner; petLoad(x.owner); }; sel.appendChild(b); });
+  const info = $('ptInfo'), tools = $('ptTools'), own = $('ptOwn'); tools.innerHTML = ''; own.innerHTML = '';
+  if (!p) { $('ptTabs').hidden = true; own.hidden = true; return; } $('ptTabs').hidden = false;
+  const lvTxt = 'المستوى ' + p.lvl + '/30', xpP = p.need ? Math.round(p.xp / p.need * 100) : 100, dirtP = p.dirty ? 100 : Math.min(100, Math.round(p.t / p.ivl * 100)), leftMin = Math.max(0, Math.ceil((p.ivl - p.t) / 60));
+  info.innerHTML = '';
+  const l1 = document.createElement('div'); l1.className = 'ptL1'; l1.textContent = p.species + ' ' + (p.name || 'بدون اسم') + ' • ' + lvTxt + (p.sleep ? ' • 😴 نايم' : p.dirty ? ' • 🪰 وصخان' : ' • ✨ نظيف'); info.appendChild(l1);
+  const bar = (lab, pct, col) => { const w = document.createElement('div'); w.className = 'ptBar'; const s = document.createElement('span'); s.textContent = lab; const t = document.createElement('div'); t.className = 'tr'; const f = document.createElement('div'); f.className = 'fl'; f.style.width = pct + '%'; f.style.background = col; t.appendChild(f); w.append(s, t); info.appendChild(w); };
+  bar('⭐ خبرة', xpP, '#ffd166'); bar(p.dirty ? '🪰 يحتاج حمام' : '🫧 يتوسخ بعد ~' + leftMin + ' د', dirtP, dirtP > 80 ? '#c0713a' : '#5ec8f2');
+  if (p.at) { const a = document.createElement('div'); a.className = 'ptNote'; a.textContent = p.isOwner ? '📤 عند ' + p.at + ' (يرجع بعد ' + Math.ceil(p.atLeft / 60) + ' د)' : (p.owner === (auth && auth.name) ? '' : '🏠 الحيوان عندك مؤقتاً (يرجع بعد ' + Math.ceil(p.atLeft / 60) + ' د)'); if (a.textContent) info.appendChild(a); }
+  if (p.partners && p.partners.length) { const a = document.createElement('div'); a.className = 'ptNote'; a.textContent = '🤝 شركاؤك: ' + p.partners.join('، '); info.appendChild(a); }
+  document.querySelectorAll('#ptTabs [data-sc]').forEach(b => b.classList.toggle('on', b.dataset.sc === PT.scene));
+  const mk = (txt, fn, on) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB' + (on ? ' on' : ''); b.textContent = txt; b.onclick = fn; tools.appendChild(b); return b; };
+  if (!p.canCare) { const a = document.createElement('div'); a.className = 'ptNote'; a.textContent = '👀 تشوف بس'; tools.appendChild(a); }
+  else if (PT.scene === 'bath') {
+    mk(PT.tool === 'soap' ? '🧼 صابون (شغّال: افرك الحيوان)' : '🧼 صابون', () => { PT.tool = PT.tool === 'soap' ? '' : 'soap'; sfx('click'); ptUi(); }, PT.tool === 'soap');
+    mk('💦 اغمسه بالماي' + (PT.foam >= 60 ? ' ✅' : ''), ptDip);
+    const h = document.createElement('div'); h.className = 'ptNote'; h.textContent = PT.foam >= 60 ? 'رغوة تكفي! اغمسه هسه 💦' : 'اختر الصابون وافرك الحيوان بإصبعك حتى تطلع رغوة 🫧'; tools.appendChild(h);
+  } else {
+    mk(p.bed ? '🧍 نزّله من السرير' : '🛏️ حطه بالسرير', () => ptBed(!p.bed));
+    mk(p.cover ? '🛌 شيل الغطا' : '🛌 غطّيه', () => { if (!p.bed) { showToast('🛏️ حطه بالسرير أول'); return; } petAct('cover', { on: !p.cover }); });
+    mk(p.light ? '💡 اطفي النور' : '💡 شغّل النور', () => { sfx('click'); petAct('light', { on: !p.light }); });
+    const h = document.createElement('div'); h.className = 'ptNote'; h.textContent = 'حطه بالسرير، غطّيه، واطفي النور حتى ينام 😴 (تكدر تسحبه بإصبعك للسرير)'; tools.appendChild(h);
+  }
+  own.hidden = !p.isOwner;
+  if (p.isOwner) {
+    const m2 = (txt, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB'; b.textContent = txt; b.onclick = fn; own.appendChild(b); };
+    m2('✏️ سمّيه', () => ptPanel('name')); m2('🤝 شارك الحيوان', () => ptPanel('share'));
+    if (p.at) m2('↩ استرجعه', async () => { try { const r = await api('/api/pet/send', { method: 'POST', body: { recall: true } }); petApply(r.pet); showToast('↩ رجع الحيوان لبيتك'); } catch (e) { showToast('⚠️ ' + e.message); } });
+    else m2('📤 ارسله لبيت صديق', () => ptPanel('send'));
+  }
+  ptPanelRender();
+}
+function ptPanel(m) { PT.panel = PT.panel === m ? '' : m; ptPanelRender(); }
+function ptPanelRender() {
+  const P = $('ptPanel'); P.innerHTML = ''; P.hidden = !PT.panel || !PT.pet || !PT.pet.isOwner; if (P.hidden) return;
+  const p = PT.pet;
+  if (PT.panel === 'name') {
+    const i = document.createElement('input'); i.maxLength = 14; i.placeholder = 'اسم الحيوان'; i.value = p.name || ''; const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB on'; b.textContent = '✔ حفظ';
+    b.onclick = async () => { const r = await petAct('name', { name: i.value }); if (r) { PT.panel = ''; ptPanelRender(); sfx('magic'); } }; P.append(i, b);
+  } else if (PT.panel === 'share' || PT.panel === 'send') {
+    const hd = document.createElement('div'); hd.className = 'ptNote'; hd.textContent = PT.panel === 'share' ? 'اختر الأصدقاء اللي يكدرون يعتنون بحيوانك معاك (تكدر تشيلهم بأي وقت):' : 'اختر شريك حتى ينرسل لبيته 10 دقايق ويعتنون سوا (يرجع تلقائياً):'; P.appendChild(hd);
+    const fr = (fData && fData.friends) || []; if (!fr.length) { const e = document.createElement('div'); e.className = 'ptNote'; e.textContent = 'ما عندك أصدقاء بعد 👥'; P.appendChild(e); }
+    fr.forEach(f => {
+      const isP = p.partners.some(x => x.toLowerCase() === f.name.toLowerCase());
+      if (PT.panel === 'send' && !isP) return;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ptB' + (PT.panel === 'share' && isP ? ' on' : ''); b.textContent = (PT.panel === 'share' ? (isP ? '✓ ' : '＋ ') : '📤 ') + f.name;
+      b.onclick = async () => {
+        try {
+          if (PT.panel === 'share') { const r = await api('/api/pet/share', { method: 'POST', body: { name: f.name, on: !isP } }); petApply(r.pet); showToast(isP ? '❌ شلت ' + f.name + ' من الشركاء' : '🤝 ' + f.name + ' صار شريكك بالعناية'); }
+          else { const r = await api('/api/pet/send', { method: 'POST', body: { name: f.name } }); petApply(r.pet); PT.panel = ''; showToast('📤 انرسل الحيوان لبيت ' + f.name + ' (10 دقايق)'); }
+        } catch (e) { showToast('⚠️ ' + e.message); }
+      };
+      P.appendChild(b);
+    });
+    if (PT.panel === 'send' && !p.partners.length) { const e = document.createElement('div'); e.className = 'ptNote'; e.textContent = 'أول شي اضغط «شارك الحيوان» وضيف صديق شريك.'; P.appendChild(e); }
+  }
+}
+function ptBed(on) { if (!PT.pet) return; PT.onBed = on; sfx('click'); petAct('bed', { on }); }
+function ptDip() {
+  if (!PT.pet || !PT.pet.canCare) return;
+  if (PT.foam < 60) { showToast('🧼 افرك الحيوان بالصابون أول حتى تطلع رغوة'); return; }
+  if (PT.dip >= 0) return; PT.dip = 0; sfx('swap');
+}
+/* ---- رسم ---- */
+function ptSprite(c, p, x, y, sz, opt) {
+  opt = opt || {}; const t = PT.T, kind = ptKind(p.species), sleep = p.sleep && PT.scene === 'bed';
+  c.save(); c.translate(x, y);
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 4, sz * 0.38, sz * 0.1, 0, 0, 7); c.fill();
+  const bob = sleep ? Math.sin(t / 40) * 1.2 : kind === 'fish' ? Math.sin(t / 14) * 5 : Math.abs(Math.sin(t / 26)) * (opt.hop || 3);
+  const sx = (opt.dir || 1) * (kind === 'fish' ? Math.sin(t / 50) > 0 ? 1 : -1 : 1);
+  c.translate(0, -sz * 0.45 - bob); c.scale(sx, 1); c.font = sz + 'px "Apple Color Emoji","Segoe UI Emoji",system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(p.species, 0, 0);
+  const dirt = p.dirty ? 1 : Math.min(1, p.t / p.ivl);
+  if (dirt > 0.2 && !opt.clean) { const n = Math.ceil(dirt * 9); for (let i = 0; i < n; i++) { const a = i * 2.4, rr = sz * (0.12 + 0.22 * ((i * 37) % 10) / 10); c.fillStyle = 'rgba(110,70,30,' + (0.45 + 0.3 * dirt) + ')'; c.beginPath(); c.ellipse(Math.cos(a) * rr, Math.sin(a * 1.3) * rr * 0.9, 3 + (i % 3) * 1.5, 2.5 + (i % 2) * 1.5, a, 0, 7); c.fill(); } }
+  c.restore();
+  if (p.dirty && !opt.clean) { for (let i = 0; i < 2; i++) { const a = t / 18 + i * 3.1; c.font = '12px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('🪰', x + Math.cos(a) * sz * 0.55, y - sz * 0.8 + Math.sin(a * 1.4) * 10); } }
+  if (sleep) { c.font = 'bold 15px system-ui'; c.textAlign = 'center'; c.fillStyle = '#cfe0ff'; const k = (t % 120) / 120; c.globalAlpha = 1 - k; c.fillText('💤', x + 22 + k * 10, y - sz - k * 24); c.globalAlpha = 1; }
+}
+function ptDrawBath(c, p) {
+  const t = PT.T; const g = c.createLinearGradient(0, 0, 0, 170); g.addColorStop(0, '#bfe6f5'); g.addColorStop(1, '#e8f7fc'); c.fillStyle = g; c.fillRect(0, 0, 320, 170);
+  c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; for (let x = 0; x < 320; x += 32) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 170); c.stroke(); } for (let y = 0; y < 170; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(320, y); c.stroke(); }
+  c.fillStyle = '#d3e6ec'; c.fillRect(0, 170, 320, 80); c.strokeStyle = 'rgba(0,0,0,.08)'; for (let y = 170; y < 250; y += 20) { c.beginPath(); c.moveTo(0, y); c.lineTo(320, y); c.stroke(); }
+  c.fillStyle = '#9fb5be'; c.fillRect(268, 18, 6, 42); c.fillRect(246, 14, 34, 8); c.fillStyle = '#c9d6db'; c.beginPath(); c.ellipse(250, 26, 9, 4, 0, 0, 7); c.fill();
+  // الحوض (خلف)
+  c.fillStyle = '#f4f7fa'; c.beginPath(); c.ellipse(160, 176, 98, 20, 0, 0, 7); c.fill(); c.fillStyle = '#6fd0f5'; c.beginPath(); c.ellipse(160, 177, 88, 15, 0, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.5; c.beginPath(); for (let i = 0; i <= 20; i++) { const x = 90 + i * 7; const y = 177 + Math.sin(t / 12 + i) * 1.6; if (i) c.lineTo(x, y); else c.moveTo(x, y); } c.stroke();
+  const k = PT.dip < 0 ? 0 : Math.sin(Math.min(1, PT.dip) * Math.PI); const py = 150 + k * 40;
+  PT.petBox = { x: 160, y: py - 36, r: 44 };
+  ptSprite(c, p, 160, py, 66, { clean: false, hop: PT.dip >= 0 ? 0 : 3 });
+  // رغوة
+  PT.bubs.forEach(b => { c.fillStyle = 'rgba(255,255,255,' + b.a + ')'; c.strokeStyle = 'rgba(150,210,240,.8)'; c.lineWidth = 1; c.beginPath(); c.arc(b.x, b.y + k * 40, b.r, 0, 7); c.fill(); c.stroke(); });
+  // واجهة الحوض (تغطي النصف الأسفل وقت الغمس)
+  c.fillStyle = '#f9fbfd'; c.beginPath(); if (c.roundRect) c.roundRect(62, 180, 196, 58, 18); else c.rect(62, 180, 196, 58); c.fill(); c.strokeStyle = '#c4d3da'; c.lineWidth = 2; c.stroke();
+  c.fillStyle = 'rgba(95,200,245,.35)'; c.fillRect(70, 186, 180, 6);
+  c.fillStyle = '#7ba7bd'; c.font = 'bold 13px Cairo, system-ui'; c.textAlign = 'center'; c.fillText('🛁 حمام ' + (p.name || 'الحيوان'), 160, 214);
+  if (PT.tool === 'soap' && PT.mx) { c.font = '26px system-ui'; c.fillText('🧼', PT.mx, PT.my); }
+  if (PT.dip >= 0) { PT.dip += 0.022; if (PT.dip > 0.45 && PT.dip < 0.5) { ptBurst(160, 176, 18); PT.bubs = []; } if (PT.dip >= 1) { PT.dip = -1; PT.foam = 0; petAct('bath').then(r => { if (r) { sfx('magic'); ptBurst(160, 110, 26); ptSay('ممنون ✨'); } }); } }
+}
+function ptDrawBed(c, p) {
+  const t = PT.T, dark = !p.light;
+  c.fillStyle = '#e9d9f2'; c.fillRect(0, 0, 320, 170); c.fillStyle = 'rgba(0,0,0,.05)'; for (let x = 0; x < 320; x += 24) c.fillRect(x, 0, 12, 170);
+  c.fillStyle = '#b98a5a'; c.fillRect(0, 170, 320, 80); c.strokeStyle = 'rgba(0,0,0,.15)'; for (let y = 170; y < 250; y += 18) { c.beginPath(); c.moveTo(0, y); c.lineTo(320, y); c.stroke(); }
+  // نافذة
+  c.fillStyle = '#fff'; c.fillRect(204, 30, 78, 70); c.fillStyle = dark ? '#16203f' : '#8fd3ff'; c.fillRect(208, 34, 70, 62); if (dark) { c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(256, 56, 9, 0, 7); c.fill(); c.fillStyle = '#16203f'; c.beginPath(); c.arc(260, 53, 8, 0, 7); c.fill(); c.fillStyle = '#fff'; [[222, 50], [238, 74], [266, 82]].forEach(s => c.fillRect(s[0], s[1], 2, 2)); }
+  c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(243, 34); c.lineTo(243, 96); c.moveTo(208, 65); c.lineTo(278, 65); c.stroke();
+  // مفتاح النور
+  c.fillStyle = '#fff'; c.fillRect(292, 88, 18, 28); c.fillStyle = p.light ? '#2fbf71' : '#c0392b'; c.fillRect(296, p.light ? 92 : 104, 10, 8);
+  // السرير
+  c.fillStyle = '#7a4a2a'; c.fillRect(14, 112, 164, 10); c.fillRect(14, 112, 10, 92); c.fillRect(168, 130, 10, 74);
+  c.fillStyle = '#f4efe6'; c.beginPath(); if (c.roundRect) c.roundRect(20, 138, 154, 34, 10); else c.rect(20, 138, 154, 34); c.fill();
+  c.fillStyle = '#ffffff'; c.beginPath(); if (c.roundRect) c.roundRect(28, 126, 44, 22, 10); else c.rect(28, 126, 44, 22); c.fill();
+  PT.bedZone = [14, 110, 164, 70];
+  // الحيوان
+  const tx = PT.onBed || PT.drag === false && p.bed ? 100 : 232, ty = PT.onBed ? 146 : 196;
+  if (!PT.drag) { PT.px += (tx - PT.px) * 0.14; PT.py += (ty - PT.py) * 0.14; }
+  PT.petBox = { x: PT.px, y: PT.py - 30, r: 40 };
+  ptSprite(c, p, PT.px, PT.py, 62, { hop: p.sleep ? 0 : 2 });
+  if (p.cover) { c.fillStyle = '#5a8fd6'; c.beginPath(); if (c.roundRect) c.roundRect(60, 142, 118, 34, 10); else c.rect(60, 142, 118, 34); c.fill(); c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2; c.beginPath(); c.moveTo(62, 150); c.lineTo(174, 150); c.stroke(); }
+  c.fillStyle = '#7a4a2a'; c.fillRect(14, 168, 164, 6);
+  c.fillStyle = '#8a5a2e'; c.fillRect(30, 172, 8, 32); c.fillRect(154, 172, 8, 32);
+  if (dark) { c.fillStyle = 'rgba(5,8,30,' + (p.sleep ? 0.7 : 0.55) + ')'; c.fillRect(0, 0, 320, 250); c.save(); c.globalCompositeOperation = 'lighter'; const gg = c.createRadialGradient(243, 64, 4, 243, 64, 70); gg.addColorStop(0, 'rgba(150,180,255,.35)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.fillRect(170, 0, 150, 140); c.restore(); }
+}
+function petLoop() {
+  if (curPage !== 'pet') { PT.raf = 0; clearInterval(PT.poll); return; }
+  PT.T++; const cv = $('petCv'); if (cv) { const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0); const p = PT.pet;
+    if (!p) { c.fillStyle = '#16212e'; c.fillRect(0, 0, 320, 250); c.fillStyle = '#9fb3c8'; c.font = '14px Cairo, system-ui'; c.textAlign = 'center'; c.fillText('🐾 ما اكو حيوان', 160, 120); }
+    else {
+      if (PT.scene === 'bath') ptDrawBath(c, p); else ptDrawBed(c, p);
+      PT.parts = PT.parts.filter(q => q.t > 0); PT.parts.forEach(q => { q.x += q.vx; q.y += q.vy; q.vy += 0.07; q.t--; c.globalAlpha = Math.min(1, q.t / 14); c.fillStyle = q.c; c.beginPath(); c.arc(q.x, q.y, q.s, 0, 7); c.fill(); }); c.globalAlpha = 1;
+      if (!p.sleep && PT.T > PT.nextSay) { PT.nextSay = PT.T + 1500 + Math.random() * 1500; if (PT.nextSay > 0 && PT.T > 200) { const L = PT_SAY[ptKind(p.species)]; ptSay(L[Math.floor(Math.random() * L.length)]); } }
+      if (PT.say && PT.say.t > 0 && PT.petBox) { PT.say.t--; const w = c.measureText(PT.say.txt).width + 18, bx = Math.max(4, Math.min(316 - w, PT.petBox.x - w / 2)), by = Math.max(4, PT.petBox.y - 54); c.globalAlpha = Math.min(1, PT.say.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, 22, 9); else c.rect(bx, by, w, 22); c.fill(); c.stroke(); c.fillStyle = '#222'; c.font = 'bold 11px Cairo, system-ui'; c.textAlign = 'center'; c.fillText(PT.say.txt, bx + w / 2, by + 15); c.globalAlpha = 1; }
+    } }
+  PT.raf = requestAnimationFrame(petLoop);
+}
+function ptBind(cv) {
+  const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 320, (e.clientY - r.top) / r.height * 250]; };
+  const onPet = (x, y) => PT.petBox && Math.hypot(x - PT.petBox.x, y - PT.petBox.y) < PT.petBox.r;
+  cv.addEventListener('pointerdown', e => {
+    const [x, y] = pt(e), p = PT.pet; if (!p) return; PT.mx = x; PT.my = y;
+    if (PT.scene === 'bed' && p.canCare && onPet(x, y)) { PT.drag = true; PT.px = x; PT.py = y + 20; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
+    if (PT.scene === 'bath' && PT.tool === 'soap' && p.canCare) { PT.down = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
+    if (onPet(x, y)) { const L = PT_SAY[ptKind(p.species)]; ptSay(L[Math.floor(Math.random() * L.length)]); ptBurst(PT.petBox.x, PT.petBox.y - 20, 6); sfx('pet', { t: ptKind(p.species) }); if (p.canCare && !p.sleep && Date.now() - PT.lastPlay > 6000) { PT.lastPlay = Date.now(); api('/api/pet/act', { method: 'POST', body: { owner: p.owner, act: 'play' } }).then(r => { if (r) petApply(r.pet); }).catch(() => {}); } }
+  });
+  cv.addEventListener('pointermove', e => {
+    const [x, y] = pt(e); PT.mx = x; PT.my = y;
+    if (PT.drag) { PT.px = x; PT.py = y + 20; }
+    else if (PT.down && PT.tool === 'soap' && PT.petBox && Math.hypot(x - PT.petBox.x, y - PT.petBox.y) < PT.petBox.r + 6 && PT.dip < 0) {
+      PT.foam = Math.min(100, PT.foam + 2.5); if (PT.bubs.length < 70 && Math.random() < 0.7) PT.bubs.push({ x: x + (Math.random() - 0.5) * 16, y: y + (Math.random() - 0.5) * 16, r: 4 + Math.random() * 7, a: 0.75 });
+      if (PT.foam >= 60 && !PT.foamOk) { PT.foamOk = true; sfx('magic'); ptUi(); } if (PT.foam < 60) PT.foamOk = false; if (Math.random() < 0.1) sfx('click');
+    }
+  });
+  const up = e => { if (PT.drag) { PT.drag = false; const [x, y] = pt(e), z = PT.bedZone || [0, 0, 0, 0], on = x > z[0] && x < z[0] + z[2] && y > z[1] && y < z[1] + z[3]; ptBed(on); } PT.down = false; if (PT.foamOk && PT.foam < 60) PT.foamOk = false; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+}
+var hvHeartsAt = null;
+$('ptTabs').querySelectorAll('[data-sc]').forEach(b => b.onclick = () => { PT.scene = b.dataset.sc; PT.tool = ''; sfx('click'); ptUi(); });
+$('hPetBtn').onclick = () => openPage('pet');
+/* وقت اللعب يوسّخ الحيوان: كل دقيقة */
+setInterval(async () => {
+  if (!auth || document.hidden || !navigator.onLine || !(auth.house && auth.house.set && auth.house.set.pet)) return;
+  try { const r = await api('/api/pet/tick', { method: 'POST', body: { sec: 60 } }); if (r.pet) { petDirtyMine = r.pet.dirty; if (r.justDirty) showToast('🪰 ' + (r.pet.name || 'حيوانك') + ' توصّخ! خذه لحمام الحيوان 🛁'); if (curPage === 'pet' && PT.pet && PT.pet.isOwner) petApply(r.pet); } } catch (e) {}
+}, 60000);
 
 /* ================= وضع بدون إنترنت ================= */
 var offDismissed = false, offShown = false;
