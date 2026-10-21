@@ -1447,9 +1447,13 @@ function rmOnMsg(ws, d) {
     const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
   } else if (d.t === 'rm_typing') {
     const h = ws.rm; if (!h || now - (h.tt || 0) < 1500) return; h.tt = now; const r = rmRooms.get(h.id); if (r) rmBc(r, { t: 'rm_typing', n: me.name }, ws);
+  } else if (d.t === 'rm_kiss') {   // بوسات: بس بين بابي وبابيتو
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmAdm(ws) || now - (h.kt || 0) < 700) return;
+    const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && rmAdm(w) && w.key !== ws.key); if (!tw || !tw.rm || Math.hypot(tw.rm.x - h.x, tw.rm.y - h.y) > 90) return; h.kt = now;   // لازم يكونون قريبين من بعض
+    rmBc(r, { t: 'rm_kiss', from: me.name, to: rmNm(tw) });
   } else if (d.t === 'rm_chat') {
     const h = ws.rm; if (!h || now - h.ct < (ws.guest ? 1500 : 600)) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return;
-    const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return;
+    const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 500); if (!txt) return;
     const m = { n: me.name, txt, ts: now, adm: rmAdm(ws) }; r.log.push(m); while (r.log.length > 80) r.log.shift(); rmBc(r, { t: 'rm_chat', m });
   } else if (d.t === 'rm_leave') rmLeave(ws);
   else if (d.t === 'rm_kick' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
