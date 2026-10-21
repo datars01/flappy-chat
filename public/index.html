@@ -6050,6 +6050,17 @@ $('rmWxSnow').onclick = () => rmSend({ t: 'rm_wx', mode: 'snow' });
 $('rmWxFast').onclick = () => rmSend({ t: 'rm_wx', mode: RM.wxSpd > 1 ? 'slow' : 'fast' });
 $('rmWxReset').onclick = () => rmSend({ t: 'rm_wx', mode: 'reset' });
 
+
+/* ---------- نغمات دخول الأعضاء / المشرفين ---------- */
+function rmJoinSnd(adm) {
+  if (RM.ambMute) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { return; } if (!actx || actx.state !== 'running') return;
+  if (!adm) { [[523, 0], [659, 0.11], [784, 0.22]].forEach(q => { blip('sine', q[0], q[0], 0.28, 0.07, q[1]); blip('triangle', q[0] * 2, q[0] * 2, 0.2, 0.018, q[1]); }); return; }
+  const arp = adm === 1 ? [392, 523, 659, 784, 1047, 1319] : [440, 587, 740, 880, 1175, 1480];
+  arp.forEach((f, i) => { blip('triangle', f, f, 0.34, 0.075, i * 0.085); blip('sine', f * 2, f * 2, 0.3, 0.03, i * 0.085); });
+  [0, 1].forEach(k => { blip('sine', arp[5], arp[5] * 1.003, 1.1, 0.06, 0.55 + k * 0.02); blip('sine', arp[3], arp[3], 1.1, 0.05, 0.55); blip('sine', arp[1], arp[1], 1.1, 0.04, 0.55); });
+  for (let i = 0; i < 7; i++) blip('sine', 2400 + Math.random() * 2600, 3200 + Math.random() * 1800, 0.12, 0.016, 0.5 + i * 0.07);
+}
+
 /* ---------- الحلقة الرئيسية ---------- */
 function rmDraw() {
   const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
@@ -6102,7 +6113,7 @@ function rmOnMsg(d) {
     (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
     rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); RM.g = null; RM.gSide = null; if (d.g) rmGOn(d.g); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
-  } else if (T === 'rm_join') { if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
+  } else if (T === 'rm_join') { if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
   else if (T === 'rm_seatbusy') { const m = RM.me; if (m.sit || m.goal) { showToast('⛔ سبقك أحد على هذا المقعد'); m.goal = false; if (m.sit) rmStand(); else { m.seat = null; m.tx = m.x; m.ty = m.y; } rmPrompt(true); } }
