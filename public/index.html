@@ -2830,7 +2830,10 @@ function musicTick() {
   mus.bus.gain.setTargetAtTime(want ? 0.5 : 0.0001, now, want ? 0.6 : 0.25);
   if (!want) { if (mus.next < now) mus.next = now + 0.1; return; }
   const lv = gameMode === 'duo' ? (duo.lv || 1) : ((Z && Z.level) || 1), th = mTheme(lv);
-  if (mus.lv !== lv) { mus.lv = lv; mus.step = 0; mus.lp.frequency.setTargetAtTime(th.lp, now, 0.3); }
+  if (mus.lv !== lv) {
+    const first = !mus.lv; mus.lv = lv; mus.step = 0; mus.lp.frequency.setTargetAtTime(th.lp, now, 0.3); mus.next = Math.max(mus.next, now + (first ? 0.1 : 0.9));
+    if (!first && want) { const c0 = th.ch[0]; [0, 1, 2, 3, 2].forEach((k, n) => mnote('triangle', mhz(c0[k] + 12), now + 0.05 + n * 0.14, 0.5, 0.06)); }   // لحن قصير يعلن النغمة الجديدة
+  }
   const E = 60 / th.bpm / 2, ARP = MARP[th.a];
   while (mus.next < now + 0.7) {
     const s = mus.step, ch = th.ch[Math.floor(s / 8) % 4], i8 = s % 8, t = mus.next;
