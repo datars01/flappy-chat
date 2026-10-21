@@ -1085,8 +1085,13 @@ function hvPubM(w) { const u = db.users[w.key], h = w.hv; return { n: u.name, sk
 function hvBc(owner, msg, except) { const set = hvRooms.get(owner); if (!set) return; const str = JSON.stringify(msg); for (const w of set) if (w !== except && w.readyState === 1) w.send(str); }
 function hvLeave(ws) {
   if (!ws.hv) return; const o = ws.hv.owner, set = hvRooms.get(o), u = db.users[ws.key]; ws.hv = null;
-  if (set) { set.delete(ws); if (!set.size) hvRooms.delete(o); else hvBc(o, { t: 'hv_leave', n: u && u.name }); }
+  if (set) {
+    set.delete(ws);
+    if (!set.size) { hvRooms.delete(o); const ou = db.users[o]; if (ou && ou.hlog && ou.hlog.length) { ou.hlog = []; save(); } }   // آخر واحد يطلع من البيت: ينمسح سجل الشات
+    else hvBc(o, { t: 'hv_leave', n: u && u.name });
+  }
 }
+for (const k in db.users) if (db.users[k].hlog) delete db.users[k].hlog;   // بعد إعادة تشغيل السيرفر ما يبقى سجل قديم
 function hvOnMsg(ws, d) {
   const me = db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'hv_join') {
