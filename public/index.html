@@ -438,7 +438,9 @@
   .devTxt b { color: #000; } .devEnd { margin-top: 14px; font-size: 26px; color: #000; }
   .devTg { color: #000; font-family: system-ui, Arial, sans-serif; font-weight: 800; font-size: 20px; letter-spacing: .5px; text-decoration: underline; text-decoration-thickness: 2px; background: #ffe9a8; padding: 1px 10px; border-radius: 10px; }
   .devBtn { display: block; margin: 14px auto 4px; width: fit-content; background: #229ed9; color: #fff; padding: 10px 22px; border-radius: 24px; font-weight: 800; text-decoration: none; font-family: Cairo, system-ui; }
-  #rmBox.rmTiny .hOvTop, #rmBox.rmTiny #rmMem, #rmBox.rmTiny #rmPrompt { display: none !important; } #rmBox.rmTiny #rmLogP { max-height: 38%; bottom: 44px; }
+  #rmBox.rmTiny .hOvTop, #rmBox.rmTiny #rmPrompt { display: none !important; } #rmBox.rmTiny #rmLogP { max-height: 38%; bottom: 44px; }
+  #rmMemArr { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 58px; padding: 0; border-radius: 0 14px 14px 0; background: rgba(10,14,30,.85); color: #fff; border: 1px solid rgba(255,255,255,.4); border-left: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; z-index: 3; } #rmMemArr b { font-size: 17px; line-height: 1; } #rmMemArr small { font-size: 10px; color: #ffd166; font-weight: 700; }
+  #rmBox.memOpen #rmMemArr { left: 122px; }
   .rmRow.rmPerm { border: 1px solid #ffc83d; background: linear-gradient(90deg, rgba(255,200,61,.18), rgba(255,200,61,.04)); }
   #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
   #rmMem .wf { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .wf input { width: 100%; padding: 4px 6px; font-size: 14px; border-radius: 8px; border: 0; box-sizing: border-box; } #rmMem .wf button { background: #2d9aa5; }
@@ -691,8 +693,8 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
-        <div id="rmMem"></div>
+        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button></div></div>
+        <div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
         <div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="120" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
@@ -4131,14 +4133,15 @@ function hSetLight(on) { hLight = on; try { localStorage.setItem('hLight', on ? 
 var hAutoFull = false;
 function hSetFull(on, auto) {
   hAutoFull = !!(on && auto); hFull = on; $('hStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
-  try { if (on) { const r = $('hStage').requestFullscreen && $('hStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  try { if (on) { const r = $('hStage').requestFullscreen && $('hStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto && IS_TABLET) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
   hOvKey = ''; hUpdateOv(); if (on && !auto && innerHeight > innerWidth) showToast('📱 دوّر الجوال بالعرض حتى تشوف المكان أكبر');
 }
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && hFull) { hFull = false; $('hStage').classList.remove('full'); document.body.style.overflow = ''; hOvKey = ''; hUpdateOv(); } });
 $('hFsBtn').onclick = () => hSetFull(!hFull);
 /* دوران الجهاز: بالعرض يفتح المشهد بوضع ملء الشاشة تلقائياً، وبالطول يرجع */
-const hLandMQ = window.matchMedia ? matchMedia('(orientation: landscape) and (max-height: 560px)') : null;
-function hOrient() { if (curPage !== 'house') return; if (hLandMQ && hLandMQ.matches) { if (!hFull) hSetFull(true, true); } else if (hFull && hAutoFull) hSetFull(false); hFitFs(); }
+const IS_TABLET = Math.min(screen.width || 0, screen.height || 0) >= 600 || /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // الوضع العرضي التلقائي للايبادات/التابلت فقط
+const hLandMQ = window.matchMedia ? matchMedia('(orientation: landscape)') : null;
+function hOrient() { if (curPage !== 'house') return; if (hLandMQ && hLandMQ.matches && IS_TABLET) { if (!hFull) hSetFull(true, true); } else if (hFull && hAutoFull) hSetFull(false); hFitFs(); }
 if (hLandMQ) (hLandMQ.addEventListener ? hLandMQ.addEventListener('change', hOrient) : hLandMQ.addListener(hOrient));
 window.addEventListener('resize', () => { hFitFs(); }); window.addEventListener('orientationchange', () => setTimeout(() => { hOrient(); }, 250));
 $('hLightBtn').onclick = () => hSetLight(!hLight);
@@ -5322,7 +5325,7 @@ function rmOnMsg(d) {
 }
 /* ---------- الواجهة: اللوبي ---------- */
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
-function rmShowRoom() { $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
+function rmShowRoom() { if (IS_TABLET && hLandMQ && hLandMQ.matches && !RM.full) setTimeout(() => { if (RM.on && !RM.full) rmSetFull(true, true); }, 0); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
 function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
 function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.menu = ''; RM.warnFor = ''; if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
 function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; $('rmZoom').textContent = '🔭 كل المكان'; rmJoinSend(); }
@@ -5360,7 +5363,7 @@ $('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; $('rmLogBtn').textCont
 function rmRenderMem() {
   const P = $('rmMem'); if (!P) return; P.innerHTML = ''; const me = rmMe();
   const all = [{ name: me, own: me === RM.owner, me: true, adm: RM.myAdm, mod: RM.isMod, g: !auth }].concat(Object.values(RM.others).map(o => ({ name: o.name, own: !!o.own, adm: o.adm || 0, mod: RM.mods.includes(o.name), g: !!o.g })));
-  $('rmCnt').textContent = '👥 ' + all.length + '/' + (RM.cap || 15); const h = document.createElement('div'); h.className = 'mh'; h.textContent = '👥 الموجودون (' + all.length + ')'; P.appendChild(h);
+  $('rmCnt').textContent = '👥 ' + all.length + '/' + (RM.cap || 15); $('rmMemN').textContent = all.length; const h = document.createElement('div'); h.className = 'mh'; h.textContent = '👥 الموجودون (' + all.length + ')'; P.appendChild(h);
   all.sort((a, b) => ((a.adm || 9) - (b.adm || 9)) || (b.own - a.own) || (b.mod - a.mod) || a.name.localeCompare(b.name)).forEach(u => {
     const row = document.createElement('div'); const b = document.createElement('button'); b.type = 'button'; b.className = 'mb' + (u.me ? ' me' : '') + (u.adm ? ' adm' + u.adm : '');
     if (u.adm) b.appendChild(crownIcon(u.adm)); else if (u.own) b.appendChild(crownIcon(3)); else if (u.mod) b.appendChild(document.createTextNode('⭐ '));
@@ -5390,11 +5393,12 @@ $('rmChatIn').addEventListener('blur', () => { setTimeout(() => { if (RM.softFoc
 $('rmSend').addEventListener('pointerdown', e => { if (document.activeElement === $('rmChatIn')) e.preventDefault(); });
 $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { if (e.key === 'Enter') rmChat(); });
 $('rmExit').onclick = () => rmLeaveRoom();
-$('rmMemBtn').onclick = () => { $('rmMem').hidden = !$('rmMem').hidden; };
+function rmMemToggle(open) { const P = $('rmMem'); P.hidden = open === undefined ? !P.hidden : !open; $('rmBox').classList.toggle('memOpen', !P.hidden); $('rmMemArr').firstChild.textContent = P.hidden ? '▶' : '◀'; }
+$('rmMemArr').onclick = () => rmMemToggle();
 $('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; $('rmZoom').textContent = RM.zoomAll ? '🔍 قرّب' : '🔭 كل المكان'; };
 function rmSetFull(on, auto, soft) {
   RM.full = on; RM.soft = !!(on && soft); if (!on) RM.softFocus = false; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
-  try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto && IS_TABLET) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
   $('rmFs').textContent = on ? '✕ إغلاق' : '⛶ تكبير'; if (typeof hFitFs === 'function') hFitFs(); if (window.hFitAll) hFitAll(); window.scrollTo(0, 0);
 }
 $('rmFs').onclick = () => rmSetFull(!RM.full);
@@ -5407,7 +5411,7 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
 })();
-if (typeof hLandMQ !== 'undefined' && hLandMQ) { const f = () => { if (curPage !== 'rooms' || !RM.on) return; if (hLandMQ.matches) { if (!RM.full) rmSetFull(true, true); } else if (RM.full && RM.autoFull) rmSetFull(false); }; hLandMQ.addEventListener ? hLandMQ.addEventListener('change', f) : hLandMQ.addListener(f); }
+if (typeof hLandMQ !== 'undefined' && hLandMQ) { const f = () => { if (curPage !== 'rooms' || !RM.on) return; if (hLandMQ.matches && IS_TABLET) { if (!RM.full) rmSetFull(true, true); } else if (RM.full && RM.autoFull) rmSetFull(false); }; hLandMQ.addEventListener ? hLandMQ.addEventListener('change', f) : hLandMQ.addListener(f); }
 
 /* ================= وضع بدون إنترنت ================= */
 var offDismissed = false, offShown = false;
