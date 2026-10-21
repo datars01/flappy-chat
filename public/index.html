@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -30,6 +30,8 @@
   #sponsor { align-self: center; font-size: 13px; font-weight: 600; color: #3a2a00; padding: 3px 16px; border-radius: 20px;
     background: linear-gradient(135deg, #ffd166, #f5a623); box-shadow: 0 3px 10px rgba(245,166,35,.35); }
   #sponsor b { font-weight: 700; }
+  .rbName { font-family: Pacifico, 'Brush Script MT', 'Segoe Script', cursive; font-weight: 400 !important; font-size: 17px; letter-spacing: .5px; direction: ltr; unicode-bidi: isolate; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+  .rbHeart { width: 17px; height: 15.5px; vertical-align: -3px; filter: drop-shadow(0 1px 2px rgba(150,0,40,.45)); }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .row { display: flex; gap: 8px; }
@@ -362,11 +364,11 @@
   #spBird { width: 150px; height: 112px; animation: spBob 1.2s ease-in-out infinite; }
   @keyframes spBob { 50% { transform: translateY(-10px) rotate(-4deg); } }
   #spTitle { font-size: 38px; font-weight: 900; }
-  #spBab { font-size: 54px; font-weight: 900; background: linear-gradient(90deg, #ff4d6d, #ffd166, #3ddc84, #3da5ff, #a855f7, #ff4d6d); background-size: 300% 100%;
+  #spBab { font-family: Pacifico, 'Brush Script MT', 'Segoe Script', cursive; direction: ltr; unicode-bidi: isolate; padding: 0 6px; font-size: 56px; font-weight: 400; background: linear-gradient(90deg, #ff4d6d, #ffd166, #3ddc84, #3da5ff, #a855f7, #ff4d6d); background-size: 300% 100%;
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: spShine 2s linear infinite; filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
   @keyframes spShine { to { background-position: 300% 0; } }
   #spBabRow { display: flex; align-items: center; gap: 10px; }
-  #spHeart { font-size: 48px; animation: spBeat 1s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(255,60,100,.8)); }
+  #spHeart svg { width: 48px; height: 44px; display: block; } #spHeart { font-size: 48px; line-height: 0; animation: spBeat 1s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(255,60,100,.8)); }
   @keyframes spBeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.22); } 60% { transform: scale(1); } }
   #spSkip { position: absolute; bottom: 24px; z-index: 2; background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 8px 20px; border-radius: 20px; font-size: 14px; }
   @media (prefers-reduced-motion: reduce) { #spNum.pop, #spReveal.show, #spBird, #spBab, #spHeart { animation: none; } }
@@ -486,7 +488,7 @@
 <body>
 <div id="app">
   <h1>🎯 بابيتو شات</h1>
-  <div id="sponsor"><b>ربش</b> ❤️</div>
+  <div id="sponsor"><b class="rbName">Rbsh</b> <svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhga)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></div>
 
   <div id="homeBar">
     <button id="hbAcc" type="button"><span id="hbName">👤 سجّل دخول</span></button>
@@ -701,7 +703,7 @@
 <div id="toast"></div>
 <div id="splash"><canvas id="spConf"></canvas>
   <div id="spNum"></div>
-  <div id="spReveal"><canvas id="spBird" width="300" height="224"></canvas><div id="spTitle">بابيتو شات</div><div id="spBabRow"><span id="spBab">ربش</span><span id="spHeart">❤️</span></div></div>
+  <div id="spReveal"><canvas id="spBird" width="300" height="224"></canvas><div id="spTitle">بابيتو شات</div><div id="spBabRow"><span id="spBab">Rbsh</span><span id="spHeart"><svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhgb)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></span></div></div>
   <button id="spSkip" type="button">تخطي ⏭</button>
 </div>
 <div id="dmPop"><div id="dmCard">
@@ -1736,7 +1738,7 @@ function drawBoard(g, lvl, hole, duoMode) {
   if (danger > 0) { ctx.shadowColor = 'rgba(255,50,50,' + (0.5 + 0.5 * Math.sin(frames / 4)) + ')'; ctx.shadowBlur = 20 * danger; }
   ctx.fillStyle = '#05070b'; ctx.beginPath(); ctx.arc(hx0, hy0, 19, 0, 6.2832); ctx.fill(); ctx.restore();
   ctx.strokeStyle = danger > 0 ? '#ff5a5a' : '#6b7a8c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(hx0, hy0, 19, 0, 6.2832); ctx.stroke();
-  ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillText('ربش ❤️', W / 2, H - 10);
+  ctx.font = 'bold 12px Cairo, system-ui, Arial'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.35)'; { ctx.font = '15px Pacifico, "Brush Script MT", cursive'; ctx.textAlign = 'left'; const tw = ctx.measureText('Rbsh').width, x0 = W / 2 - (tw + 18) / 2; ctx.fillText('Rbsh', x0, H - 10); const hx = x0 + tw + 4, hy = H - 20; ctx.save(); ctx.fillStyle = 'rgba(255,90,130,.75)'; ctx.beginPath(); ctx.moveTo(hx + 6, hy + 11); ctx.bezierCurveTo(hx - 3, hy + 5, hx - 1, hy - 1, hx + 3, hy - 1); ctx.bezierCurveTo(hx + 5, hy - 1, hx + 6, hy + 1, hx + 6, hy + 2); ctx.bezierCurveTo(hx + 6, hy + 1, hx + 7, hy - 1, hx + 9, hy - 1); ctx.bezierCurveTo(hx + 13, hy - 1, hx + 15, hy + 5, hx + 6, hy + 11); ctx.fill(); ctx.restore(); }
   if (!g) return;
   for (const b of g.chain) {
     const p = zPos(b.s); if (b.s >= PATH.L - 1) continue;
