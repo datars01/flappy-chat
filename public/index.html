@@ -570,6 +570,7 @@
       <form id="authForm" class="col" style="margin-top:8px">
         <input id="uIn" placeholder="اسم المستخدم" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false">
         <input id="pIn" type="password" placeholder="كلمة السر" maxlength="64" autocomplete="current-password">
+        <input id="pIn2" type="password" placeholder="تأكيد كلمة السر" maxlength="64" autocomplete="new-password" style="display:none">
         <button id="authBtn" type="submit">دخول</button>
       </form>
       <div id="authMsg"></div>
@@ -864,6 +865,7 @@ function setMode(m) {
   $('tabReg').classList.toggle('on', m === 'register');
   $('authBtn').textContent = m === 'login' ? 'دخول' : 'إنشاء الحساب';
   $('pIn').setAttribute('autocomplete', m === 'login' ? 'current-password' : 'new-password');
+  $('pIn').setAttribute('autocomplete', m === 'login' ? 'current-password' : 'new-password'); $('pIn2').style.display = m === 'login' ? 'none' : ''; $('pIn2').value = '';
   authSay('');
 }
 $('tabLogin').onclick = () => setMode('login');
@@ -891,15 +893,16 @@ $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
   const u = $('uIn').value.trim(), p = $('pIn').value;
   if (!u || !p) { authSay('اكتب اسم المستخدم وكلمة السر'); return; }
+  if (mode === 'register' && $('pIn2').value !== p) { authSay('⚠️ كلمة السر وتأكيدها مو متطابقين'); return; }
   $('authBtn').disabled = true; authSay('⏳ لحظة...', true);
   try {
     auth = null;
     let refSaved = ''; try { refSaved = localStorage.getItem('flappyRef') || ''; } catch (e) {}
-    const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: mode === 'register' && refSaved ? { u, p, ref: refSaved } : { u, p } });
+    const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: mode === 'register' ? (refSaved ? { u, p, p2: $('pIn2').value, ref: refSaved } : { u, p, p2: $('pIn2').value }) : { u, p } });
     if (mode === 'register') { try { localStorage.removeItem('flappyRef'); } catch (e) {} }
     auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
     syncUser(r.user);
-    saveAuth(); $('pIn').value = ''; authSay('');
+    saveAuth(); $('pIn').value = ''; $('pIn2').value = ''; authSay('');
     renderAuth(); lbRefresh(); closePage();
   } catch (err) { authSay('❌ ' + err.message); }
   $('authBtn').disabled = false;

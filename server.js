@@ -303,6 +303,7 @@ app.get('/health', (req, res) => res.send('ok'));
 
 app.post('/api/register', (req, res) => {
   if (limited('reg:' + req.ip, 10, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
+  if (req.body && req.body.p2 !== undefined && String(req.body.p2) !== String(req.body.p)) return res.status(400).json({ error: 'كلمة السر وتأكيدها مو متطابقين' });
   const name = cleanName(req.body && req.body.u);
   const p = String((req.body && req.body.p) || '');
   if (!name) return res.status(400).json({ error: 'الاسم لازم 2-16 حرف (حروف وأرقام ونقطة وشرطة فقط)' });
