@@ -2961,11 +2961,7 @@ function sfx(kind, a) {
       blip('square', 1300, 900, 0.03, 0.08, 0.42);
       blip('sine', 110, 38, 0.2, 0.28, 0.6); burst(0.1, 0.12, 0.6, 350);
     } else if (kind === 'pet') {
-      const t = a && a.t;
-      if (t === 'dog') [0, 0.22].forEach(d => { blip('sawtooth', 520, 200, 0.13, 0.14, d); blip('square', 260, 120, 0.1, 0.05, d); burst(0.06, 0.05, d, 1200); });
-      else if (t === 'cat') { blip('triangle', 560, 980, 0.2, 0.12); blip('triangle', 980, 520, 0.3, 0.12, 0.18); }
-      else if (t === 'mouse') [0, 0.11].forEach(d => blip('sine', 1500, 2300, 0.07, 0.09, d));
-      else [0, 0.09, 0.18].forEach(d => blip('sine', 420 + d * 900, 900 + d * 900, 0.07, 0.1, d));
+      /* الحيوان يحجي كتابة فقط (فقاعة نص)، بدون أي صوت */
     } else if (kind === 'click') {
       blip('square', 1400, 700, 0.03, 0.07);
     } else if (kind === 'warn') {
