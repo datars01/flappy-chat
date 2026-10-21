@@ -1206,6 +1206,15 @@ function renderShop() {
 const R = 12, D = 24, CX = 160, CY = 255, SHOT_V = 9, COOLDOWN = 12;
 const BCOL = ['#ff4d6d', '#ffd23f', '#3ddc84', '#3da5ff', '#b36bff', '#ff9f1c'];
 const BDARK = ['#a3122f', '#a07d00', '#117a43', '#14548f', '#5a1fa8', '#a35a00'];
+/* ألوان كل منطقة: المنطقة 1 بالألوان الأصلية، وكل منطقة بعدها تبدّل لون واحد بلون جديد (نفس عدد الألوان) */
+const BASE_COL = BCOL.slice(), BASE_DARK = BDARK.slice();
+const ZSWAP = [[5, '#ff8fd8', '#b03a8e'], [4, '#f2f2f2', '#8d96a3'], [3, '#b8743a', '#5e3414']];   // الصيف→الخريف: برتقالي⟵وردي، الشتاء: بنفسجي⟵أبيض، الربيع: أزرق⟵بني
+let palZone = 0;
+function setPalette(z) {
+  z = Math.max(0, Math.min(3, z | 0)); if (z === palZone) return; palZone = z;
+  for (let i = 0; i < BCOL.length; i++) { BCOL[i] = BASE_COL[i]; BDARK[i] = BASE_DARK[i]; }
+  for (let k = 0; k < z; k++) { const s = ZSWAP[k]; BCOL[s[0]] = s[1]; BDARK[s[0]] = s[2]; }
+}
 const THEMES = [['#1d4f63', '#0a1e2b'], ['#3b2a6e', '#120c2a'], ['#6b3a2a', '#201008'], ['#1f5a3a', '#07180f']];
 const ZONES = [   // الفصول الأربعة بترتيب الطبيعة، وبعد الربيع ترجع الدورة للصيف
   { n: 'الصيف', th: ['#d98a2b', '#4a2208'], deco: ['☀️', '🏖️', '🌴', '🍉'] },
@@ -1486,6 +1495,7 @@ function drawShooter(x, y, ang, skin, cur, next, aimLine) {
   if (cur != null) drawBall(x + ca * 34, y + sa * 34, cur, 10);
 }
 function drawBoard(g, lvl, hole) {
+  setPalette(zoneOf(lvl || 1) % ZONES.length);
   const zi = zoneOf(lvl || 1) % ZONES.length, th = ZONES[zi].th;
   const bg = ctx.createRadialGradient(CX, CY, 20, CX, CY, 330); bg.addColorStop(0, th[0]); bg.addColorStop(1, th[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
