@@ -1970,7 +1970,8 @@ function drawSolo() {
     text('🎯 فجّر الكرات الملونة', W / 2, 96, 21);
     text('حرّك بإصبعك للتصويب واضغط للإطلاق', W / 2, 124, 13, '#ffd166');
     text('3 كرات بنفس اللون = انفجار • لا تخلي السلسلة توصل الحفرة', W / 2, 146, 11);
-    text('اضغط للبدء', W / 2, 168, 15, '#9ff3b5');
+    text('اضغط «ابدأ اللعب» للبدء', W / 2, 168, 14, '#9ff3b5');
+    { const pu = 1 + Math.sin(performance.now() / 260) * 0.04; ctx.save(); ctx.translate(W / 2, 336); ctx.scale(pu, pu); const g = ctx.createLinearGradient(0, -26, 0, 26); g.addColorStop(0, '#34d399'); g.addColorStop(1, '#059669'); ctx.fillStyle = g; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-95, -26, 190, 52, 26); ctx.fill(); ctx.stroke(); ctx.restore(); text('▶ ابدأ اللعب', W / 2, 344, 21); }
     text('🗺️ ' + ZONES[zoneOf(Z.level) % ZONES.length].n + ' • ' + sceneOf(Z.level).em + ' ' + sceneOf(Z.level).n + (Z.level > 1 ? ' (المرحلة ' + Z.level + ')' : ''), W / 2, 196, 12, 'rgba(255,255,255,.85)');
   } else {
     drawHud(Z, myBest() ? 'الأفضل ' + Math.max(myBest(), score) : '');
@@ -2078,7 +2079,7 @@ function onTap(x, y) {
     return;
   }
   if (state === 'map') { if (mapT > 45) nextLevel(); return; }
-  if (state === 'ready') { state = 'play'; startGame(); zAim(Z, x, y); return; }
+  if (state === 'ready') { if (x > 62 && x < 258 && y > 306 && y < 366) { try { unlockAudio(); sfx('level'); } catch (e) {} state = 'play'; startGame(); zAim(Z, x, y); } return; }
   if (state === 'play') {
     if (paused) { if (x > 70 && x < 250 && y > 232 && y < 300) resumeGame(); else if (x > 60 && x < 260 && y > 312 && y < 356) restartLevel(); else if (x > 60 && x < 260 && y > 366 && y < 410) skipLevel(); return; }
     if (performance.now() < resumeAt) return;
@@ -2923,7 +2924,7 @@ function mTheme(lv) {
 function musicWanted() {
   if (!musicOn || document.hidden || curPage) return false;
   if (gameMode === 'duo') return duo.phase === 'play' || duo.phase === 'count';
-  return (state === 'play' || state === 'ready' || state === 'map') && !paused;
+  return (state === 'play' || state === 'map') && !paused;
 }
 function mnote(type, f, t, dur, vol) {
   const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = f; o.connect(g); g.connect(mus.bus);
