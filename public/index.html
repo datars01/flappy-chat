@@ -137,6 +137,21 @@
     background: rgba(78,192,202,.15); border-top: 1px solid var(--line); font-size: 13px; }
   #editTxt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
   #editCancel { width: 28px; height: 28px; padding: 0; border-radius: 50%; background: var(--card2); color: var(--text); border: 1px solid var(--line); font-size: 13px; }
+  #pinBar { position: relative; z-index: 1; display: none; align-items: center; gap: 8px; padding: 7px 12px; background: rgba(255,209,102,.14); border-bottom: 1px solid var(--line); cursor: pointer; flex-shrink: 0; }
+  #pinBar.on { display: flex; }
+  #pinBar .pt { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #pinBar .pt b { color: #ffd166; margin-inline-end: 4px; }
+  #pinBar .pc { font-size: 11px; background: rgba(255,209,102,.3); border-radius: 10px; padding: 2px 8px; font-weight: 700; flex: none; }
+  #pinPanel { display: none; position: absolute; inset: 0; z-index: 6; background: var(--card); border-radius: 22px 22px 0 0; flex-direction: column; }
+  #pinPanel.open { display: flex; }
+  #pinPanel .ph { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 700; }
+  #pinPanel .ph button { width: auto; padding: 4px 12px; }
+  #pinList { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--card2); }
+  .pinItem { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start; }
+  .pinItem .pb { flex: 1; min-width: 0; cursor: pointer; }
+  .pinItem .pn { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .pinItem .px { font-size: 13px; word-break: break-word; }
+  .pinItem button { width: auto; padding: 4px 8px; font-size: 12px; flex: none; }
   #menu { display: none; position: absolute; inset: 0; z-index: 5; background: rgba(0,0,0,.55);
     align-items: center; justify-content: center; border-radius: 22px 22px 0 0; }
   #menu.open { display: flex; }
@@ -636,6 +651,7 @@
     <button id="bigBtn" aria-label="تكبير المحادثة" type="button">⤢</button>
     <button id="closeBtn" aria-label="إغلاق" type="button">✕</button>
   </div>
+  <div id="pinBar" role="button"><span>📌</span><span class="pt"></span><span class="pc"></span></div>
   <div id="log"></div>
   <div id="typingBar"></div>
   <div id="emojiBox"></div>
@@ -651,6 +667,7 @@
   </form>
   <input type="file" id="fileIn" accept="image/*,video/*" hidden>
   <div id="menu"><div id="menuCard"></div></div>
+  <div id="pinPanel"><div class="ph"><span>📌 سجل المثبتات</span><button id="pinClose" type="button" class="ghost">رجوع</button></div><div id="pinList"></div></div>
   <div id="bgPanel"><div id="bgCard">
     <div class="bgT">🎨 تخصيص المحادثة</div>
     <div id="bgGrid"></div>
@@ -2024,6 +2041,7 @@ function openMenu(m) {
     b.onclick = () => { closeMenu(); fn(); }; card.appendChild(b);
   };
   if (!m.deleted) act('↩️ رد', () => startReply(m));
+  if (!m.deleted) { const pinned = pins.some(p => p.id === m.id); act(pinned ? '📌 فك التثبيت' : '📌 تثبيت الرسالة', () => wsend({ t: 'pin', id: m.id })); }
   if (!m.deleted && m.text) act('📋 نسخ', () => { try { navigator.clipboard.writeText(m.text); showToast('تم النسخ'); } catch (e) {} });
   if (!m.deleted && m.media && m.media.type !== 'audio') act('🔗 فتح', () => window.open(m.media.url, '_blank'));
   if (mine && !m.deleted && !m.media) act('✏️ تعديل', () => startEdit(m));
@@ -2143,8 +2161,29 @@ function setMembers(list) {
   }
 }
 
+let pins = [];
+const pinLabel = p => p.text || (p.mt === 'audio' ? '🎤 رسالة صوتية' : p.mt === 'video' ? '🎬 فيديو' : p.mt ? '🖼️ صورة' : '—');
+function renderPins() {
+  const bar = $('pinBar'); bar.classList.toggle('on', pins.length > 0);
+  if (pins.length) { const l = pins[pins.length - 1]; bar.querySelector('.pt').innerHTML = ''; const b = document.createElement('b'); b.textContent = l.name + ':'; bar.querySelector('.pt').append(b, document.createTextNode(pinLabel(l))); bar.querySelector('.pc').textContent = pins.length > 1 ? pins.length + ' مثبتة' : 'مثبتة'; }
+  const L = $('pinList'); L.innerHTML = '';
+  pins.slice().reverse().forEach(p => {
+    const d = document.createElement('div'); d.className = 'pinItem';
+    const bd = document.createElement('div'); bd.className = 'pb';
+    const pn = document.createElement('div'); pn.className = 'pn'; pn.textContent = p.name + ' • ثبّتها ' + (p.by || '') + ' • ' + new Date(p.ts).toLocaleString('ar-IQ', { dateStyle: 'short', timeStyle: 'short' });
+    const px = document.createElement('div'); px.className = 'px'; px.textContent = pinLabel(p); bd.append(pn, px);
+    bd.onclick = () => { $('pinPanel').classList.remove('open'); jumpTo(p.id); };
+    const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = '✕ فك'; u.onclick = () => wsend({ t: 'pin', id: p.id });
+    d.append(bd, u); L.appendChild(d);
+  });
+  if (!pins.length) { const e = document.createElement('div'); e.className = 'help'; e.textContent = 'ما اكو رسائل مثبتة. اضغط مطولاً على أي رسالة واختار «تثبيت»'; L.appendChild(e); }
+}
+$('pinBar').onclick = () => { renderPins(); $('pinPanel').classList.add('open'); };
+$('pinClose').onclick = () => $('pinPanel').classList.remove('open');
 function onServer(d) {
+  if (d.t === 'pins') { pins = d.pins || []; renderPins(); if (!d.silent && d.by) addSys('📌 ' + d.by + (d.on ? ' ثبّت رسالة' : ' فك تثبيت رسالة')); return; }
   if (d.t === 'joined') {
+    pins = d.pins || []; renderPins(); $('pinPanel').classList.remove('open');
     joined = true; clearTimeout(connTimer);
     $('setup').style.display = 'none';
     $('leaveBtn').style.display = 'block';

@@ -660,6 +660,9 @@ function membersOf(code) {
   return [...names.values()];
 }
 function delMedia(m) { if (m && m.media) mediaDelUrl(m.media.url); }
+const PIN_MAX = 30;
+const pinSnap = (m, byName, byKey) => ({ id: m.id, k: m.k, name: m.name, text: String(m.text || '').slice(0, 300), mt: m.media ? m.media.type : null, mu: m.media ? m.media.url : null, ts: m.ts, by: byName, bk: byKey, at: Date.now() });
+const pinsOf = room => (room.pins || []).map(p => ({ id: p.id, k: p.k, name: p.name, text: p.text, mt: p.mt, ts: p.ts, by: p.by, at: p.at }));
 const pub = m => { const { hidden, ...r } = m; return r; };
 function roomOf(code) { return own(db.rooms, code) ? db.rooms[code] : (db.rooms[code] = { msgs: [] }); }
 
@@ -1075,7 +1078,7 @@ function onMsg(ws, d) {
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
     const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-150).map(pub);
-    send(ws, { t: 'joined', code, msgs, members: membersOf(code), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {}, duo: duoPub(code) });
+    send(ws, { t: 'joined', code, msgs, members: membersOf(code), pins: pinsOf(roomOf(code)), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {}, duo: duoPub(code) });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
     return;
@@ -1156,19 +1159,30 @@ function onMsg(ws, d) {
   } else if (d.t === 'edit') {
     const m = find(d.id); const text = String(d.text || '').trim().slice(0, 500);
     if (!m || m.k !== ws.key || m.deleted || !text) return;
-    m.text = text; m.editedAt = now; save();
+    m.text = text; m.editedAt = now; const pn = (room.pins || []).find(p => p.id === m.id); if (pn) pn.text = text.slice(0, 300); save();
     bc(code, { t: 'edit', id: m.id, text: m.text, editedAt: m.editedAt });
   } else if (d.t === 'del') {
     const m = find(d.id); if (!m) return;
     if (d.scope === 'all') {
       if (m.k !== ws.key || m.deleted) return;
       delMedia(m); m.deleted = true; m.text = ''; m.media = null; m.reactions = {}; save();
+      if (room.pins && room.pins.some(p => p.id === m.id)) { room.pins = room.pins.filter(p => p.id !== m.id); bc(code, { t: 'pins', pins: pinsOf(room), id: m.id, on: false, silent: true }); }
       bc(code, { t: 'del', id: m.id, scope: 'all' });
     } else {
       if (!m.hidden.includes(ws.key)) m.hidden.push(ws.key);
       save();
       for (const w of live.get(code)) if (w.key === ws.key) send(w, { t: 'del', id: m.id, scope: 'me' });
     }
+  } else if (d.t === 'pin') {       // تثبيت/إلغاء تثبيت رسالة (لكل أعضاء الغرفة)
+    const m = find(d.id); room.pins = room.pins || [];
+    const ix = room.pins.findIndex(p => p.id === String(d.id));
+    if (ix >= 0) room.pins.splice(ix, 1);
+    else {
+      if (!m || m.deleted) return;
+      if (room.pins.length >= PIN_MAX) return send(ws, { t: 'err', error: 'وصلت الحد الأقصى للمثبتات (' + PIN_MAX + ')، فك تثبيت وحدة' });
+      room.pins.push(pinSnap(m, me.name, ws.key));
+    }
+    save(); bc(code, { t: 'pins', pins: pinsOf(room), by: me.name, on: ix < 0, id: String(d.id) });
   } else if (d.t === 'react') {
     const m = find(d.id); const emoji = String(d.emoji || '').slice(0, 8);
     if (!m || m.deleted || !emoji || /^\w+$/.test(emoji)) return;
@@ -1205,7 +1219,7 @@ function cleanup() {
   for (const code in db.rooms) {
     const r = db.rooms[code];
     r.msgs = r.msgs.filter(m => { if (m.ts < cut) { delMedia(m); return false; } return true; });
-    if (!r.msgs.length && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {
+    if (!r.msgs.length && !(r.pins && r.pins.length) && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {
       if (r.bg && r.bg.mode === 'img') mediaDelUrl(r.bg.url);
       delete db.rooms[code];
     }
