@@ -1173,7 +1173,7 @@ function drawBirdSkin(c, x, y, rot, sk, fr) {
 }
 function renderRewards() {
   const grid = $('skinGrid'); if (!grid) return;
-  const best = myBest();
+  const best = (auth && auth.admin) ? 99999 : myBest();   // الادمنية: كل السكنات مفتوحة
   const can = k => auth ? best >= k.at : k.at === 0;
   const next = SKINS.find(k => k.at > best);
   const prev = [...SKINS].reverse().find(k => k.at <= best) || SKINS[0];
