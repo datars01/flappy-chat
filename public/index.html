@@ -409,6 +409,28 @@
   #hPrompt { position: absolute; top: 70px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
   #hPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
   @keyframes hPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .rmRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); margin-top: 8px; }
+  .rmRow .ri { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .rmRow .ri b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rmRow .ri small { color: var(--muted); font-size: 12px; }
+  .rmRow .ra { display: flex; gap: 6px; align-items: center; flex: none; } .rmRow .ra button { width: auto; padding: 7px 14px; } .rmCodeIn { width: 74px; padding: 7px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 16px; direction: ltr; }
+  .rmForm { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 8px; } .rmForm input { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 16px; }
+  .rmFB { display: flex; gap: 8px; } .rmFB button { flex: 1; } .rmMsg { color: #ff8a8a; font-size: 13px; }
+  #rmCv { width: 100%; aspect-ratio: 640 / 500; display: block; border-radius: 14px; border: 2px solid var(--line); touch-action: none; background: #7fd0f2; flex-shrink: 0; }
+  #rmBox { position: relative; width: 100%; } #rmOv { position: absolute; inset: 0; pointer-events: none; } #rmOv button, #rmOv input { pointer-events: auto; width: auto; }
+  #rmPrompt { position: absolute; top: 70px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
+  #rmPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
+  #rmChatRow { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; gap: 5px; pointer-events: none; } #rmChatRow > * { pointer-events: auto; }
+  #rmChatIn { flex: 1; min-width: 0; background: rgba(10,14,30,.72); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 12px; padding: 6px 10px; font-size: 16px; } #rmChatIn::placeholder { color: rgba(255,255,255,.55); }
+  #rmLogP { position: absolute; right: 6px; bottom: 48px; width: min(56%, 260px); max-height: 30%; overflow-y: auto; background: rgba(10,14,30,.7); color: #fff; border-radius: 12px; padding: 6px 8px; font-size: 12px; pointer-events: none; } #rmLogP .m { margin-bottom: 2px; } #rmLogP b { color: #ffd166; }
+  #rmMem { position: absolute; left: 6px; top: 44px; bottom: 48px; width: 116px; overflow-y: auto; background: rgba(10,14,30,.82); border: 1px solid rgba(255,255,255,.3); border-radius: 12px; padding: 6px; color: #fff; font-size: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 4px; }
+  #rmMem[hidden] { display: none; } #rmMem .mh { font-weight: 700; color: #ffd166; font-size: 11px; margin-top: 4px; } #rmMem .mb { width: 100%; text-align: right; padding: 5px 7px; font-size: 12px; background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #rmMem .mb.me { background: rgba(255,209,102,.25); }
+  #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
+  #rmMem .wf { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .wf input { width: 100%; padding: 4px 6px; font-size: 14px; border-radius: 8px; border: 0; box-sizing: border-box; } #rmMem .wf button { background: #2d9aa5; }
+  #rmMem .ban { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 11px; } #rmMem .ban button { width: auto; background: #2d9aa5; } #rmMem .mclose { margin-top: 6px; background: #7a1f1f; }
+  #rmStage.full { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at center, #1a2336 0%, #05070d 100%); display: flex; align-items: center; justify-content: center; } #rmStage.full #rmBox { width: min(var(--hvw, 100vw), calc(var(--hvh, 100vh) * 1.28)); max-width: 100vw; } #rmStage.full #rmCv { border-radius: 0; border: 0; }
+  @media (orientation: landscape) and (max-height: 560px) { #pg-rooms #rmStage:not(.full) #rmBox { width: min(100%, calc((100vh - 130px) * 1.28)); margin: 0 auto; } }
+  #rmWarn { display: none; position: fixed; inset: 0; z-index: 10010; background: rgba(0,0,0,.72); align-items: center; justify-content: center; padding: 16px; } #rmWarn.show { display: flex; }
+  #rmWarn .rw { width: min(92vw, 380px); background: linear-gradient(160deg, #3a1020, #7a1f3a); border: 3px solid #ffd166; border-radius: 20px; padding: 22px 18px; text-align: center; color: #fff; box-shadow: 0 14px 50px rgba(0,0,0,.7); animation: hPop .3s ease-out; }
+  #rmWarn #rmWI { font-size: 54px; } #rmWarn b { display: block; font-size: 18px; margin: 6px 0; color: #ffd166; } #rmWarn p { font-size: 18px; line-height: 1.7; margin: 8px 0 16px; word-break: break-word; } #rmWarn button { padding: 10px 26px; font-size: 16px; font-weight: 700; background: #ffd166; color: #3a2a00; border: 0; border-radius: 12px; width: auto; }
   #hFsTabs { display: none; }
   #hSclBox { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 7px 8px; border-radius: 14px; background: rgba(10,14,30,.72); border: 1px solid rgba(255,255,255,.4); color: #fff; font-size: 12px; pointer-events: auto; backdrop-filter: blur(3px); }
   #hSclBox[hidden] { display: none; } #hSclBox .sr { display: flex; align-items: center; gap: 7px; } #hSclBox .hOvB { padding: 5px 10px; } #hSclBox #hSclR, #hSclBox #hSclS { font-size: 11px; padding: 4px 8px; }
@@ -513,6 +535,7 @@
     <button class="tile" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
     <button class="tile" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button>
     <button class="tile" data-pg="house" type="button"><span class="ti">🏠</span><span class="tl">بيتي</span></button>
+    <button class="tile" data-pg="rooms" type="button"><span class="ti">🏝️</span><span class="tl">نظام الغرف</span></button>
     <button class="tile" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button>
     <button class="tile" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
     <button class="tile" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
@@ -631,6 +654,33 @@
   </div>
 
 </div></div>
+<div class="page" id="pg-rooms"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏝️ نظام الغرف</span></div><div class="pgBody">
+  <div class="card" id="rmLobby">
+    <div class="lbHead"><span id="rmCount">🏝️ الغرف</span><button id="rmNew" class="ghost" type="button" style="width:auto;padding:6px 12px" hidden>➕ غرفة جديدة</button></div>
+    <div id="rmForm" class="rmForm" hidden>
+      <input id="rmName" maxlength="24" placeholder="اسم الغرفة (مثال: شاطئ الأصدقاء)" autocomplete="off">
+      <input id="rmCode" maxlength="12" placeholder="رمز الدخول (اتركه فاضي = غرفة عامة للكل)" autocomplete="off" dir="ltr">
+      <div class="rmFB"><button id="rmCreate" type="button">🏝️ أنشئ الغرفة</button><button id="rmCancel" class="ghost" type="button">إلغاء</button></div>
+      <div id="rmMsg" class="rmMsg"></div>
+    </div>
+    <div id="rmList"></div>
+    <div class="help">🏝️ كل غرفة ساحل واسع بيه كراسي وقنفات ونار مخيم وبار، تسع 15 شخص يحجون ويتمشون ويجلسون سوا. أقصى عدد غرف 15. الغرفة اللي ما يدخلها أحد أكثر من يوم تنحذف تلقائياً. صاحب الغرفة يكدر يطرد أو يحظر أو يحذّر الأعضاء من قائمة الموجودين.</div>
+  </div>
+  <div class="card" id="rmRoom" hidden>
+    <div class="lbHead"><span id="rmTtl">🏝️</span><span id="rmCnt">👥</span></div>
+    <div id="rmStage"><div id="rmBox">
+      <canvas id="rmCv" width="640" height="500"></canvas>
+      <div id="rmOv">
+        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
+        <div id="rmMem"></div>
+        <div id="rmPrompt"></div>
+        <div id="rmLogP" hidden></div>
+        <div id="rmChatRow"><input id="rmChatIn" maxlength="120" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
+      </div>
+    </div></div>
+  </div>
+</div></div>
+<div id="rmWarn" role="alert"><div class="rw"><div id="rmWI">⚠️</div><b id="rmWT"></b><p id="rmWS"></p><button id="rmWOk" type="button">حسناً</button></div></div>
 <div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
   <div class="card">
     <div class="lbHead"><span id="houseTtl">🏠 بيتك</span><span id="brickBal" class="coinBal">🧱 0</span></div>
@@ -665,7 +715,7 @@
     </div>
   </div>
 </div></div>
-<div class="page" id="pg-pet"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🐾 بيت الحيوان</span></div><div class="pgBody">
+<div class="page" id="pg-pet"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🐾 بيت الحيوان</span><button id="ptHome" class="pgBack" type="button" style="margin-inline-start:auto">🏠 للبيت</button></div><div class="pgBody">
   <div class="card col" style="gap:10px">
     <div id="ptSel"></div>
     <div id="ptInfo">⏳</div>
@@ -851,7 +901,7 @@ function syncUser(u) {
   if (!auth || !u) return;
   auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
-  auth.admin = !!u.admin; auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
+  auth.freeSkips = u.freeSkips || 0; auth.admin = !!u.admin; auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
   if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
   if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
   if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
@@ -1810,7 +1860,8 @@ function soloUpdate(raw) {
 }
 /* ---- إيقاف مؤقت ---- */
 var skipN = 0;   // عدد التخطيات بهاللعبة، وكل تخطي يزيد 200
-const skipCost = () => 200 * (skipN + 1);   // 200 ثم 400 ثم 600 ...
+const skipCost = () => 200 * (skipN + 1);
+const skipFree = () => !!(auth && auth.freeSkips > 0);   // 200 ثم 400 ثم 600 ...
 function restartLevel() {
   const old = Z, lv = old.level; Z = newZ(Math.floor(Math.random() * 2147483647) + 1, lv); Z.score = old.score; Z.inv = old.inv; Z.clears = old.clears;
   state = 'play'; paused = false; resumeAt = performance.now() + 900; mapInfo = null; zacc = 0; deadTime = 0; sfx('swap'); showToast('🔁 رجعنا المرحلة ' + lv + ' من البداية');
@@ -1819,7 +1870,7 @@ function skipLevel() {
   if (!auth) { showToast('🔒 التخطي يحتاج حساب (سجّل دخول)'); return; }
   const lv = Z.level; paused = false;
   Promise.resolve(currentGame).then(gid => { if (!gid) throw new Error('ما اكو اتصال باللعبة، جرب مرة ثانية'); return api('/api/skip', { method: 'POST', body: { gid, level: lv } }); })
-    .then(r => { skipN++; if (r.user) syncUser(r.user); renderHome(); cpSave(lv + 1); Z.chain.length = 0; Z.queue = 0; Z.shots = []; Z.level = lv + 1; nextLevel(); showToast('⏭ تخطيت المرحلة ' + lv + ' (-' + r.cost + ' 🪙)'); })
+    .then(r => { if (!r.free) skipN++; if (r.user) syncUser(r.user); renderHome(); cpSave(lv + 1); Z.chain.length = 0; Z.queue = 0; Z.shots = []; Z.level = lv + 1; nextLevel(); showToast('⏭ تخطيت المرحلة ' + lv + (r.free ? ' (مجاناً 🎁)' : ' (-' + r.cost + ' 🪙)')); })
     .catch(e => { showToast('⚠️ ' + e.message); paused = true; });
 }
 function pauseGame() { if (gameMode === 'solo' && state === 'play' && !paused && !Z.pending) { paused = true; } }
@@ -1907,7 +1958,7 @@ function drawPause() {
   ctx.fillStyle = '#3a6ea5'; ctx.fillRect(60, 312, 200, 44); ctx.strokeStyle = '#102a44'; ctx.lineWidth = 3; ctx.strokeRect(60, 312, 200, 44);
   text('🔁 إعادة المرحلة', W / 2, 342, 17);
   ctx.fillStyle = '#b7791f'; ctx.fillRect(60, 366, 200, 44); ctx.strokeStyle = '#4a2e08'; ctx.strokeRect(60, 366, 200, 44);
-  text('⏭ تخطي المرحلة  ' + skipCost() + ' 🪙', W / 2, 396, 15);
+  text(skipFree() ? '⏭ تخطي مجاني 🎁 (باقي ' + auth.freeSkips + ')' : '⏭ تخطي المرحلة  ' + skipCost() + ' 🪙', W / 2, 396, 15);
   text('أو اضغط P', W / 2, 434, 11, 'rgba(255,255,255,.6)');
 }
 function drawSolo() {
@@ -3345,7 +3396,7 @@ function connectPresence() {
   try { sock = new WebSocket(wsUrl()); } catch (e) { return; }
   fws = sock;
   const wd = setTimeout(() => { if (sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 8000);   // اتصال عالق: يتقطع ويعيد المحاولة
-  sock.onopen = () => { clearTimeout(wd); fRetry = 0; loadFriends(); if (hvOn) hvJoin(); };
+  sock.onopen = () => { clearTimeout(wd); fRetry = 0; loadFriends(); if (hvOn) hvJoin(); if (typeof RM !== 'undefined' && RM.on) rmJoinSend(); };
   sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onFriendMsg(d); };
   sock.onclose = () => {
     if (fws !== sock) return;
@@ -3364,6 +3415,7 @@ function onFriendMsg(d) {
   } else if (d.t === 'dm') onDmPush(d);
   else if (d.t === 'pet_upd') petPush(d);
   else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
+  else if (d.t && String(d.t).slice(0, 3) === 'rm_') rmOnMsg(d);
 }
 /* ---- زيارة البيوت: حضور حي ---- */
 /* يفرض اتصال جديد (يتخلص من أي سوكيت ميت أو عالق من فترة الأوفلاين) */
@@ -3674,7 +3726,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') houseLoad(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') houseLoad(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
@@ -4007,7 +4059,7 @@ document.querySelectorAll('#shTabs [data-sv]').forEach(b => b.onclick = () => { 
 $('hChatIn').addEventListener('focus', () => { setTimeout(() => { try { $('hStage').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 300); });
 ['hChatSend', 'hEmoBtn'].forEach(id => $(id).addEventListener('pointerdown', e => e.preventDefault()));
 setInterval(() => { if (hZ > 1.2 && curPage === 'house') hRenderLog(); }, 1200);
-function hFitFs() { const st = $('hStage'); if (!st) return; const vh = (window.visualViewport ? visualViewport.height : innerHeight); st.style.setProperty('--hvh', vh + 'px'); st.style.setProperty('--hvw', (window.visualViewport ? visualViewport.width : innerWidth) + 'px'); }
+function hFitFs() { const vh = (window.visualViewport ? visualViewport.height : innerHeight), vw = (window.visualViewport ? visualViewport.width : innerWidth); ['hStage', 'rmStage'].forEach(id => { const st = $(id); if (st) { st.style.setProperty('--hvh', vh + 'px'); st.style.setProperty('--hvw', vw + 'px'); } }); }
 hFitFs();
 if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; hFitFs(); if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
 document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
@@ -4360,7 +4412,7 @@ function drawSeat(c, v, s) {
 function hItem(c, S, slot, x, y, size, ex) {
   const v = hVal(S, slot); if (!v || v[0] === '#') return; ex = ex || {};
   const k = Math.min(1, (hT - (hPlaced[slot] === undefined ? -99 : hPlaced[slot])) / 22), e = k >= 1 ? 1 : 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
-  const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1);
+  const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1) * (slot === 'pet' ? 0.95 : 1);
   c.save(); c.globalAlpha = (prev ? 0.7 : 1) * Math.min(1, k * 3);
   c.fillStyle = 'rgba(0,0,0,' + (ex.lift ? 0.18 : 0.25) + ')'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
   c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc * (ex.flip === 1 ? -1 : 1), sc); if (v === '🐭') drawMouse(c, size * 1.25, hT, { walk: hPetW.on && hPetW.mv ? 1 : 0, ph: hPetW.ph }); else if (slot === 'seat' && SEAT_G[v]) drawSeat(c, v, size); else if (slot === 'pet' && (v === '🐕' || v === '🐈')) drawPetVec(c, v === '🐕' ? 'dog' : 'cat', size * 1.1, hT, { walk: hPetW.on && hPetW.mv ? 1 : 0, ph: hPetW.ph }); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
@@ -4654,14 +4706,37 @@ renderHome();
   function step() {
     if (done) return;
     if (n > 0) { num.textContent = String(n); num.classList.remove('pop'); void num.offsetWidth; num.classList.add('pop'); n--; timers.push(setTimeout(step, 650)); return; }
-    num.style.display = 'none'; drawBird(); $('spReveal').classList.add('show');
+    num.style.display = 'none'; drawBird(); $('spReveal').classList.add('show'); try { magicSnd(); } catch (e) {}
     burst(170); timers.push(setTimeout(() => burst(90), 350));
     timers.push(setTimeout(finish, 2300));
   }
   raf = requestAnimationFrame(tick);
+  try { introSnd(); if (actx && actx.state !== 'running') { const g = () => { if (!done) introSnd(); document.removeEventListener('pointerdown', g, true); }; document.addEventListener('pointerdown', g, true); } } catch (e) {}
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { n = 0; }
   setTimeout(step, 150);
 })();
+
+
+/* ===== أصوات المقدمة والسحر ===== */
+function chime(notes, step, type, vol) {
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { return; }
+  if (!actx) return;
+  notes.forEach((f, i) => { try { blip(type || 'triangle', f, f, 0.32, vol || 0.12, i * step); blip('sine', f * 2, f * 2, 0.2, (vol || 0.12) * 0.35, i * step + 0.01); } catch (e) {} });
+}
+function introSnd() { chime([523, 659, 784, 1047, 784, 1047, 1319], 0.11, 'triangle', 0.13); }   // سعيد ومبهج
+function magicSnd() { chime([1047, 1319, 1568, 1760, 2093, 2637], 0.07, 'sine', 0.1); try { blip('sine', 300, 1800, 0.7, 0.07); } catch (e) {} }   // سحري
+function heartsFx(x, y) {
+  magicSnd();
+  for (let i = 0; i < 14; i++) {
+    const h = document.createElement('div'); h.textContent = ['❤️', '💖', '💗', '💕'][i % 4];
+    const dx = (Math.random() - 0.5) * 160, dy = -(60 + Math.random() * 120), d = 900 + Math.random() * 700;
+    h.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;font-size:' + (16 + Math.random() * 18) + 'px;pointer-events:none;z-index:99999;transition:transform ' + d + 'ms ease-out,opacity ' + d + 'ms ease-in;opacity:1;transform:translate(-50%,-50%)';
+    document.body.appendChild(h);
+    requestAnimationFrame(() => requestAnimationFrame(() => { h.style.transform = 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) rotate(' + ((Math.random() - 0.5) * 60) + 'deg) scale(1.3)'; h.style.opacity = '0'; }));
+    setTimeout(() => h.remove(), d + 100);
+  }
+}
+{ const sp = $('sponsor'); if (sp) { sp.style.cursor = 'pointer'; sp.addEventListener('click', e => { unlockAudio(); heartsFx(e.clientX, e.clientY); }); } }
 
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {
@@ -4716,6 +4791,7 @@ function petApply(p) {
   ptUi();
 }
 var petDirtyMine = false;
+$('ptHome').onclick = () => { openPage('house'); setTimeout(() => { try { hSetView('inside'); } catch (e) {} }, 60); };
 function petOpen() {
   PT.scene = 'bath'; PT.tool = ''; PT.foam = 0; PT.panel = ''; PT.bubs = [];
   petListLoad().then(() => {
@@ -4802,7 +4878,7 @@ function ptDip() {
 }
 /* ---- رسم ---- */
 function ptSprite(c, p, x, y, sz, opt) {
-  opt = opt || {}; const t = PT.T, kind = ptKind(p.species), sleep = p.sleep && PT.scene === 'bed';
+  sz *= 0.95; opt = opt || {}; const t = PT.T, kind = ptKind(p.species), sleep = p.sleep && PT.scene === 'bed';
   c.save(); c.translate(x, y);
   const lie = opt.lie || 0; c.fillStyle = 'rgba(0,0,0,' + (0.22 * (1 - lie)) + ')'; c.beginPath(); c.ellipse(0, 4, sz * (0.38 + 0.25 * lie), sz * 0.1, 0, 0, 7); c.fill();
   const bob = sleep ? Math.sin(t / 40) * 1.2 : kind === 'fish' ? Math.sin(t / 14) * 5 : Math.abs(Math.sin(t / 26)) * (opt.hop || 3);
@@ -4909,6 +4985,290 @@ setInterval(async () => {
   if (!auth || document.hidden || !navigator.onLine || !(auth.house && auth.house.set && auth.house.set.pet)) return;
   try { const r = await api('/api/pet/tick', { method: 'POST', body: { sec: 60 } }); if (r.pet) { petDirtyMine = r.pet.dirty; if (r.justDirty) showToast('🪰 ' + (r.pet.name || 'حيوانك') + ' توصّخ! خذه لحمام الحيوان 🛁'); if (curPage === 'pet' && PT.pet && PT.pet.isOwner) petApply(r.pet); } } catch (e) {}
 }, 60000);
+
+/* ================= نظام الغرف 🏝️ ================= */
+const RMW = 800, RMH = 620;
+var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
+const RM_SEATS = [];
+(function () {
+  const add = (kind, x, y, s) => RM_SEATS.push({ kind, x: Math.round(x), y: Math.round(y), s: s || 1, i: RM_SEATS.length });
+  [90, 175, 260, 345, 430, 515].forEach((x, i) => add('lounge', x, 262 + (i % 2) * 8));
+  [[600, 258], [700, 258], [610, 340], [712, 340]].forEach(p => add('bench', p[0], p[1]));
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.5; add('log', 400 + Math.cos(a) * 70, 440 + Math.sin(a) * 36); }
+  [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
+  [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1]));
+  [620, 648, 676, 704].forEach(x => add('stool', x, 492));
+  add('chair', 330, 520, 58); add('chair', 478, 560, 58);
+})();
+function rmSpots(sd) {
+  const mk = (dx, dy, d) => ({ seat: sd, x: sd.x + dx, y: sd.y - dy, ey: sd.y, d });
+  let a; switch (sd.kind) {
+    case 'lounge': a = [mk(2, 9, 1)]; break;
+    case 'bench': a = [mk(-12, 11, 1), mk(12, 11, -1)]; break;
+    case 'sofa': { const g = SEAT_G['🛋️']; a = g.xs.map((x, i) => mk(x * sd.s, g.dy * sd.s, i ? -1 : 1)); break; }
+    case 'chair': a = [mk(0, SEAT_G['🪑'].dy * sd.s)]; break;
+    case 'log': a = [mk(0, 10)]; break;
+    case 'stool': a = [mk(0, 18)]; break;
+    default: a = [mk(0, 11)];
+  }
+  a.forEach((s, i) => { s.i = i; s.k = sd.i + ':' + i; }); return a;
+}
+const RM_SPOTS = RM_SEATS.flatMap(rmSpots);
+const rmBusy = sp => Object.values(RM.others).some(o => o.sit && Math.hypot(o.x - sp.x, o.y - sp.y) < 9);
+const rmSend = o => (typeof hvSend === 'function') ? hvSend(o) : false;
+/* ---------- رسم المكان ---------- */
+function rmRR(c, x, y, w, h, r, f) { c.fillStyle = f; c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); c.fill(); }
+function rmSeatDraw(c, sd) {
+  c.save(); c.translate(sd.x, sd.y); const k = sd.kind;
+  c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 1, k === 'sofa' ? sd.s * 0.55 : k === 'bench' ? 28 : k === 'lounge' ? 22 : 11, k === 'sofa' ? 6 : 3.5, 0, 0, 7); c.fill();
+  if (k === 'lounge') {
+    const col = ['#ff7a8a', '#4cc3ff', '#ffd166', '#8ddc7a'][sd.i % 4];
+    rmRR(c, -17, -5, 34, 5, 2, '#a8683a'); rmRR(c, -16, -11, 32, 7, 3, col); rmRR(c, -17, -21, 12, 11, 4, col); rmRR(c, -15, -19, 8, 6, 3, 'rgba(255,255,255,.35)');
+    c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 4; i++) c.fillRect(-9 + i * 7, -11, 2.5, 7);
+  } else if (k === 'bench') {
+    rmRR(c, -22, -9, 3, 9, 1, '#6f4524'); rmRR(c, 19, -9, 3, 9, 1, '#6f4524'); rmRR(c, -23, -24, 3, 15, 1, '#6f4524'); rmRR(c, 20, -24, 3, 15, 1, '#6f4524');
+    rmRR(c, -24, -22, 48, 3.5, 1.5, '#a8683a'); rmRR(c, -24, -16, 48, 3.5, 1.5, '#a8683a'); rmRR(c, -25, -10, 50, 5, 2, '#c68a55');
+  } else if (k === 'sofa') drawSeat(c, '🛋️', sd.s);
+  else if (k === 'chair') drawSeat(c, '🪑', sd.s);
+  else if (k === 'log') { rmRR(c, -10, -12, 20, 12, 3, '#8b5a2b'); c.fillStyle = '#d2a468'; c.beginPath(); c.ellipse(0, -12, 10, 4.2, 0, 0, 7); c.fill(); c.strokeStyle = '#a97a40'; c.lineWidth = 0.8; c.beginPath(); c.ellipse(0, -12, 6, 2.5, 0, 0, 7); c.stroke(); }
+  else if (k === 'stool') { rmRR(c, -1.6, -17, 3.2, 17, 1, '#555'); c.fillStyle = '#444'; c.beginPath(); c.ellipse(0, -1, 7, 2.4, 0, 0, 7); c.fill(); c.fillStyle = '#c0392b'; c.beginPath(); c.ellipse(0, -18, 8.5, 3.6, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-2, -19, 4, 1.2, 0, 0, 7); c.fill(); }
+  else if (k === 'swing') {
+    const sw = Math.sin(RM.T / 45) * 0.03; c.strokeStyle = '#7a4a28'; c.lineWidth = 3; c.beginPath(); c.moveTo(-22, 0); c.lineTo(-17, -78); c.moveTo(22, 0); c.lineTo(17, -78); c.moveTo(-19, -78); c.lineTo(19, -78); c.stroke();
+    c.save(); c.translate(0, -78); c.rotate(sw); c.strokeStyle = '#d9c08a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-10, 0); c.lineTo(-10, 66); c.moveTo(10, 0); c.lineTo(10, 66); c.stroke(); rmRR(c, -13, 64, 26, 4.5, 2, '#c68a55'); c.restore();
+  }
+  c.restore();
+}
+function rmPalm(c, x, y, s, ph) {
+  c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(4, 1, 26, 6, 0, 0, 7); c.fill();
+  c.strokeStyle = '#8a5b2e'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(10, -50, 4, -96); c.stroke(); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = 1.2; for (let i = 1; i < 7; i++) { c.beginPath(); c.moveTo(-3, -i * 14); c.lineTo(8, -i * 14 - 2); c.stroke(); }
+  const sway = Math.sin(RM.T / 60 + ph) * 0.06; c.translate(4, -96); [[-2.4, 1], [-1.6, 1.1], [-0.8, 1], [0, 0.9], [0.8, 1], [1.6, 1.1], [2.4, 1]].forEach((f, i) => { c.save(); c.rotate(f[0] * 0.5 + sway * (i % 2 ? 1 : -1)); c.fillStyle = i % 2 ? '#2f9e44' : '#37b24d'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(26 * f[1], -22, 56 * f[1], 4 + 10 * Math.abs(f[0])); c.quadraticCurveTo(26 * f[1], -6, 0, 3); c.fill(); c.restore(); });
+  c.fillStyle = '#7a4a22'; c.beginPath(); c.arc(-3, 3, 3.6, 0, 7); c.arc(4, 4, 3.6, 0, 7); c.fill(); c.restore();
+}
+function rmFire(c, x, y) {
+  c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 2, 34, 12, 0, 0, 7); c.fill();
+  c.fillStyle = '#6b6b6b'; for (let i = 0; i < 9; i++) { const a = i / 9 * 6.28; c.beginPath(); c.ellipse(Math.cos(a) * 24, Math.sin(a) * 10, 6, 4, 0, 0, 7); c.fill(); }
+  c.strokeStyle = '#5a3515'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(-14, -2); c.lineTo(14, -8); c.moveTo(14, -2); c.lineTo(-14, -8); c.stroke();
+  const f = (r, col, o) => { c.fillStyle = col; c.beginPath(); c.moveTo(-r, -6); c.quadraticCurveTo(-r * 0.7 + Math.sin(RM.T / 4 + o) * 3, -r * 2.2, Math.sin(RM.T / 3 + o) * 3, -r * 3.1 - Math.sin(RM.T / 5 + o) * 4); c.quadraticCurveTo(r * 0.7, -r * 2, r, -6); c.closePath(); c.fill(); };
+  f(14, '#ff7a1a', 0); f(10, '#ffb020', 1.3); f(5.5, '#fff3a0', 2.1);
+  if (RM.T % 5 === 0) RM.sparks.push({ x: x + (Math.random() - .5) * 12, y: y - 24, vx: (Math.random() - .5) * 0.6, vy: -0.7 - Math.random() * 0.8, t: 40 });
+  c.restore();
+}
+RM.sparks = [];
+function rmBar(c, x, y) {
+  c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 2, 70, 9, 0, 0, 7); c.fill();
+  rmRR(c, -66, -34, 132, 34, 4, '#8a5530'); rmRR(c, -70, -40, 140, 8, 3, '#c68a55'); c.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 6; i++) c.fillRect(-60 + i * 22, -30, 2, 28);
+  c.strokeStyle = '#6f4524'; c.lineWidth = 4; c.beginPath(); c.moveTo(-64, -40); c.lineTo(-64, -96); c.moveTo(64, -40); c.lineTo(64, -96); c.stroke();
+  c.fillStyle = '#d4a35c'; c.beginPath(); c.moveTo(-84, -92); c.lineTo(0, -122); c.lineTo(84, -92); c.lineTo(76, -88); c.lineTo(0, -112); c.lineTo(-76, -88); c.closePath(); c.fill();
+  c.fillStyle = '#c0392b'; for (let i = 0; i < 7; i++) { c.beginPath(); c.moveTo(-84 + i * 24, -92); c.lineTo(-60 + i * 24, -92 + (i % 2 ? 0 : 0)); c.lineTo(-72 + i * 24, -80); c.closePath(); c.fill(); }
+  c.font = '15px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('🍹', -30, -42); c.fillText('🥥', 6, -42); c.fillText('🍍', 40, -42); c.restore();
+}
+function rmBoat(c, x, y) { c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 3, 44, 7, 0, 0, 7); c.fill(); c.fillStyle = '#b5532c'; c.beginPath(); c.moveTo(-40, -14); c.lineTo(40, -14); c.lineTo(28, 2); c.lineTo(-28, 2); c.closePath(); c.fill(); c.fillStyle = '#f4efe6'; c.fillRect(-40, -17, 80, 4); c.strokeStyle = '#6f4524'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -14); c.lineTo(0, -62); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(2, -60); c.lineTo(30, -22); c.lineTo(2, -22); c.closePath(); c.fill(); c.restore(); }
+function rmBg(c, t) {
+  // سماء
+  let g = c.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, '#6cc7ff'); g.addColorStop(1, '#d6f3ff'); c.fillStyle = g; c.fillRect(0, 0, RMW, 100);
+  c.fillStyle = 'rgba(255,244,170,.35)'; c.beginPath(); c.arc(690, 44, 44, 0, 7); c.fill(); c.fillStyle = '#ffe066'; c.beginPath(); c.arc(690, 44, 24, 0, 7); c.fill();
+  [[80, 30, 1], [330, 52, 0.8], [520, 24, 1.1]].forEach((cl, i) => { const x = ((cl[0] + t * 0.12 * (0.6 + i * 0.3)) % (RMW + 240)) - 120; c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(x, cl[1], 34 * cl[2], 11 * cl[2], 0, 0, 7); c.ellipse(x + 20 * cl[2], cl[1] - 6, 24 * cl[2], 11 * cl[2], 0, 0, 7); c.ellipse(x - 20 * cl[2], cl[1] - 3, 20 * cl[2], 8 * cl[2], 0, 0, 7); c.fill(); });
+  c.fillStyle = '#5f7fb0'; c.beginPath(); c.moveTo(0, 100); c.quadraticCurveTo(120, 78, 250, 100); c.fill(); c.fillStyle = '#6f8cc0'; c.beginPath(); c.moveTo(560, 100); c.quadraticCurveTo(650, 82, 780, 100); c.lineTo(780, 101); c.fill();
+  // بحر
+  g = c.createLinearGradient(0, 98, 0, 205); g.addColorStop(0, '#2aa9dd'); g.addColorStop(1, '#5fd4e8'); c.fillStyle = g; c.fillRect(0, 98, RMW, 110);
+  c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.5; for (let r = 0; r < 5; r++) { c.beginPath(); for (let x = 0; x <= RMW; x += 12) { const y = 112 + r * 19 + Math.sin(x / 30 + t / 40 + r) * 2.2; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  // رمل
+  g = c.createLinearGradient(0, 196, 0, RMH); g.addColorStop(0, '#f6e2b0'); g.addColorStop(1, '#e6c488'); c.fillStyle = g; c.fillRect(0, 196, RMW, RMH - 196);
+  c.fillStyle = 'rgba(120,200,215,.35)'; c.beginPath(); c.moveTo(0, 196); for (let x = 0; x <= RMW; x += 10) c.lineTo(x, 202 + Math.sin(x / 26 + t / 28) * 3.5); c.lineTo(RMW, 196); c.closePath(); c.fill();   // رمل مبلول
+  c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.moveTo(0, 196); for (let x = 0; x <= RMW; x += 10) c.lineTo(x, 196 + Math.sin(x / 22 + t / 24) * 3 + 3); for (let x = RMW; x >= 0; x -= 10) c.lineTo(x, 192 + Math.sin(x / 22 + t / 24) * 2.2); c.closePath(); c.fill();   // رغوة
+  c.fillStyle = 'rgba(150,110,50,.16)'; for (let i = 0; i < 90; i++) { const x = (i * 97 + 31) % RMW, y = 215 + (i * 53 + 17) % (RMH - 225); c.fillRect(x, y, 2, 1.4); }
+  // أرصفة خشبية وبساط
+  c.fillStyle = 'rgba(140,90,40,.55)'; c.fillRect(380, 98, 40, 112); c.fillStyle = 'rgba(0,0,0,.18)'; for (let y = 104; y < 210; y += 9) c.fillRect(380, y, 40, 1.5);   // رصيف داخل البحر
+  c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(400, 440, 110, 56, 0, 0, 7); c.fill();
+  [[40, 232, '#ff7a8a'], [560, 410, '#4cc3ff'], [250, 380, '#ffd166'], [700, 400, '#a78bfa']].forEach(tw => { c.save(); c.translate(tw[0], tw[1]); c.rotate(0.2); rmRR(c, -18, -8, 36, 16, 2, tw[2]); c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 4; i++) c.fillRect(-14 + i * 9, -8, 3, 16); c.restore(); });   // مناشف
+  c.font = '13px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; [['🐚', 150, 330], ['⭐', 310, 250], ['🐚', 520, 600], ['🦀', 90, 590], ['🐚', 760, 300], ['🪸', 470, 232]].forEach(s => c.fillText(s[0], s[1], s[2]));
+}
+function rmDecor() {
+  const L = [];
+  [[44, 224, 1.1, 0], [304, 232, 1, 1.4], [520, 224, 1.15, 2.2], [782, 238, 1.05, 3.1], [70, 560, 1.2, 4], [748, 600, 1.1, 5.2], [450, 604, 0.9, 6]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));
+  L.push({ y: 456, f: c => rmBar(c, 660, 456) }); L.push({ y: 440, f: c => rmFire(c, 400, 440) }); L.push({ y: 616, f: c => rmBoat(c, 300, 612) });
+  [[150, 296, '#ff4d6d'], [470, 316, '#4cc3ff'], [660, 296, '#ffd166']].forEach(u => L.push({ y: u[1], f: c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0 + u[0], u[1], 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 3; c.beginPath(); c.moveTo(u[0], u[1]); c.lineTo(u[0], u[1] - 64); c.stroke(); } }));
+  RM_SEATS.forEach(sd => L.push({ y: sd.y, f: c => rmSeatDraw(c, sd) }));
+  return L;
+}
+const RM_DECOR = rmDecor();
+function rmCanopies(c) {
+  [[150, 296, '#ff4d6d'], [470, 316, '#4cc3ff'], [660, 296, '#ffd166']].forEach(u => { c.save(); c.translate(u[0], u[1] - 64); c.fillStyle = u[2]; c.beginPath(); c.moveTo(-42, 8); c.quadraticCurveTo(0, -34, 42, 8); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(-14, -4); c.quadraticCurveTo(-3, -22, 0, -22); c.quadraticCurveTo(3, -22, 14, -4); c.quadraticCurveTo(0, -14, -14, -4); c.fill(); c.restore(); });
+  c.strokeStyle = 'rgba(60,40,20,.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(44, 150); c.quadraticCurveTo(170, 190, 304, 150); c.moveTo(304, 150); c.quadraticCurveTo(412, 186, 520, 150); c.stroke();
+  [[100, 168], [170, 178], [240, 172], [370, 178], [440, 176]].forEach((p, i) => { c.fillStyle = ['#ffd166', '#ff7a8a', '#9be564', '#4cc3ff'][i % 4]; c.globalAlpha = 0.7 + 0.3 * Math.sin(RM.T / 12 + i); c.beginPath(); c.arc(p[0], p[1] - 14, 3, 0, 7); c.fill(); c.globalAlpha = 1; });
+  for (let i = 0; i < 3; i++) { const x = ((RM.T * 0.5 + i * 300) % (RMW + 100)) - 50, y = 40 + i * 14 + Math.sin(RM.T / 30 + i) * 6; c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x - 6, y); c.quadraticCurveTo(x - 3, y - 4 + Math.sin(RM.T / 6 + i) * 2, x, y); c.quadraticCurveTo(x + 3, y - 4 + Math.sin(RM.T / 6 + i) * 2, x + 6, y); c.stroke(); }
+}
+/* ---------- اللاعبون ---------- */
+function rmUpdMe() {
+  const m = RM.me, dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy); let mv = false, air = 0, jp = 0; const J = m.jump;
+  if (m.seat && !J && !m.goal && !m.sit) m.seat = null;
+  if (J) {
+    J.t++; jp = Math.min(1, J.t / J.dur); const e = jp < .5 ? 2 * jp * jp : 1 - Math.pow(-2 * jp + 2, 2) / 2; m.x = J.x0 + (J.x1 - J.x0) * e; m.y = J.y0 + (J.y1 - J.y0) * e; air = Math.sin(Math.PI * jp) * J.h;
+    if (jp >= 1) { m.jump = null; m.bn = 1; rmDust(m.x, m.y); if (J.kind === 'sit') { m.sit = true; m.goal = true; if (m.seat && m.seat.d) m.dir = m.seat.d; } else { m.sit = false; m.goal = false; m.seat = null; const a = m.after; m.after = null; if (a) rmWalkTo(a[0], a[1]); else { m.tx = m.x; m.ty = m.y; } } rmPrompt(true); }
+  } else if (d > 1.6) { const st = Math.min(d, 2.3); m.x += dx / d * st; m.y += dy / d * st; if (Math.abs(dx) > 0.5) m.dir = dx > 0 ? 1 : -1; mv = true; }
+  else if (m.goal && !m.sit && m.seat) rmJump(m.seat.x, m.seat.y, 20, 11, 'sit');
+  return { mv, air, jp };
+}
+function rmJump(x1, y1, dur, h, kind) { const m = RM.me; m.jump = { x0: m.x, y0: m.y, x1, y1, t: 0, dur, h, kind }; m.tx = x1; m.ty = y1; if (kind === 'sit' && m.seat && m.seat.d) m.dir = m.seat.d; else if (Math.abs(x1 - m.x) > 0.5) m.dir = x1 > m.x ? 1 : -1; sfx(kind === 'sit' ? 'sit' : 'stand'); }
+function rmDust(x, y) { for (let i = 0; i < 8; i++) RM.sparks.push({ x: x + (Math.random() - .5) * 16, y: y - 1, vx: (Math.random() - .5) * 1.5, vy: -0.25 - Math.random() * 0.45, t: 18 + Math.random() * 12, dust: 1 }); }
+function rmWalkTo(x, y) { const m = RM.me; if (m.jump) { if (m.jump.kind === 'stand') m.after = [x, y]; return; } if (m.sit) { rmStand([x, y]); return; } m.sit = false; m.goal = false; m.seat = null; m.tx = Math.max(24, Math.min(776, x)); m.ty = Math.max(212, Math.min(604, y)); }
+function rmSitAt(sp) { const m = RM.me; if (m.jump || m.sit || rmBusy(sp)) { if (rmBusy(sp)) showToast('⛔ هذا المكان مشغول'); return; } m.seat = sp; m.sit = false; m.goal = true; m.after = null; m.tx = sp.x; m.ty = Math.min(606, sp.ey + 10); sfx('click'); rmPrompt(true); }
+function rmStand(after) { const m = RM.me; if (m.jump) return; if (!m.sit) { m.goal = false; m.seat = null; m.tx = m.x; m.ty = m.y; rmPrompt(true); if (after) rmWalkTo(after[0], after[1]); return; } const s = m.seat; m.sit = false; m.after = after || null; rmPrompt(true); rmJump(m.x + (s && s.d ? -s.d * 10 : 0), Math.min(606, (s ? s.ey : m.y) + 10), 18, 9, 'stand'); }
+function rmDrawMe(c, st) {
+  const m = RM.me, sit = m.sit && !st.mv;
+  m.sk += ((sit ? 1 : 0) - m.sk) * 0.18; m.bn = Math.max(0, m.bn - 0.07); const hop = (st.mv ? Math.abs(Math.sin(RM.T / 3)) * 5 : m.sit ? 0 : Math.sin(RM.T / 24) * 0.8) + st.air, sk = m.sk, bn = m.bn, st2 = 1 + 0.1 * Math.sin(Math.PI * st.jp);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 13 * (1 - st.air / 40), 4 * (1 - st.air / 50), 0, 0, 7); c.fill();
+  c.save(); c.translate(m.x, m.y - 13 - hop + 7 * sk + Math.sin(RM.T / 30) * 0.7 * sk); c.rotate(-0.1 * m.dir * sk); c.scale(0.8 * m.dir * (1 + 0.1 * bn) / (st2 > 1 ? 1 + (st2 - 1) * 0.5 : 1), 0.8 * (1 - 0.12 * sk) * (1 - 0.2 * bn) * st2); drawBirdSkin(c, 0, 0, 0, curSkin(), RM.T / 2); c.restore();
+  hNameTag(c, (auth && auth.name) || 'أنت', m.x, m.y - 40 + 5 * sk - st.air * 0.6, true); rmBub(c, (auth && auth.name) || '', m.x, m.y - 44 + 5 * sk);
+}
+function rmDrawOther(c, o) {
+  const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
+  const sit = o.sit && !mv, hop = mv ? Math.abs(Math.sin(RM.T / 3)) * 5 : sit ? 0 : Math.sin(RM.T / 24) * 0.8, sk = ALL_SKINS.find(k => k.id === o.skin) || SKINS[0];
+  if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
+  o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 13, 4, 0, 0, 7); c.fill();
+  c.save(); c.translate(o.x, o.y - 13 - hop + 7 * k); c.rotate(-0.1 * o.dir * k); c.scale(0.8 * o.dir * (1 + 0.1 * o.bn), 0.8 * (1 - 0.12 * k) * (1 - 0.2 * o.bn)); drawBirdSkin(c, 0, 0, 0, sk, RM.T / 2); c.restore();
+  hNameTag(c, (o.own ? '👑 ' : '') + o.name, o.x, o.y - 40 + 5 * k, false); rmBub(c, o.name, o.x, o.y - 44 + 5 * k);
+}
+function rmBub(c, name, x, y) {
+  const b = RM.bubs[name]; if (!b || b.t <= 0) return; b.t--; let txt = b.txt.length > 26 ? b.txt.slice(0, 25) + '…' : b.txt;
+  c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.min(190, c.measureText(txt).width + 16), bx = x - w / 2, by = y - 36; c.globalAlpha = Math.min(1, b.t / 20);
+  c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, 20, 8); else c.rect(bx, by, w, 20); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(x - 5, by + 20); c.lineTo(x, by + 27); c.lineTo(x + 5, by + 20); c.fill(); c.fillStyle = '#222'; c.fillText(txt, x, by + 14, w - 8); c.restore();
+}
+function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math.hypot(s.x - x, s.y - y) < 7); if (sp) return sp.ey + 0.5; } return sy; }
+/* ---------- الحلقة الرئيسية ---------- */
+function rmDraw() {
+  const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 640, 500);
+  RM.T++; const m = RM.me, st = rmUpdMe();
+  RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = 640 / z, vh = 500 / z;
+  const tx = Math.max(0, Math.min(RMW - vw, m.x - vw / 2)), ty = Math.max(0, Math.min(RMH - vh, m.y - 20 - vh / 2));
+  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (z < 0.9) { RM.cx = (RMW - vw) / 2; RM.cy = (RMH - vh) / 2; }
+  c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
+  rmBg(c, RM.T);
+  const list = RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
+  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]);
+  list.sort((a, b) => a[0] - b[0]).forEach(it => it[1](c));
+  RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
+  rmCanopies(c); c.restore();
+  const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
+  if (k !== RM.sent && RM.T - RM.sentT >= 5) { if (rmSend({ t: 'rm_pos', x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; } }
+  if (RM.T % 20 === 0) rmPrompt(false);
+}
+function rmLoop() {
+  if (curPage !== 'rooms' || !RM.on) { RM.raf = 0; if (RM.on) rmLeaveRoom(true); return; }
+  try { rmDraw(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
+}
+function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return K; }
+/* ---------- أزرار الجلوس القريبة ---------- */
+var rmPrKey = '';
+function rmPrompt(force) {
+  const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
+  let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
+  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('');
+  if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
+  const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
+  if (m.sit || (m.goal && m.jump)) { if (m.sit) mk('🧍 قيام', () => rmStand()); return; }
+  if (!near) return;
+  if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
+  else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
+}
+/* ---------- الشبكة ---------- */
+function rmJoinSend() { if (!RM.on || !auth) return; if (fws && fws.readyState === 1) rmSend({ t: 'rm_join', id: RM.id, code: RM.code }); else if (!fws || fws.readyState > 1) presenceSync(); }
+function rmOnMsg(d) {
+  const T = d.t;
+  if (T === 'rm_state') {
+    RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
+    (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own }; });
+    if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = '';
+    rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+  } else if (T === 'rm_join') { RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own }; rmRenderMem(); showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
+  else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
+  else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmPrompt(false); }
+  else if (T === 'rm_chat') { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); RM.bubs[d.m.n] = { txt: d.m.txt, t: 240 }; rmRenderLog(); if (auth && d.m.n !== auth.name) { try { ding(); } catch (e) {} } }
+  else if (T === 'rm_warn') { rmModal('⚠️', 'تحذير من صاحب الغرفة (' + d.from + ')', d.txt); try { sfx('warn'); } catch (e) {} }
+  else if (T === 'rm_kicked') { const b = !!d.banned; rmLeaveRoom(true); rmModal(b ? '⛔' : '👢', b ? 'تم حظرك من الغرفة' : 'تم طردك من الغرفة', d.txt || (b ? 'صاحب الغرفة منعك من الدخول' : 'صاحب الغرفة طردك')); }
+  else if (T === 'rm_closed') { rmLeaveRoom(true); rmModal('🚪', 'انسكّرت الغرفة', d.txt || ''); }
+  else if (T === 'rm_bans') { RM.bans = d.bans || []; rmRenderMem(); if (d.msg) showToast(d.msg); }
+  else if (T === 'rm_ok') showToast(d.msg || '✅');
+  else if (T === 'rm_err') { showToast('⚠️ ' + d.error); if (d.fatal && RM.on) { RM.on = false; rmShowLobby(); } }
+}
+/* ---------- الواجهة: اللوبي ---------- */
+function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
+function rmShowRoom() { $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
+function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
+function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); RM.others = {}; RM.menu = ''; RM.warnFor = ''; if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
+function rmEnter(id, code) { if (!auth) { showToast('✍️ سجّل دخول أول'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zt = 2; RM.z = 2; rmJoinSend(); }
+async function rmLoadList() {
+  const L = $('rmList'); if (!L) return; if (!auth) { L.innerHTML = '<div class="help">✍️ سجّل دخول حتى تشوف الغرف وتدخلها</div>'; $('rmNew').hidden = true; return; }
+  try {
+    const r = await api('/api/rooms'); RM.list = r.rooms; $('rmCount').textContent = '🏝️ الغرف (' + r.rooms.length + '/' + r.max + ')'; $('rmNew').hidden = false; $('rmNew').textContent = r.mine ? '🗑️ سكّر غرفتي' : '➕ غرفة جديدة'; $('rmNew').dataset.mine = r.mine || '';
+    L.innerHTML = ''; if (!r.rooms.length) { const e = document.createElement('div'); e.className = 'help'; e.textContent = '🌴 ما اكو أي غرفة هسه. اضغط «➕ غرفة جديدة» وسوّي أول غرفة!'; L.appendChild(e); }
+    r.rooms.forEach(x => {
+      const row = document.createElement('div'); row.className = 'rmRow'; const info = document.createElement('div'); info.className = 'ri'; const nm = document.createElement('b'); nm.textContent = (x.locked ? '🔒 ' : '🌐 ') + x.name; const sm = document.createElement('small'); sm.textContent = '👑 ' + x.owner + ' • 👥 ' + x.count + '/' + x.cap; info.append(nm, sm);
+      const act = document.createElement('div'); act.className = 'ra'; const full = x.count >= x.cap, mine = x.id === r.mine;
+      if (x.locked && !mine && !(auth && auth.admin)) { const inp = document.createElement('input'); inp.placeholder = 'الرمز'; inp.maxLength = 12; inp.className = 'rmCodeIn'; act.appendChild(inp); const b = document.createElement('button'); b.type = 'button'; b.textContent = full ? 'ممتلئة' : 'ادخل'; b.disabled = full; b.onclick = () => { if (!inp.value.trim()) { showToast('اكتب رمز الغرفة'); return; } rmEnter(x.id, inp.value.trim()); }; act.appendChild(b); }
+      else { const b = document.createElement('button'); b.type = 'button'; b.textContent = full && !mine ? 'ممتلئة' : 'ادخل'; b.disabled = full && !mine; b.onclick = () => rmEnter(x.id, ''); act.appendChild(b); }
+      row.append(info, act); L.appendChild(row);
+    });
+  } catch (e) { L.innerHTML = '<div class="help">⚠️ ' + (e.message || 'ما قدرت أحمّل الغرف') + '</div>'; }
+}
+function rmOpen() { RM.on = RM.on && false; $('rmLobby').hidden = false; $('rmRoom').hidden = true; $('rmForm').hidden = true; rmLoadList(); clearInterval(RM.lt); RM.lt = setInterval(() => { if (curPage !== 'rooms') { clearInterval(RM.lt); return; } if (!RM.on) rmLoadList(); }, 6000); }
+$('rmNew').onclick = async () => {
+  if ($('rmNew').dataset.mine) { try { await api('/api/rooms/close', { method: 'POST', body: { id: $('rmNew').dataset.mine } }); showToast('🗑️ سكّرت غرفتك'); } catch (e) { showToast('⚠️ ' + e.message); } rmLoadList(); return; }
+  $('rmForm').hidden = !$('rmForm').hidden; $('rmMsg').textContent = '';
+};
+$('rmCreate').onclick = async () => {
+  const name = $('rmName').value.trim(), code = $('rmCode').value.trim();
+  try { const r = await api('/api/rooms/create', { method: 'POST', body: { name, code } }); $('rmForm').hidden = true; $('rmName').value = ''; $('rmCode').value = ''; showToast('🏝️ انسوت الغرفة'); rmEnter(r.room.id, code); }
+  catch (e) { $('rmMsg').textContent = '⚠️ ' + e.message; }
+};
+$('rmCancel').onclick = () => { $('rmForm').hidden = true; };
+/* ---------- الواجهة: داخل الغرفة ---------- */
+function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.slice(-6).forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.log.length; }
+function rmRenderMem() {
+  const P = $('rmMem'); if (!P) return; P.innerHTML = ''; const me = (auth && auth.name) || '';
+  const all = [{ name: me, own: me === RM.owner, me: true }].concat(Object.values(RM.others).map(o => ({ name: o.name, own: !!o.own })));
+  $('rmCnt').textContent = '👥 ' + all.length + '/15'; const h = document.createElement('div'); h.className = 'mh'; h.textContent = '👥 الموجودون (' + all.length + ')'; P.appendChild(h);
+  all.sort((a, b) => (b.own - a.own) || a.name.localeCompare(b.name)).forEach(u => {
+    const row = document.createElement('div'); const b = document.createElement('button'); b.type = 'button'; b.className = 'mb' + (u.me ? ' me' : ''); b.textContent = (u.own ? '👑 ' : '') + u.name + (u.me ? ' (أنت)' : ''); row.appendChild(b);
+    if (RM.isOwner && !u.me && !u.own) {
+      b.onclick = () => { RM.menu = RM.menu === u.name ? '' : u.name; RM.warnFor = ''; rmRenderMem(); };
+      if (RM.menu === u.name) {
+        const a = document.createElement('div'); a.className = 'act';
+        [['👢 طرد', 'rm_kick'], ['⛔ حظر', 'rm_ban']].forEach(([l, t]) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = l; x.onclick = () => { if (x.dataset.arm) { rmSend({ t, n: u.name }); RM.menu = ''; rmRenderMem(); } else { x.dataset.arm = '1'; x.textContent = 'تأكيد؟'; setTimeout(() => { if (x.isConnected) { delete x.dataset.arm; x.textContent = l; } }, 3000); } }; a.appendChild(x); });
+        const w = document.createElement('button'); w.type = 'button'; w.textContent = '⚠️ تحذير'; w.onclick = () => { RM.warnFor = RM.warnFor === u.name ? '' : u.name; rmRenderMem(); }; a.appendChild(w); row.appendChild(a);
+        if (RM.warnFor === u.name) { const f = document.createElement('div'); f.className = 'wf'; const i = document.createElement('input'); i.maxLength = 160; i.placeholder = 'اكتب رسالة التحذير...'; const s = document.createElement('button'); s.type = 'button'; s.textContent = 'ارسل'; s.onclick = () => { const tx = i.value.trim(); if (!tx) return; rmSend({ t: 'rm_warn', n: u.name, txt: tx }); RM.warnFor = ''; RM.menu = ''; rmRenderMem(); }; f.append(i, s); row.appendChild(f); setTimeout(() => i.focus(), 30); }
+      }
+    }
+    P.appendChild(row);
+  });
+  if (RM.isOwner && RM.bans.length) { const bh = document.createElement('div'); bh.className = 'mh'; bh.textContent = '⛔ المحظورون'; P.appendChild(bh); RM.bans.forEach(n => { const r = document.createElement('div'); r.className = 'ban'; const sp = document.createElement('span'); sp.textContent = n; const x = document.createElement('button'); x.type = 'button'; x.textContent = '✕ فك'; x.onclick = () => rmSend({ t: 'rm_unban', n }); r.append(sp, x); P.appendChild(r); }); }
+  if (RM.isOwner) { const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'mclose'; cb.textContent = '🗑️ سكّر الغرفة'; cb.onclick = async () => { if (!cb.dataset.arm) { cb.dataset.arm = '1'; cb.textContent = 'تأكيد السكر؟'; setTimeout(() => { if (cb.isConnected) { delete cb.dataset.arm; cb.textContent = '🗑️ سكّر الغرفة'; } }, 3000); return; } try { await api('/api/rooms/close', { method: 'POST', body: { id: RM.id } }); } catch (e) { showToast('⚠️ ' + e.message); } }; P.appendChild(cb); }
+}
+function rmModal(icon, title, txt) { $('rmWI').textContent = icon; $('rmWT').textContent = title; $('rmWS').textContent = txt || ''; $('rmWarn').classList.add('show'); }
+$('rmWOk').onclick = () => $('rmWarn').classList.remove('show');
+function rmChat() { const i = $('rmChatIn'), t = i.value.trim(); if (!t) return; if (rmSend({ t: 'rm_chat', txt: t })) i.value = ''; else showToast('⚠️ ما اكو اتصال'); }
+$('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { if (e.key === 'Enter') rmChat(); });
+$('rmExit').onclick = () => rmLeaveRoom();
+$('rmMemBtn').onclick = () => { $('rmMem').hidden = !$('rmMem').hidden; };
+$('rmZoom').onclick = () => { RM.zt = RM.zt > 1 ? 0.8 : 2; $('rmZoom').textContent = RM.zt > 1 ? '🔭 كل المكان' : '🔍 قرّب'; };
+function rmSetFull(on, auto) {
+  RM.full = on; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
+  try { if (on) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  $('rmFs').textContent = on ? '✕ إغلاق' : '⛶ تكبير'; if (typeof hFitFs === 'function') hFitFs();
+}
+$('rmFs').onclick = () => rmSetFull(!RM.full);
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && RM.full) { RM.full = false; $('rmStage').classList.remove('full'); document.body.style.overflow = ''; $('rmFs').textContent = '⛶ تكبير'; } });
+(function () {
+  const cv = $('rmCv'); if (!cv) return;
+  const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z, vw = 640 / z, vh = 500 / z; return [RM.cx + (e.clientX - r.left) / r.width * vw, RM.cy + (e.clientY - r.top) / r.height * vh]; };
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); rmWalkTo(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); } });
+  const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
+})();
+if (typeof hLandMQ !== 'undefined' && hLandMQ) { const f = () => { if (curPage !== 'rooms' || !RM.on) return; if (hLandMQ.matches) { if (!RM.full) rmSetFull(true, true); } else if (RM.full && RM.autoFull) rmSetFull(false); }; hLandMQ.addEventListener ? hLandMQ.addEventListener('change', f) : hLandMQ.addListener(f); }
 
 /* ================= وضع بدون إنترنت ================= */
 var offDismissed = false, offShown = false;
