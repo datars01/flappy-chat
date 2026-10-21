@@ -234,6 +234,12 @@ const HOUSE_DEF = [
 const HOUSE = HOUSE_DEF.map(r => ({ g: r[0], slot: r[1], name: r[2], items: r[3].map(i => ({ id: i[0], slot: r[1], name: i[1], v: i[2], price: i[3] })) }));
 const HOUSE_MOVABLE = ['tv', 'shelf', 'lamp', 'seat', 'pet', 'plant', 'rug', 'tree', 'flowers', 'feature', 'play', 'car', 'lantern'];
 const HOUSE_ITEM = {}; HOUSE.forEach(sl => sl.items.forEach(i => { HOUSE_ITEM[i.id] = i; }));
+/* موقع الغرض [x,y] + حجم اختياري [x,y,s] (0.5 – 1.8) */
+function posVal(v) {
+  const x = Math.max(-320, Math.min(320, Math.round(+v[0]))), y = Math.max(-320, Math.min(320, Math.round(+v[1])));
+  const sc = v.length === 3 && Number.isFinite(+v[2]) ? Math.max(0.5, Math.min(1.8, Math.round(+v[2] * 20) / 20)) : 1;
+  return sc === 1 ? [x, y] : [x, y, sc];
+}
 function houseOf(u) {
   if (!u.house || typeof u.house !== 'object') u.house = { own: [], set: {} };
   if (!Array.isArray(u.house.own)) u.house.own = [];
@@ -243,7 +249,7 @@ function houseOf(u) {
   HOUSE.forEach(sl => { const cur = u.house.set[sl.slot]; if (cur && own.has(cur) && HOUSE_ITEM[cur] && HOUSE_ITEM[cur].slot === sl.slot) set[sl.slot] = cur; else { const d = sl.items.find(i => i.price === 0); if (d) set[sl.slot] = d.id; } });
   const pos = {};
   if (u.house.pos && typeof u.house.pos === 'object') for (const k of Object.keys(u.house.pos)) {
-    const v = u.house.pos[k]; if (HOUSE_MOVABLE.includes(k) && Array.isArray(v) && v.length === 2 && Number.isFinite(v[0]) && Number.isFinite(v[1])) pos[k] = [Math.max(-320, Math.min(320, Math.round(v[0]))), Math.max(-320, Math.min(320, Math.round(v[1])))];
+    const v = u.house.pos[k]; if (HOUSE_MOVABLE.includes(k) && Array.isArray(v) && (v.length === 2 || v.length === 3) && Number.isFinite(v[0]) && Number.isFinite(v[1])) pos[k] = posVal(v);
   }
   return { own: [...own], set, pos };
 }
@@ -252,7 +258,7 @@ const userInfo = key => {
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
-    bricks: u.bricks || 0, zones: u.zones || 1, cp: u.cp || 1, house: houseOf(u), likes: (u.hlikes || []).length,
+    bricks: u.bricks || 0, admin: !!u.admin, zones: u.zones || 1, cp: u.cp || 1, house: houseOf(u), likes: (u.hlikes || []).length,
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
     ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
     ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
@@ -410,7 +416,8 @@ app.post('/api/start', authMw, (req, res) => {
   const gid = crypto.randomBytes(12).toString('hex');
   const u = db.users[req.key];
   let sl = Math.floor(Number(req.body && req.body.startLevel)) || 1;
-  if (sl !== (u.cp || 1) && (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1))) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
+  if (u.admin) sl = Math.max(1, Math.min(500, sl));   // الأدمن يبدأ من أي مرحلة
+  else if (sl !== (u.cp || 1) && (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1))) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
   games.set(gid, { k: req.key, sl, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
   res.json({ gid, start: sl });
 });
@@ -477,7 +484,7 @@ app.get('/api/house/of', authMw, (req, res) => {
   const k = keyOfName(nm); if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيت البيت' });
   if (k !== req.key && !mutual(req.key, k)) return res.status(403).json({ error: 'بيوت الأصدقاء فقط' });
   const u = db.users[k], h = houseOf(u), hl = Array.isArray(u.hlikes) ? u.hlikes : [];
-  res.json({ name: u.name, skin: skinOf(k), house: { set: h.set, pos: h.pos }, likes: hl.length, liked: hl.includes(req.key), self: k === req.key });
+  res.json({ name: u.name, skin: skinOf(k), house: { set: h.set, pos: h.pos }, likes: hl.length, liked: hl.includes(req.key), self: k === req.key, petName: (u.pet && u.pet.name) || '' });
 });
 // إعجاب ❤️ ببيت صديق (مرة لكل شخص، والضغط ثاني مرة يلغيه)
 app.post('/api/house/like', authMw, (req, res) => {
@@ -496,7 +503,7 @@ app.post('/api/house/pos', authMw, (req, res) => {
   const pos = Object.assign({}, h.pos);
   for (const k of Object.keys(inp)) {
     if (!HOUSE_MOVABLE.includes(k)) continue; const v = inp[k];
-    if (v === null) delete pos[k]; else if (Array.isArray(v) && v.length === 2 && Number.isFinite(+v[0]) && Number.isFinite(+v[1])) pos[k] = [Math.max(-320, Math.min(320, Math.round(+v[0]))), Math.max(-320, Math.min(320, Math.round(+v[1])))];
+    if (v === null) delete pos[k]; else if (Array.isArray(v) && (v.length === 2 || v.length === 3) && Number.isFinite(+v[0]) && Number.isFinite(+v[1])) pos[k] = posVal(v);
   }
   u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set: h.set, pos }; save();
   res.json({ user: userInfo(req.key) });
@@ -510,6 +517,16 @@ app.post('/api/house/set', authMw, (req, res) => {
   else { const it = HOUSE_ITEM[id]; if (!it || it.slot !== slot || !h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' }); set[slot] = id; }
   u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set, pos: h.pos };
   save(); res.json({ user: userInfo(req.key) });
+});
+
+// المحفظة: شيل غرض مشترى من البيت (يبقى ملكك بالمحفظة) — إرجاعه عبر /api/house/set
+app.post('/api/house/stash', authMw, (req, res) => {
+  const slot = String((req.body && req.body.slot) || ''), u = db.users[req.key], h = houseOf(u), id = h.set[slot], it = id && HOUSE_ITEM[id];
+  if (!it || it.slot !== slot || it.price <= 0) return res.status(400).json({ error: 'هذا الغرض ما يروح للمحفظة' });
+  if (!h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' });
+  const set = Object.assign({}, h.set); delete set[slot];   // houseOf يرجّع الغرض المجاني الافتراضي إن وجد
+  u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0), set, pos: h.pos }; save();
+  res.json({ user: userInfo(req.key), name: it.name });
 });
 
 // بيع غرض من البيت: يرجع نفس سعره (مواد بناء)
