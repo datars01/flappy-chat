@@ -564,6 +564,16 @@
   @keyframes admBg { to { background-position: -250% 0; } }
   @keyframes admGlow { 0%, 100% { box-shadow: 0 0 4px rgba(255,80,160,.5); } 50% { box-shadow: 0 0 13px rgba(255,120,190,.95); } }
   @keyframes admShine { 0% { left: -50%; } 55%, 100% { left: 130%; } }
+
+  #rmGame { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); z-index: 7; pointer-events: auto; width: min(316px, 94%); background: rgba(24,14,50,.94); border: 1px solid rgba(255,255,255,.4); border-radius: 16px; padding: 8px; color: #fff; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,.5); } #rmGame[hidden] { display: none; }
+  #rmGame.big { width: min(404px, 99%); top: 38px; } #rmGame.big #rmGD { font-size: 58px; } #rmGame .gr3 #rmGZ { background: rgba(255,255,255,.14); flex: 0 0 auto; font-size: 12px; font-weight: 600; }
+  #rmGH { font-weight: 800; font-size: 13px; margin-bottom: 5px; } #rmGC { width: 100%; height: auto; border-radius: 10px; border: 2px solid #8a5a2e; display: block; background: #ffe9b0; } #rmGM { font-size: 12px; min-height: 18px; margin: 6px 0 2px; font-weight: 700; }
+  #rmGame .gr2 { display: flex; align-items: center; justify-content: center; gap: 14px; } #rmGD { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); } #rmGDs { font-size: 12px; opacity: .9; }
+  #rmGame .gr3 { display: flex; gap: 8px; margin-top: 4px; } #rmGame .gr3 button { flex: 1; width: auto; padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.4); background: linear-gradient(180deg, #ff7ab8, #d6338f); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; } #rmGame .gr3 button[hidden] { display: none; } #rmGame .gr3 button:disabled { opacity: .5; } #rmGame .gr3 #rmGQ { background: rgba(255,255,255,.14); flex: 0 0 auto; font-size: 12px; font-weight: 600; }
+
+  #rmDockA { position: absolute; left: 8px; top: 40px; display: flex; flex-direction: column; gap: 8px; z-index: 4; direction: ltr; } #rmDockA[hidden] { display: none; }
+  .rc-rain { background: rgba(40,110,190,.88); } .rc-snow { background: rgba(110,170,225,.9); } .rc-fast { background: rgba(230,130,20,.9); } .rc-rst { background: rgba(110,110,130,.9); }
+  #rmBox.rmTiny #rmDockA { gap: 6px; top: 34px; }
   .rmC.on { background: #ffd166; color: #3a2a00; } .rmC[hidden] { display: none; }
   .rc-exit { background: rgba(170,30,55,.8); } .rc-view { background: rgba(20,95,170,.78); } .rc-soc { background: rgba(85,55,160,.78); } .rc-fun { background: rgba(205,115,20,.82); } .rc-me { background: rgba(25,125,95,.8); }
   #rmBox.rmTiny .rmC { width: 36px; height: 36px; } #rmBox.rmTiny .rmC small { display: none; } #rmBox.rmTiny .rmC i { font-size: 16px; } #rmBox.rmTiny #rmDock { grid-template-columns: repeat(2, 36px); gap: 6px; top: 34px; }
@@ -755,8 +765,8 @@
         <div class="hOvTop"><div class="hOvG"><span id="rmFTtl" class="hOvB"></span></div></div>
         <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><button id="rmKiss" type="button" hidden>😘 بوسة</button><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
-        <div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
-        <div id="rmLogP" hidden></div>
+        <div id="rmDockA" hidden><button id="rmWxRain" class="rmC rc-rain" type="button"><i>🌧️</i><small>مطر الآن</small></button><button id="rmWxSnow" class="rmC rc-snow" type="button"><i>❄️</i><small>ثلج الآن</small></button><button id="rmWxFast" class="rmC rc-fast" type="button"><i>⏩</i><small>تسريع</small></button><button id="rmWxReset" class="rmC rc-rst" type="button"><i>↩️</i><small>افتراضي</small></button></div><div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
+        <div id="rmGame" hidden><div id="rmGH"></div><canvas id="rmGC" width="300" height="300"></canvas><div id="rmGM"></div><div class="gr2"><div id="rmGD">🎲</div><div id="rmGDs"></div></div><div class="gr3"><button id="rmGB" type="button" hidden>🎲</button><button id="rmGZ" type="button">🔍 تكبير</button><button id="rmGQ" type="button">🚪 انسحاب</button></div></div><div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="500" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
       </div>
     </div></div>
@@ -5533,7 +5543,7 @@ const RM_SEATS = [];
   [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
   [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1])); add('swing2', 232, 392);
   [620, 648, 676, 704].forEach(x => add('stool', x, 492));
-  add('chair', 330, 520, 58); add('chair', 478, 560, 58);
+  add('chair', 330, 520, 58); add('chair', 478, 560, 58); add('gtable', 538, 410);
 })();
 function rmSpots(sd) {
   const mk = (dx, dy, d) => ({ seat: sd, x: sd.x + dx, y: sd.y - dy, ey: sd.y, d });
@@ -5542,6 +5552,7 @@ function rmSpots(sd) {
     case 'bench': a = [mk(-12, 11, 1), mk(12, 11, -1)]; break;
     case 'sofa': { const g = SEAT_G['🛋️']; a = g.xs.map((x, i) => mk(x * sd.s, g.dy * sd.s, i ? -1 : 1)); break; }
     case 'swing2': a = [mk(-15, 11, 1), mk(15, 11, 1)]; break;
+    case 'gtable': a = [mk(-48, 11, 1), mk(48, 11, -1)]; break;
     case 'chair': a = [mk(0, SEAT_G['🪑'].dy * sd.s)]; break;
     case 'log': a = [mk(0, 10)]; break;
     case 'stool': a = [mk(0, 18)]; break;
@@ -5575,6 +5586,7 @@ function rmSeatDraw(c, sd) {
     const col = ['#ff7a8a', '#4cc3ff', '#ffd166', '#8ddc7a'][sd.i % 4];
     rmRR(c, -17, -5, 34, 5, 2, '#a8683a'); rmRR(c, -16, -11, 32, 7, 3, col); rmRR(c, -17, -21, 12, 11, 4, col); rmRR(c, -15, -19, 8, 6, 3, 'rgba(255,255,255,.35)');
     c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 4; i++) c.fillRect(-9 + i * 7, -11, 2.5, 7);
+  } else if (k === 'gtable') { c.restore(); rmGTable(c, sd); return;
   } else if (k === 'bench') {
     rmRR(c, -22, -9, 3, 9, 1, '#6f4524'); rmRR(c, 19, -9, 3, 9, 1, '#6f4524'); rmRR(c, -23, -24, 3, 15, 1, '#6f4524'); rmRR(c, 20, -24, 3, 15, 1, '#6f4524');
     rmRR(c, -24, -22, 48, 3.5, 1.5, '#a8683a'); rmRR(c, -24, -16, 48, 3.5, 1.5, '#a8683a'); rmRR(c, -25, -10, 50, 5, 2, '#c68a55');
@@ -5770,6 +5782,19 @@ function rmAdmBub(c, it, b, bx, by, w, h, LH) {
   [[bx + 4, by - 1, 0], [bx + w - 4, by + 2, 2], [bx + w / 2, by - 3, 4]].forEach((p, i) => { const a = 0.5 + 0.5 * Math.sin(T / 6 + p[2]); c.globalAlpha = Math.min(1, b.t / 20) * a; c.fillStyle = '#fff'; c.font = '8px sans-serif'; c.fillText(i === 1 ? '💖' : '✦', p[0], p[1] - a * 3); });
   c.restore();
 }
+function rmNpcBub(c, it, b, bx, by, w, h, LH) {
+  const T = RM.T, x = it.x, age = (b.t0 || 230) - b.t, pop = age < 14 ? 0.6 + 0.55 * Math.sin(Math.min(1, age / 14) * Math.PI * 0.62) : 1, pul = 0.5 + 0.5 * Math.sin(T / 9), cy = by + h / 2;
+  c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.translate(x, by + h); c.scale(pop, pop); c.translate(-x, -(by + h)); c.translate(0, Math.sin(T / 14) * 1.2);
+  c.shadowColor = 'rgba(40,220,190,' + (0.5 + 0.35 * pul) + ')'; c.shadowBlur = 8 + 8 * pul;
+  const g = c.createLinearGradient(bx, by, bx + w, by + h); g.addColorStop(0, '#5ef2d0'); g.addColorStop(0.55, '#2fb8e8'); g.addColorStop(1, '#7a6af0');
+  c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 12); else c.rect(bx, by, w, h); c.fill(); c.shadowBlur = 0; c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke();
+  const ty = it.y - 16; if (by + h < ty - 2) { c.setLineDash([2, 3]); c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.stroke(); c.setLineDash([]); } else { c.fillStyle = '#5a8ae8'; c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 8); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
+  c.save(); c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 12); else c.rect(bx, by, w, h); c.clip(); const sx = bx + ((T * 1.4) % (w + 60)) - 30; const sg = c.createLinearGradient(sx - 14, 0, sx + 14, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,.5)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = sg; c.fillRect(sx - 14, by, 28, h); c.restore();
+  c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(20,50,120,.85)'; c.fillStyle = '#fff';
+  b.lines.forEach((l, k) => { const yy = by + 4 + LH * (k + 1) - 3; c.strokeText(l, bx + w / 2, yy, w - 8); c.fillText(l, bx + w / 2, yy, w - 8); });
+  for (let i = 0; i < 4; i++) { const a = T / 22 + i * 1.57, px = bx + w / 2 + Math.cos(a) * (w / 2 + 3), py = cy + Math.sin(a) * (h / 2 + 3), al = 0.5 + 0.5 * Math.sin(T / 5 + i * 2); c.globalAlpha = Math.min(1, b.t / 20) * al; c.fillStyle = '#fff'; c.font = '9px sans-serif'; c.fillText(i % 2 ? '✦' : '✧', px, py + 3); }
+  c.restore();
+}
 function rmBubFlush(c) {
   const Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = [];
   c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const LH = 14, placed = [];
@@ -5778,6 +5803,7 @@ function rmBubFlush(c) {
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
     for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = hit.y - h - 4; }
     placed.push({ x: bx, y: by, w, h });
+    if (it.adm === 'npc') { rmNpcBub(c, it, b, bx, by, w, h, LH); return; }
     if (it.adm) { rmAdmBub(c, it, b, bx, by, w, h, LH); return; }
     c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
     const ty = it.y - 16; if (by + h < ty - 2) { c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.strokeStyle = 'rgba(0,0,0,.25)'; c.setLineDash([2, 3]); c.stroke(); c.setLineDash([]); }
@@ -5789,7 +5815,8 @@ function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math
 /* ---------- الطقس (مطر/ثلج) + جربوع (موظف الاستقبال) ---------- */
 const RM_FIRE = { x: 400, y: 440 }, RM_WX_CYC = 1440;
 RM.rainI = 0; RM.snowI = 0; RM.wxUmb = false; RM.wxRain = false; RM.rain = null; RM.flakes = null; RM.wx0 = 0; RM.wxOff = 0; RM.wxLast = '';
-function rmWx() { if (!RM.wx0) RM.wx0 = performance.now() / 1000; const el = ((performance.now() / 1000 - RM.wx0 + (RM.wxOff || 0)) % RM_WX_CYC + RM_WX_CYC) % RM_WX_CYC; return { el, rain: el >= 600 && el < 720, umb: el >= 600 && el < 840, snow: el >= 1320 }; }
+RM.wxc = { el: 0, t: performance.now(), spd: 1 }; RM.wxSpd = 1;
+function rmWx() { const c = RM.wxc, el = ((c.el + (performance.now() - c.t) / 1000 * c.spd) % RM_WX_CYC + RM_WX_CYC) % RM_WX_CYC; return { el, rain: el >= 600 && el < 720, umb: el >= 600 && el < 840, snow: el >= 1320 }; }
 function rmHash(s) { let h = 0; s = String(s || ''); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 function rmWxStep() {
   const w = rmWx(); RM.rainI += ((w.rain ? 1 : 0) - RM.rainI) * 0.02; RM.snowI += ((w.snow ? 1 : 0) - RM.snowI) * 0.02; RM.wxUmb = w.umb; RM.wxRain = w.rain; rmUmbBtn();
@@ -5831,7 +5858,7 @@ function rmWxDraw(c, bw, bh) {
 }
 /* ----- جربوع ----- */
 const RM_NPC = { name: 'جربوع', x: 392, y: 330, hx: 392, hy: 330, dir: -1, wave: 0, ph: 0, cold: 0, mv: false, pseed: 7, greetT: 0 };
-function rmNpcSay(txt, t) { RM.bubs[RM_NPC.name] = { txt, t: t || 230 }; RM_NPC.wave = 130; }
+function rmNpcSay(txt, t) { RM.bubs[RM_NPC.name] = { txt, t: t || 230, t0: t || 230 }; RM_NPC.wave = 130; }
 function rmNpcAdm(n) { rmNpcSay('أهلاً بمالك اللعبة ' + n + ' 👑', 260); }
 function rmNpcWelcome() { if (RM.myAdm && !RM.me.hid) rmNpcAdm(rmMe()); else rmNpcSay('مرحباً بكم في منتجع بابي للدردشة 😊', 230); }
 function rmNpcHit(x, y) { const n = RM_NPC; return Math.abs(x - n.x) < 24 && y > n.y - 96 && y < n.y + 10; }
@@ -5853,7 +5880,7 @@ function rmDrawNpc(c) {
   // الأذرع
   const armPose = (s, ang, el) => { c.save(); c.translate(s * 16, -50); c.rotate(ang); c.beginPath(); c.roundRect ? c.roundRect(-4.2, -2, 8.4, 20, 4) : c.rect(-4.2, -2, 8.4, 20); c.fillStyle = '#1f8a62'; c.fill(); ln(1.5); c.translate(0, 18); c.rotate(el); c.beginPath(); c.roundRect ? c.roundRect(-3.6, -1, 7.2, 12, 3.6) : c.rect(-3.6, -1, 7.2, 12); c.fillStyle = '#2e1c14'; c.fill(); ln(1.3); c.beginPath(); c.arc(0, 13, 4.4, 0, 7); c.fillStyle = '#fff'; c.fill(); ln(1.2); c.restore(); };
   const wv = n.wave > 0 ? 2.4 + Math.sin(T / 3.2) * 0.45 : 0, cold = n.cold, cl = cold * 0.9;
-  armPose(-1, n.wave > 0 ? -wv : 0.2 - sw * 0.35 + cl * 0.9, n.wave > 0 ? 0 : 0.2 + cl * 1.2);
+  armPose(-1, n.wave > 0 ? wv : 0.2 - sw * 0.35 + cl * 0.9, n.wave > 0 ? 0 : 0.2 + cl * 1.2);
   armPose(1, n.ui > 0.3 ? 0.55 : 0.2 + sw * 0.35 + cl * 0.9, n.ui > 0.3 ? 0.25 : 0.2 + cl * 1.2);
   // الراس
   c.save(); c.translate(0, -73 + (cold ? Math.sin(T * 2.4) * 0.8 * cold : 0)); c.rotate(cold ? Math.sin(T * 2.2) * 0.05 * cold : Math.sin(T / 40) * 0.02);
@@ -5869,7 +5896,7 @@ function rmDrawNpc(c) {
   c.beginPath(); c.moveTo(-12, -19); c.lineTo(-10, -30); c.lineTo(10, -30); c.lineTo(12, -19); c.closePath(); c.fillStyle = '#d8283e'; c.fill(); ln(1.5); c.fillStyle = '#ffd24a'; c.fillRect(-11.4, -22.6, 22.8, 3); c.beginPath(); c.arc(0, -30, 2.2, 0, 7); c.fill(); ln(1);
   c.restore();
   c.restore();
-  const lift = n.ui > 0.05 ? 48 * n.ui : 0; rmTag(c, 'جربوع 🤝', n.x, n.y - AV_H * 1.26 - lift, { mod: false }); rmBub(c, RM_NPC.name, n.x, n.y - AV_H * 1.34 - lift);
+  const lift = n.ui > 0.05 ? 48 * n.ui : 0; rmTag(c, 'جربوع 🤝', n.x, n.y - AV_H * 1.26 - lift, { mod: false }); rmBub(c, RM_NPC.name, n.x, n.y - AV_H * 1.34 - lift, 'npc'); if (!RM.tipAt) RM.tipAt = performance.now() + 30000; if (RM.on && performance.now() > RM.tipAt && !(RM.bubs[RM_NPC.name] && RM.bubs[RM_NPC.name].t > 0)) { RM.tipAt = performance.now() + 30000; rmNpcSay('تقدر تلعب السلم والثعبان مع صديقك: اجلسوا على مقعدي الطاولة اللي فيها اللعبة 🎲', 330); }
   if (n.cold > 0.6 && Math.floor(T / 50) % 2 === 0) { c.font = '12px system-ui'; c.textAlign = 'center'; c.fillText('🥶', n.x + 18, n.y - AV_H * 0.95 + Math.sin(T / 5) * 1.5); }
 }
 
@@ -5955,6 +5982,74 @@ function rmHidUpd() { const b = $('rmHidBtn'); if (!b) return; const ok = !!(RM.
 $('rmHidBtn').onclick = () => { const on = !RM.me.hid; rmSend({ t: 'rm_hide', on: on ? 1 : 0 }); showToast(on ? '👻 اختفيت: محد يشوفك غير المشرفين' : '👁️ رجعت ظاهر للجميع'); };
 setInterval(rmHidUpd, 1500);
 
+/* ---------- لعبة حية ودرج (طاولة الاثنين) ---------- */
+const GM_L = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 }, GM_S = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+const GM_COL = ['#ff4d6d', '#3aa0ff'], GM_DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+RM.g = null; RM.gSide = null; RM.gd = [1, 1]; RM.gt = [[], []]; RM.gRoll = 0; RM.gSeq = -1; RM.gEndT = 0;
+function gmCell(n) { const r = Math.floor((n - 1) / 10), c = r % 2 === 0 ? (n - 1) % 10 : 9 - (n - 1) % 10; return [c, r]; }
+function gmXY(n, S) { n = Math.max(1, Math.min(100, n)); const lo = Math.floor(n), hi = Math.min(100, lo + 1), f = n - lo, a = gmCell(lo), b = gmCell(hi), c = a[0] + (b[0] - a[0]) * f, r = a[1] + (b[1] - a[1]) * f; return [(c + 0.5) * S, (9 - r + 0.5) * S]; }
+function rmGBoard(c, S, tiny) {
+  for (let n = 1; n <= 100; n++) { const cc = gmCell(n), x = cc[0] * S, y = (9 - cc[1]) * S; c.fillStyle = (cc[0] + cc[1]) % 2 ? '#fff1c9' : '#ffd98a'; if (n === 100) c.fillStyle = '#ffe36a'; c.fillRect(x, y, S, S); if (!tiny) { c.fillStyle = 'rgba(90,50,10,.55)'; c.font = '8px sans-serif'; c.textAlign = 'left'; c.fillText(n, x + 2, y + 9); } }
+  const lw = Math.max(1, S * 0.12);
+  Object.keys(GM_L).forEach(k => { const a = gmXY(+k, S), b = gmXY(GM_L[k], S), dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = -dy / L * S * 0.18, ny = dx / L * S * 0.18; c.strokeStyle = '#8a5a2e'; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath(); c.moveTo(a[0] + nx, a[1] + ny); c.lineTo(b[0] + nx, b[1] + ny); c.moveTo(a[0] - nx, a[1] - ny); c.lineTo(b[0] - nx, b[1] - ny); c.stroke(); const n = Math.max(2, Math.floor(L / (S * 0.55))); c.lineWidth = lw * 0.8; for (let i = 1; i < n; i++) { const t = i / n; c.beginPath(); c.moveTo(a[0] + dx * t + nx, a[1] + dy * t + ny); c.lineTo(a[0] + dx * t - nx, a[1] + dy * t - ny); c.stroke(); } });
+  Object.keys(GM_S).forEach(k => { const a = gmXY(+k, S), b = gmXY(GM_S[k], S), dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, w = S * 0.55; c.lineCap = 'round'; c.lineJoin = 'round'; const pts = []; for (let i = 0; i <= 12; i++) { const t = i / 12, o = Math.sin(t * Math.PI * 3) * w * 0.45; pts.push([a[0] + dx * t + nx * o, a[1] + dy * t + ny * o]); }
+    [['#1c6b34', lw * 2.2], ['#3ed06a', lw * 1.5]].forEach(q => { c.strokeStyle = q[0]; c.lineWidth = q[1]; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke(); });
+    c.fillStyle = '#3ed06a'; c.strokeStyle = '#1c6b34'; c.lineWidth = lw * 0.6; c.beginPath(); c.arc(a[0], a[1], S * 0.2, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(a[0] - S * 0.07, a[1] - S * 0.05, S * 0.06, 0, 7); c.arc(a[0] + S * 0.07, a[1] - S * 0.05, S * 0.06, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(a[0] - S * 0.07, a[1] - S * 0.05, S * 0.025, 0, 7); c.arc(a[0] + S * 0.07, a[1] - S * 0.05, S * 0.025, 0, 7); c.fill(); });
+}
+function rmGTokens(c, S, r) { [0, 1].forEach(i => { const p = gmXY(RM.gd[i], S), o = (i ? 1 : -1) * S * 0.18; c.fillStyle = GM_COL[i]; c.strokeStyle = '#fff'; c.lineWidth = Math.max(1, S * 0.07); c.beginPath(); c.arc(p[0] + o, p[1], r, 0, 7); c.fill(); c.stroke(); }); }
+function rmGTable(c, sd) {
+  const g = RM.g, act = g && g.ph !== 'idle', T = RM.T;
+  c.save(); c.translate(sd.x, sd.y); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 1, 40, 8, 0, 0, 7); c.fill();
+  [-48, 48].forEach(dx => { c.fillStyle = '#6f4524'; c.fillRect(dx - 6, -10, 3, 10); c.fillRect(dx + 3, -10, 3, 10); c.fillStyle = '#b8743a'; c.beginPath(); c.ellipse(dx, -10, 12, 4.2, 0, 0, 7); c.fill(); c.fillStyle = '#e8a35f'; c.beginPath(); c.ellipse(dx, -11, 10, 3.2, 0, 0, 7); c.fill(); });
+  rmRR(c, -17, -22, 34, 22, 6, '#a8552a'); c.strokeStyle = '#ffd98a'; c.lineWidth = 1.4; for (let i = -12; i <= 12; i += 8) { c.beginPath(); c.moveTo(i, -22); c.lineTo(i + 4, 0); c.stroke(); } c.fillStyle = '#ffd98a'; c.beginPath(); c.ellipse(0, -1, 17, 3, 0, 0, 7); c.fill(); c.fillStyle = '#a8552a'; c.beginPath(); c.ellipse(0, -2, 17, 3, 0, 0, 7); c.fill();
+  c.fillStyle = '#7a3a1a'; c.beginPath(); c.ellipse(0, -24, 40, 15, 0, 0, 7); c.fill(); c.fillStyle = '#ffe9b0'; c.beginPath(); c.ellipse(0, -25, 37, 13, 0, 0, 7); c.fill();
+  c.save(); c.beginPath(); c.ellipse(0, -25, 36, 12.5, 0, 0, 7); c.clip(); c.translate(-25, -25 - 9); c.scale(0.5, 0.18); rmGBoard(c, 10, true); c.restore();
+  c.save(); c.translate(-25, -25 - 9); c.scale(0.5, 0.18); rmGTokens(c, 10, 5); c.restore();
+  const dv = act && g.die ? g.die : 0; if (dv) { c.fillStyle = '#fff'; c.strokeStyle = '#555'; c.lineWidth = 0.8; rmRR(c, 26, -34, 8, 8, 2, '#fff'); c.fillStyle = '#222'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillText(dv, 30, -27.4); }
+  if (act || RM.gSide !== null) { c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 2.5; const t = '🎲 حية ودرج'; c.strokeText(t, 0, -46 + Math.sin(T / 15) * 1.2); c.fillText(t, 0, -46 + Math.sin(T / 15) * 1.2); }
+  c.restore();
+}
+/* --- المزامنة والواجهة --- */
+function rmGameTick() {
+  const m = RM.me, sp = m.sit && m.seat; const side = (sp && sp.seat && sp.seat.kind === 'gtable') ? sp.i : null;
+  if (side !== RM.gSide) { RM.gSide = side; if (side !== null) { RM.gd = [1, 1]; rmSend({ t: 'rm_gj', side }); } else rmSend({ t: 'rm_gl' }); rmGameUI(); }
+  const g = RM.g; if (g) { [0, 1].forEach(i => { const L = RM.gt[i]; if (L.length) { const tg = L[0], d = tg - RM.gd[i]; if (Math.abs(d) < 0.25) { RM.gd[i] = tg; L.shift(); } else RM.gd[i] += Math.sign(d) * Math.min(Math.abs(d), Math.abs(tg - RM.gd[i]) > 12 ? 1.1 : 0.3); } else RM.gd[i] = g.pos[i]; }); }
+  const P = $('rmGame'); if (P && !P.hidden) { rmGPaint(); if (RM.gRoll && performance.now() - RM.gRoll < 1500) $('rmGD').textContent = GM_DIE[1 + Math.floor(Math.random() * 6)]; }
+}
+function rmGPaint() { const cv = $('rmGC'), c = cv.getContext('2d'); if (!RM.g || RM.g.ph === 'idle' || RM.g.ph === 'ready') { c.clearRect(0, 0, cv.width, cv.height); } c.save(); rmGBoard(c, 30); rmGTokens(c, 30, 7); c.restore(); }
+function rmGameUI() {
+  const P = $('rmGame'); if (!P) return; const g = RM.g, s = RM.gSide; if (s === null || !g) { P.hidden = true; return; } P.hidden = false;
+  const opp = g.n[1 - s] || '', me = g.n[s] || rmMe(), H = $('rmGH'), M = $('rmGM'), B = $('rmGB'), D = $('rmGD'); B.hidden = true; B.disabled = false; $('rmGDs').textContent = '';
+  H.innerHTML = '<span style="color:' + GM_COL[s] + '">● ' + me + '</span> ⚔️ <span style="color:' + GM_COL[1 - s] + '">● ' + (opp || '...') + '</span>';
+  if (g.ph === 'idle') { M.textContent = '⏳ بانتظار لاعب ثاني يجلس بالمقعد المقابل...'; D.textContent = '🎲'; }
+  else if (g.ph === 'ready') { M.textContent = g.rd[s] ? '✅ أنت مستعد — بانتظار ' + opp : 'اضغط «مستعد» لما تكون جاهز'; D.textContent = '🎲'; B.hidden = false; B.textContent = g.rd[s] ? '⏳ بانتظار الخصم' : '✅ أنا مستعد'; B.disabled = !!g.rd[s]; B.dataset.a = 'ready'; $('rmGDs').textContent = (g.rd[s] ? '✅' : '⏳') + ' أنت   ' + (g.rd[1 - s] ? '✅' : '⏳') + ' ' + opp; }
+  else if (g.ph === 'first') { M.textContent = g.msg || 'كل واحد يرمي الزار — الأعلى يبدأ أولاً'; D.textContent = g.fr[s] ? GM_DIE[g.fr[s]] : '🎲'; $('rmGDs').textContent = opp + ': ' + (g.fr[1 - s] ? GM_DIE[g.fr[1 - s]] + ' ' + g.fr[1 - s] : '؟'); B.hidden = false; B.dataset.a = 'roll'; B.textContent = g.fr[s] ? '⏳ بانتظار الخصم' : '🎲 ارمِ الزار'; B.disabled = !!g.fr[s]; }
+  else if (g.ph === 'play') { const mine = g.turn === s; M.textContent = (g.msg ? g.msg + ' • ' : '') + (mine ? '🎯 دورك!' : '⌛ دور ' + opp); D.textContent = g.die ? GM_DIE[g.die] : '🎲'; B.hidden = false; B.dataset.a = 'roll'; B.textContent = '🎲 ارمِ الزار'; B.disabled = !mine; }
+  else if (g.ph === 'over') { M.textContent = (g.win === s ? '🏆 مبروك فزت!' : '😅 خسرت، حظ أوفر') + (g.msg ? ' — ' + g.msg : ''); D.textContent = g.die ? GM_DIE[g.die] : '🎲'; }
+}
+function rmGOn(g) {
+  const old = RM.g, ns = !old || g.seq !== RM.gSeq; RM.gSeq = g.seq; RM.gRoll = 0;
+  if (old && g.ph === 'play' && g.last) { const l = g.last, L = RM.gt[l.side]; if (old.pos[l.side] !== g.pos[l.side] || l.land !== l.to) { L.length = 0; L.push(l.land); if (l.to !== l.land) L.push(l.to); } if (l.to !== l.land) sfx(l.to > l.land ? 'win' : 'hit'); }
+  if (!old || g.ph === 'idle' || g.ph === 'ready') { RM.gt = [[], []]; RM.gd = g.pos.slice(); }
+  RM.g = g; try { if (g.ph === 'over') sfx(g.win === RM.gSide ? 'win' : 'hit'); } catch (e) {} rmGameUI();
+}
+$('rmGB').onclick = () => { const a = $('rmGB').dataset.a; if (a === 'ready') rmSend({ t: 'rm_gready' }); else if (a === 'roll') { RM.gRoll = performance.now(); sfx('click'); $('rmGB').disabled = true; rmSend({ t: 'rm_groll' }); } };
+$('rmGQ').onclick = () => rmStand();
+RM.gBig = false; try { RM.gBig = localStorage.getItem('rmGBig') === '1'; } catch (e) {}
+function rmGZUpd() { $('rmGame').classList.toggle('big', RM.gBig); $('rmGZ').textContent = RM.gBig ? '🔎 تصغير' : '🔍 تكبير'; }
+$('rmGZ').onclick = () => { RM.gBig = !RM.gBig; try { localStorage.setItem('rmGBig', RM.gBig ? '1' : '0'); } catch (e) {} rmGZUpd(); };
+rmGZUpd();
+
+
+/* ---------- تحكم المشرفين بالطقس والوقت ---------- */
+function rmWxSync(w) { if (!w) return; RM.wxc = { el: +w.el || 0, t: performance.now(), spd: +w.spd || 1 }; RM.wxSpd = RM.wxc.spd; rmLbl('rmWxFast', RM.wxSpd > 1 ? '⏹' : '⏩', RM.wxSpd > 1 ? 'إيقاف التسريع' : 'تسريع', RM.wxSpd > 1); }
+function rmWxAdmUpd() { const b = $('rmDockA'); if (b) b.hidden = !(RM.on && (RM.myAdm || RM.isMod)); }
+setInterval(rmWxAdmUpd, 1500);
+$('rmWxRain').onclick = () => rmSend({ t: 'rm_wx', mode: 'rain' });
+$('rmWxSnow').onclick = () => rmSend({ t: 'rm_wx', mode: 'snow' });
+$('rmWxFast').onclick = () => rmSend({ t: 'rm_wx', mode: RM.wxSpd > 1 ? 'slow' : 'fast' });
+$('rmWxReset').onclick = () => rmSend({ t: 'rm_wx', mode: 'reset' });
+
 /* ---------- الحلقة الرئيسية ---------- */
 function rmDraw() {
   const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
@@ -5982,7 +6077,7 @@ function rmDraw() {
 }
 function rmLoop() {
   if (curPage !== 'rooms' || !RM.on) { RM.raf = 0; if (RM.on) rmLeaveRoom(true); return; }
-  try { rmDraw(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
+  try { rmDraw(); rmGameTick(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
 }
 function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return K; }
 /* ---------- أزرار الجلوس القريبة ---------- */
@@ -6006,11 +6101,14 @@ function rmOnMsg(d) {
     RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
     (d.members || []).forEach(x => { RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    rmAvInit(d.myAv); rmMusicSet(d.music || null); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+    rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); RM.g = null; RM.gSide = null; if (d.g) rmGOn(d.g); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
   } else if (T === 'rm_join') { if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
   else if (T === 'rm_seatbusy') { const m = RM.me; if (m.sit || m.goal) { showToast('⛔ سبقك أحد على هذا المقعد'); m.goal = false; if (m.sit) rmStand(); else { m.seat = null; m.tx = m.x; m.ty = m.y; } rmPrompt(true); } }
+  else if (T === 'rm_wx') { rmWxSync(d);  showToast(({ rain: '🌧️ المشرف استدعى المطر', snow: '❄️ المشرف استدعى الثلج', fast: '⏩ المشرف سرّع الوقت', slow: '⏹ توقف التسريع', reset: '↩️ رجع الوقت للوضع الافتراضي' })[d.mode] || ''); }
+  else if (T === 'rm_g') rmGOn(d.g);
+  else if (T === 'rm_gend') { RM.g = null; RM.gt = [[], []]; if (RM.me.sit) rmStand(); showToast('🎲 انتهت اللعبة — رجعتوا للمنتجع'); rmGameUI(); }
   else if (T === 'rm_music') { rmMusicSet(d.music || null); showToast(d.music ? '🎵 بدأ تشغيل الأغاني للجميع' : '⏹ توقفت الأغاني'); }
   else if (T === 'rm_hid') { if (d.n === rmMe()) RM.me.hid = !!d.on; else { const o = RM.others[d.n]; if (o) o.hid = !!d.on; } rmHidUpd(); rmRenderMem(); }
   else if (T === 'rm_umb') { const o = RM.others[d.n]; if (o) o.umbOn = d.on !== 0; }
