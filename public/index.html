@@ -3740,8 +3740,17 @@ function hPetStep(S) {
   const v = hVal(S, 'pet');
   if (hView !== 'inside' || !v || v === '🐠' || (hDown && hDown.slot === 'pet')) { hPetW.on = false; hPetW.mv = false; return; }
   if (!hPetW.on) { const be = (HPOS.inside || []).find(e => e[0] === 'pet') || ['pet', 200, 235], bo = hOffOf('pet'); hPetW.x = hPetW.tx = be[1] + bo[0]; hPetW.y = hPetW.ty = be[2] + bo[1]; hPetW.next = hT + 150 + Math.random() * 150; hPetW.mv = false; hPetW.on = true; }
-  const W0 = HV.inside.walk[0];
-  if (!hPetW.mv && hT >= hPetW.next) { hPetW.tx = 30 + Math.random() * 262; hPetW.ty = W0 + 8 + Math.random() * (246 - W0 - 8); hPetW.mv = true; }
+  const WX = hWX(), x0 = WX[0] + 12, x1 = WX[1] - 12, y0 = HV.inside.walk[0] + 8, y1 = 244;   // حدود أرضية البيت (داخل الإطار)
+  hPetW.x = Math.max(x0, Math.min(x1, hPetW.x)); hPetW.y = Math.max(y0, Math.min(y1, hPetW.y));
+  if (!hPetW.mv && hT >= hPetW.next) {   // وجهة عشوائية بكل الأرضية، وأحياناً زاوية من زواياها، وبعيدة عن مكانه الحالي
+    let tx, ty, k = 0;
+    do {
+      if (Math.random() < 0.35) { tx = (Math.random() < .5 ? x0 : x1) + (Math.random() - .5) * 16; ty = (Math.random() < .5 ? y0 : y1) + (Math.random() - .5) * 12; }
+      else { tx = x0 + Math.random() * (x1 - x0); ty = y0 + Math.random() * (y1 - y0); }
+      tx = Math.max(x0, Math.min(x1, tx)); ty = Math.max(y0, Math.min(y1, ty));
+    } while (Math.hypot(tx - hPetW.x, ty - hPetW.y) < 60 && ++k < 8);
+    hPetW.tx = tx; hPetW.ty = ty; hPetW.mv = true;
+  }
   if (hPetW.mv) {
     const dx = hPetW.tx - hPetW.x, dy = hPetW.ty - hPetW.y, d = Math.hypot(dx, dy);
     if (d < 1.5) { hPetW.mv = false; hPetW.next = hT + 330 + Math.random() * 180; }
