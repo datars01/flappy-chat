@@ -3285,7 +3285,7 @@ function hvTick() {
 function hvPut(m) { hOthers[m.n] = { name: m.n, skin: m.skin, view: m.view, x: m.x, y: m.y, tx: m.x, ty: m.y, dir: m.dir || 1, sit: !!m.sit }; }
 function hvHearts() { for (let i = 0; i < 12; i++) hFloats.push({ x: 30 + Math.random() * 260, y: 190 + Math.random() * 50, t: 70 + i * 4, txt: i % 3 ? '❤️' : '💕' }); }
 function hvMsg(d) {
-  if (d.t === 'hv_state') { hOthers = {}; (d.members || []).forEach(hvPut); hLog = d.log || []; hLight = d.light !== false; hOvKey = ''; hRenderVis(); hRenderLog(); }
+  if (d.t === 'hv_state') { hOthers = {}; (d.members || []).forEach(hvPut); hLog = d.log || []; hBans = d.bans || []; hLight = d.light !== false; hOvKey = ''; hRenderVis(); hRenderLog(); }
   else if (d.t === 'hv_light') { hLight = !!d.on; hOvKey = ''; if (d.n && d.n !== (auth && auth.name)) showToast('💡 ' + d.n + (d.on ? ' شغّل الضوء' : ' طفّى الضوء')); sfx('click'); }
   else if (d.t === 'hv_clear') { hLog = []; hChatBub = {}; hRenderLog(); $('hLogBtn').textContent = '📜'; showToast('🗑️ ' + d.n + ' حذف سجل الشات'); }
   else if (d.t === 'hv_chat') { hLog.push(d.m); if (hLog.length > 100) hLog.shift(); hChatBub[d.m.n] = { txt: d.m.txt, t: 260 }; if (d.m.n !== (auth && auth.name)) sfx('click'); hRenderLog(); if ($('hLogP').hidden && d.m.n !== (auth && auth.name)) $('hLogBtn').textContent = '📜•'; }
@@ -3296,7 +3296,11 @@ function hvMsg(d) {
   else if (d.t === 'hv_like') { if (hVis) hVis.likes = d.likes; else if (auth) auth.likes = d.likes; if (d.on) { hvHearts(); showToast('❤️ ' + d.n + ' أعجبه البيت'); } hRenderVis(); }
   else if (d.t === 'hv_visit') showToast('👋 ' + d.name + ' زار بيتك!');
   else if (d.t === 'hv_err') showToast('⚠️ ' + d.error);
+  else if (d.t === 'hv_kicked') { hvOn = false; hOthers = {}; hVis = null; hRenderVis(); hidePage(); showToast(d.banned ? '⛔ صاحب البيت منعك من دخول بيته' : '👢 صاحب البيت طردك من البيت'); }
+  else if (d.t === 'hv_banned') { hvOn = false; hOthers = {}; hVis = null; hRenderVis(); hidePage(); showToast('⛔ ' + d.error); }
+  else if (d.t === 'hv_bans') { hBans = d.bans || []; hRenderVis(); showToast(d.act === 'hv_kick' ? '👢 طردت ' + d.n : d.act === 'hv_ban' ? '⛔ منعت ' + d.n + ' من الدخول' : '✅ رجّعت ' + d.n + ' يكدر يدخل'); }
 }
+function hOwnerAct(t, n) { hvSend({ t, n }); }
 async function hLike() {
   if (!hVis) return;
   try { const r = await api('/api/house/like', { method: 'POST', body: { name: hVis.name } }); hVis.likes = r.likes; hVis.liked = r.liked; if (r.liked) { hvHearts(); sfx('magic'); } hRenderVis(); }
@@ -3306,12 +3310,19 @@ function hRenderVis() {
   const el = $('hVisBar'); if (!el) return; el.innerHTML = '';
   const others = Object.values(hOthers), vl = { home: 'برّه', inside: 'داخل البيت', garden: 'بالحديقة' };
   const likes = hVis ? hVis.likes : (auth && auth.likes) || 0;
-  if (!hVis && !others.length && !likes) { el.hidden = true; return; } el.hidden = false;
+  if (!hVis && !others.length && !likes && !hBans.length) { el.hidden = true; return; } el.hidden = false;
   const r1 = document.createElement('div'); r1.className = 'row1';
   const t = document.createElement('span'); t.textContent = hVis ? '🏠 تزور بيت ' + hVis.name : '🏠 بيتك' + (likes ? ' • ❤️ ' + likes + ' إعجاب' : ''); r1.appendChild(t);
   if (hVis) { const b = document.createElement('button'); b.type = 'button'; b.className = hVis.liked ? 'on' : ''; b.textContent = (hVis.liked ? '❤️ ' : '🤍 ') + hVis.likes + (hVis.liked ? '' : ' أعجبني'); b.onclick = hLike; r1.appendChild(b); }
   el.appendChild(r1);
   const w = document.createElement('div'); w.className = 'who'; w.textContent = others.length ? '👥 معك بالبيت: ' + others.map(o => o.name + ' (' + vl[o.view] + ')').join('، ') : (hVis ? 'ما اكو أحد غيرك بالبيت حالياً' : ''); if (w.textContent) el.appendChild(w);
+  if (!hVis) {   // أدوات صاحب البيت: طرد / حظر / فك حظر
+    others.forEach(o => { const r = document.createElement('div'); r.className = 'row1'; const s = document.createElement('span'); s.textContent = '👤 ' + o.name; r.appendChild(s);
+      const g = document.createElement('span'); g.style.cssText = 'display:flex;gap:6px';
+      [['👢 طرد', 'hv_kick'], ['⛔ حظر', 'hv_ban']].forEach(([l, t]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = l; b.onclick = () => { if (b.dataset.arm) hOwnerAct(t, o.name); else { b.dataset.arm = '1'; b.textContent = 'تأكيد؟'; setTimeout(() => { delete b.dataset.arm; b.textContent = l; }, 3000); } }; g.appendChild(b); });
+      r.appendChild(g); el.appendChild(r); });
+    hBans.forEach(n => { const r = document.createElement('div'); r.className = 'row1'; const s = document.createElement('span'); s.textContent = '⛔ محظور: ' + n; r.appendChild(s); const b = document.createElement('button'); b.type = 'button'; b.textContent = '✅ فك الحظر'; b.onclick = () => hOwnerAct('hv_unban', n); r.appendChild(b); el.appendChild(r); });
+  }
 }
 const HEMO = ['😀', '😂', '😍', '😎', '🥰', '😭', '😡', '👍', '👏', '🙏', '❤️', '🔥', '🎉', '😮', '🤔', '😴', '👋', '🐶', '🐱', '🌹', '🍕', '☕', '🏠', '💡'];
 function hSendChat() {
@@ -3559,7 +3570,7 @@ var houseCat = null, hMapC = null, hView = 'home', hSel = 'home', hPrev = null, 
 var hChar = { x: 160, y: 222, tx: 160, ty: 222, dir: 1 };
 var hLight = true; try { hLight = localStorage.getItem('hLight') !== '0'; } catch (e) {}
 var hLog = [], hChatBub = {};
-var hVis = null, hTarget = null, hOthers = {}, hvOn = false, hLastSend = 0, hLastSent = '';
+var hBans = [], hVis = null, hTarget = null, hOthers = {}, hvOn = false, hLastSend = 0, hLastSent = '';
 var hFull = false, hDown = null, hHold = false, hGoing = false, hDoorT = 0, hPetT = 0, hBubs = [], hFloats = [], hLastBark = -9999, hOvKey = '', hDk = null, hKeys = {};
 const HV = {
   home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [208, 247], start: [160, 224] },

@@ -1092,18 +1092,24 @@ function hvLeave(ws) {
   }
 }
 for (const k in db.users) if (db.users[k].hlog) delete db.users[k].hlog;   // بعد إعادة تشغيل السيرفر ما يبقى سجل قديم
+const hbNames = ou => (ou.hban || []).map(k => db.users[k] ? db.users[k].name : k);
+function hvKickOut(owner, k, banned) {   // يطلّع اللاعب من البيت (يكدر يرجع إلا إذا محظور)
+  const set = hvRooms.get(owner); if (!set) return;
+  for (const w of [...set]) if (w.key === k) { send(w, { t: 'hv_kicked', banned: !!banned }); hvLeave(w); }
+}
 function hvOnMsg(ws, d) {
   const me = db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'hv_join') {
     const ok = keyOfName(d.owner);
     if (!own(db.users, ok)) return send(ws, { t: 'hv_err', error: 'ما لقيت البيت' });
     if (ok !== ws.key && !mutual(ws.key, ok)) return send(ws, { t: 'hv_err', error: 'البيوت للأصدقاء فقط' });
+    if (ok !== ws.key && (db.users[ok].hban || []).includes(ws.key)) return send(ws, { t: 'hv_banned', error: 'صاحب البيت منعك من الدخول' });
     hvLeave(ws);
     let set = hvRooms.get(ok); if (!set) hvRooms.set(ok, set = new Set());
     if (set.size >= 8) return send(ws, { t: 'hv_err', error: 'البيت ممتلئ (8 زوار)' });
     ws.hv = { owner: ok, view: 'home', x: 160, y: 224, dir: 1, sit: false, t: 0, st: 0 };
     const members = [...set].filter(w => w.readyState === 1).map(hvPubM); set.add(ws);
-    const ou = db.users[ok]; send(ws, { t: 'hv_state', owner: ou.name, members, light: ou.hlight !== false, log: (ou.hlog || []).slice(-50) });
+    const ou = db.users[ok]; send(ws, { t: 'hv_state', owner: ou.name, members, light: ou.hlight !== false, log: (ou.hlog || []).slice(-50), bans: ok === ws.key ? hbNames(ou) : undefined });
     hvBc(ok, { t: 'hv_join', m: hvPubM(ws) }, ws);
     if (ok !== ws.key) pushTo(ok, { t: 'hv_visit', name: me.name });
   } else if (d.t === 'hv_pos') {
@@ -1129,6 +1135,14 @@ function hvOnMsg(ws, d) {
   } else if (d.t === 'hv_clear') {   // صاحب البيت فقط يمسح سجل الشات للجميع
     const h = ws.hv; if (!h || h.owner !== ws.key) return send(ws, { t: 'hv_err', error: 'بس صاحب البيت يكدر يحذف السجل' });
     const ou = db.users[h.owner]; ou.hlog = []; save(); hvBc(h.owner, { t: 'hv_clear', n: me.name });
+  } else if (d.t === 'hv_kick' || d.t === 'hv_ban' || d.t === 'hv_unban') {   // صاحب البيت فقط
+    const h = ws.hv; if (!h || h.owner !== ws.key) return send(ws, { t: 'hv_err', error: 'بس صاحب البيت يكدر يسوي هذا' });
+    const k = keyOfName(d.n); if (!own(db.users, k) || k === ws.key) return;
+    const ou = db.users[ws.key]; ou.hban = ou.hban || [];
+    if (d.t === 'hv_kick') hvKickOut(ws.key, k, false);
+    else if (d.t === 'hv_ban') { if (!ou.hban.includes(k)) ou.hban.push(k); save(); hvKickOut(ws.key, k, true); }
+    else { ou.hban = ou.hban.filter(x => x !== k); save(); }
+    send(ws, { t: 'hv_bans', bans: hbNames(ou), n: db.users[k].name, act: d.t });
   } else if (d.t === 'hv_leave') hvLeave(ws);
 }
 function onMsg(ws, d) {
