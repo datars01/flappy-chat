@@ -413,6 +413,15 @@
   .zCard { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); }
   .zCard .ze { font-size: 30px; } .zCard .zi { flex: 1; font-weight: 700; } .zCard .zi small { display: block; font-weight: 400; color: var(--muted); }
   .zCard.lock { opacity: .55; }
+  .lvHead { text-align: center; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .lvZone { margin-top: 12px; padding: 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--card2); }
+  .lvZone h4 { margin: 0 0 8px; font-size: 14px; }
+  .lvPath { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
+  .lvN { aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; border: 3px solid var(--line); background: var(--card); color: var(--muted); position: relative; }
+  .lvN.done { background: #2e9e5b; border-color: #7fe3a5; color: #fff; }
+  .lvN.cur { background: #ffd166; border-color: #fff; color: #3a2a00; animation: lvPulse 1.2s infinite; }
+  .lvN.zend::after { content: '🏆'; position: absolute; top: -9px; inset-inline-end: -6px; font-size: 15px; }
+  @keyframes lvPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,209,102,.7); } 50% { box-shadow: 0 0 0 9px rgba(255,209,102,0); } }
   .hTabs .tab { padding: 8px; font-size: 13px; }
   #hub { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px 8px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 14px; font-weight: 600; }
@@ -447,6 +456,7 @@
     <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
     <button id="modeDuo" class="tab" type="button">👥 زوجي أونلاين</button>
     <button id="fullBtn2" class="tab fsTab" type="button">⛶ تكبير</button>
+    <button id="musBtn" class="tab" type="button">🎵 موسيقى</button>
   </div>
   <div class="card" id="duoBox" style="display:none">
     <div class="help">ادخل نفس كود غرفة الشات، وصديقك يدخل نفس الكود، وتلعبون سوا بنفس السلسلة. الجولة دقيقتين واللي يجمع نقاط أكثر يفوز. اللي تنتهي جولته أول يتفرج على الثاني، وبعدها الاثنين يضغطون «جاهز» لجولة جديدة.</div>
@@ -460,6 +470,7 @@
     <button class="tile" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
     <button class="tile" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button>
     <button class="tile" data-pg="house" type="button"><span class="ti">🏠</span><span class="tl">بيتي</span></button>
+    <button class="tile" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button>
     <button class="tile" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
     <button class="tile" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
     <button class="tile" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button>
@@ -601,6 +612,9 @@
     <div id="hBuy" class="hBuy hint"></div>
     <div class="help">🧱 تكسب مواد البناء من إنهاء المراحل بالفردي (وأكثر كل ما تتقدم)، ومن كل 3 كومبوهات تجيبها بنفس اللعبة (+8)، وبعد كل 7 مراحل مكافأة كبيرة. «ترقية البيت» تحوّله من كوخ لبيت لفيلا بحركة بناء.</div>
   </div>
+</div></div>
+<div class="page" id="pg-levels"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">📍 خريطة المراحل</span></div><div class="pgBody">
+  <div class="card"><div id="lvHead" class="lvHead"></div><button id="lvGo" type="button">▶ كمّل اللعب</button><div id="lvList"></div></div>
 </div></div>
 <div class="page" id="pg-zones"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🗺️ المناطق</span></div><div class="pgBody">
   <div class="card">
@@ -1460,8 +1474,9 @@ function drawShooter(x, y, ang, skin, cur, next, aimLine) {
   ctx.fillStyle = '#22313f'; ctx.strokeStyle = '#4f6a80'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 29, 0, 6.2832); ctx.fill(); ctx.stroke();
   const ca = Math.cos(ang), sa = Math.sin(ang);
   if (aimLine) {
-    ctx.save(); ctx.setLineDash([4, 7]); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x + ca * 48, y + sa * 48); ctx.lineTo(x + ca * 170, y + sa * 170); ctx.stroke(); ctx.restore();
+    const lc = (typeof cur === 'number' && BCOL[cur]) || '#ffffff';
+    ctx.save(); ctx.setLineDash([5, 7]); ctx.lineCap = 'round'; ctx.shadowColor = lc; ctx.shadowBlur = 8; ctx.strokeStyle = lc; ctx.globalAlpha = 0.9; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x + ca * 48, y + sa * 48); ctx.lineTo(x + ca * 190, y + sa * 190); ctx.stroke(); ctx.restore();
   }
   ctx.save(); ctx.translate(x, y); ctx.scale(1.55, 1.55);
   if (ca < 0) ctx.scale(-1, 1);
@@ -1654,11 +1669,15 @@ function drawSolo() {
     if (state === 'play' && performance.now() < resumeAt && !paused) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 150, W, 90); text(String(Math.max(1, Math.ceil((resumeAt - performance.now()) / 500))), W / 2, 215, 56, '#ffd166'); }
     if (state === 'play' && paused) drawPause();
     if (state === 'dead') {
-      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(20, 150, W - 40, 150);
-      text('💀 وصلت الكرات للحفرة', W / 2, 184, 20, '#ff9b9b');
-      text('نتيجتك: ' + score, W / 2, 218, 28);
-      text('أعلى نتيجة: ' + Math.max(myBest(), score), W / 2, 244, 15, '#ffd166');
-      if (deadTime > 40) text('اضغط للعب من جديد', W / 2, 280, 15, '#9ff3b5');
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(20, 142, W - 40, 176);
+      text('💀 وصلت الكرات للحفرة', W / 2, 172, 20, '#ff9b9b');
+      text('نتيجتك: ' + score, W / 2, 205, 26);
+      text('أعلى نتيجة: ' + Math.max(myBest(), score), W / 2, 228, 14, '#ffd166');
+      text('✅ تقدمك محفوظ: المرحلة ' + cpGet(), W / 2, 250, 13, '#9ff3b5');
+      if (deadTime > 40) {
+        ctx.fillStyle = '#2ecc71'; ctx.fillRect(30, 266, 138, 38); ctx.fillStyle = '#3a6ea5'; ctx.fillRect(176, 266, 114, 38);
+        text('▶ كمّل المرحلة ' + cpGet(), 99, 291, 13, '#fff'); text('🗺️ الخريطة', 233, 291, 13, '#fff');
+      }
     }
   }
 }
@@ -1758,7 +1777,7 @@ function onTap(x, y) {
     for (let i = 0; i < 3; i++) if (Math.hypot(x - INVX(i), y - INVY) < 24) { if (Z.inv[i]) zUse(Z, i); return; }
     if (Math.hypot(x - CX, y - CY) < 26 || Math.hypot(x - SWX, y - SWY) < 26) { zSwap(Z); sfx('swap'); return; }
     zAim(Z, x, y); playFire(Z);
-  } else if (state === 'dead' && deadTime > 40) { reset(); state = 'ready'; }
+  } else if (state === 'dead' && deadTime > 40) { if (y > 262 && x > 172) { openPage('levels'); return; } reset(); state = 'ready'; }
 }
 function duoAim(x, y) { const S = ZSH[Math.max(0, duo.slot)]; if (Math.hypot(x - S.x, y - S.y) > 4) duo.tgt = Math.atan2(y - S.y, x - S.x); }
 stageEl.addEventListener('pointermove', e => { const g = inputGame(); if (g) { const p = canvasPt(e); if (g === duo) duoAim(p.x, p.y); else zAim(g, p.x, p.y); } });
@@ -1805,6 +1824,7 @@ function exitFull() {
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { document.body.classList.remove('full'); document.documentElement.classList.remove('full'); } });
 $('fullBtn').onclick = enterFull;
 $('fullBtn2').onclick = enterFull;
+$('musBtn').onclick = () => { musicOn = !musicOn; try { localStorage.setItem('flappyMusic', musicOn ? '1' : '0'); } catch (e) {} musicLabel(); showToast(musicOn ? '🎵 الموسيقى شغّالة' : '🔇 الموسيقى مطفية'); unlockAudio(); };
 $('exitFull').onclick = exitFull;
 
 /* ================= لوحة الصدارة ================= */
@@ -2562,6 +2582,45 @@ function unlockAudio() {
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { passive: true }));
 let sfxOn = true; try { sfxOn = localStorage.getItem('flappySfx') !== '0'; } catch (e) {}
 let lastFlapSfx = 0, noiseBuf = null;
+/* ---- موسيقى خلفية هادية (تتولّد بالـ WebAudio، بدون ملفات) ---- */
+let musicOn = true; try { musicOn = localStorage.getItem('flappyMusic') !== '0'; } catch (e) {}
+let mus = null;
+const mhz = m => 440 * Math.pow(2, (m - 69) / 12);
+const MCH = [[57, 60, 64, 69], [53, 57, 60, 65], [48, 52, 55, 60], [55, 59, 62, 67]];   // Am F C G
+const MPENT = [69, 72, 74, 76, 79, 81];
+function musicWanted() {
+  if (!musicOn || document.hidden || curPage) return false;
+  if (gameMode === 'duo') return duo.phase === 'play' || duo.phase === 'count';
+  return (state === 'play' || state === 'ready' || state === 'map') && !paused;
+}
+function mnote(type, f, t, dur, vol) {
+  const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = f; o.connect(g); g.connect(mus.bus);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + Math.min(0.08, dur * 0.3)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function musicTick() {
+  if (!actx) return;
+  const want = musicWanted();
+  if (!mus) {
+    if (!want || actx.state !== 'running') return;
+    const bus = actx.createGain(), lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; bus.gain.value = 0.0001; bus.connect(lp); lp.connect(actx.destination);
+    mus = { bus, next: actx.currentTime + 0.15, step: 0 };
+  }
+  const now = actx.currentTime;
+  mus.bus.gain.setTargetAtTime(want ? 0.5 : 0.0001, now, want ? 0.6 : 0.25);
+  if (!want) { if (mus.next < now) mus.next = now + 0.1; return; }
+  const E = 60 / 84 / 2;
+  while (mus.next < now + 0.7) {
+    const s = mus.step, ch = MCH[Math.floor(s / 8) % 4], i8 = s % 8, t = mus.next;
+    if (i8 === 0) { mnote('sine', mhz(ch[0] - 12), t, E * 8, 0.07); mnote('triangle', mhz(ch[1]), t, E * 8, 0.018); mnote('triangle', mhz(ch[2]), t, E * 8, 0.018); }
+    const pat = [0, 2, 1, 3, 2, 1, 3, 2][i8]; mnote('triangle', mhz(ch[pat]), t, E * 2.2, 0.035);
+    if ((i8 === 0 || i8 === 4) && Math.random() < 0.55) mnote('sine', mhz(MPENT[Math.floor(Math.random() * MPENT.length)]), t + E * 0.5, E * 3, 0.03);
+    mus.next += E; mus.step++;
+  }
+}
+setInterval(() => { try { musicTick(); } catch (e) {} }, 250);
+function musicLabel() { const b = $('musBtn'); if (b) b.textContent = musicOn ? '🎵 موسيقى' : '🔇 موسيقى'; b.style.opacity = musicOn ? '1' : '.6'; }
+musicLabel();
 const SCL = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24], nt = i => 523.25 * Math.pow(2, SCL[Math.max(0, Math.min(10, i))] / 12);
 function blip(type, f0, f1, dur, vol, delay, f2) {
   const t = actx.currentTime + (delay || 0), o = actx.createOscillator(), g = actx.createGain();
@@ -3229,7 +3288,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') houseLoad(); else if (id === 'zones') renderZones(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') houseLoad(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
@@ -3679,6 +3738,28 @@ function hDraw() {
   c.restore();
   if (hFade > 0) { c.fillStyle = 'rgba(0,0,0,' + hFade * 0.75 + ')'; c.fillRect(0, 0, 320, 250); hFade = Math.max(0, hFade - 0.07); }
 }
+
+/* ================= خريطة المراحل ================= */
+const ZSEA = ['☀️ الصيف', '🍂 الخريف', '❄️ الشتاء', '🌸 الربيع'];
+function renderLevels() {
+  const cp = cpGet(), L = $('lvList'); if (!L) return; L.innerHTML = '';
+  $('lvHead').textContent = '📍 وصلت المرحلة ' + cp + (auth ? ' • محفوظة بحسابك' : ' • محفوظة بهذا الجهاز');
+  const zc = Math.max(4, Math.ceil((cp + 1) / 7));
+  for (let z = 0; z < zc; z++) {
+    const sec = document.createElement('div'); sec.className = 'lvZone';
+    const h = document.createElement('h4'); h.textContent = (ZONES[z % ZONES.length].deco[0] || '') + ' ' + ZONES[z % ZONES.length].n + ' — المراحل ' + (z * 7 + 1) + ' إلى ' + (z * 7 + 7); sec.appendChild(h);
+    const p = document.createElement('div'); p.className = 'lvPath';
+    for (let i = 1; i <= 7; i++) {
+      const n = z * 7 + i, d = document.createElement('div'); d.className = 'lvN' + (n < cp ? ' done' : n === cp ? ' cur' : '') + (i === 7 ? ' zend' : '');
+      d.textContent = n < cp ? '✓' : n > cp ? '🔒' : String(n); if (n > cp) d.style.opacity = '.55';
+      if (n === cp) d.onclick = () => $('lvGo').click(); else if (n < cp) d.onclick = () => showToast('✅ خلّصت المرحلة ' + n);
+      p.appendChild(d);
+    }
+    sec.appendChild(p); L.appendChild(sec);
+  }
+  $('lvGo').textContent = '▶ كمّل من المرحلة ' + cp;
+}
+$('lvGo').onclick = () => { closePage(); reset(); state = 'ready'; };
 
 /* ================= المناطق ================= */
 function renderZones() {
