@@ -421,7 +421,7 @@ app.post('/api/level', authMw, (req, res) => {
   const lv = Math.floor(Number(req.body && req.body.level));
   if (!g || g.k !== req.key || !Number.isFinite(lv)) return res.status(400).json({ error: 'لعبة غير صالحة' });
   if (lv !== g.last + 1 || lv > 500) return res.status(400).json({ error: 'مرحلة غير صالحة' });
-  const minSec = (lv === 5 ? 44 : Math.round((31 + 7 * lv) * 0.88)) * 0.04;                       // أقل وقت معقول لتفجير كل كرات المرحلة
+  const minSec = zLevelN(lv) * 0.04;                       // أقل وقت معقول لتفجير كل كرات المرحلة
   if ((Date.now() - g.lt) / 1000 < minSec) return res.status(400).json({ error: 'سريع بشكل غير طبيعي' });
   g.last = lv; g.lt = Date.now();
   const u = db.users[req.key], dy = dayOf(u);
@@ -821,7 +821,7 @@ function zPos(s) {
   _zp.x = ZPATH.xs[i] + (ZPATH.xs[j] - ZPATH.xs[i]) * f; _zp.y = ZPATH.ys[i] + (ZPATH.ys[j] - ZPATH.ys[i]) * f;
   return _zp;
 }
-const zLevelN = l => l === 5 ? 44 : Math.round((31 + 7 * l) * 0.88);   // المرحلة 5 أخف
+const zLevelN = l => Math.round((l === 5 ? 44 : (31 + 7 * l) * 0.88) * 0.87);   // -12% ثم -13%، والمرحلة 5 أخف
 const zSpeed = l => 20 + 3.5 * Math.min(l, 12);
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function zNew(seed, mode) {
