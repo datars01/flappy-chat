@@ -441,6 +441,8 @@
   #rmBox.rmTiny .hOvTop, #rmBox.rmTiny #rmPrompt { display: none !important; } #rmBox.rmTiny #rmLogP { max-height: 38%; bottom: 44px; }
   #rmMemArr { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 58px; padding: 0; border-radius: 0 14px 14px 0; background: rgba(10,14,30,.85); color: #fff; border: 1px solid rgba(255,255,255,.4); border-left: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; z-index: 3; } #rmMemArr b { font-size: 17px; line-height: 1; } #rmMemArr small { font-size: 10px; color: #ffd166; font-weight: 700; }
   #rmBox.memOpen #rmMemArr { left: 122px; }
+  #rmRot { display: none; position: absolute; inset: 0; z-index: 20; background: rgba(20,10,40,.96); color: #fff; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; pointer-events: auto; } #rmRot.show { display: flex; } #rmRot div { font-size: 56px; animation: rsBob 1.6s ease-in-out infinite; } #rmRot b { font-size: 20px; } #rmRot small { opacity: .8; }
+  #rmFTtl { pointer-events: none; background: rgba(10,14,30,.7); }
   .rmRow.rmPerm { border: 1px solid #ffc83d; background: linear-gradient(90deg, rgba(255,200,61,.18), rgba(255,200,61,.04)); }
   #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
   #rmMem .wf { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .wf input { width: 100%; padding: 4px 6px; font-size: 14px; border-radius: 8px; border: 0; box-sizing: border-box; } #rmMem .wf button { background: #2d9aa5; }
@@ -705,8 +707,8 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button></div></div>
-        <div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
+        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><span id="rmFTtl" class="hOvB"></span></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmTypBtn" class="hOvB" type="button">✍️ يكتب الآن: شغّال</button></div></div>
+        <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
         <div id="rmLogP" hidden></div>
         <div id="rmChatRow"><input id="rmChatIn" maxlength="120" placeholder="اكتب رسالة للكل..." autocomplete="off"><button id="rmSend" class="hOvB" type="button">➤</button></div>
@@ -5337,7 +5339,7 @@ function rmOnMsg(d) {
 }
 /* ---------- الواجهة: اللوبي ---------- */
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
-function rmShowRoom() { if (IS_TABLET && hLandMQ && hLandMQ.matches && !RM.full) setTimeout(() => { if (RM.on && !RM.full) rmSetFull(true, true); }, 0); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
+function rmShowRoom() { if (!RM.full) rmSetFull(true, true, true); $('rmFTtl').textContent = '🏝️ ' + RM.name; try { screen.orientation.lock(IS_TABLET ? 'any' : 'portrait').catch(() => {}); } catch (e) {} rmCheckRot(); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
 function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
 function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.menu = ''; RM.warnFor = ''; if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
 function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; $('rmZoom').textContent = '🔭 كل المكان'; rmJoinSend(); }
@@ -5408,13 +5410,18 @@ $('rmExit').onclick = () => rmLeaveRoom();
 function rmMemToggle(open) { const P = $('rmMem'); P.hidden = open === undefined ? !P.hidden : !open; $('rmBox').classList.toggle('memOpen', !P.hidden); $('rmMemArr').firstChild.textContent = P.hidden ? '▶' : '◀'; }
 $('rmMemArr').onclick = () => rmMemToggle();
 $('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; $('rmZoom').textContent = RM.zoomAll ? '🔍 قرّب' : '🔭 كل المكان'; };
+function rmLandscapeDevice() {
+  try { if (screen.orientation && screen.orientation.type) return /landscape/.test(screen.orientation.type); } catch (e) {}
+  if (typeof window.orientation === 'number') return Math.abs(window.orientation) === 90;
+  return screen.width > screen.height;
+}
+function rmCheckRot() { const r = $('rmRot'); if (r) r.classList.toggle('show', !!(RM.on && !IS_TABLET && rmLandscapeDevice())); }
+window.addEventListener('orientationchange', () => setTimeout(rmCheckRot, 200)); try { screen.orientation.addEventListener('change', rmCheckRot); } catch (e) {}
 function rmSetFull(on, auto, soft) {
   RM.full = on; RM.soft = !!(on && soft); if (!on) RM.softFocus = false; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
   try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto && IS_TABLET) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  $('rmFs').textContent = on ? '✕ إغلاق' : '⛶ تكبير'; if (typeof hFitFs === 'function') hFitFs(); if (window.hFitAll) hFitAll(); window.scrollTo(0, 0);
+  if (typeof hFitFs === 'function') hFitFs(); if (window.hFitAll) hFitAll(); window.scrollTo(0, 0);
 }
-$('rmFs').onclick = () => rmSetFull(!RM.full);
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && RM.full) { RM.full = false; $('rmStage').classList.remove('full'); document.body.style.overflow = ''; $('rmFs').textContent = '⛶ تكبير'; } });
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
@@ -5423,7 +5430,6 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
 })();
-if (typeof hLandMQ !== 'undefined' && hLandMQ) { const f = () => { if (curPage !== 'rooms' || !RM.on) return; if (hLandMQ.matches && IS_TABLET) { if (!RM.full) rmSetFull(true, true); } else if (RM.full && RM.autoFull) rmSetFull(false); }; hLandMQ.addEventListener ? hLandMQ.addEventListener('change', f) : hLandMQ.addListener(f); }
 
 /* ================= وضع بدون إنترنت ================= */
 var offDismissed = false, offShown = false;
