@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="بابيتو شات">
@@ -392,7 +392,8 @@
   #hOv { position: absolute; inset: 0; pointer-events: none; }
   #hOv button { pointer-events: auto; width: auto; }
   [hidden] { display: none !important; }
-  .hOvTop { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; gap: 6px; }
+  .hOvTop { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; }
+  .hOvTop .hOvB { padding: 5px 8px; font-size: 12px; }
   .hOvG { display: flex; gap: 6px; }
   .hOvB { background: rgba(10,14,30,.62); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 12px; padding: 6px 10px; font-size: 13px; font-weight: 700; flex: none; backdrop-filter: blur(3px); }
   #hChatRow { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; gap: 5px; pointer-events: none; }
@@ -401,12 +402,23 @@
   #hChatIn::placeholder { color: rgba(255,255,255,.55); }
   #hEmoji { position: absolute; bottom: 48px; left: 6px; right: 6px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; padding: 6px; background: rgba(10,14,30,.9); border-radius: 12px; pointer-events: auto; }
   #hEmoji button { background: transparent; padding: 3px 0; font-size: 22px; width: auto; }
-  #hLogP { position: absolute; left: 6px; right: 6px; bottom: 48px; max-height: 58%; overflow-y: auto; background: rgba(10,14,30,.88); color: #fff; border-radius: 12px; padding: 8px 10px; font-size: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 4px; }
+  #hLogP { position: absolute; left: 6px; right: 6px; bottom: 48px; max-height: 34%; overflow-y: auto; background: rgba(10,14,30,.88); color: #fff; border-radius: 12px; padding: 8px 10px; font-size: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 4px; }
   #hLogP .m b { color: #ffd166; margin-inline-end: 4px; } #hLogP .t { opacity: .5; font-size: 10px; margin-inline-start: 6px; }
   #hPrompt { position: absolute; bottom: 52px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
   #hPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
   @keyframes hPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   #hFsTabs { display: none; }
+  #hShopBox { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 10001; max-height: 64vh; overflow: auto; background: var(--card); border-top: 2px solid var(--line); border-radius: 18px 18px 0 0; padding: 10px 12px 18px; flex-direction: column; gap: 8px; box-shadow: 0 -10px 34px rgba(0,0,0,.55); }
+  #hShopBox.open { display: flex; }
+  #hShopBox .shHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; }
+  #hShopBox .shHead button { width: auto; padding: 6px 12px; }
+  #hShopBox .shTabs { display: flex; gap: 6px; }
+  #hShopBox .shTabs button { flex: 1; padding: 8px 4px; font-size: 13px; }
+  #hShopBox .shTabs button.on { background: var(--teal, #2d9aa5); color: #fff; }
+  #nAlert { display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); width: min(92vw, 400px); z-index: 10005; background: linear-gradient(135deg, #1f6f8b, #2d9aa5); color: #fff; border: 2px solid #fff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,.6); align-items: center; gap: 10px; cursor: pointer; animation: hPop .3s ease-out; }
+  #nAlert.show { display: flex; }
+  #nAlert .ni { font-size: 26px; flex: none; } #nAlert .nt { flex: 1; font-size: 13px; line-height: 1.5; } #nAlert .nt b { display: block; font-size: 14px; }
+  #nAlert .nx { flex: none; width: auto; padding: 4px 10px; background: rgba(255,255,255,.22); border: 0; color: #fff; border-radius: 10px; }
   #hStage.full { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; }
   #hStage.full #hBox { width: min(100vw, calc(100vh * 1.28)); }
   #hStage.full #houseCv { border-radius: 0; border: 0; }
@@ -610,11 +622,12 @@
   <div class="card">
     <div class="lbHead"><span id="houseTtl">🏠 بيتك</span><span id="brickBal" class="coinBal">🧱 0</span></div>
     <div id="hVisBar" class="hVisBar" hidden></div>
+    <div id="nAlert" role="alert"><span class="ni" id="nAlertI">📩</span><span class="nt"><b id="nAlertT"></b><span id="nAlertS"></span></span><button class="nx" id="nAlertX" type="button">✕</button></div>
     <div id="hStage"><div id="hBox">
       <canvas id="houseCv" width="640" height="500"></canvas>
       <div id="hOv">
         <div class="hOvTop">
-          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button></div>
+          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button><button id="hZoomBtn" class="hOvB" type="button">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button></div>
           <div class="hOvG"><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
         </div>
         <div id="hFsTabs"><button class="hOvB" data-v="home" type="button">🏠</button><button class="hOvB" data-v="inside" type="button">🛋️</button><button class="hOvB" data-v="garden" type="button">🌳</button></div>
@@ -628,11 +641,14 @@
       <button class="tab" data-v="inside" type="button">🛋️ داخل البيت</button>
       <button class="tab" data-v="garden" type="button">🌳 الحديقة</button>
     </div>
+    <div id="hShopBox"><div class="shHead"><span>🛒 تعديل البيت</span><span id="brickBal2" class="coinBal">🧱 0</span><button id="hShopX" class="ghost" type="button">✕ إغلاق</button></div>
+      <div class="shTabs" id="shTabs"><button class="tab" data-sv="home" type="button">🏠 البيت</button><button class="tab" data-sv="inside" type="button">🛋️ داخل</button><button class="tab" data-sv="garden" type="button">🌳 الحديقة</button></div>
     <div class="hTools"><button id="hResetPos" class="ghost" type="button">↺ رجّع الأغراض لأماكنها</button></div>
     <div id="hSlots" class="hSlots"></div>
     <div id="hOpts" class="hRow"></div>
     <div id="hBuy" class="hBuy hint"></div>
     <div class="help">🧱 تكسب مواد البناء من إنهاء المراحل بالفردي (وأكثر كل ما تتقدم)، ومن كل 3 كومبوهات تجيبها بنفس اللعبة (+8)، وبعد كل 7 مراحل مكافأة كبيرة. «ترقية البيت» تحوّله من كوخ لبيت لفيلا بحركة بناء.</div>
+    </div>
   </div>
 </div></div>
 <div class="page" id="pg-levels"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">📍 خريطة المراحل</span></div><div class="pgBody">
@@ -1331,7 +1347,8 @@ function trackCanvas(sc) {
   return (_trackCv = c);
 }
 
-const zLevelN = l => Math.round((l === 5 ? 44 : (31 + 7 * l) * 0.88) * 0.87);   // -12% ثم -13%، والمرحلة 5 أخف
+const ZLN = { 5: 32, 6: 42, 7: 46 };   // المراحل 5-7 أخف بشكل خاص
+const zLevelN = l => ZLN[l] || (l > 7 ? 46 + 5 * (l - 7) : Math.round((31 + 7 * l) * 0.88 * 0.87 * 0.92));
 const zSpeed = l => (20 + 3.5 * Math.min(l, 12)) * Math.max(0.75, Math.min(1.3, PATH.L / 1881));   // نفس مدة الوصول للحفرة تقريباً مهما كان طول المسار          // px بالثانية
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function newZ(seed, startLv) {
@@ -1742,7 +1759,7 @@ function reset() {
   const cp = cpGet(), sl0 = (!startFresh && cp > 1) ? cp : zs * 7 + 1; startFresh = false;
   Z = newZ(Math.floor(Math.random() * 2147483647) + 1, sl0); score = 0; zacc = 0; deadTime = 0; paused = false; resumeAt = 0; mapInfo = null;
 }
-function startGame() { const sl = Z.level; currentGame = auth ? api('/api/start', { method: 'POST', body: { startLevel: sl } }).then(r => r.gid).catch(() => null) : null; }
+function startGame() { skipN = 0; const sl = Z.level; currentGame = auth ? api('/api/start', { method: 'POST', body: { startLevel: sl } }).then(r => r.gid).catch(() => null) : null; }
 function die() {
   state = 'dead'; deadTime = 0; sfx('die'); score = Z.score;
   if (auth) { if (score > (auth.best || 0)) auth.best = score; }
@@ -1766,6 +1783,19 @@ function soloUpdate(raw) {
   else Z.ang += zWrap(Z.tgt - Z.ang) * 0.3;
 }
 /* ---- إيقاف مؤقت ---- */
+var skipN = 0;   // عدد التخطيات بهاللعبة، وكل تخطي يزيد 200
+const skipCost = () => 200 * (skipN + 1);   // 200 ثم 400 ثم 600 ...
+function restartLevel() {
+  const old = Z, lv = old.level; Z = newZ(Math.floor(Math.random() * 2147483647) + 1, lv); Z.score = old.score; Z.inv = old.inv; Z.clears = old.clears;
+  state = 'play'; paused = false; resumeAt = performance.now() + 900; mapInfo = null; zacc = 0; deadTime = 0; sfx('swap'); showToast('🔁 رجعنا المرحلة ' + lv + ' من البداية');
+}
+function skipLevel() {
+  if (!auth) { showToast('🔒 التخطي يحتاج حساب (سجّل دخول)'); return; }
+  const lv = Z.level; paused = false;
+  Promise.resolve(currentGame).then(gid => { if (!gid) throw new Error('ما اكو اتصال باللعبة، جرب مرة ثانية'); return api('/api/skip', { method: 'POST', body: { gid, level: lv } }); })
+    .then(r => { skipN++; if (r.user) syncUser(r.user); renderHome(); cpSave(lv + 1); Z.chain.length = 0; Z.queue = 0; Z.shots = []; Z.level = lv + 1; nextLevel(); showToast('⏭ تخطيت المرحلة ' + lv + ' (-' + r.cost + ' 🪙)'); })
+    .catch(e => { showToast('⚠️ ' + e.message); paused = true; });
+}
 function pauseGame() { if (gameMode === 'solo' && state === 'play' && !paused && !Z.pending) { paused = true; } }
 function resumeGame() { if (paused) { paused = false; resumeAt = performance.now() + 1500; } }
 function autoPause() { if (gameMode === 'solo' && state === 'play' && !paused && !Z.pending && !Z.dead) paused = true; }
@@ -1848,7 +1878,11 @@ function drawPause() {
   text('خذ راحتك، ما راح يصير شي', W / 2, 210, 13, '#ffd166');
   ctx.fillStyle = '#2fbf71'; ctx.fillRect(80, 240, 160, 50); ctx.strokeStyle = '#0a3a1f'; ctx.lineWidth = 3; ctx.strokeRect(80, 240, 160, 50);
   text('▶ كمّل', W / 2, 273, 22);
-  text('أو اضغط P', W / 2, 318, 11, 'rgba(255,255,255,.6)');
+  ctx.fillStyle = '#3a6ea5'; ctx.fillRect(60, 312, 200, 44); ctx.strokeStyle = '#102a44'; ctx.lineWidth = 3; ctx.strokeRect(60, 312, 200, 44);
+  text('🔁 إعادة المرحلة', W / 2, 342, 17);
+  ctx.fillStyle = '#b7791f'; ctx.fillRect(60, 366, 200, 44); ctx.strokeStyle = '#4a2e08'; ctx.strokeRect(60, 366, 200, 44);
+  text('⏭ تخطي المرحلة  ' + skipCost() + ' 🪙', W / 2, 396, 15);
+  text('أو اضغط P', W / 2, 434, 11, 'rgba(255,255,255,.6)');
 }
 function drawSolo() {
   if (state === 'map') { drawMap(); return; }
@@ -1969,7 +2003,7 @@ function onTap(x, y) {
   if (state === 'map') { if (mapT > 45) nextLevel(); return; }
   if (state === 'ready') { state = 'play'; startGame(); zAim(Z, x, y); return; }
   if (state === 'play') {
-    if (paused) { if (x > 70 && x < 250 && y > 232 && y < 300) resumeGame(); return; }
+    if (paused) { if (x > 70 && x < 250 && y > 232 && y < 300) resumeGame(); else if (x > 60 && x < 260 && y > 312 && y < 356) restartLevel(); else if (x > 60 && x < 260 && y > 366 && y < 410) skipLevel(); return; }
     if (performance.now() < resumeAt) return;
     if (Math.hypot(x - PSX, y - PSY) < 22) { pauseGame(); return; }
     for (let i = 0; i < 3; i++) if (Math.hypot(x - INVX(i), y - INVY) < 24) { if (Z.inv[i]) zUse(Z, i); return; }
@@ -2230,7 +2264,8 @@ function putMsg(m, fresh) {
   if (fresh && !old && m.k !== myKey()) { ding(); typers.delete(m.name); renderTyping(); if (chatOpen) sendRead(); }
   if (fresh && !old && m.k !== myKey() && !chatOpen) {
     unread++; updateBadge();
-    showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
+    bigAlert('💬', 'وصلتك رسالة من غرفة الكود', m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? '📎 مرفق' : ''))), () => { if (hFull) hSetFull(false); closePage(); openChat(); });
+    if (false) showToast(m.name + ': ' + (m.deleted ? '' : (m.text || (m.media ? (m.media.type === 'audio' ? '🎤 رسالة صوتية' : m.media.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') : ''))));
   }
 }
 function patchMsg(id, fn) {
@@ -3375,8 +3410,10 @@ function hSendChat() {
 function hRenderLog() {
   const P = $('hLogP'); if (!P) return; P.innerHTML = '';
   if (!hVis && hLog.length) { const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'hOvB'; cb.textContent = '🗑️ حذف السجل للجميع'; cb.style.alignSelf = 'flex-start'; cb.onclick = () => { if (cb.dataset.arm) { hvSend({ t: 'hv_clear' }); } else { cb.dataset.arm = '1'; cb.textContent = 'تأكيد الحذف؟'; setTimeout(() => { delete cb.dataset.arm; cb.textContent = '🗑️ حذف السجل للجميع'; }, 3000); } }; P.appendChild(cb); }
-  if (!hLog.length) { const e = document.createElement('div'); e.textContent = 'ما اكو رسائل بعد، ابدأ الحديث 💬'; e.style.opacity = '.7'; P.appendChild(e); return; }
-  hLog.forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ':'; const t = document.createElement('span'); t.textContent = m.txt; const tm = document.createElement('span'); tm.className = 't'; tm.textContent = new Date(m.ts).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }); d.append(b, t, tm); P.appendChild(d); });
+  let L = hLog;
+  if (hZ > 1.2) { const me = (auth && auth.name) || '', nr = new Set([me]); Object.values(hOthers).forEach(o => { if (o.view === hView && Math.hypot(o.x - hChar.x, o.y - hChar.y) <= 90) nr.add(o.name); }); L = hLog.filter(m => nr.has(m.n)); const nt = document.createElement('div'); nt.textContent = '🔍 تشوف رسائل القريبين منك بس'; nt.style.opacity = '.6'; P.appendChild(nt); }
+  if (!L.length) { const e = document.createElement('div'); e.textContent = 'ما اكو رسائل بعد، ابدأ الحديث 💬'; e.style.opacity = '.7'; P.appendChild(e); return; }
+  L.forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ':'; const t = document.createElement('span'); t.textContent = m.txt; const tm = document.createElement('span'); tm.className = 't'; tm.textContent = new Date(m.ts).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }); d.append(b, t, tm); P.appendChild(d); });
   P.scrollTop = P.scrollHeight;
 }
 (function () {
@@ -3498,13 +3535,20 @@ async function dmReload() {
     const f = fData.friends.find(x => x.name === r.friend.name); if (f) { f.unread = 0; renderFriends(); }
   } catch (e) { showToast('⚠️ ' + e.message); $('dmPop').classList.remove('open'); dmWith = null; }
 }
+/* تنبيه كبير على الشاشة (يظهر حتى داخل البيت) */
+var nAlertT = 0, nAlertFn = null;
+function bigAlert(icon, title, sub, fn) {
+  const b = $('nAlert'); if (!b) return; $('nAlertI').textContent = icon; $('nAlertT').textContent = title; $('nAlertS').textContent = sub || ''; nAlertFn = fn || null;
+  b.classList.add('show'); clearTimeout(nAlertT); nAlertT = setTimeout(() => b.classList.remove('show'), 7000);
+}
+$('nAlert').addEventListener('click', e => { const f = nAlertFn; $('nAlert').classList.remove('show'); if (e.target.id !== 'nAlertX' && f) f(); });
 function onDmPush(d) {
   if (dmWith && $('dmPop').classList.contains('open') && dmWith.toLowerCase() === String(d.from).toLowerCase()) {
     dmMsgs.push(d.m); dmRender(); api('/api/dm?with=' + encodeURIComponent(dmWith)).catch(() => {});
     try { ding(); } catch (e) {}
     return;
   }
-  showToast('💬 ' + d.from + ': ' + (d.m.inv ? '🎟️ دعوة للعب' : String(d.m.text).slice(0, 40)));
+  bigAlert('📩', 'رسالة تنتظرك في صندوق الرسائل الخاص', d.from + ': ' + (d.m.inv ? '🎟️ دعوة للعب' : String(d.m.text).slice(0, 40)), () => { if (hFull) hSetFull(false); openDm(d.from); });
   try { ding(); } catch (e) {}
   loadFriends();
 }
@@ -3617,9 +3661,9 @@ var hLog = [], hChatBub = {};
 var hBans = [], hVis = null, hTarget = null, hOthers = {}, hvOn = false, hLastSend = 0, hLastSent = '';
 var hFull = false, hDown = null, hHold = false, hGoing = false, hDoorT = 0, hPetT = 0, hBubs = [], hFloats = [], hLastBark = -9999, hOvKey = '', hDk = null, hKeys = {};
 const HV = {
-  home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [208, 247], start: [160, 224] },
-  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [174, 247], start: [196, 222] },
-  garden: { slots: ['tree', 'flowers', 'feature', 'play', 'car', 'fence', 'lantern'], first: 'tree', walk: [180, 247], start: [160, 226] }
+  home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [198, 247], start: [160, 224] },
+  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [172, 247], start: [196, 222] },
+  garden: { slots: ['tree', 'flowers', 'feature', 'play', 'car', 'fence', 'lantern'], first: 'tree', walk: [160, 247], start: [160, 226] }
 };
 const HDEF = { home: 'h1', walls: '#f4efe6', roof: '#c9483c', door: '#7a4a2a', paper: '#f3e6cf', floor: '#b98a5a' };
 const HTIERS = ['كوخ', 'بيت صغير', 'بيت واسع', 'فيلا'];
@@ -3701,7 +3745,8 @@ function hSetView(v, keep, pos) {
 }
 /* ---- قوائم الاختيار ---- */
 function hRenderUi() {
-  const bal = $('brickBal'); if (bal) bal.textContent = auth ? '🧱 ' + (auth.bricks || 0) : '🧱 —';
+  const bal = $('brickBal'); if (bal) bal.textContent = auth ? '🧱 ' + (auth.bricks || 0) : '🧱 —'; const bal2 = $('brickBal2'); if (bal2) bal2.textContent = bal.textContent;
+  document.querySelectorAll('#shTabs [data-sv]').forEach(b => b.classList.toggle('on', b.dataset.sv === hView));
   const S0 = auth && auth.house && auth.house.set || {}; const tn = $('houseTtl'); if (tn) tn.textContent = '🏠 ' + HTIERS[hTier(S0)];
   const SL = $('hSlots'), OP = $('hOpts'); if (!SL || !OP) return; SL.innerHTML = ''; OP.innerHTML = '';
   $('pg-house').classList.toggle('vis', !!hVis); hRenderVis();
@@ -3779,12 +3824,24 @@ function hHit(x, y, S) {
   const A = hAreas(hView, S); for (const slot of hView === 'inside' ? ['rug', 'floor', 'paper'] : ['fence']) { const rs = A[slot]; if (rs && rs.some(inR)) return { slot, drag: false }; }
   return null;
 }
+var hTvOn = false, hLampOn = true;
+var hZ = 1, hCZ = 1, hCX = 0, hCY = 0, hZAuto = false;
+function hSetZoom(z, auto) { hZ = z; hZAuto = !!auto; const b = $('hZoomBtn'); if (b) b.textContent = hZ > 1.05 ? '🔎 رجّع' : '🔍 قرّب'; if (typeof hRenderLog === 'function') hRenderLog(); }
+function hShopOpen() { if (hVis || !auth) return; $('hShopBox').classList.add('open'); hRenderUi(); }
+function hShopClose() { $('hShopBox').classList.remove('open'); if (hPrev) { hPrev = null; hRenderUi(); } }
 function hTap(slot, x, y) {
   const S = hSetNow(); hSelect(slot);
+  if ((slot === 'home' || slot === 'upg') && !hVis) { hShopOpen(); return; }
+  const e = hView !== 'home' && hEntries(hView, S).find(q => q.slot === slot);
+  if (e) { hWalkTo(e.x, e.y + 12); if (slot === 'pet' && hVal(S, 'pet')) hPet(); return; }
   const rs = hAreas(hView, S)[slot]; if (rs) { const q = rs[0]; hWalkTo(q[0] + q[2] / 2, q[1] + q[3] + 8); }
-  if (hView === 'inside' && slot === 'pet' && hVal(S, 'pet')) hPet();
-  if (hView === 'inside' && slot === 'seat' && hVal(S, 'seat')) { const e = hEntries('inside', S).find(q => q.slot === 'seat'); if (e) { hChar.tx = e.x; hChar.ty = Math.max(HV.inside.walk[0], e.y - 5); hChar.sitGoal = true; showToast('🪑 جلست'); } }
 }
+/* جلوس جميل: يمشي للغرض ويجلس عليه، وقيام يرجع واقف */
+function hSitAt(slot) {
+  const e = hEntries(hView, hSetNow()).find(q => q.slot === slot); if (!e) return;
+  hChar.sit = false; hChar.sitGoal = true; hChar.tx = e.x; hChar.ty = Math.max(HV[hView].walk[0], slot === 'seat' ? e.y - 5 : slot === 'play' ? e.y - 2 : e.y + 6); sfx('click'); hOvKey = '';
+}
+function hStand() { hChar.sit = false; hChar.sitGoal = false; hChar.tx = hChar.x; hChar.ty = Math.min(247, hChar.y + 16); sfx('click'); hOvKey = ''; }
 function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.push({ slot, txt, t: 140 }); }
 function hPet() {
   const S = hSetNow(), v = hVal(S, 'pet'); if (!v) return;
@@ -3801,12 +3858,13 @@ async function hSavePos(slots) {
 }
 (function () {
   const cvh = $('houseCv'); if (!cvh) return;
-  const sc = e => { const r = cvh.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 320, (e.clientY - r.top) / r.height * 250]; };
+  const sc = e => { const r = cvh.getBoundingClientRect(); return [hCX + (e.clientX - r.left) / r.width * 320 / hCZ, hCY + (e.clientY - r.top) / r.height * 250 / hCZ]; };
   cvh.addEventListener('pointerdown', e => {
     const [x, y] = sc(e), S = hSetNow(); hDown = null; hHold = false;
     const hit = hHit(x, y, S);
     if (hit && hit.drag) { hDown = { slot: hit.slot, sx: x, sy: y, o0: hOffOf(hit.slot).slice(), moved: false }; try { cvh.setPointerCapture(e.pointerId); } catch (er) {} return; }
-    if (hit) { hTap(hit.slot, x, y); return; }
+    if (hit && !['roof', 'walls', 'floor', 'paper', 'fence', 'rug'].includes(hit.slot)) { hTap(hit.slot, x, y); return; }
+    if (hit) hSelect(hit.slot);
     hWalkTo(x, y); hHold = true; try { cvh.setPointerCapture(e.pointerId); } catch (er) {}
   });
   cvh.addEventListener('pointermove', e => {
@@ -3823,6 +3881,14 @@ async function hSavePos(slots) {
   };
   cvh.addEventListener('pointerup', up); cvh.addEventListener('pointercancel', up);
 })();
+$('hZoomBtn').onclick = () => { sfx('click'); hSetZoom(hZ > 1.05 ? 1 : 2.1, false); };
+$('hEditBtn').onclick = hShopOpen; $('hShopX').onclick = hShopClose;
+document.querySelectorAll('#shTabs [data-sv]').forEach(b => b.onclick = () => { if (b.dataset.sv !== hView) hGo(b.dataset.sv); hRenderUi(); });
+$('hChatIn').addEventListener('focus', () => { if (hZ < 1.05) hSetZoom(1.8, true); setTimeout(() => { try { $('hStage').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 300); });
+$('hChatIn').addEventListener('blur', () => { if (hZAuto) hSetZoom(1, false); });
+['hChatSend', 'hEmoBtn'].forEach(id => $(id).addEventListener('pointerdown', e => e.preventDefault()));
+setInterval(() => { if (hZ > 1.2 && curPage === 'house') hRenderLog(); }, 1200);
+if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
 document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 document.querySelectorAll('#hFsTabs [data-v]').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 /* ---- الانتقال بين المناظر (باب بصوت) ---- */
@@ -3866,13 +3932,25 @@ function hUpdateOv() {
     if (hView === 'home') { const d = hDoorXY('home'); if (Math.hypot(hChar.x - d[0], hChar.y - d[1]) < 46) near = 'home'; }
     else if (hView === 'garden') { const d = hDoorXY('garden'); if (Math.abs(hChar.x - d[0]) < 42 && hChar.y - d[1] < 52) near = 'garden'; }
   }
-  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
-  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير';
+  const items = []; if (hView !== 'home') { const need = inn ? ['seat', 'tv', 'lamp', 'pet', 'plant'] : ['tree', 'play', 'flowers']; hEntries(hView, hSetNow()).forEach(e => { if (need.includes(e.slot) && !items.includes(e.slot) && (e.slot === 'tv' ? Math.abs(e.x - hChar.x) < 56 : Math.hypot(e.x - hChar.x, (e.y - hChar.y) * 1.2) < 46)) items.push(e.slot); }); }
+  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
+  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth;
   $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn;
   const P = $('hPrompt'); P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (near === 'home') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🌳 روح للحديقة', () => hGo('garden')); }
   else if (near === 'garden') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🏠 واجهة البيت', () => hGo('home')); }
+  if (hChar.sit) mk('🧍 قيام', hStand);
+  else items.forEach(sl => {
+    if (sl === 'seat') mk('🪑 اجلس', () => hSitAt('seat'));
+    else if (sl === 'tree') mk('🌳 اجلس تحت الشجرة', () => hSitAt('tree'));
+    else if (sl === 'play') mk('🎠 اجلس', () => hSitAt('play'));
+    else if (sl === 'tv') mk(hTvOn ? '📺 اطفي التلفاز' : '📺 شغّل التلفاز', () => { hTvOn = !hTvOn; sfx('click'); hOvKey = ''; });
+    else if (sl === 'lamp') mk(hLampOn ? '💡 اطفي المصباح' : '💡 شغّل المصباح', () => { hLampOn = !hLampOn; sfx('click'); hOvKey = ''; });
+    else if (sl === 'pet') mk('🐾 داعب', () => hPet());
+    else if (sl === 'plant') mk('💧 اسقِ النبتة', () => { const e = hEntries('inside', hSetNow()).find(q => q.slot === 'plant'); if (e) hBurst(e.x, e.y - 30, 12); sfx('magic'); showToast('🌿 النبتة فرحانة'); });
+    else if (sl === 'flowers') mk('🌸 شمّ الورد', () => { const e = hEntries('garden', hSetNow()).find(q => Math.abs(q.x - hChar.x) < 40); if (e) hBurst(e.x, e.y - 14, 10); sfx('magic'); showToast('🌸 ريحة حلوة'); });
+  });
 }
 /* ---- الرسم ---- */
 function hRect(c, x, y, w, h, fill, stroke) { c.fillStyle = fill; c.fillRect(x, y, w, h); if (stroke) { c.strokeStyle = stroke; c.lineWidth = 1.2; c.strokeRect(x, y, w, h); } }
@@ -3972,9 +4050,11 @@ function hChar_(c, S) {
   if (d > 1.6) { const st = Math.min(d, 2.3); hChar.x += dx / d * st; hChar.y += dy / d * st; if (Math.abs(dx) > 0.5) hChar.dir = dx > 0 ? 1 : -1; mv = true; }
   else if (hChar.sitGoal && !hChar.sit) hChar.sit = true;
   const hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : hChar.sit ? 0 : Math.sin(hT / 24) * 0.8, sit = hChar.sit && !mv;
+  hChar.sk = (hChar.sk || 0) + ((sit ? 1 : 0) - (hChar.sk || 0)) * 0.18; const sk = hChar.sk;
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(hChar.x, hChar.y + 1, 13, 4, 0, 0, 7); c.fill();
-  c.save(); c.translate(hChar.x, hChar.y - 13 - hop + (sit ? 4 : 0)); c.scale(0.8 * hChar.dir, 0.8 * (sit ? 0.94 : 1)); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
-  if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + (sit ? 4 : 0), true);
+  c.save(); c.translate(hChar.x, hChar.y - 13 - hop + 7 * sk + Math.sin(hT / 30) * 0.7 * sk); c.rotate(-0.1 * hChar.dir * sk); c.scale(0.8 * hChar.dir, 0.8 * (1 - 0.12 * sk)); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
+  if (sk > 0.9 && hT % 150 < 2) hFloats.push({ x: hChar.x + 10, y: hChar.y - 36, txt: '💤', t: 60 });
+  if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + 5 * sk, true);
 }
 const hSortY = () => hChar.sit ? hChar.y + 10 : hChar.y;
 const hOthersIn = view => Object.values(hOthers).filter(o => o.view === view);
@@ -4032,11 +4112,11 @@ function hDarkDraw(c, S) {
   hole(hChar.x, hChar.y - 14, 44, 0.9); hole(60, 72, 52, 0.5);
   const ents = hEntries('inside', S), lamp = ents.find(q => q.slot === 'lamp'), tv = ents.find(q => q.slot === 'tv');
   const tk = ents.find(q => q.slot === 'pet' && hVal(S, 'pet') === '🐠'); if (tk) hole(tk.x, tk.y - 34, 46, 0.7);
-  if (lamp) hole(lamp.x, lamp.y - 22, 38, 0.95); if (tv) hole(tv.x, tv.y - 30, 56, 0.5);
+  if (lamp && hLampOn) hole(lamp.x, lamp.y - 22, 38, 0.95); if (tv) hole(tv.x, tv.y - 30, 56, hTvOn ? 0.8 : 0.5);
   c.drawImage(hDk, 0, 0, 320, 250);
   c.save(); c.globalCompositeOperation = 'lighter';
   const glow = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
-  if (lamp) glow(lamp.x, lamp.y - 22, 70, 'rgba(255,190,100,' + (0.3 + 0.05 * Math.sin(hT / 9)) + ')');
+  if (lamp && hLampOn) glow(lamp.x, lamp.y - 22, 70, 'rgba(255,190,100,' + (0.3 + 0.05 * Math.sin(hT / 9)) + ')');
   if (tv) glow(tv.x, tv.y - 30, 60, 'rgba(110,160,255,' + (0.18 + 0.07 * Math.sin(hT / 5)) + ')');
   if (tk) glow(tk.x, tk.y - 34, 48, 'rgba(90,200,255,.22)');
   glow(60, 72, 50, 'rgba(150,180,255,.18)'); c.restore();
@@ -4137,6 +4217,7 @@ function hInterior(c, S) {
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
   list.forEach(it => { if (!charDone && hSortY() < it[2]) { hChar_(c, S); charDone = true; } String(it[0]).slice(0, 2) === '_u' ? hAvatar(c, hOthers[it[0].slice(2)]) : (it[0] === 'pet' && hVal(S, 'pet') === '🐠') ? hTank(c, it[1], it[2], hEx('pet'), S) : hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); });
   if (!charDone) hChar_(c, S);
+  if (hTvOn) { const tv = hEntries('inside', S).find(q => q.slot === 'tv'); if (tv) { c.save(); c.globalCompositeOperation = 'lighter'; const g = c.createRadialGradient(tv.x, tv.y - 28, 2, tv.x, tv.y - 28, 54); const f = 0.22 + 0.1 * Math.sin(hT / 4) + 0.05 * Math.sin(hT / 1.7); g.addColorStop(0, 'rgba(' + (hT % 90 < 45 ? '110,170,255' : '255,140,200') + ',' + f + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(tv.x - 56, tv.y - 84, 112, 112); c.restore(); } }
   hDarkDraw(c, S);
 }
 function hGarden(c, S) {
@@ -4160,6 +4241,7 @@ function hGarden(c, S) {
   if (hVal(S, 'feature') === '⛲') for (let i = 0; i < 4; i++) { const k = ((hT * 0.8 + i * 9) % 36) / 36; c.fillStyle = 'rgba(170,225,255,' + (1 - k) + ')'; c.beginPath(); c.arc(122 + (i - 1.5) * 4 * k, 176 - Math.sin(k * 3.14) * 16 + k * 14, 1.8, 0, 7); c.fill(); }
 }
 function hHilite(c, S) {
+  if (!(hDown && hDown.moved)) return;   // المربعات البيضاء تطلع بس وقت سحب الغرض
   const A = hAreas(hView, S)[hSel]; if (!A) return;
   c.save(); c.setLineDash([5, 4]); c.lineDashOffset = -hT / 3; c.strokeStyle = 'rgba(255,255,255,' + (0.7 + 0.3 * Math.sin(hT / 8)) + ')'; c.lineWidth = 2;
   A.forEach(r => { c.beginPath(); if (c.roundRect) c.roundRect(r[0] - 2, r[1] - 2, r[2] + 4, r[3] + 4, 6); else c.rect(r[0] - 2, r[1] - 2, r[2] + 4, r[3] + 4); c.stroke(); }); c.restore();
@@ -4177,6 +4259,8 @@ function hDraw() {
   c.save();
   if (hFade > 0) { const z = 1 + hFade * 0.1; c.translate(160, 125); c.scale(z, z); c.translate(-160, -125); }
   c.beginPath(); c.rect(0, 0, 320, 250); c.clip();
+  hCZ += (hZ - hCZ) * 0.16; if (Math.abs(hZ - hCZ) < 0.003) hCZ = hZ;
+  if (hCZ > 1.001) { const vw = 320 / hCZ, vh = 250 / hCZ; hCX = Math.max(0, Math.min(320 - vw, hChar.x - vw / 2)); hCY = Math.max(0, Math.min(250 - vh, hChar.y - 26 - vh / 2)); c.scale(hCZ, hCZ); c.translate(-hCX, -hCY); } else { hCX = 0; hCY = 0; }
   if (hBuild > 0) hBuild--;
   if (hView === 'inside') hInterior(c, S);
   else if (hView === 'garden') hGarden(c, S);
@@ -4200,7 +4284,7 @@ function hDraw() {
       c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.max(...lines.map(l => c.measureText(l).width)) + 14, h = lines.length * 13 + 8, bx = Math.max(3, Math.min(317 - w, x - w / 2)), by = Math.max(3, y - h - 8);
       c.globalAlpha = Math.min(1, b.t / 25); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 8); else c.rect(bx, by, w, h); c.fill(); c.stroke();
       c.beginPath(); c.moveTo(x - 5, by + h); c.lineTo(x, by + h + 6); c.lineTo(x + 5, by + h); c.fill(); c.fillStyle = '#222'; lines.forEach((l, i) => c.fillText(l, bx + w / 2, by + 13 + i * 13)); c.globalAlpha = 1; };
-    drawB(me0, hChar.x, hChar.y - 44); hOthersIn(hView).forEach(o => drawB(o.name, o.x, o.y - 44)); }
+    drawB(me0, hChar.x, hChar.y - 44); hOthersIn(hView).forEach(o => { if (hCZ > 1.2 && Math.hypot(o.x - hChar.x, o.y - hChar.y) > 90) return; drawB(o.name, o.x, o.y - 44); }); }
   hUpdateOv(); hvTick();
   for (const p of hParts) { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t--; c.globalAlpha = Math.min(1, p.t / 14); c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.sz, 0, 7); c.fill(); }
   c.globalAlpha = 1; if (hParts.length) hParts = hParts.filter(p => p.t > 0);

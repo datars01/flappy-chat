@@ -435,6 +435,19 @@ app.post('/api/level', authMw, (req, res) => {
   res.json({ gained, capped: gained < want, newZone, user: userInfo(req.key) });
 });
 
+// تخطي مرحلة بالعملات: 200 ثم 400 ثم 600... (يزيد 200 كل تخطي بنفس اللعبة)، بدون جوائز مواد بناء
+app.post('/api/skip', authMw, (req, res) => {
+  const g = games.get(String((req.body && req.body.gid) || ''));
+  const lv = Math.floor(Number(req.body && req.body.level));
+  if (!g || g.k !== req.key || !Number.isFinite(lv)) return res.status(400).json({ error: 'لعبة غير صالحة' });
+  if (lv !== g.last + 1 || lv > 500) return res.status(400).json({ error: 'مرحلة غير صالحة' });
+  const u = db.users[req.key], cost = 200 * ((g.skips || 0) + 1), coins = u.coins || 0;
+  if (coins < cost) return res.status(403).json({ error: 'عملاتك ما تكفي للتخطي، تحتاج ' + cost + ' وينقصك ' + (cost - coins) });
+  u.coins = coins - cost; g.skips = (g.skips || 0) + 1; g.last = lv; g.lt = Date.now();
+  if (lv + 1 > (u.cp || 1) || g.sl === (u.cp || 1)) u.cp = Math.min(500, lv + 1);
+  save(); res.json({ cost, nextCost: 200 * (g.skips + 1), user: userInfo(req.key) });
+});
+
 // مكافأة الكومبو: كل 3 كومبوهات بالفردي = 8 مواد بناء (بحد أدنى فاصل زمني وحد أعلى لكل لعبة)
 app.post('/api/bonus', authMw, (req, res) => {
   const g = games.get(String((req.body && req.body.gid) || ''));
@@ -821,7 +834,8 @@ function zPos(s) {
   _zp.x = ZPATH.xs[i] + (ZPATH.xs[j] - ZPATH.xs[i]) * f; _zp.y = ZPATH.ys[i] + (ZPATH.ys[j] - ZPATH.ys[i]) * f;
   return _zp;
 }
-const zLevelN = l => Math.round((l === 5 ? 44 : (31 + 7 * l) * 0.88) * 0.87);   // -12% ثم -13%، والمرحلة 5 أخف
+const ZLN = { 5: 32, 6: 42, 7: 46 };   // المراحل 5-7 أخف بشكل خاص
+const zLevelN = l => ZLN[l] || (l > 7 ? 46 + 5 * (l - 7) : Math.round((31 + 7 * l) * 0.88 * 0.87 * 0.92));
 const zSpeed = l => 20 + 3.5 * Math.min(l, 12);
 const zNCol = l => l < 2 ? 4 : l < 4 ? 5 : 6;
 function zNew(seed, mode) {
