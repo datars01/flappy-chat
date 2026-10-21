@@ -504,6 +504,7 @@
   .page { display: none; position: fixed; inset: 0; z-index: 30; background: var(--bg); flex-direction: column; align-items: center; }
   .page.open { display: flex; }
   .pgHead { width: 100%; max-width: 420px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; box-sizing: border-box; border-bottom: 1px solid var(--line); background: var(--bg); }
+  body.gwall #pg-account .pgBack { display: none; }
   .pgBack { background: var(--card2); color: var(--text); border: 1px solid var(--line); padding: 7px 14px; font-size: 14px; }
   .pgTtl { font-size: 18px; font-weight: 700; }
   .pgBody { width: 100%; max-width: 420px; flex: 1; overflow-y: auto; padding: 10px 12px 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
@@ -837,6 +838,22 @@ const $ = id => document.getElementById(id);
 
 /* ================= الحساب والاتصال بالسيرفر ================= */
 let auth = null; // {token, name, best, games, rank}
+/* ===== الضيف: 5 دقايق لعب ثم لازم حساب ===== */
+const GW = { sec: 0, wall: false, LIMIT: 300 };
+try { GW.sec = Math.min(GW.LIMIT, Number(localStorage.getItem('flappyGuestSec')) || 0); } catch (e) {}
+function gwWall() {
+  if (GW.wall) return; GW.wall = true; document.body.classList.add('gwall');
+  try { setMode('register'); } catch (e) {} openPage('account');
+  authSay('⏰ خلصت الـ5 دقايق للضيف. سوّي حساب جديد حتى تكمل اللعب، والحسابات تحفظ تقدمك ومشترياتك 🎁');
+}
+setInterval(() => {
+  if (auth) { if (GW.wall) { GW.wall = false; document.body.classList.remove('gwall'); } return; }
+  if (document.hidden || document.getElementById('splash')) return;
+  if (GW.wall) { if (curPage !== 'account') openPage('account'); return; }
+  GW.sec++; if (GW.sec % 5 === 0) { try { localStorage.setItem('flappyGuestSec', String(GW.sec)); } catch (e) {} }
+  if (GW.sec === GW.LIMIT - 60) showToast('⏰ باقي دقيقة وتحتاج تسوي حساب لتكمل اللعب');
+  if (GW.sec >= GW.LIMIT) { try { localStorage.setItem('flappyGuestSec', String(GW.sec)); } catch (e) {} gwWall(); }
+}, 1000);
 try {
   const a = JSON.parse(localStorage.getItem('flappyAuth') || 'null');
   if (a && a.token && a.name) auth = { token: a.token, name: a.name, best: 0, games: 0, rank: null };
@@ -3730,6 +3747,7 @@ function renderHome() {
   c.textContent = auth ? '🪙 ' + (auth.coins || 0) + '   🧱 ' + (auth.bricks || 0) : '';
 }
 function openPage(id) {
+  if (GW.wall && !auth) id = 'account';
   const el = $('pg-' + id); if (!el) return;
   if (!navigator.onLine && (id === 'friends' || id === 'lb')) offShow(true);
   if (document.body.classList.contains('full')) exitFull();   // وضع ملء الشاشة كان يخفي الصفحات خلف اللعبة
@@ -3742,7 +3760,7 @@ function openPage(id) {
     if (id === 'house') houseLoad(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
-function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; }
+function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
 function closePage() { if (!curPage) return; let ok = false; try { if (history.state && history.state.pg) { history.back(); ok = true; } } catch (e) {} if (!ok) hidePage(); }
 window.addEventListener('popstate', () => { if (curPage) hidePage(); });
 
