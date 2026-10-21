@@ -2785,8 +2785,28 @@ let lastFlapSfx = 0, noiseBuf = null;
 let musicOn = true; try { musicOn = localStorage.getItem('flappyMusic') !== '0'; } catch (e) {}
 let mus = null;
 const mhz = m => 440 * Math.pow(2, (m - 69) / 12);
-const MCH = [[57, 60, 64, 69], [53, 57, 60, 65], [48, 52, 55, 60], [55, 59, 62, 67]];   // Am F C G
-const MPENT = [69, 72, 74, 76, 79, 81];
+const MSC = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10], lyd: [0, 2, 4, 6, 7, 9, 11], mix: [0, 2, 4, 5, 7, 9, 10], phr: [0, 1, 3, 5, 7, 8, 10] };
+const MARP = [[0, 2, 1, 3, 2, 1, 3, 2], [0, 1, 2, 3, 2, 1, 2, 3], [3, 2, 1, 0, 1, 2, 3, 2], [0, 3, 1, 2, 0, 3, 2, 1], [0, 2, 3, 2, 1, 3, 2, 0]];
+/* نغمة مختلفة لكل مرحلة: مفتاح + مقام + تتابع أوتار + سرعة + نوع الصوت (وتتكرر بعد 12) */
+const MTH = [
+  { r: 57, m: 'min', p: [0, 5, 2, 6], bpm: 84, w: 'triangle', a: 0, lp: 1700 },
+  { r: 60, m: 'maj', p: [0, 4, 5, 3], bpm: 98, w: 'sine', a: 1, lp: 2400 },
+  { r: 62, m: 'dor', p: [0, 3, 0, 4], bpm: 90, w: 'triangle', a: 2, lp: 1900 },
+  { r: 65, m: 'lyd', p: [0, 1, 0, 4], bpm: 76, w: 'sine', a: 3, lp: 2200 },
+  { r: 55, m: 'mix', p: [0, 6, 3, 0], bpm: 104, w: 'square', a: 4, lp: 1300 },
+  { r: 64, m: 'phr', p: [0, 1, 0, 6], bpm: 70, w: 'triangle', a: 0, lp: 1500 },
+  { r: 58, m: 'maj', p: [0, 5, 3, 4], bpm: 108, w: 'triangle', a: 1, lp: 2600 },
+  { r: 62, m: 'min', p: [0, 3, 6, 4], bpm: 88, w: 'sine', a: 2, lp: 1800 },
+  { r: 57, m: 'maj', p: [0, 3, 0, 4], bpm: 116, w: 'square', a: 3, lp: 1500 },
+  { r: 52, m: 'min', p: [0, 5, 3, 4], bpm: 94, w: 'triangle', a: 4, lp: 1700 },
+  { r: 67, m: 'dor', p: [0, 4, 3, 0], bpm: 80, w: 'sine', a: 1, lp: 2100 },
+  { r: 61, m: 'lyd', p: [0, 4, 1, 0], bpm: 100, w: 'triangle', a: 3, lp: 2500 }
+];
+function mTheme(lv) {
+  const th = MTH[(Math.max(1, lv) - 1) % MTH.length];
+  if (!th.ch) { const sc = MSC[th.m], n = d => th.r + sc[d % 7] + 12 * Math.floor(d / 7); th.ch = th.p.map(d => [n(d), n(d + 2), n(d + 4), n(d + 7)]); th.pent = [0, 1, 2, 4, 5].map(d => n(d + 14)); }
+  return th;
+}
 function musicWanted() {
   if (!musicOn || document.hidden || curPage) return false;
   if (gameMode === 'duo') return duo.phase === 'play' || duo.phase === 'count';
@@ -2803,17 +2823,19 @@ function musicTick() {
   if (!mus) {
     if (!want || actx.state !== 'running') return;
     const bus = actx.createGain(), lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; bus.gain.value = 0.0001; bus.connect(lp); lp.connect(actx.destination);
-    mus = { bus, next: actx.currentTime + 0.15, step: 0 };
+    mus = { bus, lp, next: actx.currentTime + 0.15, step: 0, lv: 0 };
   }
   const now = actx.currentTime;
   mus.bus.gain.setTargetAtTime(want ? 0.5 : 0.0001, now, want ? 0.6 : 0.25);
   if (!want) { if (mus.next < now) mus.next = now + 0.1; return; }
-  const E = 60 / 84 / 2;
+  const lv = gameMode === 'duo' ? (duo.lv || 1) : ((Z && Z.level) || 1), th = mTheme(lv);
+  if (mus.lv !== lv) { mus.lv = lv; mus.step = 0; mus.lp.frequency.setTargetAtTime(th.lp, now, 0.3); }
+  const E = 60 / th.bpm / 2, ARP = MARP[th.a];
   while (mus.next < now + 0.7) {
-    const s = mus.step, ch = MCH[Math.floor(s / 8) % 4], i8 = s % 8, t = mus.next;
+    const s = mus.step, ch = th.ch[Math.floor(s / 8) % 4], i8 = s % 8, t = mus.next;
     if (i8 === 0) { mnote('sine', mhz(ch[0] - 12), t, E * 8, 0.07); mnote('triangle', mhz(ch[1]), t, E * 8, 0.018); mnote('triangle', mhz(ch[2]), t, E * 8, 0.018); }
-    const pat = [0, 2, 1, 3, 2, 1, 3, 2][i8]; mnote('triangle', mhz(ch[pat]), t, E * 2.2, 0.035);
-    if ((i8 === 0 || i8 === 4) && Math.random() < 0.55) mnote('sine', mhz(MPENT[Math.floor(Math.random() * MPENT.length)]), t + E * 0.5, E * 3, 0.03);
+    mnote(th.w, mhz(ch[ARP[i8]]), t, E * 2.2, th.w === 'square' ? 0.012 : 0.035);
+    if ((i8 === 0 || i8 === 4) && Math.random() < 0.55) mnote('sine', mhz(th.pent[Math.floor(Math.random() * th.pent.length)]), t + E * 0.5, E * 3, 0.03);
     mus.next += E; mus.step++;
   }
 }
