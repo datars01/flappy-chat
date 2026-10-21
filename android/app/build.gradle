@@ -1,0 +1,22 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.babito.chat'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.babito.chat'
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+    signingConfigs {
+        release {
+            storeFile rootProject.file('babito.jks')
+            storePassword 'babito2026'
+            keyAlias 'babito'
+            keyPassword 'babito2026'
+        }
+    }
+    buildTypes { release { signingConfig signingConfigs.release; minifyEnabled false } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
