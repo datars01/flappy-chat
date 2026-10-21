@@ -3752,7 +3752,7 @@ function hEntries(view, S, all) {
   const out = []; (HPOS[view] || []).forEach((e, i) => {
     const v = hVal(S, e[0]); if (!all && (!v || v[0] === '#')) return;
     const o = hOffOf(e[0]), pw = e[0] === 'pet' && view === 'inside' && hPetW.on && !all;
-    out.push({ slot: e[0], x: pw ? hPetW.x : e[1] + o[0], y: pw ? hPetW.y : e[2] + o[1], s: Math.round(((e[0] === 'pet' && v === '🐠') ? 64 : (e[0] === 'seat' && (v === '🛋️' || v === '🛏️')) ? Math.round(e[3] * 1.22) : e[3]) * hSclOf(e[0])), i });
+    out.push({ slot: e[0], x: pw ? hPetW.x : e[1] + o[0], y: pw ? hPetW.y : e[2] + o[1], s: Math.round(((e[0] === 'pet' && v === '🐠') ? 64 : (e[0] === 'seat' && (v === '🛋️' || v === '🛏️')) ? Math.round(e[3] * 1.2) : e[3]) * hSclOf(e[0])), i });
   }); return out;
 }
 const hRugC = () => { const o = hOffOf('rug'); return [150 + o[0], 214 + o[1]]; };
@@ -3924,16 +3924,16 @@ function hTap(slot, x, y) {
   const rs = hAreas(hView, S)[slot]; if (rs) { const q = rs[0]; hWalkTo(q[0] + q[2] / 2, q[1] + q[3] + 8); }
 }
 /* جلوس احترافي: مقاعد حقيقية (كرسي = مكان، قنفة/سرير = مكانين)، قفزة ناعمة + غبار + صوت، ومكان مشغول يتحدد حسب الأصدقاء */
+const SEAT_G = { '🪑': { w: 0.7, dy: 0.27, xs: [0] }, '🛋️': { w: 1.0, dy: 0.27, xs: [-0.19, 0.19] }, '🛏️': { w: 1.1, dy: 0.3, xs: [-0.06, 0.3] } };
 function hSeatsOf(slot, e) {
-  const W0 = HV[hView].walk[0];
   if (slot === 'seat') {
-    const v = hVal(hSetNow(), 'seat'), y = Math.max(W0, e.y - e.s * 0.1);
-    if (v === '🪑') return [{ slot, i: 0, x: e.x, y }];
-    const o = e.s * (v === '🛏️' ? 0.25 : 0.2); return [{ slot, i: 0, x: e.x - o, y, d: 1 }, { slot, i: 1, x: e.x + o, y, d: -1 }];
+    const g = SEAT_G[hVal(hSetNow(), 'seat')] || SEAT_G['🪑'], y = Math.max(0, e.y - e.s * g.dy), r = Math.min(14, g.xs.length > 1 ? (g.xs[1] - g.xs[0]) * e.s * 0.45 : 14);
+    return g.xs.map((dx, i) => ({ slot, i, x: e.x + dx * e.s, y, ey: e.y, r, d: g.xs.length > 1 ? (i === 0 ? 1 : -1) : undefined }));
   }
-  return [{ slot, i: 0, x: e.x, y: Math.max(W0, slot === 'play' ? e.y - 2 : e.y + 6) }];
+  return [{ slot, i: 0, x: e.x, y: Math.max(HV[hView].walk[0], slot === 'play' ? e.y - 2 : e.y + 6), r: 14 }];
 }
-const hSeatBusy = s => hOthersIn(hView).some(o => o.sit && Math.hypot(o.x - s.x, o.y - s.y) < 14);
+const hSeatBusy = s => hOthersIn(hView).some(o => o.sit && Math.hypot(o.x - s.x, o.y - s.y) < (s.r || 14));
+function hSeatSortY(x, y) { const e = hView === 'inside' && hEntries('inside', hSetNow()).find(q => q.slot === 'seat'); return e && hSeatsOf('seat', e).some(s => Math.hypot(s.x - x, s.y - y) < 7) ? e.y + 0.5 : y + 10; }
 function hSeatFree(slot) { const e = hEntries(hView, hSetNow()).find(q => q.slot === slot); return e ? hSeatsOf(slot, e).filter(s => !hSeatBusy(s)).length : 0; }
 function hDust(x, y) { for (let i = 0; i < 8; i++) hParts.push({ x: x + (Math.random() - .5) * 16, y: y - 1, vx: (Math.random() - .5) * 1.5, vy: -0.25 - Math.random() * 0.45, t: 16 + Math.random() * 12, col: 'rgba(255,255,255,.85)', sz: 1.6 + Math.random() * 2.2 }); }
 function hJump(x1, y1, dur, h, kind) {
@@ -3947,13 +3947,13 @@ function hSitAt(slot, side) {
   if (!free.length) { showToast(side === undefined ? '⛔ المكان مشغول، انتظر صاحبك يقوم' : '⛔ هذا الجانب مشغول' + (all.length > 1 ? '، جرب الجانب الثاني' : '')); return; }
   free.sort((a, b) => Math.hypot(a.x - hChar.x, a.y - hChar.y) - Math.hypot(b.x - hChar.x, b.y - hChar.y));
   const s = free[0]; hChar.seat = s; hChar.sit = false; hChar.sitGoal = true; hChar.after = null;
-  hChar.tx = s.x; hChar.ty = Math.min(HV[hView].walk[1], s.y + 15); sfx('click'); hOvKey = '';
+  hChar.tx = s.x; hChar.ty = Math.min(HV[hView].walk[1], (s.ey || s.y) + 10); sfx('click'); hOvKey = '';
 }
 function hStand(after) {
   if (hChar.jump) return;
   if (!hChar.sit) { hChar.sitGoal = false; hChar.seat = null; hChar.tx = hChar.x; hChar.ty = hChar.y; hOvKey = ''; if (after) hWalkTo(after[0], after[1]); return; }
   const s = hChar.seat; hChar.sit = false; hChar.after = after || null; hOvKey = '';
-  hJump(hChar.x + (s && s.d ? -s.d * 10 : 0), Math.min(HV[hView].walk[1], hChar.y + 16), 18, 9, 'stand');
+  hJump(hChar.x + (s && s.d ? -s.d * 10 : 0), Math.min(HV[hView].walk[1], (s && s.ey ? s.ey + 10 : hChar.y + 16)), 18, 9, 'stand');
 }
 function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.push({ slot, txt, t: 140 }); }
 function hPet() {
@@ -4196,7 +4196,7 @@ function hChar_(c, S) {
   if (sk > 0.9 && hT % 150 < 2) hFloats.push({ x: hChar.x + 10, y: hChar.y - 36, txt: '💤', t: 60 });
   if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + 5 * sk - air * 0.6, true);
 }
-const hSortY = () => (hChar.sit || (hChar.jump && hChar.jump.kind === 'sit')) ? hChar.y + 10 : hChar.y;
+const hSortY = () => (hChar.sit || (hChar.jump && hChar.jump.kind === 'sit')) ? ((hChar.seat && hChar.seat.slot === 'seat') ? hChar.seat.ey + 0.5 : hChar.y + 10) : hChar.y;
 const hOthersIn = view => Object.values(hOthers).filter(o => o.view === view);
 const hPetName = () => hVis ? (hVis.petName || '') : ((petPets.find(p => p.mine) || {}).name || '');
 function hPetTag(c, S, it) {
@@ -4256,13 +4256,40 @@ function drawMouse(c, s, t, o) {
   c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(-1.6, -24.4 + br, 1.4, 0.7, 0, 0, 7); c.fill();
   c.restore();
 }
+/* أثاث الجلوس مرسوم بالكود (نفس الشكل بكل الأجهزة) حتى يطابق مكان الجلوس بالضبط. الأصل (0,0) = منتصف القاعدة على الأرض */
+function drawSeat(c, v, s) {
+  const rr = (x, y, w, h, r, f) => { c.fillStyle = f; c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); c.fill(); };
+  if (v === '🪑') {
+    const w = 0.7 * s, h = s;
+    rr(-w * 0.46, -0.3 * s, 0.08 * s, 0.3 * s, 2, '#7a4a28'); rr(w * 0.38, -0.3 * s, 0.08 * s, 0.3 * s, 2, '#7a4a28');   // أرجل
+    rr(-w * 0.5, -0.98 * s, 0.09 * s, 0.7 * s, 3, '#8a5530'); rr(w * 0.41, -0.98 * s, 0.09 * s, 0.7 * s, 3, '#8a5530');   // أعمدة الظهر
+    rr(-w * 0.45, -0.92 * s, w * 0.9, 0.09 * s, 3, '#a8683a'); rr(-w * 0.45, -0.74 * s, w * 0.9, 0.08 * s, 3, '#a8683a'); rr(-w * 0.45, -0.57 * s, w * 0.9, 0.07 * s, 3, '#a8683a');   // قضبان الظهر
+    rr(-w * 0.55, -0.34 * s, w * 1.1, 0.1 * s, 4, '#c98a52'); rr(-w * 0.55, -0.34 * s, w * 1.1, 0.03 * s, 3, 'rgba(255,255,255,.28)');   // المقعد
+  } else if (v === '🛋️') {
+    const W = s, a = 0.13 * s;
+    rr(-W / 2 + 0.02 * s, -0.08 * s, 0.07 * s, 0.08 * s, 2, '#173f66'); rr(W / 2 - 0.09 * s, -0.08 * s, 0.07 * s, 0.08 * s, 2, '#173f66');
+    rr(-W / 2, -0.7 * s, W, 0.46 * s, 0.08 * s, '#1d6ab0');                                   // ظهر القنفة
+    rr(-W / 2, -0.5 * s, a, 0.5 * s, 0.05 * s, '#2a84d2'); rr(W / 2 - a, -0.5 * s, a, 0.5 * s, 0.05 * s, '#2a84d2');   // المساند
+    rr(-W / 2 + a, -0.3 * s, (W - 2 * a) / 2 - 0.01 * s, 0.16 * s, 0.05 * s, '#3b9be6'); rr(0.01 * s, -0.3 * s, (W - 2 * a) / 2 - 0.01 * s, 0.16 * s, 0.05 * s, '#3b9be6');   // وسائد الجلوس
+    rr(-W / 2 + a, -0.15 * s, W - 2 * a, 0.13 * s, 0.03 * s, '#2a84d2');                        // قاعدة أمامية
+    c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(-W / 2 + a + 2, -0.3 * s, (W - 2 * a) - 4, 2);
+  } else if (v === '🛏️') {
+    const W = 1.1 * s;
+    rr(-W / 2, -0.66 * s, 0.07 * s, 0.66 * s, 3, '#7a4a2a'); rr(W / 2 - 0.05 * s, -0.36 * s, 0.05 * s, 0.36 * s, 3, '#7a4a2a');   // لوح الرأس والقدم
+    rr(-W / 2 + 0.03 * s, -0.3 * s, W - 0.04 * s, 0.2 * s, 0.06 * s, '#f4efe6');                // المرتبة
+    rr(-W / 2 + 0.09 * s, -0.4 * s, 0.26 * s, 0.14 * s, 0.06 * s, '#ffffff');                   // الوسادة
+    rr(W / 2 - 0.4 * s, -0.31 * s, 0.38 * s, 0.22 * s, 0.05 * s, '#5a8fd6');                     // البطانية
+    rr(-W / 2 + 0.03 * s, -0.12 * s, W - 0.04 * s, 0.07 * s, 2, '#8a5a2e');
+    rr(-W / 2 + 0.06 * s, -0.06 * s, 0.06 * s, 0.06 * s, 1, '#6b3f20'); rr(W / 2 - 0.12 * s, -0.06 * s, 0.06 * s, 0.06 * s, 1, '#6b3f20');
+  }
+}
 function hItem(c, S, slot, x, y, size, ex) {
   const v = hVal(S, slot); if (!v || v[0] === '#') return; ex = ex || {};
   const k = Math.min(1, (hT - (hPlaced[slot] === undefined ? -99 : hPlaced[slot])) / 22), e = k >= 1 ? 1 : 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
   const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1);
   c.save(); c.globalAlpha = (prev ? 0.7 : 1) * Math.min(1, k * 3);
   c.fillStyle = 'rgba(0,0,0,' + (ex.lift ? 0.18 : 0.25) + ')'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
-  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc * (ex.flip === 1 ? -1 : 1), sc); if (v === '🐭') drawMouse(c, size * 1.25, hT); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
+  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc * (ex.flip === 1 ? -1 : 1), sc); if (v === '🐭') drawMouse(c, size * 1.25, hT); else if (slot === 'seat' && SEAT_G[v]) drawSeat(c, v, size); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
   if (prev || ex.lift) { c.setLineDash([4, 3]); c.strokeStyle = ex.lift ? '#fff' : '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-size * 0.55, -size * 0.9, size * 1.1, size * 1.0); }
   c.restore();
 }
@@ -4398,7 +4425,7 @@ function hInterior(c, S) {
   const rc = hRugC();
   if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(rc[0], rc[1], 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
   const list = hEntries('inside', S).map(e => [e.slot, e.x, e.y, e.s, 0]);
-  hOthersIn('inside').forEach(o => list.push(['_u' + o.name, o.x, o.sit ? o.y + 10 : o.y, 0, 0]));
+  hOthersIn('inside').forEach(o => list.push(['_u' + o.name, o.x, o.sit ? hSeatSortY(o.x, o.y) : o.y, 0, 0]));
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
   list.forEach(it => { if (!charDone && hSortY() < it[2]) { hChar_(c, S); charDone = true; } String(it[0]).slice(0, 2) === '_u' ? hAvatar(c, hOthers[it[0].slice(2)]) : (it[0] === 'pet' && hVal(S, 'pet') === '🐠') ? (c.save(), c.translate(it[1], it[2]), c.scale(hSclOf('pet'), hSclOf('pet')), c.translate(-it[1], -it[2]), hTank(c, it[1], it[2], hEx('pet'), S), c.restore()) : hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); if (it[0] === 'pet') hPetTag(c, S, it); });
   if (!charDone) hChar_(c, S);
