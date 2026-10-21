@@ -1346,6 +1346,16 @@ function zRun(ch, i) {
   while (hi < ch.length - 1 && zLinked(ch, hi) && ch[hi + 1].c === c) hi++;
   return { lo, hi };
 }
+/* 3 ضربات خلال أقل من ثانيتين = انفجار يشيل 6 كرات قريبة */
+function zQuickBlast(g, bx, by) {
+  const ch = g.chain; if (!ch.length) return;
+  const order = ch.map((b, i) => { const q = zPos(b.s); return [i, Math.hypot(q.x - bx, q.y - by)]; }).sort((a, b) => a[1] - b[1]).slice(0, 6);
+  const idx = order.map(o => o[0]), col = ch[idx[0]].c, cb = g.combo;
+  FX.rings.push({ x: bx, y: by, r: 6, max: 110, t: 0, col: '#ffe066' }); FX.rings.push({ x: bx, y: by, r: 2, max: 70, t: 0, col: '#ff5f6d' });
+  FX.flash = 0.4; FX.flashC = '255,210,90'; FX.shake = Math.max(FX.shake, 11); FX.banner = '💥 ٣ ضربات سريعة!'; FX.bannerT = 80;
+  zRemoveSet(g, idx, col); g.combo = cb; sfx('bomb'); sfx('magic');
+  g.floats.push({ x: bx, y: by - 34, text: 'انفجار! 💥', t: 60, c: '#ffe066' });
+}
 function zPop(g, lo, hi, join) {
   const ch = g.chain, cnt = hi - lo + 1;
   let pts = cnt + (cnt > 3 ? cnt - 3 : 0);
@@ -1363,6 +1373,8 @@ function zPop(g, lo, hi, join) {
   fxPop(mx, my, cnt, g.combo, join, g.popC); sfx('pop', { n: cnt, cb: g.combo, j: join });
   g.floats.push({ x: mx, y: my - 10, text: '+' + pts, t: 46, c: '#fff' });
   if (join && g.combo > 0) g.floats.push({ x: mx, y: my - 28, text: 'كومبو ×' + (g.combo + 1), t: 56, c: '#ffd166' });
+  g.hitT = g.hitT || []; g.hitT.push(g.tick || 0); while (g.hitT.length > 3) g.hitT.shift();
+  if (g.hitT.length === 3 && g.hitT[2] - g.hitT[0] <= 120) { g.hitT = []; zQuickBlast(g, mx, my); }
 }
 function zInsert(g, sh, hit) {
   const ch = g.chain, b = ch[hit], p = zPos(b.s), px = p.x, py = p.y;
