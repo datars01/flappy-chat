@@ -1098,7 +1098,7 @@ function hvOnMsg(ws, d) {
     if (set.size >= 8) return send(ws, { t: 'hv_err', error: 'البيت ممتلئ (8 زوار)' });
     ws.hv = { owner: ok, view: 'home', x: 160, y: 224, dir: 1, sit: false, t: 0, st: 0 };
     const members = [...set].filter(w => w.readyState === 1).map(hvPubM); set.add(ws);
-    send(ws, { t: 'hv_state', owner: db.users[ok].name, members });
+    const ou = db.users[ok]; send(ws, { t: 'hv_state', owner: ou.name, members, light: ou.hlight !== false, log: (ou.hlog || []).slice(-50) });
     hvBc(ok, { t: 'hv_join', m: hvPubM(ws) }, ws);
     if (ok !== ws.key) pushTo(ok, { t: 'hv_visit', name: me.name });
   } else if (d.t === 'hv_pos') {
@@ -1111,6 +1111,16 @@ function hvOnMsg(ws, d) {
     const kind = d.kind === 'dog' || d.kind === 'cat' ? d.kind : 'fish';
     const txt = kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + me.name + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + me.name + '!' : 'بلوب بلوب 🫧 أهلاً ' + me.name + '!';
     hvBc(h.owner, { t: 'hv_say', n: me.name, slot: 'pet', kind, txt }, ws);
+  } else if (d.t === 'hv_chat') {   // شات داخل البيت (يطلع فوق الراس + سجل محفوظ لصاحب البيت)
+    const h = ws.hv; if (!h || now - (h.ct || 0) < 600) return; h.ct = now;
+    const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return;
+    const ou = db.users[h.owner]; ou.hlog = Array.isArray(ou.hlog) ? ou.hlog : []; const m = { n: me.name, txt, ts: now };
+    ou.hlog.push(m); while (ou.hlog.length > 100) ou.hlog.shift(); save();
+    hvBc(h.owner, { t: 'hv_chat', m });
+  } else if (d.t === 'hv_light') {   // الضوء مشترك: أي واحد بالبيت يطفي/يشغل والكل يشوف
+    const h = ws.hv; if (!h || now - (h.lt || 0) < 400) return; h.lt = now;
+    const ou = db.users[h.owner]; ou.hlight = !!d.on; save();
+    hvBc(h.owner, { t: 'hv_light', on: ou.hlight, n: me.name });
   } else if (d.t === 'hv_leave') hvLeave(ws);
 }
 function onMsg(ws, d) {
