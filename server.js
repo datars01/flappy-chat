@@ -252,7 +252,7 @@ const userInfo = key => {
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
-    bricks: u.bricks || 0, zones: u.zones || 1, cp: u.cp || 1, house: houseOf(u),
+    bricks: u.bricks || 0, zones: u.zones || 1, cp: u.cp || 1, house: houseOf(u), likes: (u.hlikes || []).length,
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
     ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
     ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
@@ -458,6 +458,25 @@ app.post('/api/house/buy', authMw, (req, res) => {
   save(); res.json({ user: userInfo(req.key) });
 });
 // حفظ أماكن الأغراض (إزاحة عن الترتيب التلقائي)؛ القيمة null ترجع الغرض لمكانه الأصلي
+// بيت صديق (للأصدقاء فقط) مع الإعجابات
+app.get('/api/house/of', authMw, (req, res) => {
+  let nm = ''; try { nm = new URL(req.url, 'http://x').searchParams.get('name') || ''; } catch (e) {}
+  const k = keyOfName(nm); if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيت البيت' });
+  if (k !== req.key && !mutual(req.key, k)) return res.status(403).json({ error: 'بيوت الأصدقاء فقط' });
+  const u = db.users[k], h = houseOf(u), hl = Array.isArray(u.hlikes) ? u.hlikes : [];
+  res.json({ name: u.name, skin: skinOf(k), house: { set: h.set, pos: h.pos }, likes: hl.length, liked: hl.includes(req.key), self: k === req.key });
+});
+// إعجاب ❤️ ببيت صديق (مرة لكل شخص، والضغط ثاني مرة يلغيه)
+app.post('/api/house/like', authMw, (req, res) => {
+  const k = keyOfName(req.body && req.body.name); if (!own(db.users, k)) return res.status(404).json({ error: 'ما لقيت البيت' });
+  if (k === req.key) return res.status(400).json({ error: 'ما تقدر تعجب ببيتك' });
+  if (!mutual(req.key, k)) return res.status(403).json({ error: 'للأصدقاء فقط' });
+  const u = db.users[k]; u.hlikes = Array.isArray(u.hlikes) ? u.hlikes : []; const i = u.hlikes.indexOf(req.key), on = i < 0;
+  if (on) u.hlikes.push(req.key); else u.hlikes.splice(i, 1); save();
+  const msg = { t: 'hv_like', n: db.users[req.key].name, likes: u.hlikes.length, on }; hvBc(k, msg);
+  const set = hvRooms.get(k); if (!set || ![...set].some(w => w.key === k)) pushTo(k, msg);
+  res.json({ likes: u.hlikes.length, liked: on });
+});
 app.post('/api/house/pos', authMw, (req, res) => {
   const u = db.users[req.key], h = houseOf(u), inp = (req.body && req.body.pos) || {};
   if (typeof inp !== 'object') return res.status(400).json({ error: 'بيانات غلط' });
@@ -1059,8 +1078,44 @@ function leave(ws) {
   if (![...set].some(w => w.key === ws.key)) bc(code, { t: 'sys', text: db.users[ws.key].name + ' طلع من الغرفة' });
 }
 
+/* ============ زيارة البيوت (حضور حي + إعجاب) ============ */
+const hvRooms = new Map();   // مفتاح صاحب البيت -> Set(ws)
+const HV_VIEWS = ['home', 'inside', 'garden'];
+function hvPubM(w) { const u = db.users[w.key], h = w.hv; return { n: u.name, skin: skinOf(w.key), view: h.view, x: h.x, y: h.y, dir: h.dir, sit: h.sit }; }
+function hvBc(owner, msg, except) { const set = hvRooms.get(owner); if (!set) return; const str = JSON.stringify(msg); for (const w of set) if (w !== except && w.readyState === 1) w.send(str); }
+function hvLeave(ws) {
+  if (!ws.hv) return; const o = ws.hv.owner, set = hvRooms.get(o), u = db.users[ws.key]; ws.hv = null;
+  if (set) { set.delete(ws); if (!set.size) hvRooms.delete(o); else hvBc(o, { t: 'hv_leave', n: u && u.name }); }
+}
+function hvOnMsg(ws, d) {
+  const me = db.users[ws.key]; if (!me) return; const now = Date.now();
+  if (d.t === 'hv_join') {
+    const ok = keyOfName(d.owner);
+    if (!own(db.users, ok)) return send(ws, { t: 'hv_err', error: 'ما لقيت البيت' });
+    if (ok !== ws.key && !mutual(ws.key, ok)) return send(ws, { t: 'hv_err', error: 'البيوت للأصدقاء فقط' });
+    hvLeave(ws);
+    let set = hvRooms.get(ok); if (!set) hvRooms.set(ok, set = new Set());
+    if (set.size >= 8) return send(ws, { t: 'hv_err', error: 'البيت ممتلئ (8 زوار)' });
+    ws.hv = { owner: ok, view: 'home', x: 160, y: 224, dir: 1, sit: false, t: 0, st: 0 };
+    const members = [...set].filter(w => w.readyState === 1).map(hvPubM); set.add(ws);
+    send(ws, { t: 'hv_state', owner: db.users[ok].name, members });
+    hvBc(ok, { t: 'hv_join', m: hvPubM(ws) }, ws);
+    if (ok !== ws.key) pushTo(ok, { t: 'hv_visit', name: me.name });
+  } else if (d.t === 'hv_pos') {
+    const h = ws.hv; if (!h || now - h.t < 90) return; h.t = now;
+    const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    h.view = HV_VIEWS.includes(d.view) ? d.view : 'home'; h.x = Math.max(0, Math.min(320, x)); h.y = Math.max(0, Math.min(250, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    hvBc(h.owner, { t: 'hv_pos', n: me.name, view: h.view, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
+  } else if (d.t === 'hv_say') {
+    const h = ws.hv; if (!h || now - h.st < 800) return; h.st = now;
+    const kind = d.kind === 'dog' || d.kind === 'cat' ? d.kind : 'fish';
+    const txt = kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + me.name + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + me.name + '!' : 'بلوب بلوب 🫧 أهلاً ' + me.name + '!';
+    hvBc(h.owner, { t: 'hv_say', n: me.name, slot: 'pet', kind, txt }, ws);
+  } else if (d.t === 'hv_leave') hvLeave(ws);
+}
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
+  if (typeof d.t === 'string' && d.t.startsWith('hv_')) return hvOnMsg(ws, d);
   if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
@@ -1205,7 +1260,7 @@ wss.on('connection', (ws, req) => {
   if (!isOnline(key, ws)) presenceChange(key, true);
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => { leave(ws); if (!isOnline(ws.key, ws)) presenceChange(ws.key, false); });
+  ws.on('close', () => { hvLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) presenceChange(ws.key, false); });
   ws.on('error', () => {});
 });
 setInterval(() => {

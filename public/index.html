@@ -400,6 +400,12 @@
   #hStage.full #houseCv { border-radius: 0; border: 0; }
   #hStage.full #hFsTabs { display: flex; flex-direction: column; gap: 6px; position: absolute; top: 52px; left: 6px; }
   .hTools { display: flex; gap: 6px; }
+  .hVisBar { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 12px; background: rgba(255,120,160,.12); border: 1px solid rgba(255,120,160,.35); font-size: 13px; }
+  .hVisBar .row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .hVisBar .who { font-size: 12px; color: var(--muted); }
+  .hVisBar button { width: auto; padding: 6px 12px; font-size: 13px; flex: none; }
+  .hVisBar button.on { background: #ff5a82; color: #fff; }
+  #pg-house.vis #hSlots, #pg-house.vis #hOpts, #pg-house.vis #hBuy, #pg-house.vis .hTools, #pg-house.vis .help { display: none; }
   .hTools button { flex: 1; }
   .hSlot { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); }
   .hSlot .hn { font-weight: 700; font-size: 13px; }
@@ -590,6 +596,7 @@
 <div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
   <div class="card">
     <div class="lbHead"><span id="houseTtl">🏠 بيتك</span><span id="brickBal" class="coinBal">🧱 0</span></div>
+    <div id="hVisBar" class="hVisBar" hidden></div>
     <div id="hStage"><div id="hBox">
       <canvas id="houseCv" width="640" height="500"></canvas>
       <div id="hOv">
@@ -3233,7 +3240,7 @@ function connectPresence() {
   let sock;
   try { sock = new WebSocket(wsUrl()); } catch (e) { return; }
   fws = sock;
-  sock.onopen = () => { fRetry = 0; loadFriends(); };
+  sock.onopen = () => { fRetry = 0; loadFriends(); if (hvOn) hvJoin(); };
   sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onFriendMsg(d); };
   sock.onclose = () => {
     if (fws !== sock) return;
@@ -3250,7 +3257,50 @@ function onFriendMsg(d) {
     const f = fData.friends.find(x => x.name.toLowerCase() === String(d.name).toLowerCase());
     if (f) { f.online = !!d.online; f.lastSeen = d.lastSeen || f.lastSeen; if (!d.online) f.room = ''; renderFriends(); if (dmWith && dmWith.toLowerCase() === f.name.toLowerCase()) dmHeader(f); }
   } else if (d.t === 'dm') onDmPush(d);
+  else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
 }
+/* ---- زيارة البيوت: حضور حي ---- */
+function hvSend(o) { if (fws && fws.readyState === 1) { fws.send(JSON.stringify(o)); return true; } return false; }
+function hvJoin() {
+  if (!auth) return; const owner = hVis ? hVis.name : auth.name; hvOn = true; hLastSent = ''; hOthers = {};
+  if (!fws || fws.readyState > 1) presenceSync(); else hvSend({ t: 'hv_join', owner });
+  hRenderVis();
+}
+function hvStop() { hvSend({ t: 'hv_leave' }); hvOn = false; hOthers = {}; hVis = null; hRenderVis(); }
+function hvTick() {
+  if (!hvOn) return; const k = hView + '|' + Math.round(hChar.x) + '|' + Math.round(hChar.y) + '|' + hChar.dir + '|' + (hChar.sit ? 1 : 0);
+  if (k === hLastSent || hT - hLastSend < 6) return;
+  if (hvSend({ t: 'hv_pos', view: hView, x: Math.round(hChar.x * 10) / 10, y: Math.round(hChar.y * 10) / 10, dir: hChar.dir, sit: !!(hChar.sit && Math.hypot(hChar.tx - hChar.x, hChar.ty - hChar.y) < 2) })) { hLastSent = k; hLastSend = hT; }
+}
+function hvPut(m) { hOthers[m.n] = { name: m.n, skin: m.skin, view: m.view, x: m.x, y: m.y, tx: m.x, ty: m.y, dir: m.dir || 1, sit: !!m.sit }; }
+function hvHearts() { for (let i = 0; i < 12; i++) hFloats.push({ x: 30 + Math.random() * 260, y: 190 + Math.random() * 50, t: 70 + i * 4, txt: i % 3 ? '❤️' : '💕' }); }
+function hvMsg(d) {
+  if (d.t === 'hv_state') { hOthers = {}; (d.members || []).forEach(hvPut); hRenderVis(); }
+  else if (d.t === 'hv_join') { hvPut(d.m); hRenderVis(); showToast('👋 ' + d.m.n + ' دخل البيت'); sfx('door'); }
+  else if (d.t === 'hv_leave') { delete hOthers[d.n]; hRenderVis(); }
+  else if (d.t === 'hv_pos') { const o = hOthers[d.n]; if (!o) { hvPut(d); return; } if (o.view !== d.view) { o.x = d.x; o.y = d.y; } o.view = d.view; o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; }
+  else if (d.t === 'hv_say') { if (hView === 'inside') { hSay('pet', d.txt); sfx('pet', { t: d.kind }); hPetT = 30; } }
+  else if (d.t === 'hv_like') { if (hVis) hVis.likes = d.likes; else if (auth) auth.likes = d.likes; if (d.on) { hvHearts(); showToast('❤️ ' + d.n + ' أعجبه البيت'); } hRenderVis(); }
+  else if (d.t === 'hv_visit') showToast('👋 ' + d.name + ' زار بيتك!');
+  else if (d.t === 'hv_err') showToast('⚠️ ' + d.error);
+}
+async function hLike() {
+  if (!hVis) return;
+  try { const r = await api('/api/house/like', { method: 'POST', body: { name: hVis.name } }); hVis.likes = r.likes; hVis.liked = r.liked; if (r.liked) { hvHearts(); sfx('magic'); } hRenderVis(); }
+  catch (e) { showToast('⚠️ ' + e.message); }
+}
+function hRenderVis() {
+  const el = $('hVisBar'); if (!el) return; el.innerHTML = '';
+  const others = Object.values(hOthers), vl = { home: 'برّه', inside: 'داخل البيت', garden: 'بالحديقة' };
+  const likes = hVis ? hVis.likes : (auth && auth.likes) || 0;
+  if (!hVis && !others.length && !likes) { el.hidden = true; return; } el.hidden = false;
+  const r1 = document.createElement('div'); r1.className = 'row1';
+  const t = document.createElement('span'); t.textContent = hVis ? '🏠 تزور بيت ' + hVis.name : '🏠 بيتك' + (likes ? ' • ❤️ ' + likes + ' إعجاب' : ''); r1.appendChild(t);
+  if (hVis) { const b = document.createElement('button'); b.type = 'button'; b.className = hVis.liked ? 'on' : ''; b.textContent = (hVis.liked ? '❤️ ' : '🤍 ') + hVis.likes + (hVis.liked ? '' : ' أعجبني'); b.onclick = hLike; r1.appendChild(b); }
+  el.appendChild(r1);
+  const w = document.createElement('div'); w.className = 'who'; w.textContent = others.length ? '👥 معك بالبيت: ' + others.map(o => o.name + ' (' + vl[o.view] + ')').join('، ') : (hVis ? 'ما اكو أحد غيرك بالبيت حالياً' : ''); if (w.textContent) el.appendChild(w);
+}
+function visitHouse(name) { hTarget = name; openPage('house'); }
 async function loadFriends() {
   if (!auth) return;
   try { fData = await api('/api/friends'); renderFriends(); }
@@ -3321,7 +3371,8 @@ function renderFriends() {
       if (frArm !== f.name) { frArm = f.name; clearTimeout(frArmT); frArmT = setTimeout(() => { frArm = null; renderFriends(); }, 3000); renderFriends(); return; }
       frArm = null; clearTimeout(frArmT); frAct('/api/friend/remove', f.name, 'انحذف من الأصدقاء');
     };
-    r.append(m, x); L.appendChild(r);
+    const hb = frMk('button', 'ghost', '🏠'); hb.type = 'button'; hb.title = 'زيارة بيته'; hb.onclick = () => visitHouse(f.name);
+    r.append(hb, m, x); L.appendChild(r);
   });
   const b = $('frBadge'); const n = total + fData.inc.length;
   b.textContent = String(n); b.style.display = n ? '' : 'none';
@@ -3475,6 +3526,7 @@ window.addEventListener('popstate', () => { if (curPage) hidePage(); });
 var houseCat = null, hMapC = null, hView = 'home', hSel = 'home', hPrev = null, hT = 0, hRaf = 0, hFade = 0, hBuild = 0, hPlaced = {}, hParts = [];
 var hChar = { x: 160, y: 222, tx: 160, ty: 222, dir: 1 };
 var hLight = true; try { hLight = localStorage.getItem('hLight') !== '0'; } catch (e) {}
+var hVis = null, hTarget = null, hOthers = {}, hvOn = false, hLastSend = 0, hLastSent = '';
 var hFull = false, hDown = null, hHold = false, hGoing = false, hDoorT = 0, hPetT = 0, hBubs = [], hFloats = [], hLastBark = -9999, hOvKey = '', hDk = null, hKeys = {};
 const HV = {
   home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [208, 247], start: [160, 224] },
@@ -3484,8 +3536,9 @@ const HV = {
 const HDEF = { home: 'h1', walls: '#f4efe6', roof: '#c9483c', door: '#7a4a2a', paper: '#f3e6cf', floor: '#b98a5a' };
 const HTIERS = ['كوخ', 'بيت صغير', 'بيت واسع', 'فيلا'];
 const hmap = () => hMapC || (hMapC = (() => { const m = {}; (houseCat || []).forEach(sl => sl.items.forEach(i => { m[i.id] = i; })); return m; })());
+const hHouse = () => hVis ? hVis.house : ((auth && auth.house) || {});
 function hSetNow() {
-  const s = Object.assign({}, auth && auth.house && auth.house.set || {});
+  const s = Object.assign({}, hHouse().set || {});
   if (hPrev) { const it = hmap()[hPrev]; if (it) s[it.slot] = hPrev; }
   return s;
 }
@@ -3505,7 +3558,7 @@ const HPOS = {
 };
 const HLIM = { inside: [20, 300, 100, 247], garden: [20, 300, 150, 247] };
 const HMOVE = { inside: ['tv', 'shelf', 'plant', 'lamp', 'seat', 'pet', 'rug'], garden: ['tree', 'feature', 'play', 'car', 'flowers', 'lantern'] };
-function hOffOf(slot) { const p = auth && auth.house && auth.house.pos; return (p && p[slot]) || [0, 0]; }
+function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0]; }
 function hEntries(view, S, all) {
   const out = []; (HPOS[view] || []).forEach((e, i) => {
     const v = hVal(S, e[0]); if (!all && (!v || v[0] === '#')) return;
@@ -3531,12 +3584,19 @@ function hAreas(view, S) {
 function hSlotName(slot) { const sl = (houseCat || []).find(x => x.slot === slot); return sl ? sl.name : slot; }
 async function houseLoad() {
   if (auth) { try { const r = await api('/api/house'); houseCat = r.catalog; hMapC = null; syncUser(r.user); renderHome(); } catch (e) { showToast('⚠️ ما قدرت أحمّل البيت'); } }
-  hSetView(hView, true); hStart();
+  hVis = null; hOthers = {};
+  if (hTarget) {
+    const nm = hTarget; hTarget = null;
+    try { const r = await api('/api/house/of?name=' + encodeURIComponent(nm)); if (!r.self) hVis = { name: r.name, skin: r.skin, house: r.house, likes: r.likes, liked: r.liked }; }
+    catch (e) { showToast('⚠️ ' + e.message); }
+    hView = 'home'; hChar.x = hChar.tx = HV.home.start[0]; hChar.y = hChar.ty = HV.home.start[1]; hChar.sit = false; hChar.sitGoal = false; hPrev = null; hFade = 1;
+  }
+  hSetView(hView, true); hStart(); hvJoin();
 }
 function hStart() { if (!hRaf) hRaf = requestAnimationFrame(hLoop); }
-function hLoop() { if (curPage !== 'house') { hRaf = 0; if (hFull) hSetFull(false); return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
+function hLoop() { if (curPage !== 'house') { hRaf = 0; if (hFull) hSetFull(false); if (hvOn) hvStop(); return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
 function hSetView(v, keep, pos) {
-  if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; }
+  if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; hChar.sit = false; hChar.sitGoal = false; }
   hView = v; if (!keep || !HV[v].slots.includes(hSel)) hSel = HV[v].first; hPrev = null;
   document.querySelectorAll('#hTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   hRenderUi(); hOvKey = ''; hUpdateOv();
@@ -3546,6 +3606,8 @@ function hRenderUi() {
   const bal = $('brickBal'); if (bal) bal.textContent = auth ? '🧱 ' + (auth.bricks || 0) : '🧱 —';
   const S0 = auth && auth.house && auth.house.set || {}; const tn = $('houseTtl'); if (tn) tn.textContent = '🏠 ' + HTIERS[hTier(S0)];
   const SL = $('hSlots'), OP = $('hOpts'); if (!SL || !OP) return; SL.innerHTML = ''; OP.innerHTML = '';
+  $('pg-house').classList.toggle('vis', !!hVis); hRenderVis();
+  if (hVis) { if (tn) tn.textContent = '🏠 بيت ' + hVis.name + ' • ' + HTIERS[hTier(hSetNow())]; $('hBuy').innerHTML = ''; return; }
   if (!auth) { OP.innerHTML = '<div class="help">✍️ سجّل دخول حتى تبني بيتك وتكسب مواد البناء 🧱</div>'; hRenderBuy(); return; }
   if (!houseCat) { OP.innerHTML = '<div class="help">⏳ جاري التحميل...</div>'; hRenderBuy(); return; }
   const set = auth.house && auth.house.set || {}, own = new Set(auth.house && auth.house.own || []), hm = hmap();
@@ -3605,7 +3667,7 @@ function hBurstSlot(slot) {
 }
 function hBurst(x, y, n) { const cols = ['#ffd166', '#fff', '#6ee7ff', '#9ff3b5', '#ff9bd0']; for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 0.8 + Math.random() * 2.6; hParts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, t: 30 + Math.random() * 20, col: cols[i % cols.length], sz: 1.5 + Math.random() * 2.5 }); } }
 /* ---- لمس المشهد: مشي حر + سحب الأغراض + تفاعل ---- */
-function hWalkTo(x, y) { const W0 = HV[hView].walk; hChar.tx = Math.max(14, Math.min(306, x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
+function hWalkTo(x, y) { hChar.sit = false; hChar.sitGoal = false; const W0 = HV[hView].walk; hChar.tx = Math.max(14, Math.min(306, x)); hChar.ty = Math.max(W0[0], Math.min(W0[1], y)); }
 function hHit(x, y, S) {
   const inR = r => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
   if (hView === 'home') {
@@ -3614,8 +3676,8 @@ function hHit(x, y, S) {
     return null;
   }
   const ents = hEntries(hView, S, true).sort((a, b) => b.y - a.y);
-  for (const e of ents) { if (inR(hRectOf(e))) return { slot: e.slot, drag: !!(auth && hVal(S, e.slot) && hVal(S, e.slot)[0] !== '#') }; }
-  if (hView === 'inside') { const r = hRugC(); if (hVal(S, 'rug') && inR([r[0] - 86, r[1] - 12, 172, 26])) return { slot: 'rug', drag: !!auth }; }
+  for (const e of ents) { if (inR(hRectOf(e))) return { slot: e.slot, drag: !!(auth && !hVis && hVal(S, e.slot) && hVal(S, e.slot)[0] !== '#') }; }
+  if (hView === 'inside') { const r = hRugC(); if (hVal(S, 'rug') && inR([r[0] - 86, r[1] - 12, 172, 26])) return { slot: 'rug', drag: !!(auth && !hVis) }; }
   const A = hAreas(hView, S); for (const slot of hView === 'inside' ? ['rug', 'floor', 'paper'] : ['fence']) { const rs = A[slot]; if (rs && rs.some(inR)) return { slot, drag: false }; }
   return null;
 }
@@ -3623,13 +3685,14 @@ function hTap(slot, x, y) {
   const S = hSetNow(); hSelect(slot);
   const rs = hAreas(hView, S)[slot]; if (rs) { const q = rs[0]; hWalkTo(q[0] + q[2] / 2, q[1] + q[3] + 8); }
   if (hView === 'inside' && slot === 'pet' && hVal(S, 'pet')) hPet();
+  if (hView === 'inside' && slot === 'seat' && hVal(S, 'seat')) { const e = hEntries('inside', S).find(q => q.slot === 'seat'); if (e) { hChar.tx = e.x; hChar.ty = Math.max(HV.inside.walk[0], e.y - 5); hChar.sitGoal = true; showToast('🪑 جلست'); } }
 }
 function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.push({ slot, txt, t: 140 }); }
 function hPet() {
   const S = hSetNow(), v = hVal(S, 'pet'); if (!v) return;
   const e = hEntries('inside', S).find(q => q.slot === 'pet'); if (!e) return;
   const nm = (auth && auth.name) || 'صديقي', kind = v === '🐕' ? 'dog' : v === '🐈' ? 'cat' : 'fish';
-  sfx('pet', { t: kind }); hPetT = 40;
+  sfx('pet', { t: kind }); hPetT = 40; hvSend({ t: 'hv_say', kind });
   for (let i = 0; i < 4; i++) hFloats.push({ x: e.x + (Math.random() - 0.5) * 24, y: e.y - e.s * 0.8 - i * 4, t: 55 + i * 6, txt: i % 2 ? '💕' : '❤️' });
   hSay('pet', kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + nm + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + nm + '!' : 'بلوب بلوب 🫧 أهلاً ' + nm + '!');
   try { if (sfxOn && 'speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('أهلاً ' + nm); u.lang = 'ar'; u.rate = 1.05; u.volume = 0.8; speechSynthesis.speak(u); } } catch (er) {}
@@ -3802,9 +3865,26 @@ function hExterior(c, S, small) {
 function hChar_(c, S) {
   const W0 = HV[hView].walk; const dx = hChar.tx - hChar.x, dy = hChar.ty - hChar.y, d = Math.hypot(dx, dy); let mv = false;
   if (d > 1.6) { const st = Math.min(d, 2.3); hChar.x += dx / d * st; hChar.y += dy / d * st; if (Math.abs(dx) > 0.5) hChar.dir = dx > 0 ? 1 : -1; mv = true; }
-  const hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : Math.sin(hT / 24) * 0.8;
+  else if (hChar.sitGoal && !hChar.sit) hChar.sit = true;
+  const hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : hChar.sit ? 0 : Math.sin(hT / 24) * 0.8, sit = hChar.sit && !mv;
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(hChar.x, hChar.y + 1, 13, 4, 0, 0, 7); c.fill();
-  c.save(); c.translate(hChar.x, hChar.y - 13 - hop); c.scale(0.8 * hChar.dir, 0.8); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
+  c.save(); c.translate(hChar.x, hChar.y - 13 - hop + (sit ? 4 : 0)); c.scale(0.8 * hChar.dir, 0.8 * (sit ? 0.94 : 1)); drawBirdSkin(c, 0, 0, 0, curSkin(), hT / 2); c.restore();
+  if (Object.keys(hOthers).length) hNameTag(c, (auth && auth.name) || 'أنت', hChar.x, hChar.y - 40 + (sit ? 4 : 0), true);
+}
+const hSortY = () => hChar.sit ? hChar.y + 10 : hChar.y;
+const hOthersIn = view => Object.values(hOthers).filter(o => o.view === view);
+function hNameTag(c, txt, x, y, me) {
+  c.save(); c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(txt).width + 12;
+  c.fillStyle = me ? 'rgba(255,209,102,.9)' : 'rgba(0,0,0,.6)'; c.beginPath(); if (c.roundRect) c.roundRect(x - w / 2, y, w, 13, 6); else c.rect(x - w / 2, y, w, 13); c.fill();
+  c.fillStyle = me ? '#3a2a00' : '#fff'; c.fillText(txt, x, y + 10); c.restore();
+}
+function hAvatar(c, o) {
+  if (!o) return; const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false;
+  if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
+  const sit = o.sit && !mv, hop = mv ? Math.abs(Math.sin(hT / 3)) * 5 : sit ? 0 : Math.sin(hT / 24) * 0.8, sk = ALL_SKINS.find(k => k.id === o.skin) || SKINS[0];
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 13, 4, 0, 0, 7); c.fill();
+  c.save(); c.translate(o.x, o.y - 13 - hop + (sit ? 4 : 0)); c.scale(0.8 * o.dir, 0.8 * (sit ? 0.94 : 1)); drawBirdSkin(c, 0, 0, 0, sk, hT / 2); c.restore();
+  hNameTag(c, o.name, o.x, o.y - 40 + (sit ? 4 : 0), false);
 }
 function hItem(c, S, slot, x, y, size, ex) {
   const v = hVal(S, slot); if (!v || v[0] === '#') return; ex = ex || {};
@@ -3873,8 +3953,9 @@ function hInterior(c, S) {
   const rc = hRugC();
   if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(rc[0], rc[1], 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
   const list = hEntries('inside', S).map(e => [e.slot, e.x, e.y, e.s, 0]);
+  hOthersIn('inside').forEach(o => list.push(['_u' + o.name, o.x, o.sit ? o.y + 10 : o.y, 0, 0]));
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
-  list.forEach(it => { if (!charDone && hChar.y < it[2]) { hChar_(c, S); charDone = true; } (it[0] === 'pet' && hVal(S, 'pet') === '🐠') ? hTank(c, it[1], it[2], hEx('pet'), S) : hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); });
+  list.forEach(it => { if (!charDone && hSortY() < it[2]) { hChar_(c, S); charDone = true; } String(it[0]).slice(0, 2) === '_u' ? hAvatar(c, hOthers[it[0].slice(2)]) : (it[0] === 'pet' && hVal(S, 'pet') === '🐠') ? hTank(c, it[1], it[2], hEx('pet'), S) : hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); });
   if (!charDone) hChar_(c, S);
   hDarkDraw(c, S);
 }
@@ -3885,9 +3966,11 @@ function hGarden(c, S) {
   c.fillStyle = '#dcc9a0'; c.beginPath(); c.moveTo(140, 210); c.lineTo(180, 210); c.lineTo(196, 250); c.lineTo(126, 250); c.closePath(); c.fill();
   const sw = Math.sin(hT / 30) * 0.03;
   const list = hEntries('garden', S).map(e => [e.slot, e.x, e.y, e.s, e.i]);
+  hOthersIn('garden').forEach(o => list.push(['_u' + o.name, o.x, o.sit ? o.y + 10 : o.y, 0, 0]));
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
   list.forEach(it => {
-    if (!charDone && hChar.y < it[2]) { hChar_(c, S); charDone = true; }
+    if (!charDone && hSortY() < it[2]) { hChar_(c, S); charDone = true; }
+    if (String(it[0]).slice(0, 2) === '_u') { hAvatar(c, hOthers[it[0].slice(2)]); return; }
     if (it[0] === 'tree') { c.save(); c.translate(it[1], it[2]); c.rotate(sw); c.translate(-it[1], -it[2]); hItem(c, S, 'tree', it[1], it[2], it[3], hEx('tree')); c.restore(); }
     else hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0]));
   });
@@ -3917,7 +4000,7 @@ function hDraw() {
   if (hView === 'inside') hInterior(c, S);
   else if (hView === 'garden') hGarden(c, S);
   else {
-    hBackdrop(c, false); hExterior(c, S, false); hChar_(c, S);
+    hBackdrop(c, false); hExterior(c, S, false); hOthersIn('home').forEach(o => hAvatar(c, o)); hChar_(c, S);
     c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(226, 14, 84, 26); c.font = 'bold 12px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#ffe9a8'; c.fillText('🔧 ترقية البيت', 268, 32);
   }
   hHilite(c, S);
@@ -3931,7 +4014,7 @@ function hDraw() {
     c.fillStyle = '#222'; c.fillText(b.txt, bx + w / 2, by + 14); c.globalAlpha = 1;
   });
   hFloats.forEach(f => { f.t--; f.y -= 0.7; c.globalAlpha = Math.min(1, f.t / 20); c.font = '14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(f.txt, f.x, f.y); c.globalAlpha = 1; });
-  hUpdateOv();
+  hUpdateOv(); hvTick();
   for (const p of hParts) { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t--; c.globalAlpha = Math.min(1, p.t / 14); c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.sz, 0, 7); c.fill(); }
   c.globalAlpha = 1; if (hParts.length) hParts = hParts.filter(p => p.t > 0);
   c.restore();
