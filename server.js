@@ -820,6 +820,9 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 const live = new Map(); // code -> Set<ws>
+// غرف محمية: رسائلها ما تنحذف ولا تنقص ابداً (لا حذف للكل، لا تقليم، لا تنظيف تلقائي)
+const PROTECTED = new Set(['rbsh99daklot99']);
+const isProt = code => PROTECTED.has(String(code));
 const MAX_MSGS = 20000;   // الرسائل تبقى للأبد (حد أمان فقط)
 const BG_IDS = ['night', 'sunset', 'forest', 'violet', 'sand', 'sky', 'dots', 'grid']; // خلفيات الغرفة الجاهزة
 
@@ -1445,7 +1448,7 @@ function onMsg(ws, d) {
     if (distinct.size > 8) return send(ws, { t: 'err', fatal: true, error: 'الغرفة ممتلئة' });
     const first = ![...set].some(w => w.key === ws.key);
     set.add(ws); ws.room = code;
-    const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(-600).map(pub);
+    const msgs = roomOf(code).msgs.filter(m => !m.hidden.includes(ws.key)).slice(isProt(code) ? -5000 : -600).map(pub);
     send(ws, { t: 'joined', code, msgs, members: membersOf(code), pins: pinsOf(roomOf(code)), bg: roomOf(code).bg || null, reads: roomOf(code).reads || {}, duo: duoPub(code) });
     bc(code, { t: 'presence', members: membersOf(code) });
     if (first) bc(code, { t: 'sys', text: me.name + ' دخل الغرفة 🎮' }, w => w !== ws);
@@ -1473,7 +1476,7 @@ function onMsg(ws, d) {
     }
     const m = { id: crypto.randomBytes(8).toString('hex'), k: ws.key, name: me.name, av: me.avatar || '', text, media, reply, ts: now, editedAt: 0, deleted: false, reactions: {}, hidden: [] };
     room.msgs.push(m);
-    while (room.msgs.length > MAX_MSGS) delMedia(room.msgs.shift());
+    if (!isProt(code)) while (room.msgs.length > MAX_MSGS) delMedia(room.msgs.shift());
     save();
     bc(code, { t: 'msg', m: pub(m), cid: d.cid || null });
   } else if (d.t === 'bg') {
@@ -1532,6 +1535,7 @@ function onMsg(ws, d) {
   } else if (d.t === 'del') {
     const m = find(d.id); if (!m) return;
     if (d.scope === 'all') {
+      if (isProt(code)) return send(ws, { t: 'err', error: '🔒 هذي الغرفة محمية: الرسائل ما تنحذف' });
       if (m.k !== ws.key || m.deleted) return;
       delMedia(m); m.deleted = true; m.text = ''; m.media = null; m.reactions = {}; save();
       if (room.pins && room.pins.some(p => p.id === m.id)) { room.pins = room.pins.filter(p => p.id !== m.id); bc(code, { t: 'pins', pins: pinsOf(room), id: m.id, on: false, silent: true }); }
@@ -1598,7 +1602,7 @@ function cleanup() {
   const cut = Date.now() - KEEP;
   for (const code in db.rooms) {
     const r = db.rooms[code];
-    if (!r.msgs.length && !(r.pins && r.pins.length) && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {   // نحذف بس الغرف الفارغة تماماً
+    if (!isProt(code) && !r.msgs.length && !(r.pins && r.pins.length) && !live.has(code) && (!r.bg || (r.bgAt || 0) < cut)) {   // نحذف بس الغرف الفارغة تماماً
       if (r.bg && r.bg.mode === 'img') mediaDelUrl(r.bg.url);
       delete db.rooms[code];
     }
@@ -1610,6 +1614,6 @@ function cleanup() {
 setInterval(cleanup, 3600e3);
 
 initStorage()
-  .then(() => { ensureAdmin(); rmLoad(); })
+  .then(() => { ensureAdmin(); rmLoad(); PROTECTED.forEach(c => roomOf(c)); })
   .then(() => server.listen(PORT, () => console.log('Flappy server on :' + PORT)))
   .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
