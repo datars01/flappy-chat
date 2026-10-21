@@ -3728,10 +3728,25 @@ const HLIM = { get inside() { return HLIM_T[hCT].inside; }, get garden() { retur
 const hWX = () => hView === 'inside' ? [HLIM_T[hCT].inside[0] - 4, HLIM_T[hCT].inside[1] + 4] : [14, 306];
 const HMOVE = { inside: ['tv', 'shelf', 'plant', 'lamp', 'seat', 'pet', 'rug'], garden: ['tree', 'feature', 'play', 'car', 'flowers', 'lantern'] };
 function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0]; }
+/* الحيوان يتمشى بالبيت: كل ~7 ثواني يختار مكان جديد ويروح له بكل الاتجاهات ويوكف بين حركة وحركة */
+var hPetW = { x: 0, y: 0, tx: 0, ty: 0, next: 0, dir: -1, mv: false, on: false };
+function hPetStep(S) {
+  const v = hVal(S, 'pet');
+  if (hView !== 'inside' || !v || v === '🐠' || (hDown && hDown.slot === 'pet')) { hPetW.on = false; hPetW.mv = false; return; }
+  if (!hPetW.on) { const be = (HPOS.inside || []).find(e => e[0] === 'pet') || ['pet', 200, 235], bo = hOffOf('pet'); hPetW.x = hPetW.tx = be[1] + bo[0]; hPetW.y = hPetW.ty = be[2] + bo[1]; hPetW.next = hT + 150 + Math.random() * 150; hPetW.mv = false; hPetW.on = true; }
+  const W0 = HV.inside.walk[0];
+  if (!hPetW.mv && hT >= hPetW.next) { hPetW.tx = 30 + Math.random() * 262; hPetW.ty = W0 + 8 + Math.random() * (246 - W0 - 8); hPetW.mv = true; }
+  if (hPetW.mv) {
+    const dx = hPetW.tx - hPetW.x, dy = hPetW.ty - hPetW.y, d = Math.hypot(dx, dy);
+    if (d < 1.5) { hPetW.mv = false; hPetW.next = hT + 330 + Math.random() * 180; }
+    else { const st = Math.min(d, v === '🐕' ? 0.95 : v === '🐭' ? 1.05 : 0.75); hPetW.x += dx / d * st; hPetW.y += dy / d * st; if (Math.abs(dx) > 0.4) hPetW.dir = dx > 0 ? 1 : -1; }
+  }
+}
 function hEntries(view, S, all) {
   const out = []; (HPOS[view] || []).forEach((e, i) => {
     const v = hVal(S, e[0]); if (!all && (!v || v[0] === '#')) return;
-    const o = hOffOf(e[0]); out.push({ slot: e[0], x: e[1] + o[0], y: e[2] + o[1], s: (e[0] === 'pet' && v === '🐠') ? 64 : (e[0] === 'seat' && (v === '🛋️' || v === '🛏️')) ? Math.round(e[3] * 1.22) : e[3], i });
+    const o = hOffOf(e[0]), pw = e[0] === 'pet' && view === 'inside' && hPetW.on && !all;
+    out.push({ slot: e[0], x: pw ? hPetW.x : e[1] + o[0], y: pw ? hPetW.y : e[2] + o[1], s: (e[0] === 'pet' && v === '🐠') ? 64 : (e[0] === 'seat' && (v === '🛋️' || v === '🛏️')) ? Math.round(e[3] * 1.22) : e[3], i });
   }); return out;
 }
 const hRugC = () => { const o = hOffOf('rug'); return [150 + o[0], 214 + o[1]]; };
@@ -4199,7 +4214,7 @@ function hItem(c, S, slot, x, y, size, ex) {
   const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1);
   c.save(); c.globalAlpha = (prev ? 0.7 : 1) * Math.min(1, k * 3);
   c.fillStyle = 'rgba(0,0,0,' + (ex.lift ? 0.18 : 0.25) + ')'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
-  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc, sc); if (v === '🐭') drawMouse(c, size * 1.25, hT); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
+  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc * (ex.flip === 1 ? -1 : 1), sc); if (v === '🐭') drawMouse(c, size * 1.25, hT); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
   if (prev || ex.lift) { c.setLineDash([4, 3]); c.strokeStyle = ex.lift ? '#fff' : '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-size * 0.55, -size * 0.9, size * 1.1, size * 1.0); }
   c.restore();
 }
@@ -4224,7 +4239,7 @@ function hTank(c, x, y, ex, S) {
   if (prev) { c.setLineDash([4, 3]); c.strokeStyle = '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-w / 2 - 3, top - 2, w + 6, h + sh + 4); }
   c.restore();
 }
-const hEx = slot => ({ lift: !!(hDown && hDown.moved && hDown.slot === slot), hop: slot === 'pet' ? (hPetT > 0 ? Math.abs(Math.sin(hPetT / 3)) * 9 : Math.abs(Math.sin(hT / 22)) * 1.2) : 0 });
+const hEx = slot => ({ lift: !!(hDown && hDown.moved && hDown.slot === slot), flip: slot === 'pet' && hPetW.on ? hPetW.dir : 0, hop: slot === 'pet' ? (hPetT > 0 ? Math.abs(Math.sin(hPetT / 3)) * 9 : hPetW.on && hPetW.mv ? Math.abs(Math.sin(hT / 4)) * 3.2 : Math.abs(Math.sin(hT / 22)) * 1.2) : 0 });
 function hDarkDraw(c, S) {
   if (hLight) return;
   hDk = hDk || (() => { const q = document.createElement('canvas'); q.width = 320; q.height = 250; return q; })();
@@ -4371,7 +4386,7 @@ function hHilite(c, S) {
 function hDraw() {
   const cv = $('houseCv'); if (!cv) return; const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0);
   const S = hSetNow();
-  if (hDoorT > 0) hDoorT--; if (hPetT > 0) hPetT--;
+  if (hDoorT > 0) hDoorT--; if (hPetT > 0) hPetT--; hPetStep(S);
   if (hKeys.arrowleft || hKeys.a || hKeys.arrowright || hKeys.d || hKeys.arrowup || hKeys.w || hKeys.arrowdown || hKeys.s) {
     hWalkTo(hChar.x + ((hKeys.arrowright || hKeys.d ? 1 : 0) - (hKeys.arrowleft || hKeys.a ? 1 : 0)) * 30, hChar.y + ((hKeys.arrowdown || hKeys.s ? 1 : 0) - (hKeys.arrowup || hKeys.w ? 1 : 0)) * 30);
   }
@@ -4640,15 +4655,16 @@ function ptDip() {
 function ptSprite(c, p, x, y, sz, opt) {
   opt = opt || {}; const t = PT.T, kind = ptKind(p.species), sleep = p.sleep && PT.scene === 'bed';
   c.save(); c.translate(x, y);
-  c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 4, sz * 0.38, sz * 0.1, 0, 0, 7); c.fill();
+  const lie = opt.lie || 0; c.fillStyle = 'rgba(0,0,0,' + (0.22 * (1 - lie)) + ')'; c.beginPath(); c.ellipse(0, 4, sz * (0.38 + 0.25 * lie), sz * 0.1, 0, 0, 7); c.fill();
   const bob = sleep ? Math.sin(t / 40) * 1.2 : kind === 'fish' ? Math.sin(t / 14) * 5 : Math.abs(Math.sin(t / 26)) * (opt.hop || 3);
   const sx = (opt.dir || 1) * (kind === 'fish' ? Math.sin(t / 50) > 0 ? 1 : -1 : 1);
-  c.translate(0, -sz * 0.45 - bob);
+  c.translate(0, -sz * 0.45 - bob); c.rotate(-Math.PI / 2 * lie);
   if (p.species === '🐭') { c.save(); c.translate(0, sz * 0.45); c.scale(sx, 1); drawMouse(c, sz * 1.15, t, { sleep }); c.restore(); } else { c.scale(sx, 1); c.font = sz + 'px "Apple Color Emoji","Segoe UI Emoji",system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(p.species, 0, 0); }
   const dirt = p.dirty ? 1 : Math.min(1, p.t / p.ivl);
   if (dirt > 0.2 && !opt.clean) { const n = Math.ceil(dirt * 9); for (let i = 0; i < n; i++) { const a = i * 2.4, rr = sz * (0.12 + 0.22 * ((i * 37) % 10) / 10); c.fillStyle = 'rgba(110,70,30,' + (0.45 + 0.3 * dirt) + ')'; c.beginPath(); c.ellipse(Math.cos(a) * rr, Math.sin(a * 1.3) * rr * 0.9, 3 + (i % 3) * 1.5, 2.5 + (i % 2) * 1.5, a, 0, 7); c.fill(); } }
   c.restore();
   if (p.dirty && !opt.clean) { for (let i = 0; i < 2; i++) { const a = t / 18 + i * 3.1; c.font = '12px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('🪰', x + Math.cos(a) * sz * 0.55, y - sz * 0.8 + Math.sin(a * 1.4) * 10); } }
+  if (sleep && kind !== 'mouse' && lie > 0.8) { c.font = '13px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('😴', x - sz * 0.42, y - sz * 0.5); }
   if (sleep) { c.font = 'bold 15px system-ui'; c.textAlign = 'center'; c.fillStyle = '#cfe0ff'; const k = (t % 120) / 120; c.globalAlpha = 1 - k; c.fillText('💤', x + 22 + k * 10, y - sz - k * 24); c.globalAlpha = 1; }
 }
 function ptDrawBath(c, p) {
@@ -4686,11 +4702,18 @@ function ptDrawBed(c, p) {
   c.fillStyle = '#ffffff'; c.beginPath(); if (c.roundRect) c.roundRect(28, 126, 44, 22, 10); else c.rect(28, 126, 44, 22); c.fill();
   PT.bedZone = [14, 110, 164, 70];
   // الحيوان
-  const tx = PT.onBed || PT.drag === false && p.bed ? 100 : 232, ty = PT.onBed ? 146 : 196;
+  const onb = !!(PT.onBed || PT.drag === false && p.bed), tx = onb ? 80 : 232, ty = onb ? 168 : 196;
   if (!PT.drag) { PT.px += (tx - PT.px) * 0.14; PT.py += (ty - PT.py) * 0.14; }
   PT.petBox = { x: PT.px, y: PT.py - 30, r: 40 };
-  ptSprite(c, p, PT.px, PT.py, 62, { hop: p.sleep ? 0 : 2 });
-  if (p.cover) { c.fillStyle = '#5a8fd6'; c.beginPath(); if (c.roundRect) c.roundRect(60, 142, 118, 34, 10); else c.rect(60, 142, 118, 34); c.fill(); c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2; c.beginPath(); c.moveTo(62, 150); c.lineTo(174, 150); c.stroke(); }
+  PT.lieK = (PT.lieK || 0) + ((onb && !PT.drag ? 1 : 0) - (PT.lieK || 0)) * 0.1;   // ينقلب لوضع النوم تدريجياً
+  ptSprite(c, p, PT.px, PT.py, 62, { hop: p.sleep || PT.lieK > 0.5 ? 0 : 2, lie: PT.lieK });
+  PT.cvK = (PT.cvK || 0) + ((p.cover && onb ? 1 : 0) - (PT.cvK || 0)) * 0.12;   // اللحاف ينزل فوقه بنعومة
+  if (PT.cvK > 0.02) {
+    const k = PT.cvK, br = p.sleep ? Math.sin(t / 38) * 1.4 : 0, bx = 76 + (1 - k) * 34, by = 122 - (1 - k) * 22 - br;
+    c.save(); c.globalAlpha = Math.min(1, k * 1.6); c.fillStyle = '#5a8fd6'; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, 102, 52 + br, 14); else c.rect(bx, by, 102, 52 + br); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2; c.beginPath(); c.moveTo(bx + 4, by + 9); c.lineTo(bx + 98, by + 9); c.stroke();
+    c.strokeStyle = 'rgba(0,0,0,.12)'; c.lineWidth = 1.2; for (let i = 1; i < 4; i++) { c.beginPath(); c.moveTo(bx + i * 25, by + 12); c.lineTo(bx + i * 25, by + 48 + br); c.stroke(); } c.restore();
+  }
   c.fillStyle = '#7a4a2a'; c.fillRect(14, 168, 164, 6);
   c.fillStyle = '#8a5a2e'; c.fillRect(30, 172, 8, 32); c.fillRect(154, 172, 8, 32);
   if (dark) { c.fillStyle = 'rgba(5,8,30,' + (p.sleep ? 0.7 : 0.55) + ')'; c.fillRect(0, 0, 320, 250); c.save(); c.globalCompositeOperation = 'lighter'; const gg = c.createRadialGradient(243, 64, 4, 243, 64, 70); gg.addColorStop(0, 'rgba(150,180,255,.35)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.fillRect(170, 0, 150, 140); c.restore(); }
