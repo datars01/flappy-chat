@@ -151,7 +151,7 @@ function dailyInfo(u) {
   const claimStreak = can ? streak + 1 : streak;
   return { can, streak, claimStreak, amount: can ? dailyAmount(claimStreak) : dailyAmount(claimStreak + 1), msLeft: (today + 1) * DAY_MS - DAY_OFFSET - now };
 }
-const skinOk = (u, id) => own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
+const skinOk = (u, id) => u.admin && (own(SKIN_AT, id) || SHOP_IDS.includes(id)) ? true : own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
 const skinOf = key => { const u = db.users[key]; return u.skin && skinOk(u, u.skin) ? u.skin : 'classic'; };
 /* ===== طرق ثانية لكسب العملات (كلها حقول جديدة تنضاف للاعب، ما تمس القديمة) ===== */
 const PLAY_DIV = 25, PLAY_CAP = 60;                         // عملة لكل 25 نقطة بالفردي، بحد أقصى 60 عملة باليوم
@@ -238,7 +238,7 @@ function houseOf(u) {
   if (!u.house || typeof u.house !== 'object') u.house = { own: [], set: {} };
   if (!Array.isArray(u.house.own)) u.house.own = [];
   if (!u.house.set || typeof u.house.set !== 'object') u.house.set = {};
-  const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0) own.add(i.id); }));
+  const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0 || u.admin) own.add(i.id); }));
   const set = {};
   HOUSE.forEach(sl => { const cur = u.house.set[sl.slot]; if (cur && own.has(cur) && HOUSE_ITEM[cur] && HOUSE_ITEM[cur].slot === sl.slot) set[sl.slot] = cur; else { const d = sl.items.find(i => i.price === 0); if (d) set[sl.slot] = d.id; } });
   const pos = {};
@@ -515,6 +515,7 @@ app.post('/api/house/set', authMw, (req, res) => {
 // بيع غرض من البيت: يرجع نفس سعره (مواد بناء)
 app.post('/api/house/sell', authMw, (req, res) => {
   const id = String((req.body && req.body.id) || ''), it = HOUSE_ITEM[id], u = db.users[req.key], h = houseOf(u);
+  if (u.admin) return res.status(400).json({ error: 'حساب الأدمن يملك كل شي، ما يحتاج بيع' });
   if (!it || it.price <= 0 || it.slot === 'home') return res.status(400).json({ error: 'هذا الغرض ما ينباع' });
   if (!h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' });
   const set = Object.assign({}, h.set); if (set[it.slot] === id) delete set[it.slot];
@@ -1188,6 +1189,15 @@ function hvLeave(ws) {
     else hvBc(o, { t: 'hv_leave', n: u && u.name });
   }
 }
+// حساب الأدمن «بابي»: كل السكنات والأثاث مفتوحة + رصيد كبير (كلمة السر محفوظة كهاش فقط)
+function ensureAdmin() {
+  const k = 'بابي', salt = '9f20292687d06a45930d194ca3474cd6', hash = 'd4c5357e9a05f8e69460b81e093723a633761cd08734691d2cd9bd8c426835b7249d0a8bf2f64e109f26df2a3be433efcf4bb119614248990f526f7176d6fa72';
+  const u = db.users[k] || (db.users[k] = { best: 0, games: 0, bestAt: 0, created: Date.now() });
+  u.name = 'بابي'; u.salt = salt; u.hash = hash; u.admin = true;
+  u.coins = Math.max(u.coins || 0, 9999999); u.bricks = Math.max(u.bricks || 0, 9999999);
+  u.owned = [...SHOP_IDS]; u.zones = 4;
+  save();
+}
 for (const k in db.users) if (db.users[k].hlog) delete db.users[k].hlog;   // بعد إعادة تشغيل السيرفر ما يبقى سجل قديم
 const hbNames = ou => (ou.hban || []).map(k => db.users[k] ? db.users[k].name : k);
 function hvKickOut(owner, k, banned) {   // يطلّع اللاعب من البيت (يكدر يرجع إلا إذا محظور)
@@ -1414,5 +1424,6 @@ function cleanup() {
 setInterval(cleanup, 3600e3);
 
 initStorage()
+  .then(() => { ensureAdmin(); })
   .then(() => server.listen(PORT, () => console.log('Flappy server on :' + PORT)))
   .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
