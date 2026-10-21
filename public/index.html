@@ -429,7 +429,7 @@
   #rmPrompt .hOvB { background: rgba(255,209,102,.95); color: #3a2a00; border-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); animation: hPop .25s ease-out; }
   #rmChatRow { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; gap: 5px; pointer-events: none; } #rmChatRow > * { pointer-events: auto; }
   #rmChatIn { flex: 1; min-width: 0; background: rgba(10,14,30,.72); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 12px; padding: 6px 10px; font-size: 16px; } #rmChatIn::placeholder { color: rgba(255,255,255,.55); }
-  #rmLogP { position: absolute; right: 6px; bottom: 48px; width: min(56%, 260px); max-height: 30%; overflow-y: auto; background: rgba(10,14,30,.7); color: #fff; border-radius: 12px; padding: 6px 8px; font-size: 12px; pointer-events: none; } #rmLogP .m { margin-bottom: 2px; } #rmLogP b { color: #ffd166; }
+  #rmLogP { position: absolute; right: 6px; bottom: 48px; width: min(66%, 300px); max-height: 52%; overflow-y: auto; pointer-events: auto !important; background: rgba(10,14,30,.7); color: #fff; border-radius: 12px; padding: 6px 8px; font-size: 12px; pointer-events: none; } #rmLogP .m { margin-bottom: 2px; } #rmLogP b { color: #ffd166; }
   #rmMem { position: absolute; left: 6px; top: 44px; bottom: 48px; width: 116px; overflow-y: auto; background: rgba(10,14,30,.82); border: 1px solid rgba(255,255,255,.3); border-radius: 12px; padding: 6px; color: #fff; font-size: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 4px; }
   #rmMem[hidden] { display: none; } #rmMem .mh { font-weight: 700; color: #ffd166; font-size: 11px; margin-top: 4px; } #rmMem .mb { width: 100%; text-align: right; padding: 5px 7px; font-size: 12px; background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #rmMem .mb.me { background: rgba(255,209,102,.25); }
   #rmMem .act { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; } #rmMem .act button, #rmMem .ban button, #rmMem .wf button, #rmMem .mclose { width: 100%; padding: 4px 6px; font-size: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 8px; } #rmMem .act button:last-child { background: #e0a21a; color: #3a2a00; }
@@ -680,7 +680,7 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
+        <div class="hOvTop"><div class="hOvG"><button id="rmExit" class="hOvB" type="button">🚪 خروج</button><button id="rmFs" class="hOvB" type="button">⛶ تكبير</button></div><div class="hOvG"><button id="rmZoom" class="hOvB" type="button">🔭 كل المكان</button><button id="rmLogBtn" class="hOvB" type="button">📜 السجل</button><button id="rmMemBtn" class="hOvB" type="button">👥 الأعضاء</button></div></div>
         <div id="rmMem"></div>
         <div id="rmPrompt"></div>
         <div id="rmLogP" hidden></div>
@@ -4071,7 +4071,7 @@ $('hChatIn').addEventListener('focus', () => { setTimeout(() => { try { $('hStag
 setInterval(() => { if (hZ > 1.2 && curPage === 'house') hRenderLog(); }, 1200);
 function hFitFs() { const vh = (window.visualViewport ? visualViewport.height : innerHeight), vw = (window.visualViewport ? visualViewport.width : innerWidth); ['hStage', 'rmStage'].forEach(id => { const st = $(id); if (st) { st.style.setProperty('--hvh', vh + 'px'); st.style.setProperty('--hvw', vw + 'px'); } }); }
 hFitFs();
-if (window.visualViewport) { const fit = () => { const st = $('hStage'); if (!st) return; hFitFs(); if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
+if (window.visualViewport) { const fit = () => { hFitFs(); ['hStage', 'rmStage'].forEach(id => { const st = $(id); if (!st) return; if (st.classList.contains('full')) { st.style.height = visualViewport.height + 'px'; st.style.top = visualViewport.offsetTop + 'px'; st.style.bottom = 'auto'; } else { st.style.height = ''; st.style.top = ''; st.style.bottom = ''; } }); }; visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); window.hFitAll = fit; }
 document.querySelectorAll('#hTabs .tab').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 document.querySelectorAll('#hFsTabs [data-v]').forEach(b => b.onclick = () => { if (b.dataset.v !== hView) hGo(b.dataset.v); });
 /* ---- الانتقال بين المناظر (باب بصوت) ---- */
@@ -5247,7 +5247,8 @@ $('rmCreate').onclick = async () => {
 };
 $('rmCancel').onclick = () => { $('rmForm').hidden = true; };
 /* ---------- الواجهة: داخل الغرفة ---------- */
-function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.slice(-6).forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.log.length; }
+function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
+$('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; $('rmLogBtn').textContent = RM.logOpen ? '📜 اغلاق السجل' : '📜 السجل'; rmRenderLog(); };
 function rmRenderMem() {
   const P = $('rmMem'); if (!P) return; P.innerHTML = ''; const me = (auth && auth.name) || '';
   const all = [{ name: me, own: me === RM.owner, me: true }].concat(Object.values(RM.others).map(o => ({ name: o.name, own: !!o.own })));
@@ -5271,14 +5272,17 @@ function rmRenderMem() {
 function rmModal(icon, title, txt) { $('rmWI').textContent = icon; $('rmWT').textContent = title; $('rmWS').textContent = txt || ''; $('rmWarn').classList.add('show'); }
 $('rmWOk').onclick = () => $('rmWarn').classList.remove('show');
 function rmChat() { const i = $('rmChatIn'), t = i.value.trim(); if (!t) return; if (rmSend({ t: 'rm_chat', txt: t })) i.value = ''; else showToast('⚠️ ما اكو اتصال'); }
+$('rmChatIn').addEventListener('focus', () => { if (!RM.full) { RM.softFocus = true; rmSetFull(true, false, true); } setTimeout(() => { window.scrollTo(0, 0); if (window.hFitAll) hFitAll(); }, 300); });
+$('rmChatIn').addEventListener('blur', () => { setTimeout(() => { if (RM.softFocus && RM.soft && document.activeElement !== $('rmChatIn')) { RM.softFocus = false; rmSetFull(false); } }, 250); });
+$('rmSend').addEventListener('pointerdown', e => { if (document.activeElement === $('rmChatIn')) e.preventDefault(); });
 $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { if (e.key === 'Enter') rmChat(); });
 $('rmExit').onclick = () => rmLeaveRoom();
 $('rmMemBtn').onclick = () => { $('rmMem').hidden = !$('rmMem').hidden; };
 $('rmZoom').onclick = () => { RM.zt = RM.zt > 1 ? 0.8 : 2; $('rmZoom').textContent = RM.zt > 1 ? '🔭 كل المكان' : '🔍 قرّب'; };
-function rmSetFull(on, auto) {
-  RM.full = on; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
-  try { if (on) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  $('rmFs').textContent = on ? '✕ إغلاق' : '⛶ تكبير'; if (typeof hFitFs === 'function') hFitFs();
+function rmSetFull(on, auto, soft) {
+  RM.full = on; RM.soft = !!(on && soft); if (!on) RM.softFocus = false; RM.autoFull = !!(on && auto); $('rmStage').classList.toggle('full', on); document.body.style.overflow = on ? 'hidden' : '';
+  try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  $('rmFs').textContent = on ? '✕ إغلاق' : '⛶ تكبير'; if (typeof hFitFs === 'function') hFitFs(); if (window.hFitAll) hFitAll(); window.scrollTo(0, 0);
 }
 $('rmFs').onclick = () => rmSetFull(!RM.full);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && RM.full) { RM.full = false; $('rmStage').classList.remove('full'); document.body.style.overflow = ''; $('rmFs').textContent = '⛶ تكبير'; } });
