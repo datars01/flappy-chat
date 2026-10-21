@@ -220,7 +220,7 @@ const HOUSE_DEF = [
   ['inside', 'tv', 'الجدار', [['tv1', 'لوحة', '🖼️', 20], ['tv2', 'تلفزيون', '📺', 60], ['tv3', 'ساعة', '🕰️', 35]]],
   ['inside', 'lamp', 'الإضاءة', [['la1', 'شمعة', '🕯️', 10], ['la2', 'مصباح', '💡', 25], ['la3', 'ثريا', '🪔', 55]]],
   ['inside', 'shelf', 'التخزين', [['sh1', 'كتب', '📚', 30], ['sh2', 'خزانة', '🗄️', 50], ['sh3', 'صندوق كنز', '🧰', 80]]],
-  ['inside', 'pet', 'حيوان أليف', [['pe1', 'سمكة', '🐠', 30], ['pe2', 'قطة', '🐈', 60], ['pe3', 'كلب', '🐕', 75]]],
+  ['inside', 'pet', 'حيوان أليف', [['pe0', 'فأرة (الأساسية)', '🐭', 0], ['pe1', 'سمكة', '🐠', 30], ['pe2', 'قطة', '🐈', 60], ['pe3', 'كلب', '🐕', 75]]],
   ['inside', 'plant', 'نبتة', [['pl1', 'صبّار', '🌵', 10], ['pl2', 'نبتة', '🪴', 20], ['pl3', 'بامبو', '🎍', 30]]],
   ['inside', 'rug', 'السجادة', [['ru1', 'أحمر', '#b3422f', 20], ['ru2', 'أزرق', '#356fa8', 20], ['ru3', 'أخضر', '#3c8a58', 20], ['ru4', 'ذهبي', '#d4a437', 40]]],
   ['garden', 'tree', 'شجرة', [['tr1', 'شجرة', '🌳', 20], ['tr2', 'نخلة', '🌴', 35], ['tr3', 'صنوبر', '🌲', 45]]],
@@ -1216,8 +1216,8 @@ function hvOnMsg(ws, d) {
     hvBc(h.owner, { t: 'hv_pos', n: me.name, view: h.view, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
   } else if (d.t === 'hv_say') {
     const h = ws.hv; if (!h || now - h.st < 800) return; h.st = now;
-    const kind = d.kind === 'dog' || d.kind === 'cat' ? d.kind : 'fish';
-    const txt = kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + me.name + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + me.name + '!' : 'بلوب بلوب 🫧 أهلاً ' + me.name + '!';
+    const kind = d.kind === 'dog' || d.kind === 'cat' || d.kind === 'mouse' ? d.kind : 'fish';
+    const txt = kind === 'mouse' ? 'جيك جيك! 🐭 أهلاً ' + me.name + '!' : kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + me.name + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + me.name + '!' : 'بلوب بلوب 🫧 أهلاً ' + me.name + '!';
     hvBc(h.owner, { t: 'hv_say', n: me.name, slot: 'pet', kind, txt }, ws);
   } else if (d.t === 'hv_chat') {   // شات داخل البيت (يطلع فوق الراس + سجل محفوظ لصاحب البيت)
     const h = ws.hv; if (!h || now - (h.ct || 0) < 600) return; h.ct = now;

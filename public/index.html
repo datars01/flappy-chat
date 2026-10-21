@@ -2954,6 +2954,7 @@ function sfx(kind, a) {
       const t = a && a.t;
       if (t === 'dog') [0, 0.22].forEach(d => { blip('sawtooth', 520, 200, 0.13, 0.14, d); blip('square', 260, 120, 0.1, 0.05, d); burst(0.06, 0.05, d, 1200); });
       else if (t === 'cat') { blip('triangle', 560, 980, 0.2, 0.12); blip('triangle', 980, 520, 0.3, 0.12, 0.18); }
+      else if (t === 'mouse') [0, 0.11].forEach(d => blip('sine', 1500, 2300, 0.07, 0.09, d));
       else [0, 0.09, 0.18].forEach(d => blip('sine', 420 + d * 900, 900 + d * 900, 0.07, 0.1, d));
     } else if (kind === 'click') {
       blip('square', 1400, 700, 0.03, 0.07);
@@ -3874,10 +3875,10 @@ function hSay(slot, txt) { hBubs = hBubs.filter(b => b.slot !== slot); hBubs.pus
 function hPet() {
   const S = hSetNow(), v = hVal(S, 'pet'); if (!v) return;
   const e = hEntries('inside', S).find(q => q.slot === 'pet'); if (!e) return;
-  const nm = (auth && auth.name) || 'صديقي', kind = v === '🐕' ? 'dog' : v === '🐈' ? 'cat' : 'fish';
+  const nm = (auth && auth.name) || 'صديقي', kind = v === '🐕' ? 'dog' : v === '🐈' ? 'cat' : v === '🐭' ? 'mouse' : 'fish';
   sfx('pet', { t: kind }); hPetT = 40; hvSend({ t: 'hv_say', kind });
   for (let i = 0; i < 4; i++) hFloats.push({ x: e.x + (Math.random() - 0.5) * 24, y: e.y - e.s * 0.8 - i * 4, t: 55 + i * 6, txt: i % 2 ? '💕' : '❤️' });
-  hSay('pet', kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + nm + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + nm + '!' : 'بلوب بلوب 🫧 أهلاً ' + nm + '!');
+  hSay('pet', kind === 'mouse' ? 'جيك جيك! 🐭 أهلاً ' + nm + '!' : kind === 'dog' ? 'هاو هاو! 🐶 أهلاً ' + nm + '!' : kind === 'cat' ? 'مياو~ 💕 أهلاً ' + nm + '!' : 'بلوب بلوب 🫧 أهلاً ' + nm + '!');
   try { if (sfxOn && 'speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('أهلاً ' + nm); u.lang = 'ar'; u.rate = 1.05; u.volume = 0.8; speechSynthesis.speak(u); } } catch (er) {}
 }
 async function hSavePos(slots) {
@@ -4098,13 +4099,48 @@ function hAvatar(c, o) {
   c.save(); c.translate(o.x, o.y - 13 - hop + (sit ? 4 : 0)); c.scale(0.8 * o.dir, 0.8 * (sit ? 0.94 : 1)); drawBirdSkin(c, 0, 0, 0, sk, hT / 2); c.restore();
   hNameTag(c, o.name, o.x, o.y - 40 + (sit ? 4 : 0), false);
 }
+
+/* الفأرة الأساسية 🐭: مرسومة بالكود، بأحمر شفاه ومكياج وفيونكة */
+function drawMouse(c, s, t, o) {
+  o = o || {}; const u = s / 59, br = Math.sin((t || 0) / 28) * 0.6 * u, blink = ((t || 0) % 220) < 7 || o.sleep;
+  c.save(); c.scale(u, u);
+  // الذيل
+  c.strokeStyle = '#f3a7ba'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -8); c.bezierCurveTo(34, -6, 32, -26, 40, -22 + Math.sin((t || 0) / 20) * 3); c.stroke();
+  // الجسم
+  c.fillStyle = '#b4b7c6'; c.beginPath(); c.ellipse(0, -15, 19, 15 + br * 0.3, 0, 0, 7); c.fill(); c.fillStyle = '#eceef5'; c.beginPath(); c.ellipse(0, -12, 11, 10, 0, 0, 7); c.fill();
+  c.fillStyle = '#f3a7ba'; c.beginPath(); c.ellipse(-9, -1.5, 6, 3, 0, 0, 7); c.ellipse(9, -1.5, 6, 3, 0, 0, 7); c.fill();
+  // الأذنين
+  [-1, 1].forEach(sx => { c.fillStyle = '#b4b7c6'; c.beginPath(); c.arc(sx * 14, -47 + br, 10, 0, 7); c.fill(); c.fillStyle = '#f7b6c8'; c.beginPath(); c.arc(sx * 14, -47 + br, 6, 0, 7); c.fill(); });
+  // الراس
+  c.fillStyle = '#c4c7d4'; c.beginPath(); c.ellipse(0, -34 + br, 17, 15, 0, 0, 7); c.fill();
+  c.fillStyle = '#eceef5'; c.beginPath(); c.ellipse(0, -28 + br, 9, 8, 0, 0, 7); c.fill();
+  // فيونكة
+  c.fillStyle = '#ff5d8f'; c.beginPath(); c.moveTo(13, -53 + br); c.lineTo(23, -59 + br); c.lineTo(23, -47 + br); c.closePath(); c.moveTo(13, -53 + br); c.lineTo(3, -59 + br); c.lineTo(3, -47 + br); c.closePath(); c.fill(); c.fillStyle = '#e0356f'; c.beginPath(); c.arc(13, -53 + br, 2.6, 0, 7); c.fill();
+  // خدود (بلاشر)
+  c.fillStyle = 'rgba(255,90,140,.5)'; c.beginPath(); c.ellipse(-12, -29 + br, 4.5, 2.8, 0, 0, 7); c.ellipse(12, -29 + br, 4.5, 2.8, 0, 0, 7); c.fill();
+  // العيون + ظل جفون + رموش
+  [-1, 1].forEach(sx => {
+    const ex = sx * 7, ey = -35 + br;
+    c.fillStyle = 'rgba(176,86,212,.75)'; c.beginPath(); c.ellipse(ex, ey - 3.6, 5.4, 3, 0, 0, 7); c.fill();
+    if (blink) { c.strokeStyle = '#2a1830'; c.lineWidth = 1.6; c.beginPath(); c.arc(ex, ey, 3.2, 0.15, Math.PI - 0.15); c.stroke(); }
+    else { c.fillStyle = '#1b1020'; c.beginPath(); c.ellipse(ex, ey, 3, 3.5, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(ex - 1, ey - 1.2, 1.1, 0, 7); c.fill(); }
+    c.strokeStyle = '#1b1020'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(ex + sx * 3.2, ey - 1.6); c.lineTo(ex + sx * 6.4, ey - 3.6); c.moveTo(ex + sx * 3.5, ey); c.lineTo(ex + sx * 7, ey - 0.6); c.stroke();
+  });
+  // الخشم والشوارب
+  c.fillStyle = '#ff8fb0'; c.beginPath(); c.ellipse(0, -30 + br, 2.6, 2, 0, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(40,30,50,.55)'; c.lineWidth = 0.9; c.beginPath(); [[-1, -2], [-1, 1], [1, -2], [1, 1]].forEach(a => { c.moveTo(a[0] * 7, -28 + br + a[1]); c.lineTo(a[0] * 19, -28 + br + a[1] * 3); }); c.stroke();
+  // أحمر الشفاه
+  c.fillStyle = '#e0123f'; c.beginPath(); c.moveTo(-5.2, -25 + br); c.quadraticCurveTo(-2.6, -28 + br, 0, -25.8 + br); c.quadraticCurveTo(2.6, -28 + br, 5.2, -25 + br); c.quadraticCurveTo(0, -19.8 + br, -5.2, -25 + br); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(-1.6, -24.4 + br, 1.4, 0.7, 0, 0, 7); c.fill();
+  c.restore();
+}
 function hItem(c, S, slot, x, y, size, ex) {
   const v = hVal(S, slot); if (!v || v[0] === '#') return; ex = ex || {};
   const k = Math.min(1, (hT - (hPlaced[slot] === undefined ? -99 : hPlaced[slot])) / 22), e = k >= 1 ? 1 : 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
   const prev = hPrev && hmap()[hPrev] && hmap()[hPrev].slot === slot, sc = (0.65 + 0.35 * e) * (ex.lift ? 1.14 : 1);
   c.save(); c.globalAlpha = (prev ? 0.7 : 1) * Math.min(1, k * 3);
   c.fillStyle = 'rgba(0,0,0,' + (ex.lift ? 0.18 : 0.25) + ')'; c.beginPath(); c.ellipse(x, y + 1, size * 0.36 * sc, size * 0.08, 0, 0, 7); c.fill();
-  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc, sc); c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0);
+  c.translate(x, y - (1 - k) * 36 - (ex.hop || 0) - (ex.lift ? 8 : 0)); c.scale(sc, sc); if (v === '🐭') drawMouse(c, size * 1.25, hT); else { c.font = size + 'px system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(v, 0, 0); }
   if (prev || ex.lift) { c.setLineDash([4, 3]); c.strokeStyle = ex.lift ? '#fff' : '#ffd166'; c.lineWidth = 1.5; c.strokeRect(-size * 0.55, -size * 0.9, size * 1.1, size * 1.0); }
   c.restore();
 }
@@ -4434,8 +4470,8 @@ $('installBtn').onclick = async () => {
 
 /* ================= بيت الحيوان الأليف: حمام + نوم + مستويات + مشاركة ================= */
 var petPets = [], PT = { owner: '', pet: null, scene: 'bath', tool: '', foam: 0, dip: -1, bubs: [], parts: [], px: 232, py: 186, onBed: false, drag: false, say: null, nextSay: 0, T: 0, mx: 0, my: 0, raf: 0, panel: '', poll: 0, lastPlay: 0 };
-const PT_SAY = { dog: ['هاو 🐾', '😊 هاو', 'ووف!'], cat: ['مياو 😺', '🐾 مياو', 'مرررر 😸'], fish: ['🫧', 'بلوب 🫧', '🫧 🫧'] };
-const ptKind = sp => sp === '🐕' ? 'dog' : sp === '🐈' ? 'cat' : 'fish';
+const PT_SAY = { mouse: ['جيك 🐭', 'جيك جيك 🎀', '💄✨'], dog: ['هاو 🐾', '😊 هاو', 'ووف!'], cat: ['مياو 😺', '🐾 مياو', 'مرررر 😸'], fish: ['🫧', 'بلوب 🫧', '🫧 🫧'] };
+const ptKind = sp => sp === '🐕' ? 'dog' : sp === '🐈' ? 'cat' : sp === '🐭' ? 'mouse' : 'fish';
 async function petListLoad() {
   if (!auth) { petPets = []; return; }
   try { const r = await api('/api/pet/list'); petPets = r.pets || []; } catch (e) {}
@@ -4548,7 +4584,8 @@ function ptSprite(c, p, x, y, sz, opt) {
   c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(0, 4, sz * 0.38, sz * 0.1, 0, 0, 7); c.fill();
   const bob = sleep ? Math.sin(t / 40) * 1.2 : kind === 'fish' ? Math.sin(t / 14) * 5 : Math.abs(Math.sin(t / 26)) * (opt.hop || 3);
   const sx = (opt.dir || 1) * (kind === 'fish' ? Math.sin(t / 50) > 0 ? 1 : -1 : 1);
-  c.translate(0, -sz * 0.45 - bob); c.scale(sx, 1); c.font = sz + 'px "Apple Color Emoji","Segoe UI Emoji",system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(p.species, 0, 0);
+  c.translate(0, -sz * 0.45 - bob);
+  if (p.species === '🐭') { c.save(); c.translate(0, sz * 0.45); c.scale(sx, 1); drawMouse(c, sz * 1.15, t, { sleep }); c.restore(); } else { c.scale(sx, 1); c.font = sz + 'px "Apple Color Emoji","Segoe UI Emoji",system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(p.species, 0, 0); }
   const dirt = p.dirty ? 1 : Math.min(1, p.t / p.ivl);
   if (dirt > 0.2 && !opt.clean) { const n = Math.ceil(dirt * 9); for (let i = 0; i < n; i++) { const a = i * 2.4, rr = sz * (0.12 + 0.22 * ((i * 37) % 10) / 10); c.fillStyle = 'rgba(110,70,30,' + (0.45 + 0.3 * dirt) + ')'; c.beginPath(); c.ellipse(Math.cos(a) * rr, Math.sin(a * 1.3) * rr * 0.9, 3 + (i % 3) * 1.5, 2.5 + (i % 2) * 1.5, a, 0, 7); c.fill(); } }
   c.restore();
