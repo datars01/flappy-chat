@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Pacifico&family=Lalezar&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -4203,13 +4203,34 @@ function hChar_(c, S) {
 }
 const hSortY = () => (hChar.sit || (hChar.jump && hChar.jump.kind === 'sit')) ? ((hChar.seat && hChar.seat.slot === 'seat') ? hChar.seat.ey + 0.5 : hChar.y + 10) : hChar.y;
 const hOthersIn = view => Object.values(hOthers).filter(o => o.view === view);
+/* لافتة اسم الحيوان: لوح ألماسي متلألئ بخط مميز (Lalezar للعربي + Pacifico للإنجليزي) */
+function gemTag(c, text, cx, y, t, sc) {
+  sc = sc || 1; c.save(); const fs = 15 * sc; c.font = fs + 'px Lalezar, Pacifico, Cairo, system-ui, cursive'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  const tw = Math.min(150 * sc, c.measureText(text).width), w = tw + 34 * sc, h = 24 * sc, x = cx - w / 2, b = h * 0.34;
+  const path = () => { c.beginPath(); c.moveTo(x, y + h / 2); c.lineTo(x + b, y); c.lineTo(x + w - b, y); c.lineTo(x + w, y + h / 2); c.lineTo(x + w - b, y + h); c.lineTo(x + b, y + h); c.closePath(); };
+  c.shadowColor = 'rgba(120,220,255,.85)'; c.shadowBlur = 9 * sc; path();
+  const g = c.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, '#1b2f6e'); g.addColorStop(0.45, '#5b3fb8'); g.addColorStop(1, '#b02fa0'); c.fillStyle = g; c.fill(); c.shadowBlur = 0;
+  c.save(); path(); c.clip();
+  c.fillStyle = 'rgba(255,255,255,.14)'; c.beginPath(); c.moveTo(x, y); c.lineTo(x + w, y); c.lineTo(x + w - b, y + h * 0.48); c.lineTo(x + b, y + h * 0.48); c.fill();   // سطح لامع علوي
+  c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 0.8; c.beginPath(); [[x + b, y, x + w * 0.3, y + h], [x + w - b, y, x + w * 0.7, y + h], [x + w * 0.3, y + h, x + w / 2, y], [x + w * 0.7, y + h, x + w / 2, y]].forEach(l => { c.moveTo(l[0], l[1]); c.lineTo(l[2], l[3]); }); c.stroke();   // أوجه الألماس
+  const bx = x - w * 0.4 + ((t * 1.6) % (w * 1.8)); c.fillStyle = 'rgba(255,255,255,.42)'; c.beginPath(); c.moveTo(bx, y); c.lineTo(bx + 9 * sc, y); c.lineTo(bx + 9 * sc - 12 * sc, y + h); c.lineTo(bx - 12 * sc, y + h); c.fill();   // لمعة تمر
+  c.restore();
+  path(); c.lineWidth = 1.6 * sc; const sg = c.createLinearGradient(x, y, x + w, y); sg.addColorStop(0, '#bff6ff'); sg.addColorStop(0.5, '#ffffff'); sg.addColorStop(1, '#ffc2ec'); c.strokeStyle = sg; c.stroke();
+  // الماسة الصغيرة
+  const dx = x + 13 * sc, dy = y + h / 2; c.fillStyle = '#8ff0ff'; c.beginPath(); c.moveTo(dx - 6 * sc, dy - 2 * sc); c.lineTo(dx - 3 * sc, dy - 6 * sc); c.lineTo(dx + 3 * sc, dy - 6 * sc); c.lineTo(dx + 6 * sc, dy - 2 * sc); c.lineTo(dx, dy + 6 * sc); c.closePath(); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 0.8; c.stroke(); c.beginPath(); c.moveTo(dx - 6 * sc, dy - 2 * sc); c.lineTo(dx + 6 * sc, dy - 2 * sc); c.stroke();
+  // النص
+  c.lineJoin = 'round'; c.lineWidth = 3 * sc; c.strokeStyle = 'rgba(20,10,60,.85)'; c.strokeText(text, cx + 9 * sc, y + h * 0.72, tw); c.fillStyle = '#fff'; c.fillText(text, cx + 9 * sc, y + h * 0.72, tw);
+  // نجوم تتلألأ
+  [[0.1, -0.15, 0], [0.92, 0.05, 1.7], [0.55, 1.1, 3.1], [0.3, 1.05, 4.6]].forEach((s, i) => { const a = Math.max(0, Math.sin(t / 14 + s[2])); if (a < 0.15) return; const sx = x + w * s[0], sy = y + h * s[1], r = (3 + 3 * a) * sc; c.globalAlpha = a; c.fillStyle = '#fff'; c.beginPath(); c.moveTo(sx, sy - r); c.lineTo(sx + r * 0.25, sy - r * 0.25); c.lineTo(sx + r, sy); c.lineTo(sx + r * 0.25, sy + r * 0.25); c.lineTo(sx, sy + r); c.lineTo(sx - r * 0.25, sy + r * 0.25); c.lineTo(sx - r, sy); c.lineTo(sx - r * 0.25, sy - r * 0.25); c.closePath(); c.fill(); });
+  c.restore();
+}
+try { document.fonts && document.fonts.load('16px Lalezar'); document.fonts.load('16px Pacifico'); } catch (e) {}
 const hPetName = () => hVis ? (hVis.petName || '') : ((petPets.find(p => p.mine) || {}).name || '');
 function hPetTag(c, S, it) {
   const nm = hPetName(), v = hVal(S, 'pet'); if (!nm || !v) return;
-  const k = hSclOf('pet'), top = v === '🐠' ? 84 * k : it[3] * (v === '🐭' ? 1.3 : 1.02) + 4;
-  c.save(); c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.min(120, c.measureText(nm).width + 18), x = Math.max(w / 2 + 2, Math.min(318 - w / 2, it[1])), y = Math.max(2, it[2] - top - 16 - (hPetW.on && hPetW.mv ? Math.abs(Math.sin(hT / 4)) * 3 : 0));
-  c.fillStyle = 'rgba(255,255,255,.93)'; c.strokeStyle = '#ff8fb0'; c.lineWidth = 1.2; c.beginPath(); if (c.roundRect) c.roundRect(x - w / 2, y, w, 15, 7.5); else c.rect(x - w / 2, y, w, 15); c.fill(); c.stroke();
-  c.fillStyle = '#8a1f4d'; c.fillText('🐾 ' + nm, x, y + 11, w - 6); c.restore();
+  const k = hSclOf('pet'), top = v === '🐠' ? 84 * k : it[3] * (v === '🐭' ? 1.3 : 1.02) + 4, sc = 0.78;
+  const w = Math.min(150 * sc, nm.length * 9) + 34 * sc, x = Math.max(w / 2 + 2, Math.min(318 - w / 2, it[1])), y = Math.max(2, it[2] - top - 28 - (hPetW.on && hPetW.mv ? Math.abs(Math.sin(hT / 4)) * 3 : 0));
+  gemTag(c, nm, x, y, hT, sc);
 }
 function hNameTag(c, txt, x, y, me) {
   c.save(); c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(txt).width + 12;
@@ -4744,8 +4765,7 @@ function ptSprite(c, p, x, y, sz, opt) {
   if (dirt > 0.2 && !opt.clean) { const n = Math.ceil(dirt * 9); for (let i = 0; i < n; i++) { const a = i * 2.4, rr = sz * (0.12 + 0.22 * ((i * 37) % 10) / 10); c.fillStyle = 'rgba(110,70,30,' + (0.45 + 0.3 * dirt) + ')'; c.beginPath(); c.ellipse(Math.cos(a) * rr, Math.sin(a * 1.3) * rr * 0.9, 3 + (i % 3) * 1.5, 2.5 + (i % 2) * 1.5, a, 0, 7); c.fill(); } }
   c.restore();
   if (p.dirty && !opt.clean) { for (let i = 0; i < 2; i++) { const a = t / 18 + i * 3.1; c.font = '12px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('🪰', x + Math.cos(a) * sz * 0.55, y - sz * 0.8 + Math.sin(a * 1.4) * 10); } }
-  if (p.name && !opt.noTag) { c.save(); c.font = 'bold 13px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.min(190, c.measureText(p.name).width + 24), ty = y - sz * (lie > 0.5 ? 1.0 : 1.45) - 18, tx = Math.max(w / 2 + 2, Math.min(318 - w / 2, x));
-    c.fillStyle = 'rgba(255,255,255,.95)'; c.strokeStyle = '#ff8fb0'; c.lineWidth = 1.6; c.beginPath(); if (c.roundRect) c.roundRect(tx - w / 2, ty, w, 20, 10); else c.rect(tx - w / 2, ty, w, 20); c.fill(); c.stroke(); c.fillStyle = '#8a1f4d'; c.fillText('🐾 ' + p.name, tx, ty + 14, w - 8); c.restore(); }
+  if (p.name && !opt.noTag) { const nw = Math.min(150, p.name.length * 9) + 34 * 1.1; gemTag(c, p.name, Math.max(nw / 2 + 2, Math.min(318 - nw / 2, x)), y - sz * (lie > 0.5 ? 1.0 : 1.45) - 24, t, 1.1); }
   if (sleep && kind !== 'mouse' && lie > 0.8) { c.font = '13px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('😴', x - sz * 0.42, y - sz * 0.5); }
   if (sleep) { c.font = 'bold 15px system-ui'; c.textAlign = 'center'; c.fillStyle = '#cfe0ff'; const k = (t % 120) / 120; c.globalAlpha = 1 - k; c.fillText('💤', x + 22 + k * 10, y - sz - k * 24); c.globalAlpha = 1; }
 }
