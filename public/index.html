@@ -7371,6 +7371,21 @@ $('offX').onclick = () => { offDismissed = true; offHide(); };
 setInterval(() => { if (navigator.onLine && offShown) netBack(); }, 15000);
 if (!navigator.onLine) offShow(false);
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+/* ================= تحديث تلقائي: إذا نزل تحديث جديد بالسيرفر الصفحة تتحدّث لحالها ================= */
+(function () {
+  let mine = null, shown = false;
+  async function check() {
+    try { const r = await fetch('/api/version', { cache: 'no-store' }); if (!r.ok) return; const v = (await r.json()).v; if (!v) return; if (!mine) { mine = v; return; } if (v === mine || shown) return; shown = true; upd(); } catch (e) {}
+  }
+  function busy() { try { return typeof state !== 'undefined' && state === 'play'; } catch (e) { return false; } }
+  function upd() {
+    const b = document.createElement('div'); b.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:2147483600;background:linear-gradient(135deg,#8f5cff,#ff7ab8);color:#fff;padding:10px 16px;border-radius:16px;border:2px solid #fff;font:800 14px Cairo,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:center;direction:rtl;cursor:pointer';
+    b.textContent = '✨ نزل تحديث جديد للعبة! جاري التحديث...'; b.onclick = go; document.body.appendChild(b);
+    let left = 4; const t = setInterval(() => { if (busy()) { b.textContent = '✨ نزل تحديث جديد — راح يتحدّث بعد ما تخلص المرحلة (أو دوس هنا)'; return; } if (--left <= 0) { clearInterval(t); go(); } }, 1000);
+  }
+  function go() { try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.update())); } catch (e) {} setTimeout(() => location.reload(), 300); }
+  check(); setInterval(check, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); }); window.addEventListener('online', check);
+})();
 /* ================= منع تقريب الشاشة (ضغطتين/أصابع/كنترول+عجلة) ================= */
 (function () {
   const isField = el => !!(el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]'));

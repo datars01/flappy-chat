@@ -364,6 +364,9 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(express.json({ limit: '10kb' }));
+// رقم نسخة الواجهة: يتغير مع كل تحديث، والصفحات المفتوحة تتحدّث لوحدها
+const BUILD = (() => { try { return crypto.createHash('md5').update(fs.readFileSync(path.join(__dirname, 'public', 'index.html'))).digest('hex').slice(0, 10); } catch (e) { return String(Date.now()); } })();
+app.get('/api/version', (req, res) => { res.set('Cache-Control', 'no-store'); res.json({ v: BUILD }); });
 app.get('/healthz', (req, res) => res.type('text').send('ok'));   // لفحص الصحة وإبقاء السيرفر صاحي
 
 function authMw(req, res, next) {
