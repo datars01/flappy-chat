@@ -5894,7 +5894,7 @@ var AVT = (function () {
 })();
 
 /* ================= نظام الغرف 🏝️ ================= */
-const RMW = 1200, RMH = 620;   // المنتجع صار أعرض والساحل يمتد لليمين
+const RMW = 1200, RMH = 960;   // المنتجع صار أعرض والساحل يمتد لليمين
 var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
 const RM_SEATS = [];
 (function () {
@@ -6180,8 +6180,8 @@ function rmTapDraw(c) {
   const p = (el % 1100) / 1100; c.globalAlpha = 0.3 * a * (1 - p); c.strokeStyle = '#1a1208'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, 0, 7 + p * 9, 3 + p * 3.6, 0, 0, 7); c.stroke(); c.restore();
 }
 function rmWalkTo(x, y) { const m = RM.me; if (m.jump) { if (m.jump.kind === 'stand') m.after = [x, y]; return; } if (m.sit) { rmStand([x, y]); return; } m.sit = false; m.goal = false; m.seat = null; m.tx = Math.max(24, Math.min(RMW - 24, x)); m.ty = Math.max(212, Math.min(RMH - 16, y)); }
-function rmSitAt(sp) { const m = RM.me; if (m.dance) rmSetDance(0); if (m.jump || m.sit || rmBusy(sp)) { if (rmBusy(sp)) showToast('⛔ هذا المكان مشغول'); return; } m.seat = sp; m.sit = false; m.goal = true; m.after = null; m.tx = sp.x; m.ty = Math.min(606, sp.ey + 10); sfx('click'); rmPrompt(true); }
-function rmStand(after) { const m = RM.me; if (m.jump) return; if (m.sit && RM.gSide !== null) { const P = $('rmGame'); if (P) P.hidden = true; } if (!m.sit) { m.goal = false; m.seat = null; m.tx = m.x; m.ty = m.y; rmPrompt(true); if (after) rmWalkTo(after[0], after[1]); return; } const s = m.seat; m.sit = false; m.after = after || null; rmPrompt(true); rmJump(m.x + (s && s.d ? -s.d * 10 : 0), Math.min(606, (s ? s.ey : m.y) + 10), 18, 9, 'stand'); }
+function rmSitAt(sp) { const m = RM.me; if (m.dance) rmSetDance(0); if (m.jump || m.sit || rmBusy(sp)) { if (rmBusy(sp)) showToast('⛔ هذا المكان مشغول'); return; } m.seat = sp; m.sit = false; m.goal = true; m.after = null; m.tx = sp.x; m.ty = Math.min(RMH - 14, sp.ey + 10); sfx('click'); rmPrompt(true); }
+function rmStand(after) { const m = RM.me; if (m.jump) return; if (m.sit && RM.gSide !== null) { const P = $('rmGame'); if (P) P.hidden = true; } if (!m.sit) { m.goal = false; m.seat = null; m.tx = m.x; m.ty = m.y; rmPrompt(true); if (after) rmWalkTo(after[0], after[1]); return; } const s = m.seat; m.sit = false; m.after = after || null; rmPrompt(true); rmJump(m.x + (s && s.d ? -s.d * 10 : 0), Math.min(RMH - 14, (s ? s.ey : m.y) + 10), 18, 9, 'stand'); }
 /* ---------- تيجان وهالات الادمن + رتبة مميز ---------- */
 function drawCrown(c, x, y, kind, s) {
   s = s || 1; c.save(); c.translate(x, y); c.scale(s, s);
