@@ -721,6 +721,7 @@
   .rsQ small { font-size: 11.5px; } #gSoon { opacity: .9; font-size: 13px; color: #cfe; }
   .chS small { opacity: .9; } #gSec { font-size: 15px; }
   #gameCard .tab { font-size: 13px; font-weight: 700; } .gTiles .tile .tl { font-size: 13px; }
+  #offMod { position: fixed; inset: 0; z-index: 10060; background: rgba(5,6,20,.8); display: flex; align-items: center; justify-content: center; padding: 16px; } #offMod[hidden] { display: none; } #offMod .rsBox { border-radius: 24px; border: 2px solid #6a4af0; animation: tPop .4s cubic-bezier(.3,1.6,.5,1); } #offMod #offModX { background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; }
   @media (min-width: 700px) { #app { max-width: 640px; } #hub { gap: 10px; } .tile:not(.tileResort) .ti { width: 50px; height: 50px; font-size: 26px; } .tile .tl { font-size: 14px; } }
 </style>
 </head>
@@ -769,7 +770,8 @@
   <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
-  <div id="rsInfo" hidden><div class="rsBox"><h3>🏝️ ما هو المنتجع؟</h3><p>شاطئ تدخله مع الناس بشخصيتك: تمشي وتجلس وتسولف.</p><ul><li>💬 دردشة فوق الرؤوس وهمسات خاصة</li><li>🎲 ألعاب على الطاولات (سلم وثعبان، دومينو، منقلة، إكس أو)</li><li>🎣 صيد وقلاع رمل وقهوة من جربوع</li><li>🌧️🌙❄️ مطر وليل وثلج كل 10 دقائق</li><li>🔥 سهرة حول النار وألعاب نارية</li></ul><button id="rsInfoGo" type="button">🏝️ ادخل المنتجع</button><button id="rsInfoX" type="button">فهمت ✔</button></div></div>
+  <div id="offMod" hidden><div class="rsBox" style="text-align:center"><div style="font-size:54px">📴</div><h3>لازم تتصل بالإنترنت</h3><p>المنتجع أونلاين، وتحتاج إنترنت حتى تدخله وتدردش وتلعب وياه أصدقائك. شغّل الإنترنت وحاول مرة ثانية.</p><button id="offModX" type="button">حسناً ✔</button></div></div>
+<div id="rsInfo" hidden><div class="rsBox"><h3>🏝️ ما هو المنتجع؟</h3><p>شاطئ تدخله مع الناس بشخصيتك: تمشي وتجلس وتسولف.</p><ul><li>💬 دردشة فوق الرؤوس وهمسات خاصة</li><li>🎲 ألعاب على الطاولات (سلم وثعبان، دومينو، منقلة، إكس أو)</li><li>🎣 صيد وقلاع رمل وقهوة من جربوع</li><li>🌧️🌙❄️ مطر وليل وثلج كل 10 دقائق</li><li>🔥 سهرة حول النار وألعاب نارية</li></ul><button id="rsInfoGo" type="button">🏝️ ادخل المنتجع</button><button id="rsInfoX" type="button">فهمت ✔</button></div></div>
 </div>
 
 <div id="offBar" role="alert"><span>📴 ما اكو إنترنت حالياً. تكدر تلعب لوحدك عادي، بس للوصول للرسائل والحديث والتواصل واللعب مع الأصدقاء لازم تشغّل الإنترنت وتتصل أونلاين. أول ما يرجع الاتصال اللعبة تتصل تلقائياً وتكمل طبيعي.</span><button id="offX" type="button">إلغاء</button></div>
@@ -2403,6 +2405,7 @@ function rmHelpOpen() { $('rmHelp').hidden = false; }
 $('rmHelpB').onclick = rmHelpOpen; $('rmHelpL').onclick = rmHelpOpen; $('rmHelpX').onclick = () => { $('rmHelp').hidden = true; };
 $('rmHelp').addEventListener('click', e => { if (e.target === $('rmHelp')) $('rmHelp').hidden = true; });
 function rmHelpFirst() { try { if (localStorage.getItem('rmHelpSeen')) return; localStorage.setItem('rmHelpSeen', '1'); } catch (e) { return; } setTimeout(rmHelpOpen, 1200); }
+$('offModX').onclick = () => { $('offMod').hidden = true; };
 $('rsInfoX').onclick = () => { $('rsInfo').hidden = true; };
 $('rsInfo').addEventListener('click', e => { if (e.target === $('rsInfo')) $('rsInfo').hidden = true; });
 $('rsInfoGo').onclick = () => { $('rsInfo').hidden = true; openPage('rooms'); };
@@ -3997,6 +4000,7 @@ function renderHome() {
 function openPage(id) {
   if (GW.wall && !auth) id = 'account';
   const el = $('pg-' + id); if (!el) return;
+  if (!navigator.onLine && id === 'rooms') { $('offMod').hidden = false; return; }
   if (!navigator.onLine && (id === 'friends' || id === 'lb')) offShow(true);
   if (document.body.classList.contains('full')) exitFull();   // وضع ملء الشاشة كان يخفي الصفحات خلف اللعبة
   autoPause();
