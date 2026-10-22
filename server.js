@@ -1774,6 +1774,7 @@ wss.on('connection', (ws, req) => {
     return send(ws, { t: 'rm_guest', name: gname });
   }
   if (!key) { send(ws, { t: 'err', fatal: true, error: 'سجّل دخول من جديد' }); return ws.close(); }
+  if ([...wss.clients].some(w => w !== ws && !w.guest && w.key === key && w.readyState === 1)) { send(ws, { t: 'err', fatal: true, error: 'هذا الحساب داخل حالياً من جهاز أو متصفح آخر' }); return ws.close(); }   // حساب واحد = اتصال واحد، الأول يبقى
   ws.key = key; ws.room = null; ws.alive = true; ws.bucket = { n: 0, t: Date.now() };
   if (!isOnline(key, ws)) presenceChange(key, true);
   ws.on('pong', () => { ws.alive = true; });
