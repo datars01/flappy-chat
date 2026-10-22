@@ -1349,7 +1349,7 @@ function hvOnMsg(ws, d) {
     hvBc(h.owner, { t: 'hv_say', n: me.name, slot: 'pet', kind, txt }, ws);
   } else if (d.t === 'hv_chat') {   // شات داخل البيت (يطلع فوق الراس + سجل محفوظ لصاحب البيت)
     const h = ws.hv; if (!h || now - (h.ct || 0) < 600) return; h.ct = now;
-    const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return;
+    let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return; if (!isAdmKey(ws)) txt = profMask(txt);
     const ou = db.users[h.owner]; ou.hlog = Array.isArray(ou.hlog) ? ou.hlog : []; const m = { n: me.name, txt, ts: now };
     ou.hlog.push(m); while (ou.hlog.length > 100) ou.hlog.shift(); save();
     hvBc(h.owner, { t: 'hv_chat', m });
@@ -1385,6 +1385,20 @@ function rmEnsurePerm() {
 }
 function rmClean() { let ch = false; for (const r of [...rmRooms.values()]) if (!r.perm && !r.mem.size && Date.now() - (r.lastActive || r.created) > RM_TTL) { rmRooms.delete(r.id); ch = true; } if (ch) rmPersist(); }
 const rmIsOwner = (r, key) => r.owner === key || !!(db.users[key] && db.users[key].admin);
+/* ====== فلتر الألفاظ النابية (للأعضاء فقط، المشرفون معفيون) ====== */
+const PROF_N = s => String(s || '').toLowerCase().replace(/[\u064b-\u065f\u0670\u0640\u200c\u200d]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/(.)\1+/g, '$1');
+const PROF_TOK = new RegExp('^[وف]?(?:كس|زب|عير|نيك|ناك|طيز|خرا|نيج|انيك|انيج|ينيك|تنيك|خول|عرص|dick|sex|سكس)(?:ي|ك|ه|ها|هم|كم|نا|ات)?$');
+const PROF_CMP = ['كسمك', 'كسخت', 'كسام', 'قحب', 'شرموط', 'منيو', 'ديوث', 'متناك', 'عاهر', 'ابنالكلب', 'ابنالقحب', 'ابنالزاني', 'كحب', 'عرصه', 'fuck', 'shit', 'bitch', 'ashole', 'pusy', 'cunt', 'whore', 'niga', 'niger'];
+function profane(s) { const n = PROF_N(s); if (!n) return false; const toks = n.split(/[^\u0600-\u06ffa-z0-9]+/).filter(Boolean); if (toks.some(x => PROF_TOK.test(x))) return true; const cmp = toks.join(''); return PROF_CMP.some(w => cmp.includes(w)); }
+const isAdmKey = w => { const u = !w.guest && db.users[w.key]; return !!(u && u.admin); };
+const stars = w => '*'.repeat(Math.max(2, w.length));
+function profMask(s) {
+  let o = String(s).replace(/[\u0600-\u06ffA-Za-z0-9]+/g, w => profane(w) ? stars(w) : w);
+  o = o.replace(/(?:ابن|ولد|بنت)\s+(?:ال)?(?:كلب|قحب[ةه]|زاني[ةه]?)/g, m => stars(m.replace(/\s+/g, '')));
+  o = o.replace(/(?:^|[^\u0600-\u06ffA-Za-z0-9])((?:[\u0600-\u06ffA-Za-z][\s.\-_*]+){2,}[\u0600-\u06ffA-Za-z])(?![\u0600-\u06ffA-Za-z0-9])/g, (m, run) => profane(run.replace(/[\s.\-_*]+/g, '')) ? m.replace(run, stars(run.replace(/\s+/g, ''))) : m);
+  return o;
+}
+function rmProf(ws, r, h, now) { h.pf = (h.pf || 0) + 1; if (h.pf >= 3) { h.pf = 0; r.mutes = r.mutes || new Map(); r.mutes.set(rmMuteKey(ws), now + 300000); rmSlog(r, 'النظام', 'كتم تلقائي ' + rmNm(ws) + ' 5 د (ألفاظ نابية)'); return send(ws, { t: 'rm_err', error: '🔇 كتمك النظام 5 دقايق لتكرار الألفاظ النابية' }); } send(ws, { t: 'rm_err', error: '🚫 ممنوع الألفاظ النابية (' + h.pf + '/3 ثم كتم)' }); }
 const rmMuteKey = w => w.guest ? 'ip:' + w.ip : w.key;
 function rmMuted(r, w, now) { const u = r.mutes && r.mutes.get(rmMuteKey(w)); if (!u) return 0; if (u <= now) { r.mutes.delete(rmMuteKey(w)); return 0; } return Math.ceil((u - now) / 60000); }
 function rmSlog(r, who, act) { const e = { ts: Date.now(), who, act }; (r.slog = r.slog || []).push(e); while (r.slog.length > 60) r.slog.shift(); for (const w of r.mem) if (rmStaff(r, w)) send(w, { t: 'rm_slog_add', e }); }
@@ -1567,7 +1581,7 @@ function rmOnMsg(ws, d) {
     if (Math.hypot(tw.rm.x - h.x, tw.rm.y - h.y) > 110) return send(ws, { t: 'rm_ok', msg: '🚶 اقترب منه أكثر' }); if (h.hid || tw.rm.hid) { if (!(rmStaff(r, ws) && rmStaff(r, tw))) return; }
     h.hgt = now; const k = d.k === 'hug' ? 'hug' : 'shake', m = { t: 'rm_hug', from: rmNm(ws), to: rmNm(tw), k }; if (h.hid || tw.rm.hid) { send(ws, m); send(tw, m); } else rmBc(r, m);
   } else if (d.t === 'rm_whisper') {
-    const h = ws.rm; if (!h || now - (h.wst || 0) < 800) return; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); } const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200); if (!txt) return;
+    const h = ws.rm; if (!h || now - (h.wst || 0) < 800) return; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); } let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
     const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' }); h.wst = now;
     const m = { t: 'rm_whisper', from: rmNm(ws), to: rmNm(tw), txt }; send(tw, m); send(ws, m);
   } else if (d.t === 'rm_wx') {   // تحكم المشرفين بالطقس والوقت
@@ -1592,7 +1606,7 @@ function rmOnMsg(ws, d) {
     rmBc(r, { t: 'rm_kiss', from: me.name, to: rmNm(tw) });
   } else if (d.t === 'rm_chat') {
     const h = ws.rm; if (!h || now - h.ct < (ws.guest ? 1500 : 600)) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); }
-    const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 500); if (!txt) return;
+    let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 500); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
     const m = { n: me.name, txt, ts: now, adm: rmAdm(ws) }; if (h.hid) m.hid = 1; r.log.push(m); while (r.log.length > 80) r.log.shift(); if (h.hid) rmBcV(r, { t: 'rm_chat', m }, ws), send(ws, { t: 'rm_chat', m }); else rmBc(r, { t: 'rm_chat', m });
   } else if (d.t === 'rm_leave') rmLeave(ws);
   else if (d.t === 'rm_kick' || d.t === 'rm_mute' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
@@ -1662,7 +1676,7 @@ function onMsg(ws, d) {
   const find = id => room.msgs.find(m => m.id === String(id));
 
   if (d.t === 'msg') {
-    const text = String(d.text || '').trim().slice(0, 500);
+    let text = String(d.text || '').trim().slice(0, 500); if (text && !isAdmKey(ws)) text = profMask(text);
     let media = null;
     if (d.media && typeof d.media === 'object') {
       const mm = MEDIA_RE.exec(String(d.media.url || ''));
