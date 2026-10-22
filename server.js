@@ -1603,7 +1603,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_hide') {   // اختفاء المشرفين
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!(rmAdm(ws) || r.mods.has(ws.key))) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     h.hid = d.on ? 1 : 0; const nm = rmNm(ws), pj = JSON.stringify(h.hid ? { t: 'rm_leave', n: nm } : { t: 'rm_join', m: rmPubM(ws) }), hj = JSON.stringify({ t: 'rm_hid', n: nm, on: h.hid });
-    for (const w of r.mem) if (w.readyState === 1 && w !== ws) w.send(rmStaff(r, w) ? hj : pj); send(ws, hj);
+    for (const w of r.mem) if (w.readyState === 1 && w !== ws) w.send(rmStaff(r, w) ? hj : pj); ws.send(hj);
   } else if (d.t === 'rm_umb') {   // شمسية المطر
     const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
