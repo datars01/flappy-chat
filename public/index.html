@@ -5806,7 +5806,12 @@ function crownIcon(kind) { const k = document.createElement('canvas'); k.width =
 const AV_H = 76;
 function rmSetDance(e) { const m = RM.me; e = e | 0; if ((m.dance || 0) === e) return; if (e && (m.sit || m.jump)) { showToast('🧍 قوم من الكرسي أول'); return; } m.dance = e; m.dt = 0; rmSend({ t: 'rm_emo', e }); rmDanceMark(); }
 function rmDrawMe(c, st) { rmDrawMeH(c, st); rmBurnFx(c, RM.me); rmCupDraw(c, RM.me); if (RM.me.dance === 9) rmRodDraw(c, RM.me, RM.fish.st === 'bite', true); }
-function rmDrawMeH(c, st) { if (RM.me.hid) { c.save(); c.globalAlpha = 0.42; rmDrawMe0(c, st); c.restore(); rmGhost(c, RM.me.x, RM.me.y); return; } rmDrawMe0(c, st); }
+RM.gb = null;
+function rmGhostDraw(c, x, y, fn) {   // نرسم الشخصية على لوحة جانبية ثم ننسخها بشفافية (حتى ما يخرب أي globalAlpha داخلي)
+  const B = RM.gb || (RM.gb = document.createElement('canvas')); if (B.width !== 560) { B.width = 560; B.height = 600; } const g = B.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 560, 600); g.scale(2, 2); g.translate(140 - x, 230 - y); g.globalAlpha = 1; try { fn(g); } catch (e) {}
+  c.save(); c.globalAlpha = 0.4; c.drawImage(B, 0, 0, 560, 600, x - 140, y - 230, 280, 300); c.restore();
+}
+function rmDrawMeH(c, st) { if (RM.me.hid) { rmGhostDraw(c, RM.me.x, RM.me.y, g => rmDrawMe0(g, st)); rmGhost(c, RM.me.x, RM.me.y); return; } rmDrawMe0(c, st); }
 function rmGhost(c, x, y) { const t = RM.T / 30; c.save(); c.globalAlpha = 0.3 + 0.12 * Math.sin(t * 2); const g = c.createRadialGradient(x, y - 40, 5, x, y - 40, 62); g.addColorStop(0, 'rgba(160,200,255,.55)'); g.addColorStop(1, 'rgba(160,200,255,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(x, y - 40, 40, 66, 0, 0, 7); c.fill(); c.globalAlpha = 0.8; c.font = '12px sans-serif'; c.textAlign = 'center'; c.fillText('👻', x + 22, y - 92); c.restore(); }
 function rmDrawMe0(c, st) {
   const m = RM.me, sit = m.sit && !st.mv;
@@ -5820,7 +5825,7 @@ function rmDrawMe0(c, st) {
   const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm);
 }
 function rmDrawOther(c, o) { rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); rmCupDraw(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
-function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; c.save(); c.globalAlpha = 0.42; rmDrawOther0(c, o); c.restore(); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
+function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; rmGhostDraw(c, o.x, o.y, g => rmDrawOther0(g, o)); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
 function rmDrawOther0(c, o) {
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
   const sit = o.sit && !mv; if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
