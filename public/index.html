@@ -748,7 +748,6 @@
 
   <div id="fullBar" class="homeBtns">
     <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
-    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
   </div>
   <div id="gSec">🎮 ألعاب أخرى</div>
   <div id="gameCard">
@@ -5034,13 +5033,13 @@ function heartsFx(x, y) {
 /* ================= الوضع الفاتح/الداكن ================= */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $('themeBtn').textContent = t === 'light' ? '🌙 داكن' : '☀️ فاتح';
+  if ($('themeBtn')) $('themeBtn').textContent = t === 'light' ? '🌙 داكن' : '☀️ فاتح';
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#eef4f7' : '#16232d';
   try { localStorage.setItem('flappyTheme', t); } catch (e) {}
 }
 let theme = 'dark'; try { theme = localStorage.getItem('flappyTheme') === 'light' ? 'light' : 'dark'; } catch (e) {}
 applyTheme(theme);
-$('themeBtn').onclick = () => { theme = theme === 'light' ? 'dark' : 'light'; applyTheme(theme); };
+if ($('themeBtn')) $('themeBtn').onclick = () => { theme = theme === 'light' ? 'dark' : 'light'; applyTheme(theme); };
 
 /* ================= مشاركة النتيجة + التثبيت كتطبيق ================= */
 $('shareBtn').onclick = async () => {
