@@ -394,7 +394,7 @@ app.post('/api/register', (req, res) => {
   const refBy = rc ? Object.keys(db.users).find(k => db.users[k].refCode === rc) : null;
   db.users[key] = Object.assign({ name, salt, hash: hashPw(p, salt), best: 0, games: 0, bestAt: 0, created: Date.now(), freeSkips: 2 }, refBy ? { refBy } : {});
   const token = newSession(key);
-  save();
+  save(); alog('🆕', 'سجّل حساب جديد: ' + name);
   res.json({ token, user: userInfo(key) });
 });
 
@@ -493,7 +493,7 @@ app.post('/api/buy', authMw, (req, res) => {
   const price = shopPrice(id), coins = u.coins || 0;
   if (coins < price) return res.status(403).json({ error: 'عملاتك ما تكفي، ينقصك ' + (price - coins) });
   u.coins = coins - price; u.owned.push(id);
-  save();
+  save(); alog('🛍️', u.name + ' اشترى سكن بـ ' + price + ' عملة');
   res.json({ coins: u.coins, owned: u.owned, skin: id });
 });
 
@@ -516,6 +516,7 @@ app.post('/api/start', authMw, (req, res) => {
   if (u.admin) sl = Math.max(1, Math.min(500, sl));   // الأدمن يبدأ من أي مرحلة
   else if (sl !== (u.cp || 1) && (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1))) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
   games.set(gid, { k: req.key, sl, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
+  if (alOnce('st:' + req.key, 20e3)) alog('🎮', u.name + ' بدأ يلعب من المرحلة ' + sl);
   res.json({ gid, start: sl });
 });
 
@@ -535,7 +536,7 @@ app.post('/api/level', authMw, (req, res) => {
   dy.bricks = (dy.bricks || 0) + gained; u.bricks = (u.bricks || 0) + gained;
   let newZone = false;
   if (zoneDone && (u.zones || 1) < Math.min(4, lv / 7 + 1)) { u.zones = Math.min(4, lv / 7 + 1); newZone = true; }   // 4 فصول
-  save();
+  save(); alog('🏁', u.name + ' خلّص المرحلة ' + lv + (newZone ? ' وفتح فصل جديد 🗺️' : ''));
   res.json({ gained, capped: gained < want, newZone, user: userInfo(req.key) });
 });
 
@@ -549,7 +550,8 @@ app.post('/api/skip', authMw, (req, res) => {
   if (coins < cost) return res.status(403).json({ error: 'عملاتك ما تكفي للتخطي، تحتاج ' + cost + ' وينقصك ' + (cost - coins) });
   if (free) u.freeSkips--; else u.coins = coins - cost; if (!free) g.skips = (g.skips || 0) + 1; else g.fskips = (g.fskips || 0) + 1; g.last = lv; g.lt = Date.now();
   if (lv + 1 > (u.cp || 1) || g.sl === (u.cp || 1)) u.cp = Math.min(500, lv + 1);
-  save(); res.json({ cost, free, nextCost: 200 * ((g.skips || 0) + 1), user: userInfo(req.key) });
+  save(); alog('⏭️', u.name + ' تخطّى المرحلة ' + lv + (free ? ' (مجاناً)' : ' بـ ' + cost + ' عملة'));
+  res.json({ cost, free, nextCost: 200 * ((g.skips || 0) + 1), user: userInfo(req.key) });
 });
 
 // مكافأة الكومبو: كل 3 كومبوهات بالفردي = 8 مواد بناء (بحد أدنى فاصل زمني وحد أعلى لكل لعبة)
@@ -572,7 +574,8 @@ app.post('/api/house/buy', authMw, (req, res) => {
   if (h.own.includes(it.id)) return res.status(400).json({ error: 'تملكه من قبل' });
   if ((u.bricks || 0) < it.price) return res.status(400).json({ error: 'مواد البناء ما تكفي' });
   u.bricks -= it.price; u.house = { own: h.own.filter(i => HOUSE_ITEM[i] && HOUSE_ITEM[i].price > 0).concat(it.id), set: Object.assign({}, h.set, { [it.slot]: it.id }), pos: h.pos };
-  save(); res.json({ user: userInfo(req.key) });
+  save(); alog('🏠', u.name + ' اشترى للبيت: ' + it.name);
+  res.json({ user: userInfo(req.key) });
 });
 // حفظ أماكن الأغراض (إزاحة عن الترتيب التلقائي)؛ القيمة null ترجع الغرض لمكانه الأصلي
 // بيت صديق (للأصدقاء فقط) مع الإعجابات
@@ -716,6 +719,7 @@ app.post('/api/score', authMw, (req, res) => {
   const g = games.get(gid);
   if (!g || g.k !== req.key) return res.status(400).json({ error: 'لعبة غير صالحة' });
   games.delete(gid);
+  if (Number.isFinite(score) && db.users[req.key]) alog('🎯', db.users[req.key].name + ' انتهت لعبته بنتيجة ' + score);
   const elapsed = (Date.now() - g.t) / 1000;
   // أقصى معدل معقول للنقاط بلعبة الكرات (نسمح بهامش واسع)
   if (!Number.isFinite(score) || score < 0 || score > 10000 || score > Math.floor(elapsed * 25) + 60)
@@ -932,6 +936,40 @@ function presenceChange(key, on) {
   if (!on) { u.lastSeen = Date.now(); save(); }
   for (const f of flist(u, 'friends')) pushTo(f, { t: 'f_presence', name: u.name, online: on, lastSeen: u.lastSeen || 0 });
 }
+/* ============ لوحة المشرفين: سجل حي (دخول/خروج/فعاليات) ============ */
+const ALOG = [], ALOG_MAX = 200, alSubs = new Set(), alGone = new Map(), alSeen = new Map();
+const unm = k => (db.users[k] && db.users[k].name) || '؟';
+function alWho() {
+  const acc = new Map(), gst = new Set();
+  for (const w of wss.clients) { if (w.readyState !== 1 || !w.key) continue; if (w.guest) gst.add(w.gname); else if (db.users[w.key]) acc.set(w.key, db.users[w.key].name); }
+  return { acc: acc.size, gst: gst.size, names: [...acc.values()].sort(), guests: [...gst].sort() };
+}
+let alCntT = null;
+function alCntPush() {
+  if (alCntT || !alSubs.size) return;
+  alCntT = setTimeout(() => { alCntT = null; const s = JSON.stringify(Object.assign({ t: 'al_cnt' }, alWho())); for (const w of alSubs) if (w.readyState === 1) w.send(s); }, 500);
+}
+function alog(ic, txt) {
+  const e = { ts: Date.now(), ic, txt: String(txt).slice(0, 180) }; ALOG.push(e); while (ALOG.length > ALOG_MAX) ALOG.shift();
+  const s = JSON.stringify({ t: 'al_add', e }); for (const w of alSubs) if (w.readyState === 1) w.send(s);
+}
+// نفس الحدث من نفس الشخص ما يتكرر خلال فترة قصيرة (إعادة اتصال وغيرها)
+function alOnce(id, ms) { const now = Date.now(), t = alSeen.get(id) || 0; if (now - t < ms) return false; alSeen.set(id, now); if (alSeen.size > 3000) for (const [k, v] of alSeen) if (now - v > 600e3) alSeen.delete(k); return true; }
+function alOn(key) { const t = alGone.get(key); if (t) { clearTimeout(t); alGone.delete(key); return; } alog('🟢', 'انضم ' + unm(key) + ' للعبة'); }
+function alOff(key) { if (alGone.has(key)) return; alGone.set(key, setTimeout(() => { alGone.delete(key); if (!isOnline(key)) alog('🔴', 'خرج ' + unm(key) + ' من اللعبة'); }, 6000)); }
+const AL_MAG = { freeze: '❄️ كرة التجميد', bomb: '💣 الكرة المتفجرة (قنبلة)', light: '⚡ كرة الصاعقة', slow: '🐢 كرة التباطؤ', wild: '🌈 الكرة السحرية' };
+function alMsg(ws, d) {
+  const u = !ws.guest && db.users[ws.key];
+  if (d.t === 'al_sub') { if (!u || !u.admin) return; alSubs.add(ws); return send(ws, Object.assign({ t: 'al_init', list: ALOG.slice(-120) }, alWho())); }
+  if (d.t === 'al_unsub') { alSubs.delete(ws); return; }
+  if (d.t === 'al_ev') {   // فعاليات من داخل اللعبة (الكرات السحرية وغيرها)
+    const now = Date.now(); if (now - (ws.alT || 0) < 1200) return; ws.alT = now; const nm = ws.guest ? ws.gname : unm(ws.key);
+    if (d.k === 'magic' && own(AL_MAG, d.m)) alog('✨', nm + ' استخدم ' + AL_MAG[d.m]);
+    else if (d.k === 'blast') alog('💥', nm + ' سوّى انفجار ٣ ضربات سريعة');
+    else if (d.k === 'combo' && Number.isFinite(+d.n) && +d.n >= 3) alog('🔥', nm + ' سوّى كومبو ×' + Math.min(99, Math.floor(+d.n)));
+  }
+}
+
 app.get('/api/friends', authMw, (req, res) => {
   const u = db.users[req.key];
   const ok = k => own(db.users, k);
@@ -1338,6 +1376,7 @@ function hvOnMsg(ws, d) {
     const members = [...set].filter(w => w.readyState === 1).map(hvPubM); set.add(ws);
     const ou = db.users[ok]; send(ws, { t: 'hv_state', owner: ou.name, members, light: ou.hlight !== false, log: (ou.hlog || []).slice(-50), bans: ok === ws.key ? hbNames(ou) : undefined });
     hvBc(ok, { t: 'hv_join', m: hvPubM(ws) }, ws);
+    if (alOnce('hv:' + ws.key + '>' + ok, 120e3)) alog('🏡', ok === ws.key ? unm(ws.key) + ' دخل بيته' : unm(ws.key) + ' زار بيت ' + unm(ok));
     if (ok !== ws.key) pushTo(ok, { t: 'hv_visit', name: me.name });
   } else if (d.t === 'hv_pos') {
     const h = ws.hv; if (!h || now - h.t < 90) return; h.t = now;
@@ -1405,7 +1444,7 @@ const BGD = 3 * 3600e3;
 function rmStat(r, now) { const day = new Date(now + BGD).toISOString().slice(0, 10); let s = r.stat; if (!s || s.day !== day) s = r.stat = { day, joins: 0, uniq: new Set(), peak: 0, msgs: 0, games: 0, hrs: new Array(24).fill(0) }; return s; }
 const rmMuteKey = w => w.guest ? 'ip:' + w.ip : w.key;
 function rmMuted(r, w, now) { const u = r.mutes && r.mutes.get(rmMuteKey(w)); if (!u) return 0; if (u <= now) { r.mutes.delete(rmMuteKey(w)); return 0; } return Math.ceil((u - now) / 60000); }
-function rmSlog(r, who, act) { const e = { ts: Date.now(), who, act }; (r.slog = r.slog || []).push(e); while (r.slog.length > 60) r.slog.shift(); for (const w of r.mem) if (rmStaff(r, w)) send(w, { t: 'rm_slog_add', e }); }
+function rmSlog(r, who, act) { alog('🛡️', '«' + r.name + '» ' + who + ': ' + act); const e = { ts: Date.now(), who, act }; (r.slog = r.slog || []).push(e); while (r.slog.length > 60) r.slog.shift(); for (const w of r.mem) if (rmStaff(r, w)) send(w, { t: 'rm_slog_add', e }); }
 const rmCanMod = (r, key) => rmIsOwner(r, key) || !!(r.mods && r.mods.has(key));
 const rmModNames = r => [...(r.mods || [])].map(k => db.users[k] ? db.users[k].name : k);
 const rmNm = w => w.guest ? w.gname : (db.users[w.key] ? db.users[w.key].name : '؟');
@@ -1438,8 +1477,10 @@ function gmLeave(r, ws) {
   }
 }
 const gmRnd = n => Math.floor(Math.random() * n);
+const GM_NAME = { snake: 'سلم وثعبان', xo: 'إكس أو', mancala: 'منقلة', domino: 'دومينو' };
 function gmStart(r, g) {
   g.rd = [1, 1]; g.msg = ''; g.win = -1;
+  try { alog('🎲', rmNm(g.p[0]) + ' و ' + rmNm(g.p[1]) + ' بدوا لعبة ' + (GM_NAME[g.k] || g.k) + ' بغرفة «' + r.name + '»'); } catch (e) {}
   if (g.k === 'snake') { g.ph = 'first'; g.fr = [0, 0]; g.pos = [1, 1]; g.die = 0; g.last = null; return; }
   g.ph = 'play'; g.turn = gmRnd(2); const who = rmNm(g.p[g.turn]);
   if (g.k === 'xo') { g.b = Array(9).fill(''); g.line = null; g.msg = '🎲 القرعة: ' + who + ' يبدأ (X)'; }
@@ -1499,7 +1540,7 @@ function avClean2(a, adm) { const v = avClean(a); if (!v) return v; if (!adm) { 
 function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
   if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws); ws.rm = null; if (!r) return;
-  try { gmLeave(r, ws); } catch (e) {} r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) rmBc(r, { t: 'rm_leave', n: nm });
+  try { gmLeave(r, ws); } catch (e) {} r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) { rmBc(r, { t: 'rm_leave', n: nm }); alog('🚪', nm + ' طلع من غرفة «' + r.name + '»'); }
   r.lastActive = Date.now(); if (!ws.guest) rmPersist();
 }
 function rmCloseRoom(r, why) { for (const w of [...r.mem]) { send(w, { t: 'rm_closed', txt: why || 'صاحب الغرفة سكّر الغرفة' }); w.rm = null; } r.mem.clear(); rmRooms.delete(r.id); rmPersist(); }
@@ -1539,6 +1580,7 @@ function rmOnMsg(ws, d) {
     const members = [...r.mem].filter(w => w.readyState === 1 && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
     send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
+    if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
     if (!ws.guest && me && !me.admin) { const dn = Math.floor((now + BGD) / 864e5), g = me.rmGift || { day: 0, streak: 0 }; if (g.day !== dn) { const streak = g.day === dn - 1 ? Math.min((g.streak || 0) + 1, 30) : 1, amt = 15 + Math.min(streak, 7) * 5; me.rmGift = { day: dn, streak }; me.coins = (me.coins || 0) + amt; save(); send(ws, { t: 'rm_gift', coins: amt, streak, away: g.day ? dn - g.day : 0 }); } }
     const am = rmAdm(ws); r.wel = r.wel || {};
@@ -1675,6 +1717,7 @@ function onMsg(ws, d) {
     const code = String(d.code || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
     if (code.length < 4) return send(ws, { t: 'err', fatal: true, error: 'الكود لازم 4 أحرف أو أرقام على الأقل' });
     if (ws.room) leave(ws);
+    if (alOnce('ch:' + ws.key + '>' + code, 60e3)) alog('💬', unm(ws.key) + ' دخل غرفة شات');
     let set = live.get(code);
     if (!set) live.set(code, set = new Set());
     const distinct = new Set([...set].map(w => w.key)); distinct.add(ws.key);
@@ -1734,6 +1777,7 @@ function onMsg(ws, d) {
       if (du.state === 'play' || du.state === 'count') return send(ws, { t: 'duo_err', error: 'فيه جولة شغالة بالغرفة، انتظر لين تخلص' });
       if (du.players.length >= 2) return send(ws, { t: 'duo_err', error: 'الغرفة الزوجية فيها لاعبين اثنين' });
       du.players.push(ws.key); du.ready[ws.key] = false;
+      if (alOnce('duo:' + ws.key, 60e3)) alog('👥', unm(ws.key) + ' دخل اللعب الثنائي');
       if (du.state === 'over') du.state = 'lobby';
     }
     duoSync(code);
@@ -1813,16 +1857,18 @@ wss.on('connection', (ws, req) => {
     do { gname = 'ضيف' + (100 + Math.floor(Math.random() * 900)); } while (used.has(gname) || own(db.users, gname.toLowerCase()));
     ws.guest = true; ws.gname = gname; ws.ip = ip; ws.key = 'g:' + crypto.randomBytes(6).toString('hex'); ws.alive = true; ws.bucket = { n: 0, t: Date.now() }; ws.room = null;
     ws.on('pong', () => { ws.alive = true; });
-    ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (!d || typeof d.t !== 'string' || !d.t.startsWith('rm_')) return; try { rmOnMsg(ws, d); } catch (e) { console.error(e); } });
-    ws.on('close', () => { rmLeave(ws); }); ws.on('error', () => {});
+    ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (d && d.t === 'al_ev') { try { alMsg(ws, d); } catch (e) {} return; } if (!d || typeof d.t !== 'string' || !d.t.startsWith('rm_')) return; try { rmOnMsg(ws, d); } catch (e) { console.error(e); } });
+    ws.on('close', () => { rmLeave(ws); alog('🔴', 'خرج الضيف ' + gname); alCntPush(); }); ws.on('error', () => {});
+    alog('🟢', 'انضم الضيف ' + gname + ' (بدون حساب)'); alCntPush();
     return send(ws, { t: 'rm_guest', name: gname });
   }
   if (!key) { send(ws, { t: 'err', fatal: true, error: 'سجّل دخول من جديد' }); return ws.close(); }
   ws.key = key; ws.room = null; ws.alive = true; ws.bucket = { n: 0, t: Date.now() };
-  if (!isOnline(key, ws)) presenceChange(key, true);
+  if (!isOnline(key, ws)) { presenceChange(key, true); alOn(key); }
+  alCntPush();
   ws.on('pong', () => { ws.alive = true; });
-  ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => { hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) presenceChange(ws.key, false); });
+  ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (d && typeof d.t === 'string' && d.t.startsWith('al_')) { try { alMsg(ws, d); } catch (e) { console.error(e); } return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
+  ws.on('close', () => { alSubs.delete(ws); hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
   ws.on('error', () => {});
 });
 setInterval(() => {

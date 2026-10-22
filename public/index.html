@@ -740,6 +740,28 @@
   #rmPC .pr button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 10px 4px; min-height: 62px; font-size: 13px; font-weight: 700; line-height: 1.25; border-radius: 14px; transition: transform .12s, background .15s; } #rmPC .pr button:active { transform: scale(.92); background: rgba(255,255,255,.3); } #rmPC .pr button i { font-style: normal; font-size: 22px; }
   #rmPC .pr button.sm { grid-column: 1 / -1; min-height: 0; padding: 7px; flex-direction: row; background: rgba(255,255,255,.08); }
   @media (min-width: 700px) { #app { max-width: 640px; } #hub { gap: 10px; } .tile:not(.tileResort) .ti { width: 50px; height: 50px; font-size: 26px; } .tile .tl { font-size: 14px; } }
+  /* لوحة المشرفين */
+  #alPill { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 70px); left: 8px; z-index: 2147483000; display: none; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; background: linear-gradient(135deg, #3b1f6b, #6b2fb3); color: #fff; font: 700 13px system-ui, sans-serif; border: 2px solid #c9a8ff; box-shadow: 0 4px 16px rgba(0,0,0,.5); cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; direction: rtl; }
+  #alPill.on { display: flex; }
+  #alPill .alDot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 6px #3ddc84; }
+  #alPill .alNew { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff4d6d; font-size: 11px; display: none; align-items: center; justify-content: center; }
+  #alPill .alNew.on { display: inline-flex; }
+  #alBox { position: fixed; z-index: 2147483001; display: none; flex-direction: column; width: min(92vw, 340px); max-height: min(70vh, 480px); background: rgba(16,12,30,.96); color: #eee; border: 2px solid #8f5cff; border-radius: 16px; box-shadow: 0 10px 36px rgba(0,0,0,.65); font: 13px system-ui, sans-serif; direction: rtl; overflow: hidden; }
+  #alBox.on { display: flex; }
+  #alHead { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(135deg, #3b1f6b, #6b2fb3); font-weight: 700; }
+  #alHead .sp { flex: 1; }
+  #alHead button { background: rgba(255,255,255,.15); color: #fff; border: 0; border-radius: 8px; padding: 4px 8px; font: inherit; cursor: pointer; }
+  #alCnt { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.1); cursor: pointer; }
+  #alCnt b { color: #3ddc84; font-size: 15px; }
+  #alWho { display: none; padding: 6px 10px; max-height: 110px; overflow: auto; border-bottom: 1px solid rgba(255,255,255,.1); line-height: 1.8; font-size: 12px; color: #cfc4ff; }
+  #alWho.on { display: block; }
+  #alWho span { display: inline-block; background: rgba(143,92,255,.22); border-radius: 8px; padding: 0 7px; margin: 2px; }
+  #alList { flex: 1; overflow: auto; padding: 4px 0; }
+  #alList .alRow { display: flex; gap: 6px; padding: 4px 10px; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,.04); }
+  #alList .alRow.fresh { animation: alFl 1.6s ease-out; }
+  #alList .alT { color: #8d86a8; font-size: 11px; flex: none; direction: ltr; padding-top: 1px; }
+  #alList .alEmpty { padding: 16px; text-align: center; color: #8d86a8; }
+  @keyframes alFl { from { background: rgba(143,92,255,.45); } to { background: transparent; } }
 </style>
 </head>
 <body>
@@ -1742,7 +1764,7 @@ function zQuickBlast(g, bx, by) {
   const order = ch.map((b, i) => { const q = zPos(b.s); return [i, Math.hypot(q.x - bx, q.y - by)]; }).sort((a, b) => a[1] - b[1]).slice(0, 6);
   const idx = order.map(o => o[0]), col = ch[idx[0]].c, cb = g.combo;
   FX.rings.push({ x: bx, y: by, r: 6, max: 110, t: 0, col: '#ffe066' }); FX.rings.push({ x: bx, y: by, r: 2, max: 70, t: 0, col: '#ff5f6d' });
-  FX.flash = 0.4; FX.flashC = '255,210,90'; FX.shake = Math.max(FX.shake, 11); FX.banner = '💥 ٣ ضربات سريعة!'; FX.bannerT = 80;
+  FX.flash = 0.4; FX.flashC = '255,210,90'; FX.shake = Math.max(FX.shake, 11); FX.banner = '💥 ٣ ضربات سريعة!'; FX.bannerT = 80; alEv({ k: 'blast' });
   zRemoveSet(g, idx, col); g.combo = cb; sfx('bomb'); sfx('magic');
   g.floats.push({ x: bx, y: by - 34, text: 'انفجار! 💥', t: 60, c: '#ffe066' });
 }
@@ -1896,7 +1918,7 @@ function zUse(g, i) {
   if ((m === 'bomb' || m === 'wild') && g.armed) { showToast('عندك قوة جاهزة للرمية، ارمي بيها أول'); return false; }
   let idx = null;
   if (m === 'light') { idx = []; g.chain.forEach((b, k) => { if (b.c === g.cur && b.s > 10) idx.push(k); }); if (!idx.length) { showToast('⚡ ما اكو كرات بلون كرتك الحالية'); return false; } }
-  g.inv.splice(i, 1); sfx('use');
+  g.inv.splice(i, 1); sfx('use'); alEv({ k: 'magic', m });
   if (m === 'freeze') { g.freeze = 300; g.fzMax = 300; FX.flash = 0.3; FX.flashC = '120,220,255'; g.floats.push({ x: CX, y: 150, text: '❄️ تجميد!', t: 60, c: '#9fe8ff' }); }
   else if (m === 'slow') { g.slow = 480; g.floats.push({ x: CX, y: 150, text: '🐢 تباطؤ!', t: 60, c: '#9ff3b5' }); }
   else if (m === 'bomb' || m === 'wild') { g.armed = m; g.floats.push({ x: CX, y: 150, text: MAG[m].em + ' ارمي!', t: 50, c: '#ffe066' }); }
@@ -3726,7 +3748,7 @@ function connectPresence() {
   try { sock = new WebSocket(wsUrl()); } catch (e) { return; }
   fws = sock;
   const wd = setTimeout(() => { if (sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 8000);   // اتصال عالق: يتقطع ويعيد المحاولة
-  sock.onopen = () => { clearTimeout(wd); fRetry = 0; loadFriends(); if (hvOn) hvJoin(); if (typeof RM !== 'undefined' && RM.on) rmJoinSend(); };
+  sock.onopen = () => { clearTimeout(wd); fRetry = 0; try { alSync(); } catch (e) {} loadFriends(); if (hvOn) hvJoin(); if (typeof RM !== 'undefined' && RM.on) rmJoinSend(); };
   sock.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (e) { return; } onFriendMsg(d); };
   sock.onclose = () => {
     if (fws !== sock) return;
@@ -3747,6 +3769,7 @@ function onFriendMsg(d) {
   else if (d.t === 'pet_upd') petPush(d);
   else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
   else if (d.t && String(d.t).slice(0, 3) === 'rm_') rmOnMsg(d);
+  else if (d.t && String(d.t).slice(0, 3) === 'al_') alOnMsg(d);
 }
 /* ---- زيارة البيوت: حضور حي ---- */
 /* يفرض اتصال جديد (يتخلص من أي سوكيت ميت أو عالق من فترة الأوفلاين) */
@@ -7040,6 +7063,85 @@ $('offX').onclick = () => { offDismissed = true; offHide(); };
 setInterval(() => { if (navigator.onLine && offShown) netBack(); }, 15000);
 if (!navigator.onLine) offShow(false);
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+/* ================= لوحة المشرفين (للادمنية فقط) ================= */
+var AL = { sock: null, list: [], open: false, unread: 0, cnt: { acc: 0, gst: 0, names: [], guests: [] }, built: false, moved: false };
+function alBuild() {
+  if (AL.built) return; AL.built = true;
+  const pill = document.createElement('div'); pill.id = 'alPill';
+  pill.innerHTML = '<span>🛡️</span><span class="alDot"></span><span id="alPN">0</span><span class="alNew" id="alPNew"></span>';
+  const box = document.createElement('div'); box.id = 'alBox';
+  box.innerHTML = '<div id="alHead">🛡️ لوحة المشرفين<span class="sp"></span><button type="button" id="alClr" title="مسح السجل من شاشتي">🧹</button><button type="button" id="alX">✕</button></div>' +
+    '<div id="alCnt"></div><div id="alWho"></div><div id="alList"></div>';
+  document.body.appendChild(pill); document.body.appendChild(box);
+  try { const p = JSON.parse(localStorage.getItem('alPos') || 'null'); if (p) { pill.style.left = p.x + 'px'; pill.style.top = p.y + 'px'; } } catch (e) {}
+  let sx = 0, sy = 0, ox = 0, oy = 0, drag = false, down = false;
+  pill.addEventListener('pointerdown', e => { down = true; drag = false; sx = e.clientX; sy = e.clientY; const r = pill.getBoundingClientRect(); ox = r.left; oy = r.top; try { pill.setPointerCapture(e.pointerId); } catch (er) {} });
+  pill.addEventListener('pointermove', e => {
+    if (!down) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (!drag && Math.hypot(dx, dy) < 8) return; drag = true;
+    const x = Math.max(4, Math.min(innerWidth - pill.offsetWidth - 4, ox + dx)), y = Math.max(4, Math.min(innerHeight - pill.offsetHeight - 4, oy + dy));
+    pill.style.left = x + 'px'; pill.style.top = y + 'px';
+  });
+  pill.addEventListener('pointerup', () => { if (!down) return; down = false; if (drag) { try { localStorage.setItem('alPos', JSON.stringify({ x: parseInt(pill.style.left, 10), y: parseInt(pill.style.top, 10) })); } catch (e) {} if (AL.open) alPlace(); } else alToggle(); });
+  $('alX').onclick = () => alToggle(false);
+  $('alClr').onclick = () => { AL.list = []; alRender(); };
+  $('alCnt').onclick = () => $('alWho').classList.toggle('on');
+  window.addEventListener('resize', () => { if (AL.open) alPlace(); });
+  document.addEventListener('fullscreenchange', alHost); document.addEventListener('webkitfullscreenchange', alHost);
+  try { AL.open = localStorage.getItem('alOpen') === '1'; } catch (e) {}
+}
+/* بوضع ملء الشاشة نخلي اللوحة داخل العنصر المكبّر حتى تبقى ظاهرة */
+function alHost() {
+  if (!AL.built) return; const fe = document.fullscreenElement || document.webkitFullscreenElement, host = (fe && fe !== document.documentElement) ? fe : document.body;
+  for (const id of ['alPill', 'alBox']) { const el = $(id); if (el && el.parentNode !== host) host.appendChild(el); }
+}
+function alPlace() {
+  const pill = $('alPill'), box = $('alBox'), r = pill.getBoundingClientRect(), bw = box.offsetWidth || 320, bh = box.offsetHeight || 300;
+  let x = r.left, y = r.bottom + 6; if (x + bw > innerWidth - 6) x = innerWidth - bw - 6; if (y + bh > innerHeight - 6) y = Math.max(6, r.top - bh - 6);
+  box.style.left = Math.max(6, x) + 'px'; box.style.top = y + 'px';
+}
+function alToggle(on) {
+  AL.open = on === undefined ? !AL.open : !!on; try { localStorage.setItem('alOpen', AL.open ? '1' : '0'); } catch (e) {}
+  $('alBox').classList.toggle('on', AL.open); if (AL.open) { AL.unread = 0; alRender(); alPlace(); } alBadge();
+}
+function alBadge() { const n = $('alPNew'); if (!n) return; n.textContent = AL.unread > 99 ? '99+' : AL.unread; n.classList.toggle('on', AL.unread > 0 && !AL.open); }
+function alTime(ts) { const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function alRowEl(e, fresh) {
+  const row = document.createElement('div'); row.className = 'alRow' + (fresh ? ' fresh' : '');
+  const t = document.createElement('span'); t.className = 'alT'; t.textContent = alTime(e.ts);
+  const x = document.createElement('span'); x.textContent = (e.ic || '•') + ' ' + e.txt;   // نص فقط (ما ننفذ HTML)
+  row.appendChild(t); row.appendChild(x); return row;
+}
+function alRender() {
+  if (!AL.built) return; const c = AL.cnt, tot = (c.acc || 0) + (c.gst || 0);
+  $('alPN').textContent = tot;
+  $('alCnt').innerHTML = '👥 الموجودين باللعبة: <b>' + tot + '</b> <small style="opacity:.75">(' + (c.acc || 0) + ' حساب + ' + (c.gst || 0) + ' ضيف) — اضغط لعرض الأسماء</small>';
+  const who = $('alWho'); who.textContent = '';
+  for (const n of (c.names || []).concat(c.guests || [])) { const sp = document.createElement('span'); sp.textContent = n; who.appendChild(sp); }
+  if (!AL.open) return;
+  const L = $('alList'); L.textContent = '';
+  if (!AL.list.length) { const em = document.createElement('div'); em.className = 'alEmpty'; em.textContent = 'ماكو أحداث بعد'; L.appendChild(em); return; }
+  for (let i = AL.list.length - 1; i >= 0; i--) L.appendChild(alRowEl(AL.list[i], false));
+}
+function alOnMsg(d) {
+  if (d.t === 'al_init') { AL.list = d.list || []; AL.cnt = d; alRender(); }
+  else if (d.t === 'al_cnt') { AL.cnt = d; alRender(); }
+  else if (d.t === 'al_add' && d.e) {
+    AL.list.push(d.e); if (AL.list.length > 200) AL.list.shift();
+    if (AL.open) { const L = $('alList'), em = L.querySelector('.alEmpty'); if (em) em.remove(); L.insertBefore(alRowEl(d.e, true), L.firstChild); while (L.children.length > 200) L.lastChild.remove(); }
+    else { AL.unread++; alBadge(); }
+  }
+}
+/* نشترك بالسجل على اتصال الحضور؛ ونعيد الاشتراك إذا تبدّل الاتصال */
+function alSync() {
+  const adm = !!(auth && auth.admin);
+  if (!adm) { if (AL.built) { $('alPill').classList.remove('on'); $('alBox').classList.remove('on'); } AL.sock = null; return; }
+  alBuild(); $('alPill').classList.add('on'); if (AL.open) { $('alBox').classList.add('on'); alPlace(); }
+  if (typeof fws !== 'undefined' && fws && fws.readyState === 1 && AL.sock !== fws) { AL.sock = fws; try { fws.send(JSON.stringify({ t: 'al_sub' })); } catch (e) { AL.sock = null; } }
+  alHost();
+}
+setInterval(alSync, 2500); setTimeout(alSync, 600);
+/* يبلّغ السيرفر بالفعاليات داخل اللعبة (للوحة المشرفين) */
+function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 </body>
 </html>
