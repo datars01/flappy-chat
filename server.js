@@ -1453,7 +1453,7 @@ const rmBanNm = (r, k) => (r.banNm && r.banNm.get(k)) || (db.users[k] ? db.users
 const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', locked: !!r.code, count: new Set([...r.mem].filter(w => !(w.rm && w.rm.hid)).map(w => w.key)).size, cap: r.cap || RM_CAP, perm: !!r.perm });
 
 /* ---------- طاولات الالعاب (سلم وثعبان / إكس أو / منقلة / دومينو) ---------- */
-const GM_TB = [{ x: 118, y: 418, k: 'snake' }, { x: 400, y: 276, k: 'xo' }, { x: 385, y: 552, k: 'mancala' }, { x: 665, y: 565, k: 'domino' }];
+const GM_TB = [{ x: 925, y: 345, k: 'snake' }, { x: 1100, y: 345, k: 'xo' }, { x: 925, y: 525, k: 'rps' }, { x: 1100, y: 525, k: 'domino' }];   // منطقة الألعاب بالجهة اليمنى: 2 يسار و 2 يمين
 const GM_L = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 }, GM_S = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
 const GM_XL = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const gmNew = tb => ({ tb, k: GM_TB[tb].k, p: [null, null], ph: 'idle', rd: [0, 0], turn: 0, msg: '', seq: 0, win: -1, rt: [0, 0] });
@@ -1462,7 +1462,7 @@ function gmPub(r, g) {
   const o = { tb: g.tb, k: g.k, n: g.p.map(w => w ? rmNm(w) : ''), ph: g.ph, rd: g.rd, turn: g.turn, win: g.win, msg: g.msg, seq: g.seq };
   if (g.k === 'snake') { o.fr = g.fr; o.pos = g.pos; o.die = g.die; o.last = g.last; }
   else if (g.k === 'xo') { o.b = g.b; o.line = g.line || null; }
-  else if (g.k === 'mancala') { o.pits = g.pits; o.last = g.last; }
+  else if (g.k === 'rps') { o.sc = g.sc; o.pk = (g.pick || [null, null]).map(x => !!x); o.rv = g.rv || null; o.rn = g.rn || 1; }
   else { o.chain = g.chain; o.cnt = g.hand ? [g.hand[0].length, g.hand[1].length] : [0, 0]; o.yard = g.yard ? g.yard.length : 0; }
   return o;
 }
@@ -1477,20 +1477,26 @@ function gmLeave(r, ws) {
   }
 }
 const gmRnd = n => Math.floor(Math.random() * n);
-const GM_NAME = { snake: 'سلم وثعبان', xo: 'إكس أو', mancala: 'منقلة', domino: 'دومينو' };
+const GM_NAME = { snake: 'سلم وثعبان', xo: 'إكس أو', rps: 'حجرة ورقة مقص', domino: 'دومينو' };
 function gmStart(r, g) {
   g.rd = [1, 1]; g.msg = ''; g.win = -1;
   try { alog('🎲', rmNm(g.p[0]) + ' و ' + rmNm(g.p[1]) + ' بدوا لعبة ' + (GM_NAME[g.k] || g.k) + ' بغرفة «' + r.name + '»'); } catch (e) {}
   if (g.k === 'snake') { g.ph = 'first'; g.fr = [0, 0]; g.pos = [1, 1]; g.die = 0; g.last = null; return; }
   g.ph = 'play'; g.turn = gmRnd(2); const who = rmNm(g.p[g.turn]);
   if (g.k === 'xo') { g.b = Array(9).fill(''); g.line = null; g.msg = '🎲 القرعة: ' + who + ' يبدأ (X)'; }
-  else if (g.k === 'mancala') { g.pits = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]; g.last = null; g.msg = '🎲 القرعة: ' + who + ' يبدأ'; }
+  else if (g.k === 'rps') { g.sc = [0, 0]; g.pick = [null, null]; g.rv = null; g.rn = 1; g.msg = 'كل واحد يختار بالسر — أول واحد يوصل 3 يفوز'; }
   else { const T = []; for (let i = 0; i <= 6; i++) for (let j = i; j <= 6; j++) T.push([i, j]); for (let i = T.length - 1; i > 0; i--) { const j = gmRnd(i + 1); [T[i], T[j]] = [T[j], T[i]]; } g.hand = [T.slice(0, 7), T.slice(7, 14)]; g.yard = T.slice(14); g.chain = []; g.pass = 0; g.msg = '🎲 القرعة: ' + who + ' يبدأ'; }
 }
 function dmEnds(g) { return g.chain.length ? [g.chain[0][0], g.chain[g.chain.length - 1][1]] : null; }
 function dmCan(g, side) { const e = dmEnds(g); if (!e) return true; return g.hand[side].some(t => t.includes(e[0]) || t.includes(e[1])); }
 function gmAct(r, g, me, a, now) {
   if (g.ph === 'first' && g.k === 'snake') { if (a.a !== 'roll' || g.fr[me]) return; g.fr[me] = 1 + gmRnd(6); if (g.fr[0] && g.fr[1]) { if (g.fr[0] === g.fr[1]) { g.msg = '🤝 تعادل! ارميا من جديد'; g.fr = [0, 0]; } else { g.turn = g.fr[0] > g.fr[1] ? 0 : 1; g.ph = 'play'; g.pos = [1, 1]; g.die = 0; g.msg = '🎲 ' + rmNm(g.p[g.turn]) + ' يبدأ أولاً'; } } return gmBc(r, g); }
+  if (g.k === 'rps') {   // حجرة ورقة مقص: الاثنين يختارون بنفس الوقت وبالسر، وبعدين ينكشف الاختيار
+    if (g.ph !== 'play' || a.a !== 'pick' || g.pick[me]) return; const ch = ['r', 'p', 's'].includes(a.c) ? a.c : null; if (!ch) return; g.pick[me] = ch; g.msg = '';
+    if (g.pick[0] && g.pick[1]) { const x = g.pick[0], y = g.pick[1], beat = { r: 's', p: 'r', s: 'p' }; const w = x === y ? -1 : beat[x] === y ? 0 : 1; if (w >= 0) g.sc[w]++; g.rv = { c: [x, y], w, n: g.rn }; g.pick = [null, null]; g.rn++;
+      g.msg = w < 0 ? '🤝 تعادل بهالجولة' : '✅ ' + rmNm(g.p[w]) + ' فاز بالجولة'; if (g.sc[0] >= 3 || g.sc[1] >= 3) { gmBc(r, g); return gmOver(r, g, g.sc[0] >= 3 ? 0 : 1, g.sc[0] + ' : ' + g.sc[1]); } }
+    return gmBc(r, g);
+  }
   if (g.ph !== 'play' || g.turn !== me) return;
   if (g.k === 'snake') {
     if (a.a !== 'roll') return; const die = 1 + gmRnd(6), from = g.pos[me]; let land = from + die, to = land, note = ''; if (land > 100) { land = from; to = from; note = 'تحتاج رقم أصغر'; } else if (GM_L[land]) { to = GM_L[land]; note = '🪜 سلم!'; } else if (GM_S[land]) { to = GM_S[land]; note = '🐍 ثعبان!'; }
@@ -1519,7 +1525,7 @@ function gmAct(r, g, me, a, now) {
     if (!H.length) { gmBc(r, g); return gmOver(r, g, me, ''); } g.turn = 1 - me; return gmBc(r, g);
   }
 }
-const WX_CYC = 600;
+const WX_CYC = 3600;   // دورة ساعة: كل 30 دقيقة مطر أو ثلج (دقيقة وحدة)، والليل دقيقة بالنص
 function wxNow(r, now) { const c = r.wxc || (r.wxc = { base: 0, ref: Date.now(), spd: 1 }); now = now || Date.now(); return { el: ((c.base + (now - c.ref) / 1000 * c.spd) % WX_CYC + WX_CYC) % WX_CYC, spd: c.spd }; }
 const rmStaff = (r, w) => !!(rmAdm(w) || (r && r.mods && r.mods.has(w.key)));
 function rmBcV(r, msg, sender) { const str = JSON.stringify(msg), hid = sender && sender.rm && sender.rm.hid; for (const w of r.mem) if (w !== sender && w.readyState === 1 && (!hid || rmStaff(r, w))) w.send(str); }
@@ -1539,7 +1545,8 @@ function avClean(a, adm) {
 function avClean2(a, adm) { const v = avClean(a); if (!v) return v; if (!adm) { if (AV_ADMHS.includes(v.hs)) v.hs = 'short'; if (AV_ADMHC.includes(v.hc)) v.hc = 'brown'; if (v.ey > 13) v.ey = 0; v.wg = 0; v.cr = 0; if (v.o.slice(2, 5) === 'adm') v.o = ''; } return v; }
 function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
-  if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws); ws.rm = null; if (!r) return;
+  if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws), hp = ws.rm.hold || ws.rm.heldBy; ws.rm = null; if (!r) return;
+  if (hp) { for (const w of r.mem) if (w.rm && rmNm(w) === hp) { w.rm.hold = w.rm.heldBy = null; } rmBc(r, { t: 'rm_hold', a: nm, b: hp, on: 0 }); }
   try { gmLeave(r, ws); } catch (e) {} r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) { rmBc(r, { t: 'rm_leave', n: nm }); alog('🚪', nm + ' طلع من غرفة «' + r.name + '»'); }
   r.lastActive = Date.now(); if (!ws.guest) rmPersist();
 }
@@ -1576,9 +1583,12 @@ function rmOnMsg(ws, d) {
     if (ws.guest && d.av) ws.av = avClean2(d.av, 0);
     if (ws.rm && ws.rm.id === r.id) rmLeave(ws); else rmLeave(ws);
     const distinct = new Set([...r.mem].map(w => w.key)); if (!distinct.has(ws.key) && distinct.size >= (r.cap || RM_CAP)) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة ممتلئة (' + (r.cap || RM_CAP) + ' شخص)' });
-    ws.rm = { id: r.id, owner: r.owner, x: 380 + Math.random() * 40, y: 300 + Math.random() * 30, dir: 1, sit: false, t: 0, ct: 0 };
-    const members = [...r.mem].filter(w => w.readyState === 1 && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
+    // رجوع بعد الخروج للتطبيقات: نشيل الاتصال القديم لنفس الحساب حتى ما تصير الشخصية مستنسخة، ونرجّعه لنفس مكانه
+    const first = ![...r.mem].some(w => w.key === ws.key); let prev = null;
+    if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
+    ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
+    const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]) });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1592,7 +1602,7 @@ function rmOnMsg(ws, d) {
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
     const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.x = Math.max(0, Math.min(800, x)); h.y = Math.max(0, Math.min(620, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    h.x = Math.max(0, Math.min(1200, x)); h.y = Math.max(0, Math.min(620, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmBcV(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
@@ -1615,6 +1625,9 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_announce') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' }); if (now - (r.annT || 0) < 4000) return; const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 140); if (!txt) return; r.annT = now;
     rmBc(r, { t: 'rm_announce', txt, by: h.hid ? 'الإدارة' : rmNm(ws), adm: rmAdm(ws) }); rmSlog(r, h.hid ? 'الإدارة' : rmNm(ws), 'إعلان: ' + txt.slice(0, 50));
+  } else if (d.t === 'rm_order') {   // طلب مشروب لنفسك: جربوع يجيبه ويقدمه قدام الكل
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; if (now - (h.ord || 0) < 6000) return send(ws, { t: 'rm_ok', msg: '⏳ جربوع دا يحضّر طلبك' }); if (!['coffee', 'tea', 'juice', 'water', 'pepsi'].includes(d.k)) return;
+    h.ord = now; const m = { t: 'rm_treat', from: rmNm(ws), to: rmNm(ws), k: d.k, self: 1 }; if (h.hid) send(ws, m); else rmBc(r, m);
   } else if (d.t === 'rm_treat') {   // عزيمة: جربوع يوصل مشروب لصديق
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || ws.guest) return; if (now - (h.trt || 0) < 9000) return send(ws, { t: 'rm_ok', msg: '⏳ انتظر شوي قبل عزيمة ثانية' }); if (!['coffee', 'tea', 'water', 'pepsi'].includes(d.k)) return;
     const tw = [...r.mem].find(w => w !== ws && w.readyState === 1 && rmNm(w) === String(d.n || '')); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' });
@@ -1628,17 +1641,26 @@ function rmOnMsg(ws, d) {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return; send(ws, { t: 'rm_slog', list: r.slog || [] });
   } else if (d.t === 'rm_castle' || d.t === 'rm_castle_del') {
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; r.castles = (r.castles || []).filter(c => now - c.ts < 480e3); const nm = rmNm(ws);
-    if (d.t === 'rm_castle') { if (now - (h.cst || 0) < 3000) return; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y) || y < 240 || y > 604 || x < 20 || x > 780 || Math.hypot(x - h.x, y - h.y) > 70) return; h.cst = now; r.castles = r.castles.filter(c => c.by !== nm); while (r.castles.length >= 14) r.castles.shift(); r.castles.push({ id: now + '' + Math.floor(Math.random() * 1000), x: Math.round(x), y: Math.round(y), by: nm, ts: now }); }
+    if (d.t === 'rm_castle') { return; /* قلعة الرمل انشالت بالكامل */ const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y) || y < 240 || y > 604 || x < 20 || x > 780 || Math.hypot(x - h.x, y - h.y) > 70) return; h.cst = now; r.castles = r.castles.filter(c => c.by !== nm); while (r.castles.length >= 14) r.castles.shift(); r.castles.push({ id: now + '' + Math.floor(Math.random() * 1000), x: Math.round(x), y: Math.round(y), by: nm, ts: now }); }
     else { const k = r.castles.find(c => c.id === String(d.id || '')); if (!k) return; if (k.by !== nm && !rmStaff(r, ws)) return; r.castles = r.castles.filter(c => c !== k); }
     rmBc(r, { t: 'rm_castles', list: r.castles.map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((now - c.ts) / 1000) })) });
   } else if (d.t === 'rm_react') {
     const h = ws.rm; if (!h || now - (h.rxt || 0) < 700) return; h.rxt = now; const e = String(d.e || ''); if (!['😂', '❤️', '👍', '😮', '😢', '😡', '🎉', '🔥', '🐟', '🐠', '🦀', '🐡', '🏆'].includes(e)) return; const r = rmRooms.get(h.id); if (r) { rmBcV(r, { t: 'rm_react', n: rmNm(ws), e }, ws); send(ws, { t: 'rm_react', n: rmNm(ws), e }); }
   } else if (d.t === 'rm_hug') {
     const h = ws.rm; if (!h || now - (h.hgt || 0) < 2500) return; const r = rmRooms.get(h.id); if (!r) return; const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || !tw.rm) return;
-    if (Math.hypot(tw.rm.x - h.x, tw.rm.y - h.y) > 110) return send(ws, { t: 'rm_ok', msg: '🚶 اقترب منه أكثر' }); if (h.hid || tw.rm.hid) { if (!(rmStaff(r, ws) && rmStaff(r, tw))) return; }
+    if (Math.hypot(tw.rm.x - h.x, tw.rm.y - h.y) > 110) return send(ws, { t: 'rm_ok', msg: d.k === 'dance2' || d.k === 'dance2ok' ? '🚶 لازم تتقرب منه أكثر حتى ترقصون سوا' : d.k === 'hug' ? '🚶 لازم تتقرب منه أكثر حتى تحضنه' : '🚶 اقترب منه أكثر' }); if (h.hid || tw.rm.hid) { if (!(rmStaff(r, ws) && rmStaff(r, tw))) return; }
     if (d.k === 'dance2') { h.hgt = now; if (h.hid || tw.rm.hid) return; send(tw, { t: 'rm_dinv', from: rmNm(ws) }); return send(ws, { t: 'rm_ok', msg: '💃 انرسلت دعوة الرقص' }); }
     if (d.k === 'dance2ok') { h.hgt = now; const mm = { t: 'rm_d2', a: rmNm(tw), b: rmNm(ws) }; if (h.hid || tw.rm.hid) { send(ws, mm); send(tw, mm); } else rmBc(r, mm); return; }
     h.hgt = now; const k = ['hug', 'heart', 'clap'].includes(d.k) ? d.k : 'shake', m = { t: 'rm_hug', from: rmNm(ws), to: rmNm(tw), k }; if (h.hid || tw.rm.hid) { send(ws, m); send(tw, m); } else rmBc(r, m);
+  } else if (d.t === 'rm_hold') {   // مسك الإيد: اللي يمسك يمشي وصاحبه يلحقه، والاثنين يكدرون يفلتون
+    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (now - (h.hlt || 0) < 700) return; h.hlt = now;
+    if (!d.on) { const pn = h.hold || h.heldBy; if (!pn) return; const tw = [...r.mem].find(w => w.rm && rmNm(w) === pn); h.hold = h.heldBy = null; if (tw) tw.rm.hold = tw.rm.heldBy = null; rmBc(r, { t: 'rm_hold', a: rmNm(ws), b: pn, on: 0, by: rmNm(ws) }); return; }
+    const tw = [...r.mem].find(w => w !== ws && w.rm && rmNm(w) === String(d.n || '')); if (!tw) return; if (tw.key === ws.key) return;
+    if (h.hid || tw.rm.hid) return; if (h.hold || h.heldBy) return send(ws, { t: 'rm_ok', msg: '✋ أنت ماسك إيد شخص، فلت إيده أول' }); if (tw.rm.hold || tw.rm.heldBy) return send(ws, { t: 'rm_ok', msg: '✋ هذا الشخص ماسك إيد غيرك' });
+    if (Math.hypot(tw.rm.x - h.x, tw.rm.y - h.y) > 110) return send(ws, { t: 'rm_ok', msg: '🚶 لازم تتقرب منه أكثر حتى تمسك إيده' });
+    if (!d.acc) { tw.rm.hreq = { from: rmNm(ws), t: now }; send(tw, { t: 'rm_hinv', from: rmNm(ws) }); return send(ws, { t: 'rm_ok', msg: '🤝 انرسل طلب مسك الإيد، ينتظر موافقته' }); }   // لازم الثاني يوافق
+    const q = h.hreq; if (!q || q.from !== rmNm(tw) || now - q.t > 30000) return send(ws, { t: 'rm_ok', msg: '⌛ الطلب انتهى' }); h.hreq = null;
+    tw.rm.hold = rmNm(ws); h.heldBy = rmNm(tw); rmBc(r, { t: 'rm_hold', a: rmNm(tw), b: rmNm(ws), on: 1 });
   } else if (d.t === 'rm_whisper') {
     const h = ws.rm; if (!h || now - (h.wst || 0) < 800) return; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); } let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
     const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' }); h.wst = now;
@@ -1646,7 +1668,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_wx') {   // تحكم المشرفين بالطقس والوقت
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmStaff(r, ws)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     const md = ['rain', 'snow', 'fast', 'slow', 'reset', 'day', 'night', 'fw'].includes(d.mode) ? d.mode : ''; if (!md || now - (r.wxt || 0) < 500) return; r.wxt = now; const cur = wxNow(r, now), c = r.wxc;
-    c.base = md === 'rain' ? 124 : md === 'snow' ? 484 : md === 'day' ? 20 : md === 'night' ? 304 : md === 'fw' ? 340 : cur.el; c.ref = now; c.spd = md === 'fast' ? 12 : ['rain', 'snow', 'day', 'night', 'fw'].includes(md) ? cur.spd : 1;
+    c.base = md === 'rain' ? 1802 : md === 'snow' ? 3542 : md === 'day' ? 20 : md === 'night' ? 2702 : md === 'fw' ? 2710 : cur.el; c.ref = now; c.spd = md === 'fast' ? 12 : ['rain', 'snow', 'day', 'night', 'fw'].includes(md) ? cur.spd : 1;
     rmBc(r, Object.assign({ t: 'rm_wx', mode: md, by: rmNm(ws) }, wxNow(r, now))); if (!(ws.rm && ws.rm.hid)) rmSlog(r, rmNm(ws), 'غيّر الجو (' + md + ')');
   } else if (d.t === 'rm_hide') {   // اختفاء المشرفين
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!(rmAdm(ws) || r.mods.has(ws.key))) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
@@ -1655,7 +1677,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_umb') {   // شمسية المطر
     const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
-    const h = ws.rm; if (!h || now - (h.et || 0) < 250) return; h.et = now; const e = Number(d.e); h.emo = Number.isInteger(e) && e >= 0 && e <= 9 ? e : 0;
+    const h = ws.rm; if (!h || now - (h.et || 0) < 250) return; h.et = now; const e = Number(d.e); h.emo = Number.isInteger(e) && e >= 0 && e <= 20 ? e : 0;
     const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_emo', n: me.name, e: h.emo }, ws);
   } else if (d.t === 'rm_typing') {
     const h = ws.rm; if (!h || now - (h.tt || 0) < 1500) return; h.tt = now; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_typing', n: me.name }, ws);
