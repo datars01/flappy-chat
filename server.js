@@ -1701,14 +1701,16 @@ function rmOnMsg(ws, d) {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; const ideas = Array.isArray(db.ideas) ? db.ideas : (db.ideas = []), staff = rmStaff(r, ws);
     const pubI = () => ideas.slice(-200).map(x => ({ id: x.id, n: x.n, txt: x.txt, ts: x.ts, c: x.c }));
     const bcAll = () => { const str = JSON.stringify({ t: 'rm_ideas', list: pubI() }); for (const rr of rmRooms.values()) for (const w of rr.mem) if (w.readyState === 1) w.send(str); };
-    if (d.t === 'rm_ideas_get') return send(ws, { t: 'rm_ideas', list: pubI(), canDel: staff, open: !!d.open });
+    const WEEK = 7 * 864e5, lastOf = () => { if (ws.guest || !me) return 0; if (!me.ideaAt) { const mine = ideas.filter(x => x.k === ws.key); if (mine.length) me.ideaAt = mine[mine.length - 1].ts; } return me.ideaAt || 0; };
+    const nextAt = () => (ws.guest || !me || me.admin) ? 0 : Math.max(0, lastOf() + WEEK);
+    if (d.t === 'rm_ideas_get') return send(ws, { t: 'rm_ideas', list: pubI(), canDel: staff, open: !!d.open, next: nextAt() });
     if (d.t === 'rm_idea_del') { if (!staff) return send(ws, { t: 'rm_err', error: 'الحذف للمشرفين فقط' }); const i = ideas.findIndex(x => x.id === String(d.id || '')); if (i < 0) return; const x = ideas[i]; ideas.splice(i, 1); save(); try { alog('🗑️', rmNm(ws) + ' حذف فكرة ' + x.n + ': ' + x.txt.slice(0, 40)); } catch (e) {} return bcAll(); }
     if (ws.guest) return send(ws, { t: 'rm_err', error: '✍️ سجّل حساب حتى تكتب فكرتك' });
-    if (now - (h.idT || 0) < 20000) return send(ws, { t: 'rm_ok', msg: '⏳ انتظر شوي قبل ما تكتب فكرة ثانية' });
+    { const nx = nextAt(); if (nx > now) { const dd = Math.ceil((nx - now) / 864e5); return send(ws, { t: 'rm_ok', msg: '⏳ كل شخص يكتب فكرة وحدة بالأسبوع — تكدر تكتب فكرة جديدة بعد ' + (dd > 1 ? dd + ' أيام' : 'يوم') }); } }   // فكرة وحدة كل أسبوع لكل شخص
     { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); }
     let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim(); if (!txt) return; txt = [...txt].slice(0, 54).join(''); if (!staff) txt = profMask(txt);
-    h.idT = now; ideas.push({ id: crypto.randomBytes(5).toString('hex'), k: ws.key, n: rmNm(ws), txt, ts: now, c: Math.floor(Math.random() * 12) }); while (ideas.length > 400) ideas.shift(); save();
-    try { alog('💡', rmNm(ws) + ' كتب فكرة: ' + txt); } catch (e) {} send(ws, { t: 'rm_ok', msg: '💡 انضافت فكرتك، شكراً إلك!' }); return bcAll();
+    h.idT = now; me.ideaAt = now; ideas.push({ id: crypto.randomBytes(5).toString('hex'), k: ws.key, n: rmNm(ws), txt, ts: now, c: Math.floor(Math.random() * 12) }); while (ideas.length > 400) ideas.shift(); save();
+    try { alog('💡', rmNm(ws) + ' كتب فكرة: ' + txt); } catch (e) {} send(ws, { t: 'rm_ok', msg: '💡 انضافت فكرتك، شكراً إلك! تكدر تكتب فكرة ثانية بعد أسبوع' }); send(ws, { t: 'rm_ideas', list: pubI(), next: nextAt() }); return bcAll();
   } else if (d.t === 'rm_whisper') {
     const h = ws.rm; if (!h || now - (h.wst || 0) < 800) return; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); } let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
     const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' }); h.wst = now;

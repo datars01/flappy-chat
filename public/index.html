@@ -6062,6 +6062,11 @@ function rmIdeasRender(list, canDel) {
   RM.ideas.slice().reverse().forEach(x => { const r = document.createElement('div'); r.className = 'idRow'; r.style.background = RM_IDC[(x.c || 0) % RM_IDC.length]; const b = document.createElement('b'); b.textContent = '✍️ ' + x.n; const t = document.createElement('span'); t.textContent = x.txt; r.append(b, t);
     if (RM.ideaDel) { const d = document.createElement('button'); d.type = 'button'; d.className = 'idDel'; d.textContent = '🗑️ حذف'; d.onclick = () => { if (confirm('تحذف هذا التعليق؟')) rmSend({ t: 'rm_idea_del', id: x.id }); }; r.appendChild(d); } L.appendChild(r); });
 }
+function rmIdeaLock() {   // فكرة وحدة بالأسبوع: نقفل المربع ونبين بعد كم يوم يكدر يكتب
+  const o = $('rmIdeas'); if (!o) return; const inp = o.querySelector('.idIn input'), sb = o.querySelector('.idIn button'), nt = o.querySelector('.idWk'); if (!inp || !auth) return; const left = (RM.ideaNext || 0) - Date.now();
+  if (left > 0) { const dd = Math.ceil(left / 864e5); inp.disabled = true; sb.disabled = true; inp.placeholder = '✅ كتبت فكرتك هالأسبوع'; if (nt) nt.textContent = '⏳ تكدر تكتب فكرة جديدة بعد ' + (dd > 1 ? dd + ' أيام' : 'يوم'); }
+  else { inp.disabled = false; sb.disabled = false; inp.placeholder = 'اكتب فكرتك هنا...'; if (nt) nt.textContent = '📝 كل شخص يكتب فكرة وحدة بالأسبوع، فاختارها زين'; }
+}
 function rmIdeasShow() {
   let o = $('rmIdeas'); if (o) o.remove(); o = document.createElement('div'); o.className = 'rmOv'; o.id = 'rmIdeas'; const c = document.createElement('div'); c.className = 'rmOvC';
   const h = document.createElement('h4'); h.textContent = '💡 لوحة الأفكار'; const top = document.createElement('div'); top.className = 'idTop'; top.textContent = 'إذا عاجبك شي نضيفه للعبة اكتبه بالمربع جوا 👇';
@@ -6069,7 +6074,7 @@ function rmIdeasShow() {
   inp.addEventListener('input', () => { if ([...inp.value].length > 54) inp.value = [...inp.value].slice(0, 54).join(''); cnt.textContent = [...inp.value].length + '/54'; });
   const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = 'ارسل'; sb.disabled = !auth; const go = () => { const v = inp.value.trim(); if (!v) return; rmSend({ t: 'rm_idea_add', txt: v }); inp.value = ''; cnt.textContent = '0/54'; }; sb.onclick = go; inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   const x = document.createElement('button'); x.type = 'button'; x.textContent = '✖ سكّر'; x.onclick = () => o.remove();
-  row.append(inp, cnt, sb); c.append(h, top, L, row, x); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o); rmIdeasRender();
+  row.append(inp, cnt, sb); const wk = document.createElement('div'); wk.className = 'idWk'; wk.style.cssText = 'font-size:12px;text-align:center;color:#ffd166'; c.append(h, top, L, row, wk, x); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o); rmIdeasRender();
 }
 /* ---------- عداد ساعات التواجد + لوحة طلب العضوية المميزة ---------- */
 const RM_VIPB = { x: 335, y: 338 };
@@ -7104,7 +7109,7 @@ function rmOnMsg(d) {
   else if (T === 'rm_mytime') { RM.myTime = { total: d.total || 0, today: d.today || 0, d8: d.d8 || 0, t0: performance.now() }; rmTimeTile(); if (RM.vipWant) { RM.vipWant = 0; rmVipShow(d); } if (RM.timeWant) { RM.timeWant = 0; rmTimeShow(d); } }
   else if (T === 'rm_vip_list') rmVipListShow(d.list || []);
   else if (T === 'rm_vipnew') { RM.vipCnt = d.cnt || 0; rmVipBadge(); showToast('⭐ طلب عضوية مميزة جديد من ' + d.n); }
-  else if (T === 'rm_ideas') { if (d.open) rmIdeasShow(); rmIdeasRender(d.list, d.canDel); }
+  else if (T === 'rm_ideas') { if (d.next !== undefined) RM.ideaNext = d.next; if (d.open) rmIdeasShow(); rmIdeasRender(d.list, d.canDel); rmIdeaLock(); }
   else if (T === 'rm_stats') { RM.stats = d.st; rmStatsRender(); }
   else if (T === 'rm_whisper') { RM.log.push({ n: d.from, txt: d.txt, whs: d.to === rmMe() ? 1 : 2, to: d.to, ts: Date.now() }); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); if (d.to === rmMe()) { showToast('🤫 همسة من ' + d.from + ': ' + d.txt.slice(0, 60)); try { if (!RM.ambMute) { blip('sine', 880, 1175, 0.12, 0.06); blip('sine', 1175, 1568, 0.16, 0.05, 0.1); } } catch (e) {} } }
   else if (T === 'rm_g') rmGOn(d.g);
