@@ -954,7 +954,7 @@ app.post('/api/friend/add', authMw, (req, res) => {
   }
   if (flist(t, 'fin').length >= 100) return res.status(400).json({ error: 'عنده طلبات كثيرة حالياً' });
   me.fout.push(k); flist(t, 'fin').push(req.key); save();
-  pushTo(k, { t: 'f_update', toast: '👋 ' + me.name + ' يريد يضيفك صديق' });
+  pushTo(k, { t: 'f_update', toast: '👋 ' + me.name + ' يريد يضيفك صديق', req: me.name });
   res.json({ status: 'sent', name: t.name });
 });
 app.post('/api/friend/accept', authMw, (req, res) => {
@@ -1573,8 +1573,12 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_announce') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' }); if (now - (r.annT || 0) < 4000) return; const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 140); if (!txt) return; r.annT = now;
     rmBc(r, { t: 'rm_announce', txt, by: h.hid ? 'الإدارة' : rmNm(ws), adm: rmAdm(ws) }); rmSlog(r, h.hid ? 'الإدارة' : rmNm(ws), 'إعلان: ' + txt.slice(0, 50));
+  } else if (d.t === 'rm_treat') {   // عزيمة: جربوع يوصل مشروب لصديق
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || ws.guest) return; if (now - (h.trt || 0) < 9000) return send(ws, { t: 'rm_ok', msg: '⏳ انتظر شوي قبل عزيمة ثانية' }); if (!['coffee', 'tea', 'water', 'pepsi'].includes(d.k)) return;
+    const tw = [...r.mem].find(w => w !== ws && w.readyState === 1 && rmNm(w) === String(d.n || '')); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' });
+    h.trt = now; const m = { t: 'rm_treat', from: rmNm(ws), to: rmNm(tw), k: d.k }; if (h.hid || tw.rm.hid) { send(ws, m); send(tw, m); } else rmBc(r, m);
   } else if (d.t === 'rm_drink') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000 || !['coffee', 'tea', 'juice'].includes(d.k)) return; h.dk = now; const m = { t: 'rm_drink', n: rmNm(ws), k: d.k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000 || !['coffee', 'tea', 'juice', 'water', 'pepsi'].includes(d.k)) return; h.dk = now; const m = { t: 'rm_drink', n: rmNm(ws), k: d.k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
   } else if (d.t === 'rm_stats_get') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return; const s = rmStat(r, now), vis = new Set([...r.mem].filter(w => !(w.rm && w.rm.hid)).map(w => w.key)).size;
     send(ws, { t: 'rm_stats', st: { online: vis, uniq: s.uniq.size, joins: s.joins, peak: s.peak, msgs: s.msgs, games: s.games, hrs: s.hrs } });
