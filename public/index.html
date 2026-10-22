@@ -64,7 +64,7 @@
   canvas { width: 100%; height: 100%; display: block; touch-action: none; direction: ltr; }
   body.full #stage { position: fixed; inset: 0; z-index: 40; width: 100vw; height: 100vh; height: 100dvh;
     max-height: none; aspect-ratio: auto; border: 0; border-radius: 0; background: #0b141b; margin: 0; box-shadow: none; }
-  body.full #stage canvas { object-fit: contain; }
+  body.full #stage canvas { object-fit: contain; } body.full #stage { display: flex; align-items: center; justify-content: center; } body.full #stage canvas { width: 100%; height: 100%; }
   #exitFull { display: none; position: fixed; top: 10px; inset-inline-start: 10px; z-index: 47; padding: 8px 14px;
     background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.35); font-size: 14px; }
   body.full #exitFull { display: block; }
@@ -618,9 +618,71 @@
   @media (min-width: 760px) and (max-height: 700px) { .avPrev canvas { height: min(56vh, 300px); } }
   @media (max-height: 620px) and (orientation: landscape) { #avTabs { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 5px 8px; } #avTabs button { padding: 5px 9px; } .avPrev { padding: 6px; } .avAct button { padding: 4px 8px; font-size: 11px; } .avBar { padding: 4px 8px; } .avBar button { padding: 7px; font-size: 14px; } }
   .avPrev, .avPan { box-sizing: border-box; } .avPrev canvas { flex: none; }
+
+  /* ===== الواجهة الجديدة ===== */
+  #app { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  #hub { order: 0; }
+  .tile { transition: transform .18s cubic-bezier(.3,1.6,.5,1), box-shadow .2s, filter .2s; overflow: hidden; -webkit-tap-highlight-color: transparent; animation: tIn .5s both; animation-delay: calc(var(--i, 0) * 40ms); }
+  .tile:not(.tileResort) { padding: 10px 2px 8px; background: linear-gradient(160deg, #222c60, #161d42); }
+  .tile:not(.tileResort) .ti { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; font-size: 22px; background: var(--c, #3a7bff); box-shadow: 0 3px 8px rgba(0,0,0,.3); margin-bottom: 3px; transition: transform .25s cubic-bezier(.3,1.8,.5,1); }
+  .tile:not(.tileResort):hover .ti { transform: translateY(-2px) rotate(-6deg) scale(1.08); }
+  .tile:active { transform: scale(.9); }
+  .tile.pop { animation: tPop .45s cubic-bezier(.3,1.6,.5,1); }
+  .tile.tileDev { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 8px; padding: 8px; }
+  .tile.tileDev .ti { width: 30px; height: 30px; font-size: 16px; margin: 0; }
+  @keyframes tIn { from { opacity: 0; transform: translateY(14px) scale(.92); } to { opacity: 1; transform: none; } }
+  @keyframes tPop { 0% { transform: scale(.88); } 55% { transform: scale(1.1) translateY(-4px); } 100% { transform: scale(1); } }
+  .rip { position: absolute; border-radius: 50%; background: rgba(255,255,255,.4); transform: scale(0); animation: ripA .6s ease-out forwards; pointer-events: none; }
+  @keyframes ripA { to { transform: scale(1); opacity: 0; } }
+  .tile.tileResort { margin-bottom: 2px; min-height: 108px; padding-bottom: 14px; }
+  .rsNew { position: absolute; top: 9px; inset-inline-start: 10px; z-index: 2; background: linear-gradient(135deg, #ff4f9a, #ff9a3c); color: #fff; font-weight: 900; font-size: 12px; padding: 3px 11px; border-radius: 12px; animation: nwP 1.4s infinite; }
+  @keyframes nwP { 0% { box-shadow: 0 0 0 0 rgba(255,100,150,.8); } 70%,100% { box-shadow: 0 0 0 11px rgba(255,100,150,0); } }
+  .rsQ { position: absolute; bottom: 9px; inset-inline-start: 10px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.25); border: 1.5px solid #fff; font-weight: 900; font-size: 16px; }
+  .rsQ:active { transform: scale(.85); }
+  #gameCard { background: linear-gradient(160deg, #1f5a46, #10382c); border: 1px solid #2f8a6a; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  #gameCard h2 { margin: 0; font-size: 17px; text-align: center; color: #fff; }
+  #gameCard .tab { background: rgba(255,255,255,.14); color: #fff; border: 0; border-radius: 10px; font-size: 12px; padding: 7px 4px; }
+  #gameCard .tab.on { background: #ffd166; color: #3a2200; }
+  #playNow { display: block; width: 100%; background: linear-gradient(135deg, #2ee48d, #12b36b); color: #04281a; font-weight: 900; font-size: 18px; padding: 12px; border: 0; border-radius: 16px; box-shadow: 0 5px 0 #0b7a49; transition: transform .12s, box-shadow .12s; animation: plP 2s ease-in-out infinite; }
+  #playNow:active { transform: translateY(4px); box-shadow: 0 1px 0 #0b7a49; }
+  @keyframes plP { 50% { filter: brightness(1.15); } }
+  #stage:not(.x) { display: none; }
+  #rsInfo { position: fixed; inset: 0; z-index: 90; background: rgba(5,6,20,.75); display: flex; align-items: flex-end; justify-content: center; }
+  #rsInfo[hidden] { display: none; }
+  .rsBox { width: min(480px, 100%); background: #1a2147; border-top: 2px solid #6a4af0; border-radius: 26px 26px 0 0; padding: 18px 16px max(20px, env(safe-area-inset-bottom)); color: #fff; animation: shUp .3s ease-out; max-height: 90vh; overflow: auto; }
+  @keyframes shUp { from { transform: translateY(100%); } }
+  .rsBox h3 { margin: 0 0 6px; font-size: 19px; } .rsBox p { font-size: 14px; line-height: 1.7; margin: 0; } .rsBox ul { padding-inline-start: 20px; font-size: 14px; line-height: 1.9; margin: 8px 0; }
+  .rsBox button { display: block; width: 100%; margin-top: 8px; padding: 11px; border-radius: 14px; border: 0; font-weight: 800; font-size: 15px; background: rgba(255,255,255,.14); color: #fff; } .rsBox #rsInfoGo { background: linear-gradient(135deg, #8e3bff, #c04dff); }
+  .rsBox #rsInfoX { background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; }
+  #exitFull { padding: 9px 18px; font-weight: 800; }
+
+  .tile.wide { grid-column: 1 / -1; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 9px 12px; text-align: start; }
+  .tile.wide .wt { display: flex; flex-direction: column; align-items: flex-start; flex: 1; } .tile.wide .tl { font-size: 15px; font-weight: 800; } .tile.wide small { font-size: 11px; opacity: .7; font-weight: 600; }
+  .tile.wide::after { content: "◀"; font-size: 12px; opacity: .5; transition: transform .2s; } .tile.wide:active { transform: translateX(-10px) scale(.98); } .tile.wide:hover::after { transform: translateX(-4px); }
+  .tile.wide .tb { inset-inline-end: 34px; top: 12px; }
+
+  /* خلفية متحركة */
+  #bgFx { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(160deg, #0b1030, #1b1250, #0c2a4a, #2a0f4a); background-size: 300% 300%; animation: bgShift 24s ease-in-out infinite; }
+  @keyframes bgShift { 0%,100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
+  #bgFx i { position: absolute; bottom: -60px; border-radius: 50%; opacity: .0; background: radial-gradient(circle at 32% 30%, #fff9 0 12%, var(--bc) 40%, rgba(0,0,0,.35) 100%); box-shadow: 0 0 18px var(--bc); animation: bgUp var(--d) linear var(--dl) infinite; }
+  @keyframes bgUp { 0% { transform: translate(0,0) scale(.8); opacity: 0; } 10% { opacity: .55; } 50% { transform: translate(var(--dx),-55vh) scale(1); } 90% { opacity: .5; } 100% { transform: translate(calc(var(--dx) * -1),-115vh) scale(1.1); opacity: 0; } }
+  #bgFx b { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; animation: bgTw var(--d) ease-in-out var(--dl) infinite; }
+  @keyframes bgTw { 0%,100% { opacity: .1; transform: scale(.6); } 50% { opacity: .9; transform: scale(1.6); } }
+  #app { position: relative; z-index: 1; }
+  body.full #bgFx { display: none; }
+  @media (prefers-reduced-motion: reduce) { #bgFx, #bgFx i, #bgFx b { animation: none; } }
+
+  #gSec { font-size: 14px; font-weight: 800; color: #ffd166; display: flex; align-items: center; gap: 8px; margin: 6px 4px 0; } #gSec::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.2); }
+  #gameCard { position: relative; overflow: hidden; border: 2px solid #8ff0c0; border-radius: 22px; padding: 16px 14px; background: linear-gradient(135deg, #0d6b4a 0%, #14a36b 50%, #2ee48d 120%); box-shadow: 0 8px 26px rgba(30,200,130,.4), inset 0 0 0 1px rgba(255,255,255,.2); }
+  #gameCard::before { content: ""; position: absolute; inset: -40% -10%; background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,.25) 50%, transparent 62%); transform: translateX(-120%); animation: rsShine 3.6s ease-in-out infinite; pointer-events: none; }
+  #gHead { display: flex; align-items: center; gap: 12px; } #gHead .gi { font-size: 50px; filter: drop-shadow(0 3px 8px rgba(0,0,0,.4)); animation: rsBob 2.6s ease-in-out infinite; }
+  #gHead h2 { font-family: Lalezar, Cairo, system-ui; font-size: 26px; font-weight: 400; text-align: start; text-shadow: 0 2px 10px rgba(0,0,0,.4); } #gHead small { display: block; font-size: 12px; color: #fff; opacity: .92; font-weight: 600; line-height: 1.5; }
+  #gSoon { text-align: center; font-size: 12px; color: #fff; opacity: .6; margin-bottom: 4px; }
+  @media (min-width: 700px) { #app { max-width: 640px; } #hub { gap: 10px; } .tile:not(.tileResort) .ti { width: 50px; height: 50px; font-size: 26px; } .tile .tl { font-size: 14px; } }
 </style>
 </head>
 <body>
+<div id="bgFx" aria-hidden="true"></div>
 <div id="app">
   <h1>🎯 بابيتو شات</h1>
   <div id="sponsor"><b class="rbName">Rbsh</b> <svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhga)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></div>
@@ -630,40 +692,46 @@
     <span id="hbCoins">🪙 0</span>
   </div>
 
-  <div id="modeBar" class="tabs">
-    <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
-    <button id="modeDuo" class="tab" type="button">👥 زوجي أونلاين</button>
-    <button id="fullBtn2" class="tab fsTab" type="button">⛶ تكبير</button>
-    <button id="musBtn" class="tab" type="button">🎵 موسيقى</button>
+  <div id="hub">
+    <button class="tile tileResort" data-pg="rooms" type="button"><span class="rsGlow"></span><span class="rsNew">✨ جديد</span><span class="ti">🏝️</span><span class="rsTx"><span class="tl">المنتجع</span><small>شاطئ مفتوح للجميع<br>دردشة • جلسات • ألعاب طاولة</small></span><span class="rsGo">ادخل ◀</span><span class="rsQ" id="rsQ" role="button" aria-label="ما هو المنتجع؟">؟</span></button>
+    <button class="tile wide" data-c="#2ea77a" data-pg="house" type="button"><span class="ti">🏠</span><span class="wt"><span class="tl">بيتي</span><small>أثاث، حديقة، حيوانك الأليف</small></span></button>
+    <button class="tile wide" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="wt"><span class="tl">المتجر</span><small>شخصيات وأغراض جديدة</small></span></button>
+    <button class="tile wide" data-c="#e0546a" data-pg="friends" type="button"><span class="ti">👥</span><span class="wt"><span class="tl">الأصدقاء</span><small>رسائل وأصدقاء وغرف خاصة</small></span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
+    <button class="tile wide" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="wt"><span class="tl">اكسب عملات</span><small>مهمات وهدايا يومية</small></span></button>
+    <button class="tile" data-c="#3a7bff" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
+    <button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
+    <button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button>
+    <button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
+    <button class="tile" data-c="#3a9bd0" data-pg="chat" type="button"><span class="ti">💬</span><span class="tl">الشات</span></button>
+    <button class="tile" data-c="#d08a1a" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
+    <button class="tile" data-c="#7a7fa0" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
+    <button class="tile" data-c="#6a6f90" data-pg="more" type="button"><span class="ti">⚙️</span><span class="tl">المزيد</span></button>
+    <button class="tile tileDev" data-c="#4a5aa0" data-pg="dev" type="button"><span class="ti">👨‍💻</span><span class="tl">معلومات عن المطور</span></button>
   </div>
+
+  <div id="gSec">🎮 ألعاب أخرى</div>
+  <div id="gameCard">
+    <div id="gHead"><span class="gi">🎯</span><div><h2>فجّر الكرات الملونة</h2><small>أطلق الكرات، كوّن ثلاث متشابهة وفجّرها قبل ما توصل للحفرة. العب لوحدك أو ويا صديقك أونلاين.</small></div></div>
+    <div id="modeBar" class="tabs">
+      <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
+      <button id="modeDuo" class="tab" type="button">👥 زوجي</button>
+      <button id="musBtn" class="tab" type="button">🎵 موسيقى</button>
+    </div>
   <div class="card" id="duoBox" style="display:none">
     <div class="help">ادخل نفس كود غرفة الشات، وصديقك يدخل نفس الكود، وتلعبون سوا بنفس السلسلة. الجولة دقيقتين واللي يجمع نقاط أكثر يفوز. اللي تنتهي جولته أول يتفرج على الثاني، وبعدها الاثنين يضغطون «جاهز» لجولة جديدة.</div>
     <div class="row"><input id="duoCode" placeholder="كود الغرفة (نفس كود الشات)" maxlength="20" autocomplete="off" autocapitalize="off"><button id="duoEnter" type="button">دخول</button></div>
     <div id="duoMsg" class="help"></div>
   </div>
+    <button id="playNow" type="button">▶ ابدأ اللعب</button>
+  </div>
+  <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
-  <div id="hub">
-    <button class="tile tileResort" data-pg="rooms" type="button"><span class="rsGlow"></span><span class="ti">🏝️</span><span class="rsTx"><span class="tl">المنتجع</span><small>شاطئ مفتوح للجميع • دردشة وجلسات • ادخل الحين ✨</small></span><span class="rsGo">ادخل ◀</span></button>
-    <button class="tile" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
-    <button class="tile" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
-    <button class="tile" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button>
-    <button class="tile" data-pg="house" type="button"><span class="ti">🏠</span><span class="tl">بيتي</span></button>
-    <button class="tile" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button>
-    <button class="tile" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
-    <button class="tile" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
-    <button class="tile" data-pg="dev" type="button"><span class="ti">👨‍💻</span><span class="tl">معلومات عن المطور</span></button>
-    <button class="tile" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button>
-    <button class="tile" data-pg="friends" type="button"><span class="ti">👥</span><span class="tl">الأصدقاء</span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
-    <button class="tile" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
-    <button class="tile" data-pg="chat" type="button"><span class="ti">💬</span><span class="tl">غرفة الشات</span></button>
-    <button class="tile" data-pg="more" type="button"><span class="ti">⚙️</span><span class="tl">المزيد</span></button>
-  </div>
-
+  <div id="rsInfo" hidden><div class="rsBox"><h3>🏝️ ما هو المنتجع؟</h3><p>شاطئ تدخله مع الناس بشخصيتك: تمشي وتجلس وتسولف.</p><ul><li>💬 دردشة فوق الرؤوس وهمسات خاصة</li><li>🎲 ألعاب على الطاولات (سلم وثعبان، دومينو، منقلة، إكس أو)</li><li>🎣 صيد وقلاع رمل وقهوة من جربوع</li><li>🌧️🌙❄️ مطر وليل وثلج كل 10 دقائق</li><li>🔥 سهرة حول النار وألعاب نارية</li></ul><button id="rsInfoGo" type="button">🏝️ ادخل المنتجع</button><button id="rsInfoX" type="button">فهمت ✔</button></div></div>
 </div>
 
 <div id="offBar" role="alert"><span>📴 ما اكو إنترنت حالياً. تكدر تلعب لوحدك عادي، بس للوصول للرسائل والحديث والتواصل واللعب مع الأصدقاء لازم تشغّل الإنترنت وتتصل أونلاين. أول ما يرجع الاتصال اللعبة تتصل تلقائياً وتكمل طبيعي.</span><button id="offX" type="button">إلغاء</button></div>
-<button id="exitFull" type="button">✕ خروج من ملء الشاشة</button>
+<button id="exitFull" type="button">✕ خروج</button>
 <div class="page" id="pg-account"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">👤 حسابي</span></div><div class="pgBody">
   <!-- الحساب -->
   <div class="card" id="authCard">
@@ -765,7 +833,6 @@
     <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
     <button id="shareBtn" class="ghost" type="button">📤 شارك نتيجتك</button>
     <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
-    <button id="fullBtn" class="ghost" type="button">⛶ ملء الشاشة</button>
   </div>
 
 </div></div>
@@ -2220,7 +2287,7 @@ function onTap(x, y) {
     return;
   }
   if (state === 'map') { if (mapT > 45) nextLevel(); return; }
-  if (state === 'ready') { if (x > 62 && x < 258 && y > 306 && y < 366) { try { unlockAudio(); sfx('level'); } catch (e) {} state = 'play'; startGame(); zAim(Z, x, y); } return; }
+  if (state === 'ready') { if (x > 62 && x < 258 && y > 306 && y < 366) { try { unlockAudio(); sfx('level'); } catch (e) {} state = 'play'; enterFull(); startGame(); zAim(Z, x, y); } return; }
   if (state === 'play') {
     if (paused) { if (x > 70 && x < 250 && y > 232 && y < 300) resumeGame(); else if (x > 60 && x < 260 && y > 312 && y < 356) restartLevel(); else if (x > 60 && x < 260 && y > 366 && y < 410) skipLevel(); return; }
     if (performance.now() < resumeAt) return;
@@ -2267,16 +2334,38 @@ function enterFull() {
   window.scrollTo(0, 0);
 }
 function exitFull() {
+  try { pauseGame(); } catch (e) {}
   document.body.classList.remove('full'); document.documentElement.classList.remove('full');
   try {
     if (document.fullscreenElement && document.exitFullscreen) { const p = document.exitFullscreen(); if (p && p.catch) p.catch(() => {}); }
   } catch (e) {}
 }
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { document.body.classList.remove('full'); document.documentElement.classList.remove('full'); } });
-$('fullBtn').onclick = enterFull;
-$('fullBtn2').onclick = enterFull;
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { try { if (document.body.classList.contains('full')) pauseGame(); } catch (e) {} document.body.classList.remove('full'); document.documentElement.classList.remove('full'); } });
+if ($('fullBtn')) $('fullBtn').onclick = enterFull;
 $('musBtn').onclick = () => { musicOn = !musicOn; try { localStorage.setItem('flappyMusic', musicOn ? '1' : '0'); } catch (e) {} musicLabel(); showToast(musicOn ? '🎵 الموسيقى شغّالة' : '🔇 الموسيقى مطفية'); unlockAudio(); };
 $('exitFull').onclick = exitFull;
+/* ===== واجهة جديدة: تشغيل + نغمة + أنيميشن ===== */
+function playJingle() { try { unlockAudio(); if (!actx) return; [523, 659, 784, 1047].forEach((f, i) => blip('triangle', f, f * 1.01, 0.16, 0.12, i * 0.07)); blip('sine', 1568, 1568, 0.3, 0.07, 0.3); } catch (e) {} }
+function tileFx(t, ev) {
+  try { const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.6, e = document.createElement('span'); e.className = 'rip'; e.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + ((ev && ev.clientX ? ev.clientX - r.left : r.width / 2) - d / 2) + 'px;top:' + ((ev && ev.clientY ? ev.clientY - r.top : r.height / 2) - d / 2) + 'px'; t.appendChild(e); setTimeout(() => e.remove(), 650); t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); blip('sine', 600, 900, 0.08, 0.06); if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
+}
+document.querySelectorAll('#hub .tile').forEach((t, i) => { t.style.setProperty('--i', i); if (t.dataset.c) t.style.setProperty('--c', t.dataset.c); t.addEventListener('pointerdown', ev => { if (ev.target.id === 'rsQ') return; try { unlockAudio(); } catch (e) {} tileFx(t, ev); }); });
+$('rsQ').addEventListener('click', e => { e.stopPropagation(); $('rsInfo').hidden = false; });
+$('rsQ').addEventListener('pointerdown', e => e.stopPropagation());
+$('rsInfoX').onclick = () => { $('rsInfo').hidden = true; };
+$('rsInfo').addEventListener('click', e => { if (e.target === $('rsInfo')) $('rsInfo').hidden = true; });
+$('rsInfoGo').onclick = () => { $('rsInfo').hidden = true; openPage('rooms'); };
+
+(function () { const f = document.getElementById('bgFx'); if (!f) return; const C = ['#3a7bff', '#ff4f6a', '#2ee48d', '#ffd166', '#b45cff', '#18d0e8'];
+  for (let i = 0; i < 16; i++) { const e = document.createElement('i'), z = 18 + Math.random() * 34; e.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + z + 'px;height:' + z + 'px;--bc:' + C[i % 6] + ';--d:' + (14 + Math.random() * 14) + 's;--dl:-' + (Math.random() * 24) + 's;--dx:' + ((Math.random() - .5) * 90) + 'px'; f.appendChild(e); }
+  for (let i = 0; i < 28; i++) { const e = document.createElement('b'); e.style.cssText = 'left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;--d:' + (2 + Math.random() * 4) + 's;--dl:-' + (Math.random() * 5) + 's'; f.appendChild(e); } })();
+$('playNow').onclick = () => {
+  playJingle();
+  if (gameMode === 'duo') { const c = $('duoCode').value.trim(); if (!c && !duo.want) { showToast('اكتب كود الغرفة أول'); $('duoCode').focus(); return; } if (!duo.want) duoEnter(); enterFull(); return; }
+  enterFull();
+  if (state === 'ready') { state = 'play'; startGame(); }
+};
+
 
 /* ================= لوحة الصدارة ================= */
 let lbLast = [], lbSig = '';
