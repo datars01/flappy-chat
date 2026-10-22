@@ -678,6 +678,14 @@
   #gHead { display: flex; align-items: center; gap: 12px; } #gHead .gi { font-size: 50px; filter: drop-shadow(0 3px 8px rgba(0,0,0,.4)); animation: rsBob 2.6s ease-in-out infinite; }
   #gHead h2 { font-family: Lalezar, Cairo, system-ui; font-size: 26px; font-weight: 400; text-align: start; text-shadow: 0 2px 10px rgba(0,0,0,.4); } #gHead small { display: block; font-size: 12px; color: #fff; opacity: .92; font-weight: 600; line-height: 1.5; }
   #gSoon { text-align: center; font-size: 12px; color: #fff; opacity: .6; margin-bottom: 4px; }
+
+  .gTiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; position: relative; z-index: 1; }
+  .gTiles .tile { background: rgba(0,0,0,.28) !important; border-color: rgba(255,255,255,.25); }
+  #hub .tile:not(.tileResort):not(.wide) { }
+  #hub { grid-template-columns: repeat(3, 1fr); } .gTiles .tile .tl { font-size: 10.5px; } .gTiles .tile .ti { width: 34px; height: 34px; font-size: 18px; }
+  #hub .tile.tileDev { grid-column: auto; flex-direction: column; padding: 10px 2px 8px; gap: 2px; } #hub .tile.tileDev .ti { width: 42px; height: 42px; font-size: 22px; margin-bottom: 3px; }
+  #hub .tile.tileDev .tl { font-size: 11px; }
+  @media (min-width: 700px) { #hub .tile.tileDev .ti { width: 50px; height: 50px; font-size: 26px; } }
   @media (min-width: 700px) { #app { max-width: 640px; } #hub { gap: 10px; } .tile:not(.tileResort) .ti { width: 50px; height: 50px; font-size: 26px; } .tile .tl { font-size: 14px; } }
 </style>
 </head>
@@ -695,13 +703,8 @@
   <div id="hub">
     <button class="tile tileResort" data-pg="rooms" type="button"><span class="rsGlow"></span><span class="rsNew">✨ جديد</span><span class="ti">🏝️</span><span class="rsTx"><span class="tl">المنتجع</span><small>شاطئ مفتوح للجميع<br>دردشة • جلسات • ألعاب طاولة</small></span><span class="rsGo">ادخل ◀</span><span class="rsQ" id="rsQ" role="button" aria-label="ما هو المنتجع؟">؟</span></button>
     <button class="tile wide" data-c="#2ea77a" data-pg="house" type="button"><span class="ti">🏠</span><span class="wt"><span class="tl">بيتي</span><small>أثاث، حديقة، حيوانك الأليف</small></span></button>
-    <button class="tile wide" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="wt"><span class="tl">المتجر</span><small>شخصيات وأغراض جديدة</small></span></button>
     <button class="tile wide" data-c="#e0546a" data-pg="friends" type="button"><span class="ti">👥</span><span class="wt"><span class="tl">الأصدقاء</span><small>رسائل وأصدقاء وغرف خاصة</small></span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
-    <button class="tile wide" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="wt"><span class="tl">اكسب عملات</span><small>مهمات وهدايا يومية</small></span></button>
     <button class="tile" data-c="#3a7bff" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
-    <button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button>
-    <button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button>
-    <button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button>
     <button class="tile" data-c="#3a9bd0" data-pg="chat" type="button"><span class="ti">💬</span><span class="tl">الشات</span></button>
     <button class="tile" data-c="#d08a1a" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
     <button class="tile" data-c="#7a7fa0" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
@@ -712,6 +715,7 @@
   <div id="gSec">🎮 ألعاب أخرى</div>
   <div id="gameCard">
     <div id="gHead"><span class="gi">🎯</span><div><h2>فجّر الكرات الملونة</h2><small>أطلق الكرات، كوّن ثلاث متشابهة وفجّرها قبل ما توصل للحفرة. العب لوحدك أو ويا صديقك أونلاين.</small></div></div>
+    <div class="gTiles"><button class="tile" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button><button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button><button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button><button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button><button class="tile" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button></div>
     <div id="modeBar" class="tabs">
       <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
       <button id="modeDuo" class="tab" type="button">👥 زوجي</button>
@@ -2349,7 +2353,7 @@ function playJingle() { try { unlockAudio(); if (!actx) return; [523, 659, 784, 
 function tileFx(t, ev) {
   try { const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.6, e = document.createElement('span'); e.className = 'rip'; e.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + ((ev && ev.clientX ? ev.clientX - r.left : r.width / 2) - d / 2) + 'px;top:' + ((ev && ev.clientY ? ev.clientY - r.top : r.height / 2) - d / 2) + 'px'; t.appendChild(e); setTimeout(() => e.remove(), 650); t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); blip('sine', 600, 900, 0.08, 0.06); if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
 }
-document.querySelectorAll('#hub .tile').forEach((t, i) => { t.style.setProperty('--i', i); if (t.dataset.c) t.style.setProperty('--c', t.dataset.c); t.addEventListener('pointerdown', ev => { if (ev.target.id === 'rsQ') return; try { unlockAudio(); } catch (e) {} tileFx(t, ev); }); });
+document.querySelectorAll('.tile').forEach((t, i) => { t.style.setProperty('--i', i); if (t.dataset.c) t.style.setProperty('--c', t.dataset.c); t.addEventListener('pointerdown', ev => { if (ev.target.id === 'rsQ') return; try { unlockAudio(); } catch (e) {} tileFx(t, ev); }); });
 $('rsQ').addEventListener('click', e => { e.stopPropagation(); $('rsInfo').hidden = false; });
 $('rsQ').addEventListener('pointerdown', e => e.stopPropagation());
 $('rsInfoX').onclick = () => { $('rsInfo').hidden = true; };
