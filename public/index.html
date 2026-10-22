@@ -460,7 +460,9 @@
   #rmDockArr:active { transform: translateY(-50%) scale(.92); }
   @keyframes rmArrGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,122,184,.65), -3px 4px 14px rgba(0,0,0,.45); } 50% { box-shadow: 0 0 0 9px rgba(255,122,184,0), -3px 4px 14px rgba(0,0,0,.45); } }
   #rmBox.memb #rmDockArr { display: flex; } #rmBox.memb:not(.dockOpen) #rmDock, #rmBox.memb:not(.dockOpen) #rmDance, #rmBox.memb:not(.dockOpen) #rmMus, #rmBox.memb:not(.dockOpen) #rmRx { display: none !important; }
-  #rmBox.memb.dockOpen #rmDockArr { right: 112px; animation: none; } #rmBox.memb.dockOpen #rmDockArr b { transform: rotate(180deg); }
+  #rmBox.memb.dockOpen #rmDockArr { right: 128px; animation: none; } #rmBox.memb.dockOpen #rmDockArr b { transform: rotate(180deg); }
+  #rmBox.memb #rmDock { padding: 9px; border-radius: 18px; background: linear-gradient(165deg, rgba(92,44,160,.93) 0%, rgba(52,38,128,.93) 55%, rgba(26,72,150,.93) 100%); border: 2px solid rgba(255,255,255,.55); box-shadow: 0 8px 22px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.25); }   /* خلفية حلوة للأزرار بدل الأبيض */
+  #rmDockA { padding: 9px; border-radius: 18px; background: linear-gradient(165deg, rgba(92,44,160,.93) 0%, rgba(52,38,128,.93) 55%, rgba(26,72,150,.93) 100%); border: 2px solid rgba(255,255,255,.55); box-shadow: 0 8px 22px rgba(0,0,0,.45); }   /* نفس الخلفية لأزرار المشرفين */
   #rmBox.memb.dockOpen #rmDock { animation: rmDockIn .34s cubic-bezier(.25,1.5,.5,1); } #rmBox.memb.dockShut #rmDock { animation: rmDockOut .22s ease-in forwards; }
   #rmBox.memb.dockOpen #rmDock > * { animation: rmBtnPop .36s cubic-bezier(.3,1.6,.5,1) backwards; } #rmBox.memb.dockOpen #rmDock > *:nth-child(2) { animation-delay: .03s; } #rmBox.memb.dockOpen #rmDock > *:nth-child(3) { animation-delay: .06s; } #rmBox.memb.dockOpen #rmDock > *:nth-child(4) { animation-delay: .09s; } #rmBox.memb.dockOpen #rmDock > *:nth-child(5) { animation-delay: .12s; } #rmBox.memb.dockOpen #rmDock > *:nth-child(6) { animation-delay: .15s; } #rmBox.memb.dockOpen #rmDock > *:nth-child(n+7) { animation-delay: .18s; }
   @keyframes rmDockIn { from { opacity: 0; transform: translateX(40px) scale(.9); } to { opacity: 1; transform: none; } } @keyframes rmDockOut { to { opacity: 0; transform: translateX(40px) scale(.9); } } @keyframes rmBtnPop { from { opacity: 0; transform: scale(.4) rotate(-12deg); } to { opacity: 1; transform: none; } }
@@ -7149,7 +7151,7 @@ $('avSave').onclick = () => {
 
 /* ---------- الواجهة: اللوبي ---------- */
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
-function rmDockUpd() { const B = $('rmBox'); if (!B) return; const memb = !(RM.myAdm || RM.isMod || RM.isOwner); B.classList.toggle('memb', memb); }
+function rmDockUpd() { const B = $('rmBox'); if (!B) return; B.classList.add('memb'); /* السهم الجانبي للكل (أعضاء ومشرفين) */ }
 $('rmDockArr').onclick = () => {   // فتح/سد أزرار العضو مع حركة وصوت
   const B = $('rmBox'); if (B.classList.contains('dockShut')) return; const open = !B.classList.contains('dockOpen');
   try { if (open) { blip('sine', 520, 980, 0.12, 0.07); blip('sine', 780, 1320, 0.12, 0.05, 0.08); } else { blip('sine', 900, 420, 0.13, 0.06); blip('sine', 600, 300, 0.1, 0.04, 0.07); } } catch (e) {}
