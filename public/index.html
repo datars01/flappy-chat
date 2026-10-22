@@ -6250,6 +6250,7 @@ function rmDrawMe0(c, st) {
 function rmDrawOther(c, o) { rmHugEm(o); rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); rmCupDraw(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
 function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; rmGhostDraw(c, o.x, o.y, g => rmDrawOther0(g, o)); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
 function rmDrawOther0(c, o) {
+  rmHoldGlue(o);
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
   const sit = o.sit && !mv; if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
   o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
@@ -6674,7 +6675,7 @@ function rmDInvite(from) {
 }
 /* ---------- العناق والرقص الثنائي ومسك الإيد (حركات حقيقية بين شخصين) ---------- */
 RM.pair = null; RM.holds = {}; RM.holdLead = {};
-const RM_HOLD_GAP = 30;
+const RM_HOLD_GAP = 27;
 function rmPairStart(kind, partner, lead) { const m = RM.me; if (m.sit) rmStand(); RM.pair = { kind, with: partner, lead, st: 'go', t0: performance.now(), side: 0 }; }
 function rmPairEnd() { const P = RM.pair; RM.pair = null; if (P && P.st === 'do' && [16, 17, 18].includes(RM.me.dance || 0)) rmSetDance(0); }
 function rmPairTick() {
@@ -6690,15 +6691,19 @@ function rmPairTick() {
 }
 /* مسك الإيد: اللي انمسكت إيده يمشي ورا الماسك بنفس الجهة */
 function rmHoldOf(name) { return RM.holds[name] || null; }
-function rmHoldSide(name, x, dir) { const p = rmHoldOf(name); if (!p) return 0; const po = rmPosOf(p); if (!po) return 0; const s = po[0] >= x ? 1 : -1; return s === dir ? 1 : -1; }
+function rmHoldSide(name, x, dir) { const p = rmHoldOf(name); if (!p) return 0; const po = rmPosOf(p); if (!po) return 0; if (Math.abs(po[0] - x) > RM_HOLD_GAP + 14) return 0; const s = po[0] >= x ? 1 : -1; return s === dir ? 1 : -1; }   // الإيد تنمد بس إذا هم لاصقين
+/* اللي ماسك إيده يبقى ملتصق بالماسك وهو يمشي (حتى عند باقي اللاعبين) */
+function rmHoldGlue(o) { const p = RM.holds[o.name]; if (!p || RM.holdLead[o.name]) return; const lp = rmPosOf(p); if (!lp || Math.hypot(lp[0] - o.x, lp[1] - o.y) > 140) return; const s = o.x >= lp[0] ? 1 : -1; o.tx = lp[0] + s * RM_HOLD_GAP; o.ty = lp[1]; o.dir = rmDirOf(p); }
 function rmHoldTick() {
   const me = rmMe(), p = rmHoldOf(me); if (!p || RM.holdLead[me]) return; const po = rmPosOf(p); if (!po) return; const m = RM.me; if (m.sit) { rmStand(); return; } if (m.jump) return;
-  const s = m.x >= po[0] ? 1 : -1, tx = Math.max(24, Math.min(RMW - 24, po[0] + s * RM_HOLD_GAP)), ty = po[1]; if (Math.hypot(m.tx - tx, m.ty - ty) > 1.5) { m.tx = tx; m.ty = ty; m.goal = false; m.seat = null; }
-  if (Math.hypot(m.x - tx, m.y - ty) < 3) m.dir = rmDirOf(p);
+  const s = m.x >= po[0] ? 1 : -1, tx = Math.max(24, Math.min(RMW - 24, po[0] + s * RM_HOLD_GAP)), ty = po[1], d = Math.hypot(m.x - tx, m.y - ty);
+  m.tx = tx; m.ty = ty; m.goal = false; m.seat = null;
+  if (d < 90) { m.x += (tx - m.x) * 0.45; m.y += (ty - m.y) * 0.45; }   // يلحقه فوراً ويبقون لاصقين، مو بس يمشي وراه
+  m.dir = rmDirOf(p);
 }
 function rmClaspDraw(c) {   // إيدين ماسكة بعض فوق الكل حتى تبين واضحة
   for (const a in RM.holdLead) { const b = RM.holds[a]; if (!b) continue; const pa = rmPosOf(a), pb = rmPosOf(b); if (!pa || !pb) continue; const oa = a === rmMe() ? RM.me : RM.others[a], ob = b === rmMe() ? RM.me : RM.others[b]; if ((oa && oa.hid) || (ob && ob.hid)) continue;
-    const x = (pa[0] + pb[0]) / 2, y = (pa[1] + pb[1]) / 2 - 58 * AV_H / 137, sk = (typeof AVT !== 'undefined') ? '#f6c9a8' : '#f6c9a8', d = pb[0] > pa[0] ? 1 : -1;
+    if (Math.abs(pa[0] - pb[0]) > RM_HOLD_GAP + 14 || Math.abs(pa[1] - pb[1]) > 12) continue; const x = (pa[0] + pb[0]) / 2, y = (pa[1] + pb[1]) / 2 - 58 * AV_H / 137, sk = (typeof AVT !== 'undefined') ? '#f6c9a8' : '#f6c9a8', d = pb[0] > pa[0] ? 1 : -1;
     c.save(); c.translate(x, y); c.scale(d, 1); c.lineWidth = 0.9; c.strokeStyle = '#2e2030'; c.fillStyle = sk;
     c.beginPath(); c.ellipse(-1.4, 0, 2.3, 2, 0, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.ellipse(1.4, 0.3, 2.3, 2, 0, 0, 7); c.fill(); c.stroke();
     c.lineWidth = 0.55; for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(-0.6, -1 + i * 0.9); c.quadraticCurveTo(0.6, -0.6 + i * 0.9, 1.6, -1 + i * 0.9); c.stroke(); } c.restore(); }
