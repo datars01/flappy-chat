@@ -5716,6 +5716,7 @@ var AVT = (function () {
       }
       else if (d === 8) { const w = Math.sin(q / 5); o.aR = 1.7 + w * .9; o.aL = .35; o.hip = Math.sin(q / 10) * 1.8; o.rot = Math.sin(q / 10) * .05; o.bob = -Math.abs(w) * 1; o.hair = w * .05; o.headR = Math.sin(q / 10) * .08; }
     }
+    if (Pp.swim && !d) { const w = t / 7; o.aL = 1.7 + Math.sin(w) * 1.25; o.aR = 1.7 + Math.sin(w + Math.PI) * 1.25; o.eL = .35 + Math.max(0, Math.cos(w)) * .5; o.eR = .35 + Math.max(0, -Math.cos(w)) * .5; o.sL = o.sR = 0; o.bob = Math.sin(t / 9) * 1.6; o.headR = Math.sin(w) * .06; o.hair = Math.sin(w) * .05; o.lL = o.lR = 0; o.kL = o.kR = 0; }   // سباحة: ضربات إيدين متبادلة
     if (Pp.burn > .2 && !d) { const k = Math.min(1, Pp.burn), w = t / 2.6; o.aL = (2.1 + Math.sin(w) * .6) * k + o.aL * (1 - k); o.aR = (2.1 + Math.sin(w + 2.2) * .6) * k + o.aR * (1 - k); o.eL = o.eR = .5 * k; o.sL = o.sR = 0; o.bob = -Math.abs(Math.sin(t / 3)) * 5 * k; o.kL = Math.max(0, Math.sin(t / 3)) * .9 * k; o.kR = Math.max(0, -Math.sin(t / 3)) * .9 * k; o.headR = Math.sin(t / 4) * .08 * k; o.hair = Math.sin(t / 3) * .1; }   // يتألم ويقفز من الحرارة
     if (Pp.umb && !d) { o.aR = .55; o.sR = 0; o.eR = .25; }
     if (Pp.hold && !d) { const sw = mv ? Math.sin(ph) * 1.2 : 0, A = drinkIK(23.5 + sw, -59); if (Pp.hold > 0) { o.aR = A.a; o.eR = A.e; o.sR = 0; } else { o.aL = A.a; o.eL = -A.e; o.sL = 0; } }   // ماسك إيد شخص يمشي وياه
@@ -5894,7 +5895,7 @@ var AVT = (function () {
 })();
 
 /* ================= نظام الغرف 🏝️ ================= */
-const RMW = 1200, RMH = 960;   // المنتجع صار أعرض والساحل يمتد لليمين
+const RMW = 1200, RMH = 990;   // المنتجع صار أعرض والساحل يمتد لليمين
 var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
 const RM_SEATS = [];
 (function () {
@@ -5905,6 +5906,7 @@ const RM_SEATS = [];
   [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
   [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1])); add('swing2', 232, 392);
   [620, 648, 676, 704].forEach(x => add('stool', x, 492));
+  [[968, 812], [1112, 812], [1040, 858]].forEach(p => add('bench', p[0], p[1]));   // جلسة الحديقة الهادية
    [0, 1, 2, 3].forEach(i => { add('gtable', [925, 1100, 925, 1100][i], [345, 345, 525, 525][i]); RM_SEATS[RM_SEATS.length - 1].tb = i; });
 })();
 function rmSpots(sd) {
@@ -6078,6 +6080,94 @@ function rmIdeasShow() {
   const x = document.createElement('button'); x.type = 'button'; x.textContent = '✖ سكّر'; x.onclick = () => o.remove();
   row.append(inp, cnt, sb); const wk = document.createElement('div'); wk.className = 'idWk'; wk.style.cssText = 'font-size:12px;text-align:center;color:#ffd166'; c.append(h, top, L, row, wk, x); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o); rmIdeasRender();
 }
+/* ====================== المساحة الجديدة تحت: مسبح، ملاهي، حديقة، زاوية تصوير ====================== */
+const RM_POOL = { x: 100, y: 662, w: 340, h: 150 }, RM_FER = { x: 600, cy: 752, R: 92, by: 880, n: 6 }, RM_CAR = { x: 822, y: 818, R: 64, n: 6 }, RM_FTN = { x: 1040, y: 760 }, RM_PHO = { x: 290, y: 958 };
+RM.nullCv = null; function rmNullC() { const k = RM.nullCv || (RM.nullCv = document.createElement('canvas')); k.width = 1; k.height = 1; return k.getContext('2d'); }
+function rmInPool(o) { const P = RM_POOL; return !!o && o.x > P.x + 12 && o.x < P.x + P.w - 12 && o.y > P.y + 24 && o.y < P.y + P.h - 4; }
+function rmSwimStart(c, o) { if (!rmInPool(o)) return false; const wl = o.y - 30 + Math.sin(RM.T / 9 + (o.pseed || 0)) * 1.4; c.save(); c.beginPath(); c.rect(o.x - 80, o.y - 260, 160, wl - (o.y - 260)); c.clip(); o._wl = wl; return true; }
+function rmSwimEnd(c, o) {
+  c.restore(); const wl = o._wl, T = RM.T; c.save(); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.6; for (let i = 0; i < 2; i++) { const r = 12 + i * 6 + Math.sin(T / 7 + i) * 2; c.globalAlpha = 0.7 - i * 0.3; c.beginPath(); c.ellipse(o.x, wl, r, r * 0.3, 0, 0, 7); c.stroke(); } c.restore();
+  if ((T + (o.pseed || 0)) % 9 === 0) for (let i = 0; i < 3; i++) RM.sparks.push({ x: o.x + (Math.random() - 0.5) * 22, y: wl, vx: (Math.random() - 0.5) * 1.2, vy: -1.4 - Math.random(), t: 18, drop: 1 });   // رشات مي
+}
+function rmPoolDraw(c) {
+  const P = RM_POOL, T = RM.T; c.save();
+  c.fillStyle = '#e9eef2'; rmRR(c, P.x - 16, P.y - 14, P.w + 32, P.h + 28, 18, '#e9eef2'); c.strokeStyle = 'rgba(120,140,160,.35)'; c.lineWidth = 1; for (let x = P.x - 10; x < P.x + P.w + 16; x += 16) { c.beginPath(); c.moveTo(x, P.y - 14); c.lineTo(x, P.y - 2); c.moveTo(x, P.y + P.h + 2); c.lineTo(x, P.y + P.h + 14); c.stroke(); }
+  const g = c.createLinearGradient(0, P.y, 0, P.y + P.h); g.addColorStop(0, '#3fc6ef'); g.addColorStop(1, '#1580c8'); rmRR(c, P.x, P.y, P.w, P.h, 12, g);
+  c.save(); c.beginPath(); if (c.roundRect) c.roundRect(P.x, P.y, P.w, P.h, 12); else c.rect(P.x, P.y, P.w, P.h); c.clip(); c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 1.4;
+  for (let j = 0; j < 7; j++) { c.beginPath(); for (let x = P.x; x <= P.x + P.w; x += 8) c.lineTo(x, P.y + 14 + j * 20 + Math.sin(x / 22 + T / 18 + j) * 3); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.12)'; for (let i = 0; i < 14; i++) { const x = P.x + ((i * 61 + T * 0.4) % P.w), y = P.y + 10 + (i * 37) % (P.h - 20); c.beginPath(); c.ellipse(x, y, 9, 2.4, 0, 0, 7); c.fill(); }
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.setLineDash([6, 6]); [P.y + 50, P.y + 100].forEach(y => { c.beginPath(); c.moveTo(P.x + 6, y); c.lineTo(P.x + P.w - 6, y); c.stroke(); }); c.setLineDash([]); c.restore();
+  c.strokeStyle = '#b8c4cc'; c.lineWidth = 3; [[P.x + P.w - 30, 0], [P.x + P.w - 18, 0]].forEach(p => { c.beginPath(); c.moveTo(p[0], P.y - 10); c.lineTo(p[0], P.y + 22); c.stroke(); }); c.lineWidth = 2; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(P.x + P.w - 30, P.y + 2 + k * 8); c.lineTo(P.x + P.w - 18, P.y + 2 + k * 8); c.stroke(); }   // سلم المسبح
+  { const fx = P.x + 70 + Math.sin(T / 60) * 20, fy = P.y + 70 + Math.cos(T / 70) * 10; c.lineWidth = 6; c.strokeStyle = '#ff5a6a'; c.beginPath(); c.ellipse(fx, fy, 12, 6, 0, 0, 7); c.stroke(); c.strokeStyle = '#fff'; c.setLineDash([5, 7]); c.beginPath(); c.ellipse(fx, fy, 12, 6, 0, 0, 7); c.stroke(); c.setLineDash([]); }   // عوامة
+  c.font = 'bold 12px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#0d4a7a'; c.fillText('🏊 المسبح', P.x + P.w / 2, P.y - 20); c.restore();
+}
+/* --- الملاهي: دولاب الهوا والدوّارة (الدوران بنفس الوقت عند الكل) --- */
+function rmRideOf(o) { const e = o && o.dance || 0; return e >= 20 && e < 26 ? { k: 'fer', i: e - 20 } : e >= 26 && e < 32 ? { k: 'car', i: e - 26 } : null; }
+function rmFerPos(i) { const F = RM_FER, a = Date.now() / 1000 * 0.22 + i * Math.PI * 2 / F.n; return [F.x + Math.cos(a) * F.R, F.cy + Math.sin(a) * F.R]; }
+function rmCarPos(i) { const C = RM_CAR, a = Date.now() / 1000 * 0.7 + i * Math.PI * 2 / C.n; return [C.x + Math.cos(a) * C.R, C.y + Math.sin(a) * C.R * 0.3, Math.sin(a), Math.cos(a)]; }
+function rmRiders(kind) { const L = []; const add = (o, nm, me) => { const r = rmRideOf(o); if (r && r.k === kind && !(o.hid && !(RM.myAdm || RM.isMod))) L.push({ o, nm, me, i: r.i }); }; add(RM.me, rmMe(), true); Object.values(RM.others).forEach(o => add(o, o.name, false)); return L; }
+function rmRiderDraw(c, R, x, y, s) { c.save(); c.translate(x, y); c.scale((R.o.dir || 1) * s, s); AVT.drawAt(c, R.o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, sit: 1, dance: 1, dt: RM.T }); c.restore(); rmTag(c, R.nm, x, y - AV_H * s * 0.95 - 6, { me: R.me, adm: R.o.adm || (R.me ? RM.myAdm : 0) }); }
+function rmFerrisDraw(c) {
+  const F = RM_FER, T = RM.T, a0 = Date.now() / 1000 * 0.22; c.save();
+  c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(F.x, F.by, 70, 10, 0, 0, 7); c.fill();
+  c.strokeStyle = '#4a5a8a'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.moveTo(F.x - 46, F.by); c.lineTo(F.x, F.cy); c.lineTo(F.x + 46, F.by); c.stroke();
+  c.strokeStyle = '#ff7ab8'; c.lineWidth = 4; c.beginPath(); c.arc(F.x, F.cy, F.R, 0, 7); c.stroke(); c.strokeStyle = '#ffd166'; c.lineWidth = 2; c.beginPath(); c.arc(F.x, F.cy, F.R - 10, 0, 7); c.stroke();
+  for (let i = 0; i < 12; i++) { const a = a0 + i * Math.PI / 6; c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(F.x, F.cy); c.lineTo(F.x + Math.cos(a) * F.R, F.cy + Math.sin(a) * F.R); c.stroke(); c.fillStyle = ['#ff5a6a', '#ffd166', '#5ad1ff', '#8ddc7a'][i % 4]; c.globalAlpha = 0.6 + 0.4 * Math.sin(T / 6 + i); c.beginPath(); c.arc(F.x + Math.cos(a) * F.R, F.cy + Math.sin(a) * F.R, 2.6, 0, 7); c.fill(); c.globalAlpha = 1; }
+  c.fillStyle = '#ffd166'; c.beginPath(); c.arc(F.x, F.cy, 9, 0, 7); c.fill(); c.strokeStyle = '#8a5a00'; c.lineWidth = 2; c.stroke();
+  const riders = rmRiders('fer');
+  for (let i = 0; i < F.n; i++) { const p = rmFerPos(i), col = ['#ff5a6a', '#5ad1ff', '#ffd166', '#8ddc7a', '#c78bff', '#ff9a4a'][i]; c.strokeStyle = '#555'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(p[0], p[1] - 4); c.lineTo(p[0], p[1] + 4); c.stroke();
+    riders.filter(R => R.i === i).forEach(R => rmRiderDraw(c, R, p[0], p[1] + 30, 0.5));
+    rmRR(c, p[0] - 17, p[1] + 14, 34, 18, 7, col); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(p[0] - 13, p[1] + 17, 26, 4); c.fillStyle = col; c.beginPath(); c.moveTo(p[0] - 17, p[1] + 4); c.quadraticCurveTo(p[0], p[1] - 6, p[0] + 17, p[1] + 4); c.lineTo(p[0] + 15, p[1] + 7); c.lineTo(p[0] - 15, p[1] + 7); c.fill(); }
+  c.font = 'bold 12px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#7a1a5a'; c.fillText('🎡 دولاب الهوا', F.x, F.by + 18); c.restore();
+}
+function rmCarouselDraw(c) {
+  const C = RM_CAR, T = RM.T; c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(C.x, C.y + 8, C.R + 18, (C.R + 18) * 0.32, 0, 0, 7); c.fill();
+  c.fillStyle = '#f4d8ff'; c.beginPath(); c.ellipse(C.x, C.y, C.R + 14, (C.R + 14) * 0.32, 0, 0, 7); c.fill(); c.strokeStyle = '#a060d0'; c.lineWidth = 3; c.stroke();
+  c.fillStyle = '#ffd166'; c.fillRect(C.x - 4, C.y - 78, 8, 78);
+  const riders = rmRiders('car'), items = []; for (let i = 0; i < C.n; i++) items.push([rmCarPos(i), i]); items.sort((a, b) => a[0][1] - b[0][1]);
+  const roof = () => { c.fillStyle = '#ff5a8a'; c.beginPath(); c.moveTo(C.x - C.R - 16, C.y - 78); c.lineTo(C.x, C.y - 118); c.lineTo(C.x + C.R + 16, C.y - 78); c.closePath(); c.fill(); for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff' : '#ff5a8a'; c.beginPath(); c.arc(C.x - C.R - 16 + k * (C.R * 2 + 32) / 7, C.y - 78, 6, 0, Math.PI); c.fill(); } c.fillStyle = '#ffd166'; c.beginPath(); c.arc(C.x, C.y - 120, 5, 0, 7); c.fill(); };
+  items.forEach(([p, i]) => { const bob = Math.sin(Date.now() / 300 + i * 1.7) * 5, hx = p[0], hy = p[1] - 30 + bob, col = ['#fff', '#ffd1e8', '#d6f0ff', '#fff2c0', '#e2ffd6', '#ead6ff'][i];
+    c.strokeStyle = '#d4a017'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(hx, C.y - 78); c.lineTo(hx, p[1] + 6); c.stroke();
+    c.save(); c.translate(hx, hy); c.scale(p[3] > 0 ? 1 : -1, 1); c.fillStyle = col; c.strokeStyle = '#6a4a8a'; c.lineWidth = 1.4; c.beginPath(); c.ellipse(0, 0, 14, 7, 0, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.ellipse(12, -8, 5, 8, 0.5, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#ff7ab8'; c.fillRect(-14, -3, 6, 9); c.fillStyle = '#6a4a8a'; [-8, 8].forEach(lx => { c.fillRect(lx - 1.5, 5, 3, 9); }); c.restore();
+    riders.filter(R => R.i === i).forEach(R => rmRiderDraw(c, R, hx, hy + 2, 0.48)); });
+  roof(); c.font = 'bold 12px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#7a1a5a'; c.fillText('🎠 الدوّارة', C.x, C.y + 44); c.restore();
+}
+const rmNearFer = () => Math.hypot(RM.me.x - RM_FER.x, RM.me.y - RM_FER.by) < 80, rmNearCar = () => Math.hypot(RM.me.x - RM_CAR.x, (RM.me.y - RM_CAR.y) * 1.3) < 105;
+function rmRideBoard(kind) {   // نختار مقعد فاضي ونركب
+  const m = RM.me; if (m.sit) { rmStand(); return; } const used = new Set(rmRiders(kind).filter(R => !R.me).map(R => R.i)), n = kind === 'fer' ? RM_FER.n : RM_CAR.n; let pick = -1; for (let i = 0; i < n; i++) if (!used.has(i)) { pick = i; break; }
+  if (pick < 0) { showToast('⛔ كل المقاعد مليانة، انتظر شوي'); return; } m.tx = m.x; m.ty = m.y; rmSetDance((kind === 'fer' ? 20 : 26) + pick); RM.sent = ''; try { if (!RM.ambMute) [[523, 0], [659, 0.1], [784, 0.2]].forEach(q => blip('sine', q[0], q[0], 0.18, 0.05, q[1])); } catch (e) {} showToast(kind === 'fer' ? '🎡 ركبت دولاب الهوا! استمتع بالمنظر' : '🎠 ركبت الدوّارة! وييي'); rmPrompt(true);
+}
+/* --- الحديقة الهادية --- */
+function rmFlowerBed(c, x, y, i) { c.save(); c.fillStyle = '#7a5a3a'; c.beginPath(); c.ellipse(x, y, 30, 9, 0, 0, 7); c.fill(); c.fillStyle = '#4a9a3a'; c.beginPath(); c.ellipse(x, y - 3, 27, 8, 0, 0, 7); c.fill(); const cols = [['#ff5a8a', '#ffd166'], ['#c78bff', '#fff'], ['#ff9a4a', '#ff5a6a'], ['#5ad1ff', '#ffd1e8']][i % 4]; for (let k = 0; k < 9; k++) { const fx = x - 22 + k * 5.5, fy = y - 8 - (k % 3) * 3 + Math.sin(RM.T / 30 + k) * 0.6; c.strokeStyle = '#2f7a2a'; c.lineWidth = 1; c.beginPath(); c.moveTo(fx, y - 3); c.lineTo(fx, fy); c.stroke(); c.fillStyle = cols[k % 2]; for (let p = 0; p < 5; p++) { const a = p * 1.2566; c.beginPath(); c.arc(fx + Math.cos(a) * 2, fy + Math.sin(a) * 2, 1.7, 0, 7); c.fill(); } c.fillStyle = '#ffd23a'; c.beginPath(); c.arc(fx, fy, 1.2, 0, 7); c.fill(); } c.restore(); }
+function rmFountainDraw(c) {
+  const x = RM_FTN.x, y = RM_FTN.y, T = RM.T; c.save(); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x, y + 4, 58, 16, 0, 0, 7); c.fill();
+  c.fillStyle = '#d8d2c4'; c.beginPath(); c.ellipse(x, y, 54, 16, 0, 0, 7); c.fill(); c.fillStyle = '#4ab8e8'; c.beginPath(); c.ellipse(x, y - 3, 46, 12, 0, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 1; for (let k = 0; k < 3; k++) { const r = ((T / 2 + k * 15) % 45); c.globalAlpha = 1 - r / 45; c.beginPath(); c.ellipse(x, y - 3, r, r * 0.26, 0, 0, 7); c.stroke(); } c.globalAlpha = 1;
+  c.fillStyle = '#c8c0b0'; c.fillRect(x - 5, y - 40, 10, 38); c.beginPath(); c.ellipse(x, y - 40, 20, 6, 0, 0, 7); c.fill(); c.fillStyle = '#4ab8e8'; c.beginPath(); c.ellipse(x, y - 42, 16, 4, 0, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(180,230,255,.85)'; c.lineWidth = 2; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(x, y - 58); c.quadraticCurveTo(x + k * 10, y - 78 - Math.abs(k) * -4 + Math.sin(T / 6 + k) * 2, x + k * 18, y - 42); c.stroke(); }
+  c.fillStyle = 'rgba(220,245,255,.9)'; c.beginPath(); c.arc(x, y - 60 + Math.sin(T / 5) * 1.5, 3, 0, 7); c.fill();
+  if (T % 6 === 0) RM.sparks.push({ x: x + (Math.random() - 0.5) * 30, y: y - 44, vx: (Math.random() - 0.5) * 0.8, vy: -0.6, t: 14, drop: 1 });
+  c.font = 'bold 12px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#2f6a2a'; c.fillText('🌷 الحديقة الهادية', x, y + 30); c.restore();
+}
+/* --- زاوية التصوير: خلفية حلوة، وزر يلتقط صورة للشاشة ويحفظها --- */
+function rmPhotoDraw(c) {
+  const x = RM_PHO.x, y = RM_PHO.y, T = RM.T; c.save(); c.fillStyle = 'rgba(0,0,0,.16)'; c.beginPath(); c.ellipse(x, y, 70, 9, 0, 0, 7); c.fill();
+  c.strokeStyle = '#fff'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 60, y); c.lineTo(x - 60, y - 70); c.quadraticCurveTo(x - 60, y - 112, x, y - 112); c.quadraticCurveTo(x + 60, y - 112, x + 60, y - 70); c.lineTo(x + 60, y); c.stroke();
+  const fl = ['#ff5a8a', '#ffd166', '#c78bff', '#ff9a4a', '#5ad1ff']; for (let k = 0; k < 22; k++) { const u = k / 21, px = u < 0.3 ? x - 60 : u > 0.7 ? x + 60 : x - 60 + (u - 0.3) / 0.4 * 120, py = u < 0.3 ? y - u / 0.3 * 80 : u > 0.7 ? y - (1 - u) / 0.3 * 80 : y - 100 - Math.sin((u - 0.3) / 0.4 * Math.PI) * 12; c.fillStyle = fl[k % 5]; c.beginPath(); c.arc(px, py, 5 + (k % 3), 0, 7); c.fill(); c.fillStyle = '#3a9a3a'; c.beginPath(); c.ellipse(px + 4, py + 3, 3, 1.6, 0.6, 0, 7); c.fill(); }
+  c.font = 'bold 13px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#c0306a'; c.fillText('📸 منتجع بابي', x, y - 122 + Math.sin(T / 20));
+  if (rmNearPho()) { c.globalAlpha = 0.6 + 0.4 * Math.sin(T / 8); c.font = '14px system-ui'; c.fillText('📷', x + 70, y - 60); } c.restore();
+}
+const rmNearPho = () => Math.hypot(RM.me.x - RM_PHO.x, (RM.me.y - RM_PHO.y) * 1.3) < 75;
+function rmPhotoTake() {
+  const cv = $('rmCv'); if (!cv) return; try { if (!RM.ambMute) { burst(0.05, 0.12, 0, 1800); burst(0.08, 0.08, 0.09, 900); } } catch (e) {}
+  const fl = document.createElement('div'); fl.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:30;pointer-events:none;opacity:1;transition:opacity .45s'; $('rmBox').appendChild(fl); setTimeout(() => { fl.style.opacity = '0'; setTimeout(() => fl.remove(), 500); }, 60);
+  let url = ''; try { const W = cv.width, Hh = cv.height, P = document.createElement('canvas'), pad = Math.round(W * 0.04); P.width = W + pad * 2; P.height = Hh + pad * 2 + Math.round(W * 0.12); const g = P.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, P.width, P.height); g.drawImage(cv, pad, pad);
+    g.fillStyle = '#c0306a'; g.textAlign = 'center'; g.font = 'bold ' + Math.round(W * 0.05) + 'px Cairo, system-ui'; g.fillText('📸 منتجع بابي ❤️', P.width / 2, Hh + pad * 2 + W * 0.06); g.fillStyle = '#888'; g.font = Math.round(W * 0.03) + 'px Cairo, system-ui'; g.fillText(new Date().toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' }), P.width / 2, Hh + pad * 2 + W * 0.1); url = P.toDataURL('image/png'); } catch (e) { showToast('⚠️ ما قدرت آخذ الصورة'); return; }
+  setTimeout(() => { const c = rmPanel('rmPhoto', '📸 صورتكم بالمنتجع'); const im = document.createElement('img'); im.src = url; im.style.cssText = 'width:100%;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.5)'; c.appendChild(im);
+    const a = document.createElement('a'); a.href = url; a.download = 'منتجع-بابي-' + Date.now() + '.png'; a.textContent = '💾 حفظ الصورة'; a.style.cssText = 'display:block;text-align:center;padding:10px;border-radius:12px;background:#2ecc71;color:#fff;font-weight:800;text-decoration:none'; c.appendChild(a);
+    if (navigator.canShare) { const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = '📤 مشاركة'; sb.onclick = async () => { try { const bl = await (await fetch(url)).blob(), f = new File([bl], 'resort.png', { type: 'image/png' }); if (navigator.canShare({ files: [f] })) await navigator.share({ files: [f], title: 'منتجع بابي' }); } catch (e) {} }; c.appendChild(sb); }
+    rmCloseBtn(c, 'rmPhoto'); }, 380);
+}
 /* ---------- عداد ساعات التواجد + لوحة طلب العضوية المميزة ---------- */
 const RM_VIPB = { x: 762, y: 270 };   // جنب لوحة الأفكار
 const rmHrs = sec => { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h + ' ساعة و ' + m + ' دقيقة'; };
@@ -6143,6 +6233,9 @@ function rmDecor() {
   [[150, 296, '#ff4d6d'], [660, 296, '#ffd166']].forEach(u => L.push({ y: u[1], f: c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0 + u[0], u[1], 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 3; c.beginPath(); c.moveTo(u[0], u[1]); c.lineTo(u[0], u[1] - 64); c.stroke(); } }));
   [[1000, 236, 1.05, 7.3], [1170, 230, 1.1, 8.1], [1185, 610, 1.0, 9]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));   // نخل الساحل الجديد
   L.push({ y: RM_IDB.y, f: c => rmIdeaBoard(c) });   // لوحة الأفكار
+  L.push({ y: RM_POOL.y - 2, f: c => rmPoolDraw(c) }); L.push({ y: RM_FER.by, f: c => rmFerrisDraw(c) }); L.push({ y: RM_CAR.y + 20, f: c => rmCarouselDraw(c) }); L.push({ y: RM_FTN.y, f: c => rmFountainDraw(c) }); L.push({ y: RM_PHO.y, f: c => rmPhotoDraw(c) });
+  [[1000, 690], [1080, 690], [935, 760], [1145, 760]].forEach((p, i) => L.push({ y: p[1], f: c => rmFlowerBed(c, p[0], p[1], i) }));
+  [[905, 905, 1, 10.3], [1180, 900, 0.95, 11.2], [470, 930, 1.05, 12.1], [60, 900, 1.1, 13.4]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));
   L.push({ y: RM_VIPB.y, f: c => rmVipBoard(c) });   // لوحة العضوية المميزة
   L.push({ y: 262, f: c => {   // لافتة «منطقة الألعاب»
     const x = 1012, y = 262; c.save(); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x, y, 30, 5, 0, 0, 7); c.fill(); c.fillStyle = '#7a4a22'; c.fillRect(x - 24, y - 34, 4, 34); c.fillRect(x + 20, y - 34, 4, 34);
@@ -6237,7 +6330,7 @@ function rmHugEm(o) {   // سمايلات تتطاير فوق الشخص حسب 
   const L = RM_DEM[o.dance || 0]; if (!L || o.hid) return; const every = o.dance === 18 ? 16 : 26; if ((RM.T + (o.pseed || 0) * 7) % every) return; const d = o.dir || 1;
   RM.fx.push({ x: o.x - (o.dance === 18 ? d * 9 : 0) + (Math.random() - 0.5) * 18, y: o.y - AV_H * 1.15, vx: (Math.random() - 0.5) * 0.5, vy: -0.55 - Math.random() * 0.35, g: -0.003, t: 0, life: 80, col: '#fff', e: L[Math.floor(Math.random() * L.length)], r: 8 + Math.random() * 3, rot: 0, vr: (Math.random() - 0.5) * 0.02 });
 }
-function rmDrawMe(c, st) { rmHugEm(RM.me); rmDrawMeH(c, st); rmBurnFx(c, RM.me); rmCupDraw(c, RM.me); if (RM.me.dance === 9) rmRodDraw(c, RM.me, RM.fish.st === 'bite', true); }
+function rmDrawMe(c, st) { rmHugEm(RM.me); if (rmRideOf(RM.me)) { rmDrawMeH(rmNullC(), st); return; } const sw = rmSwimStart(c, RM.me); rmDrawMeH(c, st); if (sw) rmSwimEnd(c, RM.me); rmBurnFx(c, RM.me); rmCupDraw(c, RM.me); if (RM.me.dance === 9) rmRodDraw(c, RM.me, RM.fish.st === 'bite', true); }
 RM.gb = null;
 function rmGhostDraw(c, x, y, fn) {   // نرسم الشخصية على لوحة جانبية ثم ننسخها بشفافية (حتى ما يخرب أي globalAlpha داخلي)
   const B = RM.gb || (RM.gb = document.createElement('canvas')); if (B.width !== 560) { B.width = 560; B.height = 600; } const g = B.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 560, 600); g.scale(2, 2); g.translate(140 - x, 230 - y); g.globalAlpha = 1; try { fn(g); } catch (e) {}
@@ -6248,26 +6341,26 @@ function rmGhost(c, x, y) { const t = RM.T / 30; c.save(); c.globalAlpha = 0.3 +
 function rmDrawMe0(c, st) {
   const m = RM.me, sit = m.sit && !st.mv;
   m.sk += ((sit ? 1 : 0) - m.sk) * 0.18; m.bn = Math.max(0, m.bn - 0.07);
-  { const dd = Math.hypot(m.x - (m.lx === undefined ? m.x : m.lx), m.y - (m.ly === undefined ? m.y : m.ly)); m.ph = (m.ph || 0) + Math.min(dd, 4) * 0.14; m.lx = m.x; m.ly = m.y; } if (m.dance && (st.mv || m.sit || m.jump)) rmSetDance(0); if (m.dance && ![9, 16, 17, 18].includes(m.dance) && performance.now() > (m.dEnd || 0)) rmSetDance(0); /* كل رقصة 5 ثواني وتخلص */ if (m.dance) m.dt = (m.dt || 0) + 1;
+  { const dd = Math.hypot(m.x - (m.lx === undefined ? m.x : m.lx), m.y - (m.ly === undefined ? m.y : m.ly)); m.ph = (m.ph || 0) + Math.min(dd, 4) * 0.14; m.lx = m.x; m.ly = m.y; } if (m.dance && (st.mv || m.sit || m.jump)) rmSetDance(0); if (m.dance && m.dance < 20 && ![9, 16, 17, 18].includes(m.dance) && performance.now() > (m.dEnd || 0)) rmSetDance(0); /* كل رقصة 5 ثواني وتخلص */ if (m.dance) m.dt = (m.dt || 0) + 1;
   const sk = m.sk, up = st.air * 0.8;
   if (RM.myAdm) rmAura(c, m.x, m.y, RM.myAdm);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 17 * (1 - st.air / 40), 5 * (1 - st.air / 50), 0, 0, 7); c.fill();
   const cold = rmCold(m), ui = rmUi(m), wet = rmWet(m); m.pseed = 3;
-  const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: (m.dance === 9 ? 0 : m.dance || 0), dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(m), sip: rmSipP(m), cup: (m.drink && m.drink.sip) ? m.drink.k : '', burn: m.burn || 0, char: m.char || 0, cseed: 3, hold: rmHoldSide(rmMe(), m.x, m.dir) }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
+  const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: (m.dance === 9 ? 0 : m.dance || 0), dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(m), sip: rmSipP(m), cup: (m.drink && m.drink.sip) ? m.drink.k : '', burn: m.burn || 0, char: m.char || 0, cseed: 3, hold: rmHoldSide(rmMe(), m.x, m.dir), swim: rmInPool(m) }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
   const lf = 16 * ui; rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm);
 }
-function rmDrawOther(c, o) { rmHugEm(o); rmDrawOtherH(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); rmCupDraw(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
+function rmDrawOther(c, o) { rmHugEm(o); if (rmRideOf(o)) { rmDrawOther0(rmNullC(), o); return; } const sw = rmSwimStart(c, o); rmDrawOtherH(c, o); if (sw) rmSwimEnd(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); rmCupDraw(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
 function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; rmGhostDraw(c, o.x, o.y, g => rmDrawOther0(g, o)); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
 function rmDrawOther0(c, o) {
   rmHoldGlue(o);
   const dx = o.tx - o.x, dy = o.ty - o.y; let mv = false; if (Math.hypot(dx, dy) > 0.8) { o.x += dx * 0.22; o.y += dy * 0.22; mv = true; }
   const sit = o.sit && !mv; if (o.psit === undefined) o.psit = sit; if (sit !== o.psit) { o.psit = sit; rmDust(o.x, o.y); o.bn = 1; }
   o.sk = (o.sk || 0) + ((sit ? 1 : 0) - (o.sk || 0)) * 0.18; const k = o.sk; o.bn = Math.max(0, (o.bn || 0) - 0.07);
-  { const dd = Math.hypot(o.x - (o.lx === undefined ? o.x : o.lx), o.y - (o.ly === undefined ? o.y : o.ly)); o.ph = (o.ph || 0) + Math.min(dd, 4) * 0.14; o.lx = o.x; o.ly = o.y; } if (mv && ![16, 17, 18].includes(o.dance || 0)) o.dance = 0; if (o.sit) o.dance = 0; if (o.dance) o.dt = (o.dt || 0) + 1;
+  { const dd = Math.hypot(o.x - (o.lx === undefined ? o.x : o.lx), o.y - (o.ly === undefined ? o.y : o.ly)); o.ph = (o.ph || 0) + Math.min(dd, 4) * 0.14; o.lx = o.x; o.ly = o.y; } if (mv && ![16, 17, 18].includes(o.dance || 0) && !((o.dance || 0) >= 20)) o.dance = 0; if (o.sit) o.dance = 0; if (o.dance) o.dt = (o.dt || 0) + 1;
   if (o.adm) rmAura(c, o.x, o.y, o.adm);
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 17, 5, 0, 0, 7); c.fill();
   if (!o.pseed) o.pseed = rmHash(o.name) % 30; const cold = rmCold(o), ui = rmUi(o), wet = rmWet(o);
-  const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: (o.dance === 9 ? 0 : o.dance || 0), dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(o), sip: rmSipP(o), cup: (o.drink && o.drink.sip) ? o.drink.k : '', burn: o.burn || 0, char: o.char || 0, cseed: o.pseed || 0, hold: rmHoldSide(o.name, o.x, o.dir || 1) }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
+  const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: (o.dance === 9 ? 0 : o.dance || 0), dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(o), sip: rmSipP(o), cup: (o.drink && o.drink.sip) ? o.drink.k : '', burn: o.burn || 0, char: o.char || 0, cseed: o.pseed || 0, hold: rmHoldSide(o.name, o.x, o.dir || 1), swim: rmInPool(o) }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
   const lf = 16 * ui; rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf, o.adm); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
 }
 function rmTyping(c, name, x, y) {
@@ -7112,12 +7205,12 @@ var rmPrKey = '';
 function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
-  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '');
+  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '') + (rmNearFer() ? 'F' : '') + (rmNearCar() ? 'C' : '') + (rmNearPho() ? 'P' : '') + (rmInPool(m) ? 'W' : '') + (rmRideOf(m) ? 'R' + m.dance : '');
   if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (RM.holds[rmMe()]) mk('✋ فلت الإيد', () => rmSend({ t: 'rm_hold', on: 0 }));
   if (m.sit || (m.goal && m.jump)) { if (m.sit) { mk('🧍 قيام', () => rmStand()); if (m.seat && m.seat.seat && m.seat.seat.kind === 'stool') mk('🛎️ اطلب من جربوع', rmOrderMenu); } return; }   // كراسي البار الحمر: تطلب وجربوع يجيبه لمكانك
-  if (!near) { if (m.jump || m.goal) return; if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart);  return; }
+  if (!near) { if (m.jump || m.goal) return; if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (rmRideOf(m)) { mk('🚪 انزل من اللعبة', () => { rmSetDance(0); rmPrompt(true); }); return; } if (rmNearFer()) mk('🎡 اركب دولاب الهوا', () => rmRideBoard('fer')); if (rmNearCar()) mk('🎠 اركب الدوّارة', () => rmRideBoard('car')); if (rmNearPho()) mk('📸 التقط صورة', rmPhotoTake); if (rmInPool(m)) mk('💦 رش مي', () => { for (let i = 0; i < 16; i++) RM.sparks.push({ x: m.x + m.dir * 10, y: m.y - 30, vx: m.dir * (1 + Math.random() * 2), vy: -1.5 - Math.random() * 1.5, t: 26, drop: 1 }); rmSend({ t: 'rm_react', e: '🐟' }); }); if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart);  return; }
   if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
