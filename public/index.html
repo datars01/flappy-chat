@@ -442,6 +442,10 @@
   #rmBox.rmTiny .hOvTop, #rmBox.rmTiny #rmPrompt { display: none !important; } #rmBox.rmTiny #rmLogP { max-height: 38%; bottom: 44px; }
   #rmMemArr { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 58px; padding: 0; border-radius: 0 14px 14px 0; background: rgba(10,14,30,.85); color: #fff; border: 1px solid rgba(255,255,255,.4); border-left: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; z-index: 3; } #rmMemArr b { font-size: 17px; line-height: 1; } #rmMemArr small { font-size: 10px; color: #ffd166; font-weight: 700; }
   #rmBox.memOpen #rmMemArr { left: 122px; }
+  /* قائمة الموجودين مفتوحة: كل أزرار المنتجع تختفي وراها وترجع لما تنسد */
+  #rmOv > * { transition: opacity .2s ease, visibility .2s; }
+  #rmBox.memOpen #rmOv > *:not(#rmMem):not(#rmMemArr):not(#rmRot) { opacity: 0; visibility: hidden; pointer-events: none !important; }
+  #rmBox.memOpen #rmMem { z-index: 20; top: 8px; bottom: 8px; } #rmBox.memOpen #rmMemArr { z-index: 21; }
   #rmRot { display: none; position: absolute; inset: 0; z-index: 20; background: rgba(20,10,40,.96); color: #fff; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; pointer-events: auto; } #rmRot.show { display: flex; } #rmRot div { font-size: 56px; animation: rsBob 1.6s ease-in-out infinite; } #rmRot b { font-size: 20px; } #rmRot small { opacity: .8; }
   #rmFTtl { pointer-events: auto; background: rgba(10,14,30,.7); }
   #rmKiss { position: absolute; left: 8px; bottom: 52px; z-index: 4; pointer-events: auto; background: linear-gradient(135deg,#ff5c8a,#e0245e); color: #fff; font-size: 15px; font-weight: 800; padding: 8px 16px; border-radius: 22px; border: 2px solid #fff; box-shadow: 0 4px 14px rgba(224,36,94,.55); width: auto; } #rmKiss[hidden] { display: none; }
