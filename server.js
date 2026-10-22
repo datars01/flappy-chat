@@ -1607,7 +1607,7 @@ function rmOnMsg(ws, d) {
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1690,6 +1690,28 @@ function rmOnMsg(ws, d) {
     const q = { id: crypto.randomBytes(5).toString('hex'), k: ws.key, n: me.name, room: r.id, ts: now, tot0: tm.total, day0: tm.today }; vipReqs().push(q); while (vipReqs().length > 100) vipReqs().shift(); save();
     try { alog('⭐', me.name + ' قدّم طلب عضوية مميزة بغرفة «' + r.name + '»'); } catch (e) {}
     vipNotifyAdmins({ t: 'rm_vipnew', n: me.name, cnt: vipReqs().length }); return send(ws, { t: 'rm_ok', msg: '📨 انرسل طلبك للمشرفين، راح يوصلك الرد' });
+  } else if (d.t === 'rm_report') {   // المميز يبلّغ على شخص، والبلاغ يروح لخانة شكاوي المميزين عند المشرفين
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || ws.guest) return; if (!(r.mods.has(ws.key) || rmIsOwner(r, ws.key))) return send(ws, { t: 'rm_err', error: 'الإبلاغ للأعضاء المميزين' });
+    const tws = [...r.mem].find(w => w !== ws && rmNm(w) === String(d.n || '')); if (!tws) return send(ws, { t: 'rm_err', error: 'الشخص مو موجود' }); if (!tws.guest && db.users[tws.key] && db.users[tws.key].admin) return send(ws, { t: 'rm_err', error: 'ما تكدر تبلّغ على ادمن' });
+    if (now - (h.rpT || 0) < 30000) return send(ws, { t: 'rm_ok', msg: '⏳ انتظر شوي قبل بلاغ ثاني' }); h.rpT = now;
+    const why = String(d.why || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+    const L = Array.isArray(db.reports) ? db.reports : (db.reports = []); L.push({ id: crypto.randomBytes(5).toString('hex'), room: r.id, rn: r.name, by: me.name, n: rmNm(tws), tk: tws.guest ? 'ip:' + tws.ip : tws.key, g: !!tws.guest, why, ts: now }); while (L.length > 200) L.shift(); save();
+    try { alog('🚩', me.name + ' بلّغ على ' + rmNm(tws) + (why ? ': ' + why : '')); } catch (e) {} vipNotifyAdmins({ t: 'rm_repnew', by: me.name, n: rmNm(tws), cnt: L.length });
+    return send(ws, { t: 'rm_ok', msg: '🚩 انرسل البلاغ للمشرفين' });
+  } else if (d.t === 'rm_rep_list' || d.t === 'rm_rep_act') {
+    if (!rmAdm(ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' }); const L = Array.isArray(db.reports) ? db.reports : (db.reports = []);
+    if (d.t === 'rm_rep_act') {
+      const i = L.findIndex(q => q.id === String(d.id || '')); if (i < 0) return; const q = L[i], a = ['kick', 'ban', 'dismiss'].includes(d.a) ? d.a : ''; if (!a) return; const r = rmRooms.get(q.room);
+      if (a !== 'dismiss') {
+        if (!r) return send(ws, { t: 'rm_err', error: 'الغرفة انسكرت' }); const match = w => q.g ? ('ip:' + w.ip) === q.tk : w.key === q.tk; const here = [...r.mem].filter(match);
+        if (a === 'kick' && !here.length) return send(ws, { t: 'rm_err', error: q.n + ' مو موجود بالغرفة هسه — تكدر تحظره' });
+        if (a === 'ban') { r.bans.add(q.tk); if (r.banNm) r.banNm.set(q.tk, q.n + (q.g ? ' (ضيف)' : '')); rmPersist(); }
+        for (const w of here) { send(w, { t: 'rm_kicked', banned: a === 'ban', txt: 'بسبب بلاغ من عضو مميز' }); r.mem.delete(w); w.rm = null; } if (here.length) rmBc(r, { t: 'rm_leave', n: q.n });
+        rmSlog(r, rmNm(ws), (a === 'ban' ? 'حظر ' : 'طرد ') + q.n + ' (بلاغ من ' + q.by + ')'); send(ws, { t: 'rm_ok', msg: (a === 'ban' ? '⛔ حظرت ' : '👢 طردت ') + q.n });
+      }
+      L.splice(i, 1); save();
+    }
+    return send(ws, { t: 'rm_rep_list', list: L.slice().reverse().map(q => { const r = rmRooms.get(q.room); return { id: q.id, rn: q.rn, by: q.by, n: q.n, why: q.why, ts: q.ts, on: !!(r && [...r.mem].some(w => q.g ? ('ip:' + w.ip) === q.tk : w.key === q.tk)) }; }) });
   } else if (d.t === 'rm_vip_list' || d.t === 'rm_vip_dec') {
     if (!rmAdm(ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' });
     if (d.t === 'rm_vip_dec') { const L = vipReqs(), i = L.findIndex(q => q.id === String(d.id || '')); if (i < 0) return; const q = L[i]; L.splice(i, 1); save();
