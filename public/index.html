@@ -6096,7 +6096,7 @@ function rmVipOpen() { if (!auth) { showToast('✍️ سجّل حساب حتى �
 function rmTimeOpen() { if (!auth) { showToast('✍️ سجّل حساب حتى ينحسب وقتك'); return; } RM.timeWant = 1; rmSend({ t: 'rm_mytime' }); }
 function rmVipShow(d) {
   const c = rmPanel('rmVip', '⭐ طلب العضوية المميزة'), ok1 = d.total >= d.need.total * 3600, ok2 = d.today >= d.need.day * 3600, mod = RM.isMod || RM.myAdm;
-  const n = document.createElement('div'); n.className = 'vipNote'; n.textContent = 'العضو المميز ياخذ نجمة ⭐ جنب اسمه ويكدر يطرد ويحذر ويحظر بالغرفة. شروط الانضمام:'; c.appendChild(n);
+  const n = document.createElement('div'); n.className = 'vipNote'; n.textContent = 'العضو المميز ياخذ نجمة ⭐ جنب اسمه ويكدر يدز رسالة تحذير للأعضاء بالغرفة (بدون طرد أو حظر). شروط الانضمام:'; c.appendChild(n);
   [[ok1, '🕹️ مجموع ساعات اللعب بالمنتجع ' + d.need.total + ' ساعة أو أكثر', rmHrs(d.total)], [ok2, '📅 تواجد يومي ' + d.need.day + ' ساعات (اليوم)', rmHrs(d.today)]].forEach(q => { const r = document.createElement('div'); r.className = 'vipReq ' + (q[0] ? 'ok' : 'no'); const b = document.createElement('b'); b.textContent = q[0] ? '✅' : '❌'; const sp = document.createElement('span'); sp.textContent = q[1]; const sm = document.createElement('small'); sm.textContent = q[2]; r.append(b, sp, sm); c.appendChild(r); });
   const n2 = document.createElement('div'); n2.className = 'vipNote'; n2.textContent = '📊 أيام تواجدت بيها ' + d.need.day + ' ساعات خلال آخر أسبوع: ' + (d.d8 || 0) + ' / 7 — والطلب يروح للمشرفين حتى يوافقون عليه'; c.appendChild(n2);
   const b = document.createElement('button'); b.type = 'button'; if (mod) { b.textContent = '⭐ أنت عضو مميز من قبل'; b.disabled = true; } else if (d.pend) { b.textContent = '⏳ طلبك عند المشرفين'; b.disabled = true; } else if (!(ok1 && ok2)) { b.textContent = '🔒 كمّل الشروط حتى تكدر تقدّم'; b.disabled = true; } else { b.textContent = '📨 قدّم الطلب'; b.onclick = () => { rmSend({ t: 'rm_vip_apply' }); const o = $('rmVip'); if (o) o.remove(); }; }
@@ -6532,7 +6532,7 @@ function rmBurnFx(c, o) {
   c.restore();
 }
 /* ---------- اختفاء المشرفين ---------- */
-function rmHidUpd() { const b = $('rmHidBtn'); if (!b) return; const ok = !!(RM.on && (RM.myAdm || RM.isMod)); b.hidden = !ok; rmLbl('rmHidBtn', RM.me.hid ? '👁️' : '👻', RM.me.hid ? 'إظهار' : 'اختفاء', !!RM.me.hid); }
+function rmHidUpd() { const b = $('rmHidBtn'); if (!b) return; const ok = !!(RM.on && (RM.myAdm || RM.isOwner)); b.hidden = !ok; rmLbl('rmHidBtn', RM.me.hid ? '👁️' : '👻', RM.me.hid ? 'إظهار' : 'اختفاء', !!RM.me.hid); }
 $('rmHidBtn').onclick = () => { const on = !RM.me.hid; rmSend({ t: 'rm_hide', on: on ? 1 : 0 }); showToast(on ? '👻 اختفيت: محد يشوفك غير المشرفين' : '👁️ رجعت ظاهر للجميع'); };
 setInterval(rmHidUpd, 1500);
 
@@ -6733,7 +6733,7 @@ function rmRainSnd() {
 setInterval(rmRainSnd, 500);
 /* أزرار الإدارة (طقس/إعلان/سجل...) صارت داخل نفس القائمة اليمنى، وتطلع بس للمشرفين */
 (function () { const A = $('rmDockA'), D = $('rmDock'); if (!A || !D) return; const hd = document.createElement('div'); hd.className = 'admB admHd'; hd.textContent = '⚙️ أزرار الإدارة'; D.appendChild(hd); [...A.children].forEach(b => { b.classList.add('admB'); D.appendChild(b); }); A.remove(); })();
-function rmWxAdmUpd() { const D = $('rmDock'); if (D) D.classList.toggle('noAdm', !(RM.on && (RM.myAdm || RM.isMod))); }
+function rmWxAdmUpd() { const D = $('rmDock'); if (D) D.classList.toggle('noAdm', !(RM.on && (RM.myAdm || RM.isOwner))); }
 setInterval(rmWxAdmUpd, 1500);
 $('rmWxDay').onclick = () => rmSend({ t: 'rm_wx', mode: 'day' }); $('rmWxNight').onclick = () => rmSend({ t: 'rm_wx', mode: 'night' }); $('rmWxFw').onclick = () => rmSend({ t: 'rm_wx', mode: 'fw' });
 $('rmAnn').onclick = () => rmAskText('📢 إعلان لكل الموجودين', 'اكتب الإعلان...', v => rmSend({ t: 'rm_announce', txt: v })); $('rmSlogB').onclick = rmSlogOpen; $('rmStatB').onclick = rmStatsOpen;
@@ -7308,8 +7308,8 @@ function rmRenderMem() { try { rmDockUpd(); } catch (e) {}
       b.onclick = () => { RM.menu = RM.menu === u.name ? '' : u.name; RM.warnFor = ''; rmRenderMem(); };
       if (RM.menu === u.name) {
         const a = document.createElement('div'); a.className = 'act';
-        [['👢 طرد', 'rm_kick'], ['⛔ حظر', 'rm_ban']].forEach(([l, t]) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = l; x.onclick = () => { if (x.dataset.arm) { rmSend({ t, n: u.name }); RM.menu = ''; rmRenderMem(); } else { x.dataset.arm = '1'; x.textContent = 'تأكيد؟'; setTimeout(() => { if (x.isConnected) { delete x.dataset.arm; x.textContent = l; } }, 3000); } }; a.appendChild(x); });
-        const mu = document.createElement('button'); mu.type = 'button'; mu.textContent = '🔇 كتم'; mu.onclick = () => { RM.muteFor = RM.muteFor === u.name ? '' : u.name; RM.warnFor = ''; rmRenderMem(); }; a.appendChild(mu);
+        if (RM.isOwner || RM.myAdm) [['👢 طرد', 'rm_kick'], ['⛔ حظر', 'rm_ban']].forEach(([l, t]) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = l; x.onclick = () => { if (x.dataset.arm) { rmSend({ t, n: u.name }); RM.menu = ''; rmRenderMem(); } else { x.dataset.arm = '1'; x.textContent = 'تأكيد؟'; setTimeout(() => { if (x.isConnected) { delete x.dataset.arm; x.textContent = l; } }, 3000); } }; a.appendChild(x); });
+        if (RM.isOwner || RM.myAdm) { const mu = document.createElement('button'); mu.type = 'button'; mu.textContent = '🔇 كتم'; mu.onclick = () => { RM.muteFor = RM.muteFor === u.name ? '' : u.name; RM.warnFor = ''; rmRenderMem(); }; a.appendChild(mu); }   /* المميز: تحذير بس */
         const w = document.createElement('button'); w.type = 'button'; w.textContent = '⚠️ تحذير'; w.onclick = () => { RM.warnFor = RM.warnFor === u.name ? '' : u.name; rmRenderMem(); }; a.appendChild(w);
         if (RM.isOwner && !u.g) { const rk = document.createElement('button'); rk.type = 'button'; rk.className = 'rk'; rk.textContent = u.mod ? '✖ شيل رتبة مميز' : '⭐ رتبة مميز'; rk.onclick = () => { rmSend({ t: u.mod ? 'rm_unmod' : 'rm_mod', n: u.name }); RM.menu = ''; rmRenderMem(); }; a.appendChild(rk); }
         row.appendChild(a);

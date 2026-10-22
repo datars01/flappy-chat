@@ -1642,7 +1642,7 @@ function rmOnMsg(ws, d) {
     else if (d.t === 'rm_gready') { if (g.ph !== 'ready') return; g.rd[me2] = 1; if (g.rd[0] && g.rd[1]) gmStart(r, g); gmBc(r, g); }
     else if (d.t === 'rm_gact') { if (now - g.rt[me2] < 350) return; g.rt[me2] = now; gmAct(r, g, me2, d.a && typeof d.a === 'object' ? d.a : {}, now); }
   } else if (d.t === 'rm_announce') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' }); if (now - (r.annT || 0) < 4000) return; const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 140); if (!txt) return; r.annT = now;
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' }); if (now - (r.annT || 0) < 4000) return; const txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 140); if (!txt) return; r.annT = now;
     rmBc(r, { t: 'rm_announce', txt, by: h.hid ? 'الإدارة' : rmNm(ws), adm: rmAdm(ws) }); rmSlog(r, h.hid ? 'الإدارة' : rmNm(ws), 'إعلان: ' + txt.slice(0, 50));
   } else if (d.t === 'rm_order') {   // طلب مشروب لنفسك: جربوع يجيبه ويقدمه قدام الكل
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; if (now - (h.ord || 0) < 6000) return send(ws, { t: 'rm_ok', msg: '⏳ جربوع دا يحضّر طلبك' }); if (!['coffee', 'tea', 'juice', 'water', 'pepsi'].includes(d.k)) return;
@@ -1654,10 +1654,10 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_drink') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000 || !['coffee', 'tea', 'juice', 'water', 'pepsi'].includes(d.k)) return; h.dk = now; const m = { t: 'rm_drink', n: rmNm(ws), k: d.k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
   } else if (d.t === 'rm_stats_get') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return; const s = rmStat(r, now), vis = new Set([...r.mem].filter(w => !(w.rm && w.rm.hid)).map(w => w.key)).size;
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmIsOwner(r, ws.key)) return; const s = rmStat(r, now), vis = new Set([...r.mem].filter(w => !(w.rm && w.rm.hid)).map(w => w.key)).size;
     send(ws, { t: 'rm_stats', st: { online: vis, uniq: s.uniq.size, joins: s.joins, peak: s.peak, msgs: s.msgs, games: s.games, hrs: s.hrs } });
   } else if (d.t === 'rm_slog_get') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmStaff(r, ws)) return; send(ws, { t: 'rm_slog', list: r.slog || [] });
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmIsOwner(r, ws.key)) return; send(ws, { t: 'rm_slog', list: r.slog || [] });
   } else if (d.t === 'rm_castle' || d.t === 'rm_castle_del') {
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; r.castles = (r.castles || []).filter(c => now - c.ts < 480e3); const nm = rmNm(ws);
     if (d.t === 'rm_castle') { return; /* قلعة الرمل انشالت بالكامل */ const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y) || y < 240 || y > 604 || x < 20 || x > 780 || Math.hypot(x - h.x, y - h.y) > 70) return; h.cst = now; r.castles = r.castles.filter(c => c.by !== nm); while (r.castles.length >= 14) r.castles.shift(); r.castles.push({ id: now + '' + Math.floor(Math.random() * 1000), x: Math.round(x), y: Math.round(y), by: nm, ts: now }); }
@@ -1698,7 +1698,7 @@ function rmOnMsg(ws, d) {
       try { alog(d.ok ? '✅' : '❌', rmNm(ws) + (d.ok ? ' قبل' : ' رفض') + ' طلب تميّز ' + q.n); } catch (e) {} }
     return send(ws, { t: 'rm_vip_list', list: vipReqs().map(vipPub) });
   } else if (d.t === 'rm_ideas_get' || d.t === 'rm_idea_add' || d.t === 'rm_idea_del') {   // لوحة الأفكار: الكل يكتب ويشوف، والحذف للمشرفين بس
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; const ideas = Array.isArray(db.ideas) ? db.ideas : (db.ideas = []), staff = rmStaff(r, ws);
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; const ideas = Array.isArray(db.ideas) ? db.ideas : (db.ideas = []), staff = !!rmAdm(ws);
     const pubI = () => ideas.slice(-200).map(x => ({ id: x.id, n: x.n, txt: x.txt, ts: x.ts, c: x.c }));
     const bcAll = () => { const str = JSON.stringify({ t: 'rm_ideas', list: pubI() }); for (const rr of rmRooms.values()) for (const w of rr.mem) if (w.readyState === 1) w.send(str); };
     const WEEK = 7 * 864e5, lastOf = () => { if (ws.guest || !me) return 0; if (!me.ideaAt) { const mine = ideas.filter(x => x.k === ws.key); if (mine.length) me.ideaAt = mine[mine.length - 1].ts; } return me.ideaAt || 0; };
@@ -1716,12 +1716,12 @@ function rmOnMsg(ws, d) {
     const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' }); h.wst = now;
     const m = { t: 'rm_whisper', from: rmNm(ws), to: rmNm(tw), txt }; send(tw, m); send(ws, m);
   } else if (d.t === 'rm_wx') {   // تحكم المشرفين بالطقس والوقت
-    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmStaff(r, ws)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
+    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     const md = ['rain', 'snow', 'fast', 'slow', 'reset', 'day', 'night', 'fw'].includes(d.mode) ? d.mode : ''; if (!md || now - (r.wxt || 0) < 500) return; r.wxt = now; const cur = wxNow(r, now), c = r.wxc;
     c.base = md === 'rain' ? 1802 : md === 'snow' ? 3542 : md === 'day' ? 20 : md === 'night' ? 2702 : md === 'fw' ? 2710 : cur.el; c.ref = now; c.spd = md === 'fast' ? 12 : ['rain', 'snow', 'day', 'night', 'fw'].includes(md) ? cur.spd : 1;
     rmBc(r, Object.assign({ t: 'rm_wx', mode: md, by: rmNm(ws) }, wxNow(r, now))); if (!(ws.rm && ws.rm.hid)) rmSlog(r, rmNm(ws), 'غيّر الجو (' + md + ')');
   } else if (d.t === 'rm_hide') {   // اختفاء المشرفين
-    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!(rmAdm(ws) || r.mods.has(ws.key))) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
+    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     h.hid = d.on ? 1 : 0; const nm = rmNm(ws), pj = JSON.stringify(h.hid ? { t: 'rm_leave', n: nm } : { t: 'rm_join', m: rmPubM(ws) }), hj = JSON.stringify({ t: 'rm_hid', n: nm, on: h.hid });
     for (const w of r.mem) if (w.readyState === 1 && w !== ws) w.send(rmStaff(r, w) ? hj : pj); ws.send(hj);
   } else if (d.t === 'rm_umb') {   // شمسية المطر
@@ -1743,6 +1743,7 @@ function rmOnMsg(ws, d) {
   else if (d.t === 'rm_kick' || d.t === 'rm_mute' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmCanMod(r, ws.key)) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة أو المميزين يكدرون يسوون هذا' });
     const isOwn = rmIsOwner(r, ws.key); if ((d.t === 'rm_unban' || d.t === 'rm_mod' || d.t === 'rm_unmod') && !isOwn) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة' });
+    if (!isOwn && d.t !== 'rm_warn') return send(ws, { t: 'rm_err', error: '⭐ العضو المميز يكدر يدز رسالة تحذير بس' });   // صلاحية المميز: تحذير فقط
     const tname = String(d.n || '');
     const tws = [...r.mem].find(w => rmNm(w) === tname);
     let k = tws ? (tws.guest ? 'ip:' + tws.ip : tws.key) : (d.t === 'rm_unban' ? ([...(r.banNm || [])].find(e => e[1] === tname) || [])[0] || keyOfName(tname) : keyOfName(tname));
@@ -1754,7 +1755,7 @@ function rmOnMsg(ws, d) {
       if (!tws || tws.guest || !db.users[k]) return send(ws, { t: 'rm_err', error: 'الرتبة للأعضاء المسجلين اللي داخل الغرفة بس' });
       if (d.t === 'rm_mod') r.mods.add(k); else r.mods.delete(k); rmPersist();
       rmBc(r, { t: 'rm_mods', mods: rmModNames(r), who: tn, on: d.t === 'rm_mod' });
-      return send(ws, { t: 'rm_ok', msg: d.t === 'rm_mod' ? '⭐ أعطيت ' + tn + ' رتبة مميز (طرد وحظر وتحذير)' : 'شلت رتبة مميز من ' + tn });
+      return send(ws, { t: 'rm_ok', msg: d.t === 'rm_mod' ? '⭐ أعطيت ' + tn + ' رتبة مميز (يكدر يحذّر بس)' : 'شلت رتبة مميز من ' + tn });
     }
     if (r.mods.has(k) && !isOwn) return send(ws, { t: 'rm_err', error: 'ما تكدر تتعامل مع عضو مميز' });
     if (d.t === 'rm_mute') {
