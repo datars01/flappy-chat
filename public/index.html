@@ -5906,7 +5906,8 @@ const RM_SEATS = [];
   [[130, 486, 72], [262, 552, 72], [560, 548, 72]].forEach(p => add('sofa', p[0], p[1], p[2]));
   [[62, 372], [742, 478]].forEach(p => add('swing', p[0], p[1])); add('swing2', 232, 392);
   [620, 648, 676, 704].forEach(x => add('stool', x, 492));
-  [[968, 812], [1112, 812], [1040, 858]].forEach(p => add('bench', p[0], p[1]));   // جلسة الحديقة الهادية
+  [[968, 812], [1112, 812], [1040, 858], [925, 845], [1155, 845], [1040, 905]].forEach(p => add('bench', p[0], p[1]));   // جلسة الحديقة الهادية (كراسي طويلة)
+  [[968, 772, 1], [1112, 772, -1], [992, 885, 1], [1088, 885, -1], [1000, 728, 1], [1080, 728, -1]].forEach(p => add('gchair', p[0], p[1], p[2]));   // كراسي لشخص واحد حول النافورة
    [0, 1, 2, 3].forEach(i => { add('gtable', [925, 1100, 925, 1100][i], [345, 345, 525, 525][i]); RM_SEATS[RM_SEATS.length - 1].tb = i; });
 })();
 function rmSpots(sd) {
@@ -5920,6 +5921,7 @@ function rmSpots(sd) {
     case 'chair': a = [mk(0, SEAT_G['🪑'].dy * sd.s)]; break;
     case 'log': a = [mk(0, 10)]; break;
     case 'stool': a = [mk(0, 18)]; break;
+    case 'gchair': a = [mk(0, 11, sd.s || 1)]; break;
     default: a = [mk(0, 11)];
   }
   a.forEach((s, i) => { s.i = i; s.k = sd.i + ':' + i; }); return a;
@@ -5957,6 +5959,9 @@ function rmSeatDraw(c, sd) {
   } else if (k === 'sofa') drawSeat(c, '🛋️', sd.s);
   else if (k === 'chair') drawSeat(c, '🪑', sd.s);
   else if (k === 'log') { rmRR(c, -10, -12, 20, 12, 3, '#8b5a2b'); c.fillStyle = '#d2a468'; c.beginPath(); c.ellipse(0, -12, 10, 4.2, 0, 0, 7); c.fill(); c.strokeStyle = '#a97a40'; c.lineWidth = 0.8; c.beginPath(); c.ellipse(0, -12, 6, 2.5, 0, 0, 7); c.stroke(); }
+  else if (k === 'gchair') {   // كرسي حديقة لشخص واحد
+    c.fillStyle = '#7a4a22'; [-8, 7].forEach(lx => c.fillRect(lx, -11, 2.4, 11)); rmRR(c, -9, -26, 18, 14, 3, '#b8743a'); c.fillStyle = '#8a5428'; for (let i = 0; i < 3; i++) c.fillRect(-7, -24 + i * 4, 14, 1.4); rmRR(c, -11, -14, 22, 5, 2, '#d08a48'); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(-9, -13.5, 18, 1.4);
+  }
   else if (k === 'stool') { rmRR(c, -1.6, -17, 3.2, 17, 1, '#555'); c.fillStyle = '#444'; c.beginPath(); c.ellipse(0, -1, 7, 2.4, 0, 0, 7); c.fill(); c.fillStyle = '#c0392b'; c.beginPath(); c.ellipse(0, -18, 8.5, 3.6, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-2, -19, 4, 1.2, 0, 0, 7); c.fill(); }
   else if (k === 'swing' || k === 'swing2') {
     const sps = RM_SPOTS.filter(q => q.seat === sd), nT = sps.filter(rmTaken).length; sd.amp = (sd.amp || 0) + ((nT ? 0.15 + 0.09 * nT : 0.03) - (sd.amp || 0)) * 0.03; sd.ph = (sd.ph || 0) + 0.05; sd.ang = sd.amp * Math.sin(sd.ph);
