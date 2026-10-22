@@ -914,7 +914,8 @@ function friendRow(me, key) {
   const last = lastMsgOf(me, key), on = isOnline(key);
   let room = '';
   if (on) for (const w of wss.clients) if (w.key === key && w.room) { room = w.room; break; }
-  return { name: f.name, online: on, lastSeen: f.lastSeen || 0, room, unread, avatar: f.avatar || '',
+  let rm = null; if (on) for (const w of wss.clients) if (w.key === key && w.rm && !w.rm.hid && w.readyState === 1) { const rr = rmRooms.get(w.rm.id); if (rr) { rm = { id: rr.id, name: rr.name, locked: !!rr.code }; break; } }
+  return { name: f.name, online: on, lastSeen: f.lastSeen || 0, room, rm, unread, avatar: f.avatar || '',
     last: last ? { text: last.inv ? '🎟️ دعوة للعب' : String(last.text || '').slice(0, 40), ts: last.ts, mine: last.k === me } : null };
 }
 const keyOfName = n => String(n || '').trim().toLowerCase();
@@ -1538,6 +1539,7 @@ function rmOnMsg(ws, d) {
     const members = [...r.mem].filter(w => w.readyState === 1 && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM), first = ![...r.mem].some(w => w.key === ws.key); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
     send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
+    if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
     if (!ws.guest && me && !me.admin) { const dn = Math.floor((now + BGD) / 864e5), g = me.rmGift || { day: 0, streak: 0 }; if (g.day !== dn) { const streak = g.day === dn - 1 ? Math.min((g.streak || 0) + 1, 30) : 1, amt = 15 + Math.min(streak, 7) * 5; me.rmGift = { day: dn, streak }; me.coins = (me.coins || 0) + amt; save(); send(ws, { t: 'rm_gift', coins: amt, streak, away: g.day ? dn - g.day : 0 }); } }
     const am = rmAdm(ws); r.wel = r.wel || {};
     if (am && now - (r.wel[ws.key] || 0) > 60e3) {   // ترحيب مميز بدخول الادمنية
