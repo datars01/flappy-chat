@@ -2504,7 +2504,7 @@ function rmFrRender() {
     L.appendChild(row);
   });
 }
-$('rmFrBtn').onclick = () => { $('rmFr').hidden = false; rmFrRender(); if (auth) loadFriends().then(() => { if (!$('rmFr').hidden) rmFrRender(); }); };
+$('rmFrBtn').onclick = () => { rmPopClose('rmFr'); $('rmFr').hidden = false; rmFrRender(); if (auth) loadFriends().then(() => { if (!$('rmFr').hidden) rmFrRender(); }); };
 $('rmFrX').onclick = () => { $('rmFr').hidden = true; };
 $('rmFr').addEventListener('click', e => { if (e.target === $('rmFr')) $('rmFr').hidden = true; });
 
@@ -6480,7 +6480,7 @@ function rmMusicSet(m) {
     S.p = new YT.Player('rmYTin', { height: '200', width: '200', videoId: m.k === 'v' ? m.id : undefined, playerVars: pv, events: { onReady: e => { rmMusApply(); try { if (m.k === 'pl') { e.target.setLoop(true); e.target.setShuffle(true); } e.target.playVideo(); } catch (er) {} }, onStateChange: e => { S.st = e.data; try { const d = e.target.getVideoData(); if (d && d.title) S.title = d.title; } catch (er) {} rmMusUI(); }, onError: () => { S.title = '⚠️ تعذر تشغيل هذي الأغنية، ينتقل للتالية'; try { if (m.k === 'pl') S.p.nextVideo(); } catch (er) {} rmMusUI(); } } });
   }); rmMusUI();
 }
-$('rmMusBtn').onclick = () => { const P = $('rmMus'); const open = P.hidden; $('rmDance').hidden = true; P.hidden = !open; if (open) rmMusUI(); };
+$('rmMusBtn').onclick = () => { const P = $('rmMus'); const open = P.hidden; if (open) rmPopClose('rmMus'); P.hidden = !open; if (open) rmMusUI(); };
 $('rmMusMute').onclick = () => { RM.mus.mute = !RM.mus.mute; try { localStorage.setItem('rmMusMute', RM.mus.mute ? '1' : '0'); } catch (e) {} rmMusApply(); rmMusUI(); };
 $('rmMusVol').oninput = e => { RM.mus.vol = +e.target.value; if (RM.mus.vol > 0 && RM.mus.mute) { RM.mus.mute = false; try { localStorage.setItem('rmMusMute', '0'); } catch (er) {} } try { localStorage.setItem('rmMusVol', RM.mus.vol); } catch (er) {} rmMusApply(); rmMusUI(); };
 $('rmMusPlay').onclick = () => { const p = RM.mus.p; if (!p) return; try { if (RM.mus.st === 1) p.pauseVideo(); else p.playVideo(); } catch (e) {} };
@@ -6501,7 +6501,7 @@ async function rmGoLoad() {
       L.appendChild(row); });
   } catch (e) { L.innerHTML = '<small>⚠️ ما قدرت أحمّل الغرف</small>'; }
 }
-$('rmFTtl').onclick = () => { const P = $('rmGo'); const open = P.hidden; P.hidden = !open; $('rmGoC').hidden = true; $('rmGoF').hidden = true; if (open) rmGoLoad(); };
+$('rmFTtl').onclick = () => { const P = $('rmGo'); const open = P.hidden; if (open) rmPopClose('rmGo'); P.hidden = !open; $('rmGoC').hidden = true; $('rmGoF').hidden = true; if (open) rmGoLoad(); };
 $('rmGoN').onclick = () => { $('rmGoC').hidden = true; RM.goTo = null; };
 $('rmGoNew').onclick = () => {   // زر إنشاء غرفة من قائمة الغرف داخل المنتجع
   if (!auth) { showToast('✍️ سجّل حساب حتى تسوي غرفة'); return; }
@@ -6808,14 +6808,21 @@ function rmFxDraw(c) {
 const RM_RX = ['😂', '❤️', '👍', '😮', '😢', '😡', '🎉', '🔥'];
 RM.rx = []; RM.pc = '';
 (function () { const P = $('rmRx'); RM_RX.forEach(e => { const b = document.createElement('button'); b.type = 'button'; b.textContent = e; b.onclick = () => { rmSend({ t: 'rm_react', e }); P.hidden = true; }; P.appendChild(b); }); })();
-$('rmRxBtn').onclick = () => { const P = $('rmRx'); $('rmMus').hidden = true; $('rmDance').hidden = true; P.hidden = !P.hidden; };
+$('rmRxBtn').onclick = () => { const P = $('rmRx'); const open = P.hidden; if (open) rmPopClose('rmRx'); P.hidden = !open; };
 function rmReactAdd(n, e) { RM.rx.push({ n, e, t0: RM.T, ph: Math.random() * 6 }); if (RM.rx.length > 40) RM.rx.shift(); }
 function rmReactDraw(c) {
   RM.rx = RM.rx.filter(r => RM.T - r.t0 < 170); RM.rx.forEach(r => { const p = rmPosOf(r.n); if (!p) return; const age = RM.T - r.t0, pop = age < 10 ? 0.4 + age * 0.08 : 1, a = age > 130 ? (170 - age) / 40 : 1; c.save(); c.globalAlpha = Math.max(0, a); c.translate(p[0] + Math.sin(age / 12 + r.ph) * 6, p[1] - AV_H * 1.62 - age * 0.45); c.scale(pop * 1.15, pop * 1.15); c.font = '22px sans-serif'; c.textAlign = 'center'; c.shadowColor = 'rgba(0,0,0,.4)'; c.shadowBlur = 5; c.fillText(r.e, 0, 0); c.restore(); });
 }
 function rmPcLbl(x, t) { const i = t.indexOf(' '); if (i > 0 && i <= 3) { const a = document.createElement('i'), b = document.createElement('span'); a.textContent = t.slice(0, i); b.textContent = t.slice(i + 1); x.appendChild(a); x.appendChild(b); } else { x.textContent = t; if (t === '✖' || t === '↩️') x.className = 'sm'; } }
 function rmPcClose() { RM.pc = ''; $('rmPC').hidden = true; }
+/* قائمة وحدة مفتوحة بالمرة: لما تفتح قائمة تنسد الباقي (تفاعل، رقص، أغاني، سجل، أصدقاء، غرف، موجودين...) */
+function rmPopClose(keep) {
+  ['rmDance', 'rmMus', 'rmRx', 'rmFr', 'rmGo'].forEach(id => { if (id !== keep) { const e = $(id); if (e) e.hidden = true; } });
+  if (keep !== 'rmPC') rmPcClose(); if (keep !== 'log' && RM.logOpen) { RM.logOpen = false; rmLbl('rmLogBtn', '📜', 'السجل', false); rmRenderLog(); }
+  if (keep !== 'mem' && !$('rmMem').hidden) rmMemToggle(false); document.querySelectorAll('#rmBox .rmOv').forEach(o => o.remove());
+}
 function rmPcOpen(name) {
+  rmPopClose('rmPC');
   const o = RM.others[name]; if (!o) return; RM.pc = name; const P = $('rmPC'); P.innerHTML = ''; P.hidden = false; const b = document.createElement('b'); b.textContent = '👤 ' + name; P.appendChild(b);
   const r = document.createElement('div'); r.className = 'pr'; const mk = (t, f) => { const x = document.createElement('button'); x.type = 'button'; rmPcLbl(x, t); x.onclick = f; r.appendChild(x); };
   mk('🤝 مصافحة', () => { rmSend({ t: 'rm_hug', n: name, k: 'shake' }); rmPcClose(); }); mk('🤗 عناق', () => { rmSend({ t: 'rm_hug', n: name, k: 'hug' }); rmPcClose(); }); mk('💞 قلب', () => { rmSend({ t: 'rm_hug', n: name, k: 'heart' }); rmPcClose(); }); mk('👏 تصفيق', () => { rmSend({ t: 'rm_hug', n: name, k: 'clap' }); rmPcClose(); }); mk('💃 رقصة اثنين', () => { rmSend({ t: 'rm_hug', n: name, k: 'dance2' }); rmPcClose(); });
@@ -7170,7 +7177,7 @@ function rmAvInit(sv) {
 const RM_DANCES = [[1, '👋', 'تلويح'], [2, '💃', 'هز الخصر'], [3, '🤪', 'هز الراس'], [4, '🌸', 'رقصة أنيقة'], [5, '🙌', 'تصفيق'], [6, '🕺', 'تويست'], [7, '🎉', 'قفز احتفال'], [8, '✨', 'ديسكو'], [10, '🥁', 'سامبا'], [11, '🌊', 'موجة الإيدين'], [12, '🦶', 'دبكة'], [13, '↔️', 'خطوة جانبية'], [14, '🤖', 'روبوت'], [15, '🥳', 'فرحة']];
 function rmDanceMark() { const P = $('rmDance'); if (!P || P.hidden) return; P.querySelectorAll('button[data-e]').forEach(b => b.classList.toggle('on', +b.dataset.e === (RM.me.dance || 0))); }
 function rmDanceBuild() { const P = $('rmDance'); P.innerHTML = ''; RM_DANCES.forEach(d => { const b = document.createElement('button'); b.type = 'button'; b.dataset.e = d[0]; b.textContent = d[1] + ' ' + d[2]; b.onclick = () => { rmSetDance(d[0]); rmDanceMark(); if (RM.me.dance) P.hidden = true; }; P.appendChild(b); }); const st = document.createElement('button'); st.type = 'button'; st.className = 'stop'; st.textContent = '⏹ إيقاف الرقص'; st.onclick = () => { rmSetDance(0); P.hidden = true; }; P.appendChild(st); rmDanceMark(); }
-$('rmDanceBtn').onclick = () => { const P = $('rmDance'); $('rmMus').hidden = true; if (P.hidden) { rmDanceBuild(); P.hidden = false; } else P.hidden = true; };
+$('rmDanceBtn').onclick = () => { const P = $('rmDance'); if (P.hidden) { rmPopClose('rmDance'); rmDanceBuild(); P.hidden = false; } else P.hidden = true; };
 $('rmAvBtn').onclick = () => avOpen(false);
 $('rmUmbBtn').onclick = () => { RM.me.umbOn = RM.me.umbOn === false; rmSend({ t: 'rm_umb', on: RM.me.umbOn ? 1 : 0 }); rmUmbBtn(); showToast(RM.me.umbOn ? '☂️ طلعت الشمسية' : '💧 شلت الشمسية... ملابسك رح تتبلل'); };
 const AV_PAL = ['#b83a52', '#e83a4a', '#ff7aa8', '#e8a030', '#ffd23a', '#3aa07a', '#2a7a9a', '#1e8ae8', '#5a4a9a', '#7a5cff', '#2a2a34', '#f2f2f6', '#8a5a3a', '#ff7a2b'], AV_PAL2 = ['#2f5fb0', '#1c1c26', '#8a6a4a', '#c8506a', '#4a8a5a', '#e8e8f0', '#5a5e6a', '#c8b890', '#7a3a2a', '#1c2c5a'], AV_PAL3 = ['#ffffff', '#1c1c26', '#ff7aa8', '#e8a030', '#5a8ad8', '#3a2a22', '#c0182e', '#e8c46a'];
@@ -7296,7 +7303,7 @@ function rmLbl(id, ic, lb, on) { const b = $(id); if (!b) return; b.innerHTML = 
 function rmTypLabel() { rmLbl('rmTypBtn', '✍️', RM.typOn ? 'يكتب: شغّال' : 'يكتب: مطفي'); } rmTypLabel();
 $('rmTypBtn').onclick = () => { RM.typOn = !RM.typOn; try { localStorage.setItem('rmTyp', RM.typOn ? '1' : '0'); } catch (e) {} rmTypLabel(); showToast(RM.typOn ? '✍️ مؤشر «يكتب الآن» شغّال' : 'انطفى مؤشر «يكتب الآن»'); };
 $('rmChatIn').addEventListener('input', () => { if (RM.typOn && $('rmChatIn').value.trim() && performance.now() - (RM.typSent || 0) > 1400) { RM.typSent = performance.now(); rmSend({ t: 'rm_typing' }); } });
-$('rmLogBtn').onclick = () => { RM.logOpen = !RM.logOpen; rmLbl('rmLogBtn', '📜', RM.logOpen ? 'اغلاق' : 'السجل', RM.logOpen); rmRenderLog(); };
+$('rmLogBtn').onclick = () => { if (!RM.logOpen) rmPopClose('log'); RM.logOpen = !RM.logOpen; rmLbl('rmLogBtn', '📜', RM.logOpen ? 'اغلاق' : 'السجل', RM.logOpen); rmRenderLog(); };
 function rmKissUpd() {
   const b = $('rmKiss'); if (!b) return; const o = RM.myAdm ? Object.values(RM.others).find(x => x.adm && x.adm !== RM.myAdm) : null;
   const near = !!(o && Math.hypot(o.x - RM.me.x, o.y - RM.me.y) < 62); RM.kissTo = near ? o.name : ''; b.hidden = !near; if (near) b.textContent = '😘 بوسة لـ ' + o.name;
@@ -7363,7 +7370,7 @@ $('rmSend').addEventListener('pointerdown', e => { if (document.activeElement ==
 $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { if (e.key === 'Enter') rmChat(); });
 $('rmExit').onclick = () => { showToast('👋 شكراً لزيارتك منتجع بابي! نشوفك قريب 🌴'); rmLeaveRoom(); };
 function rmMemToggle(open) { const P = $('rmMem'); P.hidden = open === undefined ? !P.hidden : !open; $('rmBox').classList.toggle('memOpen', !P.hidden); $('rmMemArr').firstChild.textContent = P.hidden ? '▶' : '◀'; }
-$('rmMemArr').onclick = () => rmMemToggle();
+$('rmMemArr').onclick = () => { if ($('rmMem').hidden) rmPopClose('mem'); rmMemToggle(); };
 $('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; rmLbl('rmZoom', RM.zoomAll ? '🔍' : '🔭', RM.zoomAll ? 'قرّب' : 'كل المكان'); };
 function rmLandscapeDevice() {
   try { if (screen.orientation && screen.orientation.type) return /landscape/.test(screen.orientation.type); } catch (e) {}
