@@ -637,8 +637,6 @@
   .tile.tileResort { margin-bottom: 2px; min-height: 108px; padding-bottom: 14px; }
   .rsNew { position: absolute; top: 9px; inset-inline-start: 10px; z-index: 2; background: linear-gradient(135deg, #ff4f9a, #ff9a3c); color: #fff; font-weight: 900; font-size: 12px; padding: 3px 11px; border-radius: 12px; animation: nwP 1.4s infinite; }
   @keyframes nwP { 0% { box-shadow: 0 0 0 0 rgba(255,100,150,.8); } 70%,100% { box-shadow: 0 0 0 11px rgba(255,100,150,0); } }
-  .rsQ { position: absolute; bottom: 9px; inset-inline-start: 10px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.25); border: 1.5px solid #fff; font-weight: 900; font-size: 16px; }
-  .rsQ:active { transform: scale(.85); }
   #gameCard { background: linear-gradient(160deg, #1f5a46, #10382c); border: 1px solid #2f8a6a; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   #gameCard h2 { margin: 0; font-size: 17px; text-align: center; color: #fff; }
   #gameCard .tab { background: rgba(255,255,255,.14); color: #fff; border: 0; border-radius: 10px; font-size: 12px; padding: 7px 4px; }
@@ -679,13 +677,29 @@
   #gHead h2 { font-family: Lalezar, Cairo, system-ui; font-size: 26px; font-weight: 400; text-align: start; text-shadow: 0 2px 10px rgba(0,0,0,.4); } #gHead small { display: block; font-size: 12px; color: #fff; opacity: .92; font-weight: 600; line-height: 1.5; }
   #gSoon { text-align: center; font-size: 12px; color: #fff; opacity: .6; margin-bottom: 4px; }
 
-  .gTiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; position: relative; z-index: 1; }
+  .gTiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; position: relative; z-index: 1; }
   .gTiles .tile { background: rgba(0,0,0,.28) !important; border-color: rgba(255,255,255,.25); }
   #hub .tile:not(.tileResort):not(.wide) { }
-  #hub { grid-template-columns: repeat(3, 1fr); } .gTiles .tile .tl { font-size: 10.5px; } .gTiles .tile .ti { width: 34px; height: 34px; font-size: 18px; }
-  #hub .tile.tileDev { grid-column: auto; flex-direction: column; padding: 10px 2px 8px; gap: 2px; } #hub .tile.tileDev .ti { width: 42px; height: 42px; font-size: 22px; margin-bottom: 3px; }
+  #hub { grid-template-columns: repeat(3, 1fr); }
+  #hub .tile.tileDev { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 8px; padding: 10px 6px; } #hub .tile.tileDev .ti { width: 36px; height: 36px; font-size: 19px; margin: 0; }
   #hub .tile.tileDev .tl { font-size: 11px; }
   @media (min-width: 700px) { #hub .tile.tileDev .ti { width: 50px; height: 50px; font-size: 26px; } }
+
+  .chG { background: linear-gradient(160deg, #1d2a66, #141b45); border: 1px solid #3a4a99; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+  .chGt { font-family: Lalezar, Cairo, system-ui; font-size: 20px; color: #ffd166; margin-bottom: 8px; text-align: center; }
+  .chS { display: flex; align-items: center; gap: 10px; padding: 7px 4px; font-size: 14px; line-height: 1.5; animation: tIn .5s both; } .chS:nth-child(3){animation-delay:.08s}.chS:nth-child(4){animation-delay:.16s}.chS:nth-child(5){animation-delay:.24s}.chS:nth-child(6){animation-delay:.32s}
+  .chS b { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .chS em { font-style: normal; color: #7be3ff; font-weight: 800; } .chS small { opacity: .65; }
+  .chTip { margin-top: 6px; text-align: center; font-size: 12.5px; background: rgba(255,209,102,.12); color: #ffe8a8; border-radius: 10px; padding: 7px; }
+
+  #rsRow { grid-column: 1 / -1; display: flex; gap: 8px; align-items: stretch; } #rsRow .tileResort { flex: 1; min-width: 0; }
+  .rsQ { flex: none; width: 56px; border-radius: 18px; border: 2px solid #e6c8ff; background: linear-gradient(160deg, #3b1d7a, #24124f); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 4px 14px rgba(142,59,255,.4); transition: transform .15s; } .rsQ b { font-size: 26px; line-height: 1; color: #ffd166; animation: rsBob 2.4s ease-in-out infinite; } .rsQ small { font-size: 10.5px; font-weight: 700; } .rsQ:active { transform: scale(.9); }
+  #rmHelp { position: fixed; inset: 0; z-index: 10050; background: rgba(5,6,20,.78); display: flex; align-items: flex-end; justify-content: center; } #rmHelp[hidden] { display: none; }
+  #rmHelp .rsBox { width: min(520px, 100%); } .hpS { display: flex; gap: 10px; align-items: flex-start; padding: 7px 2px; font-size: 14px; line-height: 1.6; animation: tIn .45s both; } .hpS i { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-style: normal; font-size: 19px; background: rgba(255,255,255,.12); } .hpS b { color: #ffd166; } .hpS span { flex: 1; }
+  #rmHelpB { pointer-events: auto; }
+
+  .homeBtns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .homeBtns button { flex: 1; min-width: 110px; padding: 10px 12px; font-size: 14px; border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); transition: transform .15s; } .homeBtns button:active { transform: scale(.94); }
+  #shareBtn { display: block; width: 100%; padding: 9px; border-radius: 14px; background: rgba(0,0,0,.28); color: #fff; border: 1px solid rgba(255,255,255,.3); font-weight: 700; font-size: 14px; position: relative; z-index: 1; transition: transform .15s; } #shareBtn:active { transform: scale(.96); }
   @media (min-width: 700px) { #app { max-width: 640px; } #hub { gap: 10px; } .tile:not(.tileResort) .ti { width: 50px; height: 50px; font-size: 26px; } .tile .tl { font-size: 14px; } }
 </style>
 </head>
@@ -701,21 +715,24 @@
   </div>
 
   <div id="hub">
-    <button class="tile tileResort" data-pg="rooms" type="button"><span class="rsGlow"></span><span class="rsNew">✨ جديد</span><span class="ti">🏝️</span><span class="rsTx"><span class="tl">المنتجع</span><small>شاطئ مفتوح للجميع<br>دردشة • جلسات • ألعاب طاولة</small></span><span class="rsGo">ادخل ◀</span><span class="rsQ" id="rsQ" role="button" aria-label="ما هو المنتجع؟">؟</span></button>
+    <div id="rsRow"><button id="rsQ" class="rsQ" type="button" aria-label="ما هو المنتجع؟"><b>؟</b><small>تعريف</small></button>
+    <button class="tile tileResort" data-pg="rooms" type="button"><span class="rsGlow"></span><span class="rsNew">✨ جديد</span><span class="ti">🏝️</span><span class="rsTx"><span class="tl">المنتجع</span><small>شاطئ مفتوح للجميع<br>دردشة • جلسات • ألعاب طاولة</small></span><span class="rsGo">ادخل ◀</span></button></div>
     <button class="tile wide" data-c="#2ea77a" data-pg="house" type="button"><span class="ti">🏠</span><span class="wt"><span class="tl">بيتي</span><small>أثاث، حديقة، حيوانك الأليف</small></span></button>
     <button class="tile wide" data-c="#e0546a" data-pg="friends" type="button"><span class="ti">👥</span><span class="wt"><span class="tl">الأصدقاء</span><small>رسائل وأصدقاء وغرف خاصة</small></span><span class="tb" id="mnFrBadge" style="display:none"></span></button>
     <button class="tile" data-c="#3a7bff" data-pg="account" type="button"><span class="ti">👤</span><span class="tl">حسابي</span></button>
     <button class="tile" data-c="#3a9bd0" data-pg="chat" type="button"><span class="ti">💬</span><span class="tl">الشات</span></button>
     <button class="tile" data-c="#d08a1a" data-pg="lb" type="button"><span class="ti">🏆</span><span class="tl">الصدارة</span></button>
-    <button class="tile" data-c="#7a7fa0" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button>
-    <button class="tile" data-c="#6a6f90" data-pg="more" type="button"><span class="ti">⚙️</span><span class="tl">المزيد</span></button>
     <button class="tile tileDev" data-c="#4a5aa0" data-pg="dev" type="button"><span class="ti">👨‍💻</span><span class="tl">معلومات عن المطور</span></button>
   </div>
 
+  <div id="fullBar" class="homeBtns">
+    <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
+    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
+  </div>
   <div id="gSec">🎮 ألعاب أخرى</div>
   <div id="gameCard">
     <div id="gHead"><span class="gi">🎯</span><div><h2>فجّر الكرات الملونة</h2><small>أطلق الكرات، كوّن ثلاث متشابهة وفجّرها قبل ما توصل للحفرة. العب لوحدك أو ويا صديقك أونلاين.</small></div></div>
-    <div class="gTiles"><button class="tile" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button><button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button><button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button><button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button><button class="tile" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button></div>
+    <div class="gTiles"><button class="tile" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button><button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button><button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button><button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button><button class="tile" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button><button class="tile" data-c="#7a7fa0" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button></div>
     <div id="modeBar" class="tabs">
       <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
       <button id="modeDuo" class="tab" type="button">👥 زوجي</button>
@@ -727,6 +744,7 @@
     <div id="duoMsg" class="help"></div>
   </div>
     <button id="playNow" type="button">▶ ابدأ اللعب</button>
+    <button id="shareBtn" type="button">📤 شارك نتيجتك</button>
   </div>
   <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
@@ -819,6 +837,14 @@
 <div class="page" id="pg-chat"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">💬 غرفة الشات</span></div><div class="pgBody">
   <div class="card" id="panel">
     <div id="setup">
+      <div class="chG"><div class="chGt">💬 شلون يشتغل الشات؟</div>
+        <div class="chS"><b>1</b><span>سجّل دخولك بحسابك <small>(الشات يحتاج حساب)</small></span></div>
+        <div class="chS"><b>2</b><span>اكتب <em>كود غرفة</em> من 4 أحرف أو أرقام فأكثر</span></div>
+        <div class="chS"><b>3</b><span>خلّي صديقك يكتب <em>نفس الكود</em> بنفس الخانة</span></div>
+        <div class="chS"><b>4</b><span>اضغط <em>دخول غرفة الشات 🚪</em> وسولفوا سوا</span></div>
+        <div class="chS"><b>5</b><span>تطلع من الغرفة بزر <em>خروج</em> بأي وقت</span></div>
+        <div class="chTip">🔒 اختار كود صعب التخمين حتى ما يدخل عليكم أحد</div>
+      </div>
       <div class="row">
         <input id="codeIn" placeholder="كود غرفة الشات (4 أحرف أو أرقام فأكثر)" maxlength="20" autocomplete="off" autocapitalize="off">
       </div>
@@ -833,16 +859,11 @@
 
 </div></div>
 <div class="page" id="pg-more"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">⚙️ المزيد</span></div><div class="pgBody">
-  <div id="fullBar">
-    <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
-    <button id="shareBtn" class="ghost" type="button">📤 شارك نتيجتك</button>
-    <button id="themeBtn" class="ghost" type="button">☀️ فاتح</button>
-  </div>
 
 </div></div>
 <div class="page" id="pg-rooms"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏝️ المنتجع</span></div><div class="pgBody">
   <div class="card" id="rmLobby">
-    <div class="lbHead"><span id="rmCount">🏝️ الغرف</span><button id="rmNew" class="ghost" type="button" style="width:auto;padding:6px 12px" hidden>➕ غرفة جديدة</button></div>
+    <div class="lbHead"><span id="rmCount">🏝️ الغرف</span><button id="rmHelpL" class="ghost" type="button" style="width:auto;padding:6px 12px">📖 تعليمات</button><button id="rmNew" class="ghost" type="button" style="width:auto;padding:6px 12px" hidden>➕ غرفة جديدة</button></div>
     <div id="rmForm" class="rmForm" hidden>
       <input id="rmName" maxlength="24" placeholder="اسم الغرفة (مثال: شاطئ الأصدقاء)" autocomplete="off">
       <input id="rmCode" maxlength="12" placeholder="رمز الدخول (اتركه فاضي = غرفة عامة للكل)" autocomplete="off" dir="ltr">
@@ -857,7 +878,7 @@
     <div id="rmStage"><div id="rmBox">
       <canvas id="rmCv" width="640" height="500"></canvas>
       <div id="rmOv">
-        <div class="hOvTop"><div class="hOvG"><span id="rmFTtl" class="hOvB"></span></div></div>
+        <div class="hOvTop"><div class="hOvG"><span id="rmFTtl" class="hOvB"></span><button id="rmHelpB" class="hOvB" type="button">📖 تعليمات</button></div></div>
         <div id="rmRot"><div>🔄</div><b>دوّر جهازك للوضع الطولي</b><small>المنتجع للموبايل بالوضع الطولي (الآيباد يدعم العرض)</small></div><button id="rmKiss" type="button" hidden>😘 بوسة</button><div id="rmMem" hidden></div><button id="rmMemArr" type="button" aria-label="قائمة الموجودين"><b>▶</b><small id="rmMemN">0</small></button>
         <div id="rmPrompt"></div>
         <div id="rmDockA" hidden><button id="rmWxRain" class="rmC rc-rain" type="button"><i>🌧️</i><small>مطر الآن</small></button><button id="rmWxSnow" class="rmC rc-snow" type="button"><i>❄️</i><small>ثلج الآن</small></button><button id="rmWxDay" class="rmC rc-day" type="button"><i>☀️</i><small>نهار</small></button><button id="rmWxNight" class="rmC rc-night" type="button"><i>🌙</i><small>ليل</small></button><button id="rmWxFw" class="rmC rc-fw" type="button"><i>🎆</i><small>ألعاب</small></button><button id="rmAnn" class="rmC rc-ann" type="button"><i>📢</i><small>إعلان</small></button><button id="rmStatB" class="rmC rc-stat" type="button"><i>📊</i><small>إحصائيات</small></button><button id="rmSlogB" class="rmC rc-slog" type="button"><i>🛡️</i><small>سجل الإدارة</small></button><button id="rmWxFast" class="rmC rc-fast" type="button"><i>⏩</i><small>تسريع</small></button><button id="rmWxReset" class="rmC rc-rst" type="button"><i>↩️</i><small>افتراضي</small></button></div><div id="rmClk"></div><div id="rmDock"><button id="rmExit" class="rmC rc-exit" type="button"><i>🚪</i><small>خروج</small></button><button id="rmZoom" class="rmC rc-view" type="button"><i>🔭</i><small>كل المكان</small></button><button id="rmLogBtn" class="rmC rc-soc" type="button"><i>📜</i><small>السجل</small></button><button id="rmTypBtn" class="rmC rc-soc" type="button"><i>✍️</i><small>يكتب: شغّال</small></button><button id="rmDanceBtn" class="rmC rc-fun" type="button"><i>💃</i><small>رقص</small></button><button id="rmAvBtn" class="rmC rc-me" type="button"><i>👗</i><small>شخصيتي</small></button><button id="rmHidBtn" class="rmC rc-hid" type="button" hidden><i>👻</i><small>اختفاء</small></button><button id="rmRxBtn" class="rmC rc-rx" type="button"><i>😂</i><small>تفاعل</small></button><button id="rmMusBtn" class="rmC rc-mus" type="button"><i>🎵</i><small>الأغاني</small></button><button id="rmSndBtn" class="rmC rc-view" type="button"><i>🔊</i><small>الأصوات</small></button><button id="rmUmbBtn" class="rmC rc-fun" type="button" hidden><i>💧</i><small>تبلل</small></button></div><div id="rmDance" hidden></div><div id="rmMus" hidden><b id="rmMusT">لا توجد أغاني حالياً</b><div class="mr"><button id="rmMusPlay" type="button" hidden>▶</button><button id="rmMusMute" type="button">🔊</button><input id="rmMusVol" type="range" min="0" max="100" value="60"></div><div id="rmMusAdm" hidden><input id="rmMusUrl" placeholder="رابط قائمة تشغيل يوتيوب (playlist)" autocomplete="off"><div class="mr"><button id="rmMusSet" type="button">▶ تشغيل للجميع</button><button id="rmMusStop" type="button">⏹ إيقاف</button></div></div></div><div id="rmRx" hidden></div><div id="rmPC" hidden></div><div id="rmGo" hidden><b>🏝️ الغرف</b><div id="rmGoL"></div><div id="rmGoC" hidden><span id="rmGoT"></span><input id="rmGoCode" placeholder="رمز الغرفة" maxlength="12" hidden><div class="mr"><button id="rmGoY" type="button">✅ نعم، انتقل</button><button id="rmGoN" type="button">✖ لا</button></div></div></div><div id="rmYT"><div id="rmYTin"></div></div>
@@ -868,6 +889,7 @@
   </div>
 </div></div>
 <div id="avEd" hidden><div class="avBox"><div class="avMain"><div class="avPrev"><canvas id="avCv" width="300" height="380"></canvas><div class="avAct"><button id="avWalk" type="button">🚶 مشي</button><button id="avSit" type="button">🪑 جلوس</button><button id="avDnc" type="button">💃 رقصة</button><button id="avZm" type="button">🔍 الوجه</button></div></div><div class="avPan"><div id="avTabs"></div><div id="avOpts"></div></div></div><div class="avBar"><button id="avSave" type="button">✅ حفظ</button><button id="avCancel" type="button">✖ إلغاء</button></div></div></div>
+<div id="rmHelp" hidden><div class="rsBox"><h3>📖 تعليمات المنتجع</h3><div class="hpS" style="animation-delay:0ms"><i>👆</i><span><b>التمشي:</b> دوس على أي مكان بالشاطئ وشخصيتك تمشي له.</span></div><div class="hpS" style="animation-delay:40ms"><i>🪑</i><span><b>الجلوس:</b> قرّب من كرسي أو قنفة أو مرجوحة وتطلع لك أزرار <b>اجلس</b>، وللقيام اضغط <b>قيام</b>.</span></div><div class="hpS" style="animation-delay:80ms"><i>💬</i><span><b>الدردشة:</b> اكتب برسالة الشريط الأسفل وتطلع فوق راسك. دوس على شخص تظهر لك قائمة: مصافحة، عناق، همس خاص.</span></div><div class="hpS" style="animation-delay:120ms"><i>🎲</i><span><b>ألعاب الطاولات:</b> اجلس على مقعدي أي طاولة وادعُ صديقك: سلم وثعبان، دومينو، منقلة، إكس أو.</span></div><div class="hpS" style="animation-delay:160ms"><i>🎣</i><span><b>الصيد:</b> قرب الرصيف وابدأ الصيد، وإذا عضّت السمكة اضغط <b>اسحب الآن!</b></span></div><div class="hpS" style="animation-delay:200ms"><i>☕</i><span><b>جربوع:</b> قرّب من جربوع بالبار واطلب مشروبك. ويعطيك نصايح وهدية يومية.</span></div><div class="hpS" style="animation-delay:240ms"><i>🏰</i><span><b>قلاع الرمل:</b> ابنِ قلعة رمل على الشاطئ وخلي علمك عليها.</span></div><div class="hpS" style="animation-delay:280ms"><i>👥</i><span><b>الموجودين:</b> السهم ▶ على الجنب يفتح قائمة اللي بالغرفة.</span></div><div class="hpS" style="animation-delay:320ms"><i>🌦️</i><span><b>الطقس والوقت:</b> كل 10 دقائق: مطر ☔ ثم ليل 🌙 وألعاب نارية 🎆 ثم ثلج ❄️. إذا برد الجو روح يم النار 🔥. العداد الصغير يبين الجاي.</span></div><div class="hpS" style="animation-delay:360ms"><i>🚪</i><span><b>الخروج:</b> ارجع للغرف من زر الرجوع بأعلى الصفحة.</span></div><button id="rmHelpX" type="button">فهمت ✔</button></div></div>
 <div id="rmWarn" role="alert"><div class="rw"><div id="rmWI">⚠️</div><b id="rmWT"></b><p id="rmWS"></p><button id="rmWOk" type="button">حسناً</button></div></div>
 <div class="page" id="pg-house"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏠 بيتي</span></div><div class="pgBody">
   <div class="card">
@@ -2356,6 +2378,11 @@ function tileFx(t, ev) {
 document.querySelectorAll('.tile').forEach((t, i) => { t.style.setProperty('--i', i); if (t.dataset.c) t.style.setProperty('--c', t.dataset.c); t.addEventListener('pointerdown', ev => { if (ev.target.id === 'rsQ') return; try { unlockAudio(); } catch (e) {} tileFx(t, ev); }); });
 $('rsQ').addEventListener('click', e => { e.stopPropagation(); $('rsInfo').hidden = false; });
 $('rsQ').addEventListener('pointerdown', e => e.stopPropagation());
+
+function rmHelpOpen() { $('rmHelp').hidden = false; } 
+$('rmHelpB').onclick = rmHelpOpen; $('rmHelpL').onclick = rmHelpOpen; $('rmHelpX').onclick = () => { $('rmHelp').hidden = true; };
+$('rmHelp').addEventListener('click', e => { if (e.target === $('rmHelp')) $('rmHelp').hidden = true; });
+function rmHelpFirst() { try { if (localStorage.getItem('rmHelpSeen')) return; localStorage.setItem('rmHelpSeen', '1'); } catch (e) { return; } setTimeout(rmHelpOpen, 1200); }
 $('rsInfoX').onclick = () => { $('rsInfo').hidden = true; };
 $('rsInfo').addEventListener('click', e => { if (e.target === $('rsInfo')) $('rsInfo').hidden = true; });
 $('rsInfoGo').onclick = () => { $('rsInfo').hidden = true; openPage('rooms'); };
@@ -6747,7 +6774,7 @@ $('avSave').onclick = () => {
 
 /* ---------- الواجهة: اللوبي ---------- */
 function rmShowLobby() { $('rmLobby').hidden = false; $('rmRoom').hidden = true; if (RM.full) rmSetFull(false); rmLoadList(); }
-function rmShowRoom() { if (!RM.full) rmSetFull(true, true, true); $('rmFTtl').textContent = '🏝️ ' + RM.name; try { screen.orientation.lock(IS_TABLET ? 'any' : 'portrait').catch(() => {}); } catch (e) {} rmCheckRot(); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); }
+function rmShowRoom() { if (!RM.full) rmSetFull(true, true, true); $('rmFTtl').textContent = '🏝️ ' + RM.name; try { screen.orientation.lock(IS_TABLET ? 'any' : 'portrait').catch(() => {}); } catch (e) {} rmCheckRot(); $('rmLobby').hidden = true; $('rmRoom').hidden = false; $('rmTtl').textContent = '🏝️ ' + RM.name + ' • 👑 ' + RM.owner; rmStart(); rmHelpFirst(); }
 function rmStart() { if (!RM.raf) RM.raf = requestAnimationFrame(rmLoop); }
 function rmLeaveRoom(silent) { const was = RM.on; RM.on = false; if (was) rmSend({ t: 'rm_leave' }); if (!auth && gws) { const g = gws; gws = null; setTimeout(() => { try { g.close(); } catch (e) {} }, 100); } RM.others = {}; RM.me.hid = false; RM.menu = ''; RM.warnFor = ''; try { rmMusicSet(null); } catch (e) {} if (RM.full) rmSetFull(false); if (curPage === 'rooms') rmShowLobby(); if (!silent) showToast('🚪 طلعت من الغرفة'); }
 function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ سجّل حساب حتى تدخل هذي الغرفة'); return; } RM.id = id; RM.code = code || ''; RM.on = true; RM.others = {}; RM.bubs = {}; RM.log = []; RM.menu = ''; RM.zoomAll = false; RM.z = 0; rmLbl('rmZoom', '🔭', 'كل المكان'); RM.wx0 = performance.now() / 1000; RM.wxLast = ''; RM.rainI = 0; RM.snowI = 0; RM.me.umbOn = true; RM.me.wet = 0; RM.me.cold = 0; setTimeout(() => { if (RM.on) rmNpcWelcome(); }, 2600); rmJoinSend(); }
