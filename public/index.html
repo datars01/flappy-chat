@@ -801,6 +801,43 @@
   #alList .alT { color: #8d86a8; font-size: 11px; flex: none; direction: ltr; padding-top: 1px; }
   #alList .alEmpty { padding: 16px; text-align: center; color: #8d86a8; }
   @keyframes alFl { from { background: rgba(143,92,255,.45); } to { background: transparent; } }
+
+  /* ===== لعبة مين الخاين؟ ===== */
+  .tile.tileSus { grid-column: 1 / -1; width: 100%; display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 22px 14px 14px; min-height: 86px; margin: 4px 0 8px; border-radius: 20px; border: 2px solid #ffb3d0; color: #fff; text-align: right; position: relative; overflow: hidden; background: radial-gradient(circle at 15% 20%, rgba(255,255,255,.25) 0 2px, transparent 3px), radial-gradient(circle at 70% 70%, rgba(255,255,255,.2) 0 1.5px, transparent 2.5px), linear-gradient(135deg, #1b1446 0%, #4a1d6e 45%, #b0285a 100%); box-shadow: 0 6px 22px rgba(176,40,90,.45); animation: susGlow 2.6s ease-in-out infinite; cursor: pointer; }
+  @keyframes susGlow { 0%, 100% { box-shadow: 0 6px 22px rgba(176,40,90,.45); } 50% { box-shadow: 0 6px 30px rgba(255,90,160,.75); } }
+  .tileSus .susEm { font-size: 30px; letter-spacing: -6px; animation: susBob 1.6s ease-in-out infinite; } @keyframes susBob { 50% { transform: translateY(-4px) rotate(-4deg); } }
+  .tileSus .susTx { flex: 1; display: flex; flex-direction: column; gap: 2px; } .tileSus .tl { font-size: 20px; font-weight: 900; } .tileSus small { font-size: 12px; opacity: .9; }
+  .tileSus .susNew { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 800; background: #ffd166; color: #3a2200; padding: 2px 8px; border-radius: 10px; } .tileSus .susGo { background: #fff; color: #b0285a; font-weight: 900; padding: 8px 12px; border-radius: 12px; font-size: 13px; }
+  #pg-sus .pgBody { max-width: none; padding: 0; gap: 0; overflow: hidden; position: relative; background: radial-gradient(ellipse at top, #24184e, #07060f); }
+  #susBody[data-v="menu"], #susBody[data-v="lobby"] { overflow-y: auto; padding: 12px; align-items: center; }
+  .susMenu, .susLobby { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; color: #fff; padding-bottom: 60px; }
+  .susHero { text-align: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15); border-radius: 18px; padding: 12px; } .susHero h2 { margin: 2px 0 6px; font-size: 26px; } .susHero p { font-size: 13px; opacity: .9; line-height: 1.7; margin: 6px 0 0; }
+  .susHeroRow { display: flex; justify-content: center; flex-wrap: wrap; } .susHeroRow canvas { animation: susBob 1.8s ease-in-out infinite; margin: 0 -4px; }
+  .susBtn { width: 100%; padding: 12px; border-radius: 14px; border: 2px solid rgba(255,255,255,.6); background: linear-gradient(135deg, #8f5cff, #ff5a9a); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; } .susBtn.big { font-size: 18px; padding: 15px; } .susBtn.ghost { background: rgba(255,255,255,.12); } .susBtn:disabled { opacity: .5; }
+  .susJoin { display: flex; gap: 8px; } .susJoin input { flex: 1; min-width: 0; padding: 10px; font-size: 16px; border-radius: 12px; border: 2px solid #ffd166; text-align: center; } .susJoin .susBtn { width: auto; padding: 10px 16px; }
+  .susSec { font-weight: 800; color: #ffd166; margin-top: 4px; } .susList { display: flex; flex-direction: column; gap: 6px; } .susList small { opacity: .75; } .susRow { padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-weight: 700; text-align: right; cursor: pointer; }
+  .susHow { background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 12px; font-size: 13px; line-height: 1.7; } .susHow summary { font-weight: 800; cursor: pointer; }
+  .susCode { text-align: center; background: rgba(255,209,102,.15); border: 1px dashed #ffd166; padding: 8px; border-radius: 12px; } .susCode b { font-size: 22px; letter-spacing: 4px; color: #ffd166; }
+  .susPlayers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .susP { display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(255,255,255,.08); border-radius: 12px; padding: 6px 2px; font-size: 11px; text-align: center; min-height: 92px; justify-content: center; } .susP.me { outline: 2px solid #ffd166; } .susP.empty { opacity: .5; } .susP span { font-size: 26px; } .susP b { font-size: 12px; word-break: break-word; }
+  .susPick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .susCh { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.1); border: 2px solid transparent; border-radius: 12px; color: #fff; padding: 4px; font-size: 11px; cursor: pointer; } .susCh.on { border-color: #ffd166; background: rgba(255,209,102,.2); } .susCh.used { opacity: .35; } .susWait { text-align: center; opacity: .85; font-size: 13px; }
+  .susGame { position: absolute; inset: 0; } .susGame:not(.ph-play) .susJoy, .susGame:not(.ph-play) .susActs, .susGame:not(.ph-play) .susTasks, .susGame.ph-eject .susTop, .susGame.ph-over .susTop { display: none; } #susCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .susTop { position: absolute; top: 8px; left: 8px; right: 52px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; } .susProg { position: relative; height: 20px; border-radius: 10px; background: rgba(0,0,0,.55); border: 2px solid rgba(255,255,255,.5); overflow: hidden; } .susProg i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #2ecc71, #7dffa8); transition: width .4s; } .susProg span { position: relative; font-size: 11px; font-weight: 800; color: #fff; padding: 0 8px; line-height: 16px; }
+  #susRole { align-self: flex-start; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 10px; background: rgba(0,0,0,.6); color: #7dffa8; } #susRole.imp { color: #ff6a7a; }
+  .susTasks { position: absolute; top: 62px; left: 8px; max-width: 46%; background: rgba(0,0,0,.5); border-radius: 10px; padding: 6px 8px; color: #fff; font-size: 11.5px; line-height: 1.6; pointer-events: none; } .susTasks .done { opacity: .55; text-decoration: line-through; }
+  .susJoy { position: absolute; left: 18px; bottom: 26px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.35); touch-action: none; } .susJoy i { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgba(255,255,255,.45); box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+  .susActs { position: absolute; right: 14px; bottom: 22px; display: flex; flex-direction: column; gap: 10px; } .susAct { position: relative; width: 74px; height: 74px; border-radius: 50%; border: 3px solid rgba(255,255,255,.4); background: rgba(40,40,60,.75); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: .45; cursor: pointer; } .susAct.on { opacity: 1; border-color: #fff; } .susAct i { font-style: normal; font-size: 26px; line-height: 1; } .susAct small { font-size: 11px; font-weight: 800; } .susAct em { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 6px #000; }
+  .susAct.a-kill { background: rgba(180,20,40,.8); } .susAct.a-report { background: rgba(200,120,20,.8); } .susAct.a-use { background: rgba(40,120,200,.8); }
+  .susExit { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); background: rgba(0,0,0,.55); color: #fff; font-size: 18px; cursor: pointer; }
+  .susMeet { position: absolute; inset: 0; z-index: 5; background: rgba(12,10,30,.94); display: flex; flex-direction: column; gap: 8px; padding: 10px; overflow-y: auto; color: #fff; } .susMeet[hidden] { display: none; }
+  .susMH { text-align: center; font-weight: 900; font-size: 17px; } .susMH b { color: #ffd166; } .susMG { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; } .susMP { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px; border-radius: 12px; border: 2px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: #fff; font-size: 12px; cursor: pointer; } .susMP.dead { opacity: .45; } .susMP.me { border-color: #ffd166; } .susMP:disabled { cursor: default; } .susMP small { font-size: 10.5px; color: #7dffa8; }
+  .susChat { flex: 1; min-height: 120px; max-height: 40vh; overflow-y: auto; background: rgba(255,255,255,.06); border-radius: 12px; padding: 6px 8px; font-size: 13px; line-height: 1.7; } .susChat > div { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; } .susChat .sys { color: #ffd166; font-weight: 700; }
+  .susCIn { display: flex; gap: 6px; } .susCIn input { flex: 1; min-width: 0; padding: 10px; font-size: 16px; border-radius: 12px; border: 2px solid #8f5cff; } .susCIn button { width: 52px; border-radius: 12px; border: 0; background: #8f5cff; color: #fff; font-size: 18px; }
+  .susTask { position: absolute; inset: 0; z-index: 6; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; } .susTask[hidden] { display: none; }
+  .susTBox { position: relative; width: min(94%, 420px); background: #1e1a36; border: 2px solid #8f5cff; border-radius: 18px; padding: 12px; color: #fff; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; } .susTBox h4 { margin: 0; } .susTX { position: absolute; top: 8px; left: 8px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: #c0392b; color: #fff; }
+  .susTCv { width: 100%; border-radius: 12px; touch-action: none; } .susBar { width: 100%; height: 26px; border-radius: 13px; background: rgba(255,255,255,.15); overflow: hidden; } .susBar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd166, #2ecc71); }
+  .susHold { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #fff; background: radial-gradient(circle, #ff7ab8, #8f5cff); color: #fff; font-size: 15px; font-weight: 900; touch-action: none; user-select: none; -webkit-user-select: none; } .susHold:active { transform: scale(.95); }
+  .susSeq { display: grid; grid-template-columns: repeat(3, 70px); gap: 8px; } .susSeq button { height: 70px; border-radius: 14px; border: 2px solid rgba(255,255,255,.4); background: #3a3460; color: #fff; font-size: 26px; font-weight: 900; } .susSeq button.ok { background: #2ecc71; } .susSeq button:disabled { opacity: .3; }
+  .susTOk { font-size: 22px; font-weight: 900; color: #7dffa8; }
 </style>
 </head>
 <body>
@@ -845,6 +882,7 @@
     <button id="playNow" type="button">▶ ابدأ اللعب</button>
     <button id="shareBtn" type="button">📤 شارك نتيجتك</button>
   </div>
+  <button class="tile tileSus" data-pg="sus" type="button"><span class="susNew">✨ جديد • أونلاين</span><span class="susEm">🥔🍆🍅</span><span class="susTx"><span class="tl">مين الخاين؟</span><small>3 إلى 5 لاعبين • اكشفوا الخاين قبل ما يطيّركم 😈</small></span><span class="susGo">العب ◀</span></button>
   <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
@@ -1048,6 +1086,7 @@
     <div id="zList" class="col"></div>
   </div>
 </div></div>
+<div class="page" id="pg-sus"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🥔 مين الخاين؟</span></div><div class="pgBody" id="susBody"></div></div>
 <div class="page" id="pg-dev"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">👨‍💻 معلومات عن المطور</span></div><div class="pgBody">
   <div class="card devCard"><div class="devTxt">تم تطوير هذا العمل البسيط من قبل <b>سجاد</b> مهندس تقني ومتخصص في برمجة الالعاب والشبكات.<br><br>حسابي الوحيد في التليغرام <a class="devTg" href="https://t.me/Daklot" target="_blank" rel="noopener">Daklot</a> وليس لدي حسابات اخرى.<br><br>للمزيد من الاستفسار مراسلتي على الخاص، وفي حال لدى احد الاعضاء افكار ويحب مشاركتها استقبل الافكار وسوف اضعها في اللعبة ان شاء الله.<div class="devEnd">تحياتي 🌹</div></div>
   <a class="devBtn" href="https://t.me/Daklot" target="_blank" rel="noopener">✈️ راسلني على تليغرام</a></div>
@@ -3809,6 +3848,7 @@ function onFriendMsg(d) {
   else if (d.t && String(d.t).slice(0, 3) === 'hv_') hvMsg(d);
   else if (d.t && String(d.t).slice(0, 3) === 'rm_') rmOnMsg(d);
   else if (d.t && String(d.t).slice(0, 3) === 'al_') alOnMsg(d);
+  else if (d.t && String(d.t).slice(0, 4) === 'sus_') { if (typeof susMsg === 'function') susMsg(d); }
 }
 /* ---- زيارة البيوت: حضور حي ---- */
 /* يفرض اتصال جديد (يتخلص من أي سوكيت ميت أو عالق من فترة الأوفلاين) */
@@ -4125,7 +4165,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') houseLoad(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') houseLoad(); else if (id === 'sus') susOpen(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
@@ -7634,5 +7674,6 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 /* يبلّغ السيرفر بالفعاليات داخل اللعبة (للوحة المشرفين) */
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
+<script src="/sus.js?v=2"></script>
 </body>
 </html>

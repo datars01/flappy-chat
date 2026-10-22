@@ -1798,10 +1798,12 @@ function rmOnMsg(ws, d) {
     }
   }
 }
+const SUS = require('./sus-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b) });
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
   if (typeof d.t === 'string' && d.t.startsWith('hv_')) return hvOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('rm_')) return rmOnMsg(ws, d);
+  if (typeof d.t === 'string' && d.t.startsWith('sus_')) return SUS.onMsg(ws, d);   // لعبة «مين الخاين؟»
   if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
@@ -1963,7 +1965,7 @@ wss.on('connection', (ws, req) => {
   alCntPush();
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (d && typeof d.t === 'string' && d.t.startsWith('al_')) { try { alMsg(ws, d); } catch (e) { console.error(e); } return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => { alSubs.delete(ws); hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
+  ws.on('close', () => { alSubs.delete(ws); try { SUS.leave(ws); } catch (e) {} hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
   ws.on('error', () => {});
 });
 setInterval(() => {
