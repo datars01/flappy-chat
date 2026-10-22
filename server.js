@@ -1552,6 +1552,22 @@ function rmLeave(ws) {
 }
 function rmCloseRoom(r, why) { for (const w of [...r.mem]) { send(w, { t: 'rm_closed', txt: why || 'صاحب الغرفة سكّر الغرفة' }); w.rm = null; } r.mem.clear(); rmRooms.delete(r.id); rmPersist(); }
 setInterval(rmClean, 10 * 60e3);
+/* ===== عداد ساعات التواجد بالمنتجع + طلبات العضوية المميزة ===== */
+const VIP_TOTAL_H = 500, VIP_DAY_H = 8;
+const rmDayKey = t => new Date((t || Date.now()) + BGD).toISOString().slice(0, 10);
+function rmTimeOf(u) {
+  const days = u.rmDays || {}, today = days[rmDayKey()] || 0; let d8 = 0; for (let i = 0; i < 7; i++) { if ((days[rmDayKey(Date.now() - i * 864e5)] || 0) >= VIP_DAY_H * 3600) d8++; }
+  return { total: u.rmSec || 0, today, d8 };
+}
+setInterval(() => {   // كل دقيقة: نضيف دقيقة لكل عضو موجود بالمنتجع
+  const seen = new Set(), dk = rmDayKey(); let ch = false;
+  for (const r of rmRooms.values()) for (const w of r.mem) { if (w.guest || w.readyState !== 1 || seen.has(w.key)) continue; seen.add(w.key); const u = db.users[w.key]; if (!u) continue;
+    u.rmSec = (u.rmSec || 0) + 60; const D = u.rmDays || (u.rmDays = {}); D[dk] = (D[dk] || 0) + 60; const ks = Object.keys(D); if (ks.length > 14) ks.sort().slice(0, ks.length - 14).forEach(k => delete D[k]); ch = true; }
+  if (ch) save();
+}, 60e3);
+const vipReqs = () => Array.isArray(db.vipReq) ? db.vipReq : (db.vipReq = []);
+const vipPub = q => { const u = db.users[q.k]; const tm = u ? rmTimeOf(u) : { total: 0, today: 0, d8: 0 }; const rr = rmRooms.get(q.room); return { id: q.id, n: q.n, room: rr ? rr.name : q.room, ts: q.ts, tot0: q.tot0 || 0, day0: q.day0 || 0, total: tm.total, today: tm.today, d8: tm.d8, need: { total: VIP_TOTAL_H, day: VIP_DAY_H } }; };
+function vipNotifyAdmins(msg) { const str = JSON.stringify(msg); for (const w of wss.clients) if (w.readyState === 1 && !w.guest && db.users[w.key] && db.users[w.key].admin) w.send(str); }
 const rmSorted = () => [...rmRooms.values()].sort((a, b) => (b.perm ? 1 : 0) - (a.perm ? 1 : 0));
 app.get('/api/rooms', authMw, (req, res) => { res.json({ rooms: rmSorted().map(rmPub), max: RM_MAX, mine: ([...rmRooms.values()].find(r => !r.perm && r.owner === req.key) || {}).id || '' }); });
 app.get('/api/rooms/public', (req, res) => { res.json({ rooms: rmSorted().filter(r => r.perm).map(rmPub), max: RM_MAX, mine: '' }); });
@@ -1588,7 +1604,7 @@ function rmOnMsg(ws, d) {
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]) });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, vipCnt: rmAdm(ws) ? vipReqs().length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1661,6 +1677,23 @@ function rmOnMsg(ws, d) {
     if (!d.acc) { tw.rm.hreq = { from: rmNm(ws), t: now }; send(tw, { t: 'rm_hinv', from: rmNm(ws) }); return send(ws, { t: 'rm_ok', msg: '🤝 انرسل طلب مسك الإيد، ينتظر موافقته' }); }   // لازم الثاني يوافق
     const q = h.hreq; if (!q || q.from !== rmNm(tw) || now - q.t > 30000) return send(ws, { t: 'rm_ok', msg: '⌛ الطلب انتهى' }); h.hreq = null;
     tw.rm.hold = rmNm(ws); h.heldBy = rmNm(tw); rmBc(r, { t: 'rm_hold', a: rmNm(tw), b: rmNm(ws), on: 1 });
+  } else if (d.t === 'rm_mytime') {
+    if (ws.guest || !me) return; send(ws, Object.assign({ t: 'rm_mytime', need: { total: VIP_TOTAL_H, day: VIP_DAY_H }, pend: vipReqs().some(q => q.k === ws.key) }, rmTimeOf(me)));
+  } else if (d.t === 'rm_vip_apply') {   // طلب العضوية المميزة: شروط ساعات اللعب، والطلب يوصل للمشرفين
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; if (ws.guest) return send(ws, { t: 'rm_err', error: '✍️ سجّل حساب حتى تقدّم' });
+    if (me.admin || r.mods.has(ws.key)) return send(ws, { t: 'rm_ok', msg: '⭐ أنت عضو مميز من قبل' });
+    if (vipReqs().some(q => q.k === ws.key)) return send(ws, { t: 'rm_ok', msg: '⏳ طلبك موجود عند المشرفين، انتظر الرد' });
+    const tm = rmTimeOf(me); if (tm.total < VIP_TOTAL_H * 3600 || tm.today < VIP_DAY_H * 3600) return send(ws, { t: 'rm_err', error: '⛔ ما تنطبق الشروط بعد: لازم ' + VIP_TOTAL_H + ' ساعة لعب بالمجموع و ' + VIP_DAY_H + ' ساعات تواجد اليوم' });
+    const q = { id: crypto.randomBytes(5).toString('hex'), k: ws.key, n: me.name, room: r.id, ts: now, tot0: tm.total, day0: tm.today }; vipReqs().push(q); while (vipReqs().length > 100) vipReqs().shift(); save();
+    try { alog('⭐', me.name + ' قدّم طلب عضوية مميزة بغرفة «' + r.name + '»'); } catch (e) {}
+    vipNotifyAdmins({ t: 'rm_vipnew', n: me.name, cnt: vipReqs().length }); return send(ws, { t: 'rm_ok', msg: '📨 انرسل طلبك للمشرفين، راح يوصلك الرد' });
+  } else if (d.t === 'rm_vip_list' || d.t === 'rm_vip_dec') {
+    if (!rmAdm(ws)) return send(ws, { t: 'rm_err', error: 'للمشرفين فقط' });
+    if (d.t === 'rm_vip_dec') { const L = vipReqs(), i = L.findIndex(q => q.id === String(d.id || '')); if (i < 0) return; const q = L[i]; L.splice(i, 1); save();
+      if (d.ok) { const rr = rmRooms.get(q.room) || rmRooms.get('babi'); if (rr && db.users[q.k]) { rr.mods.add(q.k); rmPersist(); rmBc(rr, { t: 'rm_mods', mods: rmModNames(rr), who: q.n, on: true }); } pushTo(q.k, { t: 'rm_ok', msg: '🎉 مبروك! انقبل طلبك وصرت عضو مميز ⭐' }); }
+      else pushTo(q.k, { t: 'rm_ok', msg: '😔 طلب العضوية المميزة ما انقبل هالمرة' });
+      try { alog(d.ok ? '✅' : '❌', rmNm(ws) + (d.ok ? ' قبل' : ' رفض') + ' طلب تميّز ' + q.n); } catch (e) {} }
+    return send(ws, { t: 'rm_vip_list', list: vipReqs().map(vipPub) });
   } else if (d.t === 'rm_ideas_get' || d.t === 'rm_idea_add' || d.t === 'rm_idea_del') {   // لوحة الأفكار: الكل يكتب ويشوف، والحذف للمشرفين بس
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; const ideas = Array.isArray(db.ideas) ? db.ideas : (db.ideas = []), staff = rmStaff(r, ws);
     const pubI = () => ideas.slice(-200).map(x => ({ id: x.id, n: x.n, txt: x.txt, ts: x.ts, c: x.c }));

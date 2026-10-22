@@ -623,6 +623,12 @@
   #rmLogP .m.whs { background: linear-gradient(90deg, rgba(150,110,255,.45), rgba(150,110,255,.12)); border-radius: 8px; padding: 3px 6px; font-style: italic; border: 1px dashed rgba(200,170,255,.6); }
   .rmC.on { background: #ffd166; color: #3a2a00; } .rmC[hidden] { display: none; }
   .rc-exit { background: rgba(170,30,55,.8); } .rc-view { background: rgba(20,95,170,.78); } .rc-soc { background: rgba(85,55,160,.78); } .rc-fun { background: rgba(205,115,20,.82); } .rc-me { background: rgba(25,125,95,.8); }
+  #rmBox.memb.rmTiny #rmDock { top: 50%; }
+  .rc-time { background: linear-gradient(135deg, rgba(20,150,120,.9), rgba(20,90,170,.9)); } .rc-time small { font-weight: 800; } .rc-vip { background: linear-gradient(135deg, rgba(230,160,20,.95), rgba(200,60,140,.9)); position: relative; } .rc-vip .bd { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; border-radius: 8px; background: #ff3355; color: #fff; font: 800 10px system-ui; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid #fff; }
+  #rmVip .rmOvC, #rmTimeP .rmOvC, #rmVipL .rmOvC { width: min(340px, 94%); max-height: 86%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .vipReq { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.1); font-size: 13px; } .vipReq.ok { background: rgba(46,204,113,.22); } .vipReq.no { background: rgba(231,76,60,.22); } .vipReq b { font-size: 18px; } .vipReq span { flex: 1; }
+  .vipBig { text-align: center; font: 800 26px Cairo, system-ui; color: #ffd166; } .vipNote { font-size: 12px; opacity: .85; text-align: center; line-height: 1.6; }
+  .vipRow { padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.1); font-size: 12px; line-height: 1.7; } .vipRow .mr { display: flex; gap: 6px; margin-top: 6px; } .vipRow .mr button { flex: 1; padding: 7px; border-radius: 9px; border: 0; font-weight: 800; cursor: pointer; color: #fff; } .vipRow .y { background: #2ecc71; } .vipRow .n { background: #c0392b; }
   #rmBox.rmTiny .rmC { width: 36px; height: 36px; } #rmBox.rmTiny .rmC small { display: none; } #rmBox.rmTiny .rmC i { font-size: 16px; } #rmBox.rmTiny #rmDock { grid-template-columns: repeat(2, 36px); gap: 6px; top: 34px; }
 
   #rmDance { position: absolute; right: 108px; top: 40px; z-index: 5; pointer-events: auto; background: rgba(20,12,50,.92); border: 1px solid rgba(255,255,255,.4); border-radius: 14px; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: min(230px, 70%); } #rmDance[hidden] { display: none; }
@@ -6065,6 +6071,53 @@ function rmIdeasShow() {
   const x = document.createElement('button'); x.type = 'button'; x.textContent = '✖ سكّر'; x.onclick = () => o.remove();
   row.append(inp, cnt, sb); c.append(h, top, L, row, x); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o); rmIdeasRender();
 }
+/* ---------- عداد ساعات التواجد + لوحة طلب العضوية المميزة ---------- */
+const RM_VIPB = { x: 335, y: 338 };
+const rmHrs = sec => { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h + ' ساعة و ' + m + ' دقيقة'; };
+function rmTimeNow() { const T = RM.myTime; if (!T) return null; const add = (performance.now() - T.t0) / 1000; return { total: T.total + add, today: T.today + add, d8: T.d8 || 0 }; }
+function rmTimeTile() { const e = $('rmTimeS'); if (!e) return; const t = rmTimeNow(); e.textContent = t ? Math.floor(t.total / 3600) + 'س' : '--'; }
+function rmVipBoard(c) {
+  const x = RM_VIPB.x, y = RM_VIPB.y, T = RM.T; c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 30, 5, 0, 0, 7); c.fill();
+  c.fillStyle = '#5a3a8a'; c.fillRect(x - 3, y - 50, 6, 50); const g = c.createLinearGradient(x - 36, y - 96, x + 36, y - 52); g.addColorStop(0, '#ffd23a'); g.addColorStop(0.5, '#ff9ad0'); g.addColorStop(1, '#a070ff'); c.fillStyle = g; c.strokeStyle = '#fff'; c.lineWidth = 2;
+  c.beginPath(); if (c.roundRect) c.roundRect(x - 38, y - 98, 76, 48, 10); else c.rect(x - 38, y - 98, 76, 48); c.fill(); c.stroke(); drawStarBadge(c, x, y - 84, 9 + Math.sin(T / 12));
+  c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#3a1a5a'; c.fillText('العضوية المميزة', x, y - 66); c.font = 'bold 8px Cairo, system-ui'; c.fillText('قدّم طلبك هنا', x, y - 56);
+  if (rmNearVip()) { c.globalAlpha = 0.6 + 0.4 * Math.sin(T / 8); c.font = '13px system-ui'; c.fillText('👆', x + 40, y - 70); } c.restore();
+}
+const rmNearVip = () => Math.hypot(RM.me.x - RM_VIPB.x, (RM.me.y - RM_VIPB.y) * 1.2) < 70;
+const rmVipHit = (x, y) => Math.abs(x - RM_VIPB.x) < 42 && y > RM_VIPB.y - 100 && y < RM_VIPB.y + 6;
+function rmPanel(id, title) { const o0 = $(id); if (o0) o0.remove(); const o = document.createElement('div'); o.className = 'rmOv'; o.id = id; const c = document.createElement('div'); c.className = 'rmOvC'; const h = document.createElement('h4'); h.textContent = title; c.appendChild(h); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o); return c; }
+function rmCloseBtn(c, id) { const x = document.createElement('button'); x.type = 'button'; x.textContent = '✖ سكّر'; x.onclick = () => { const o = $(id); if (o) o.remove(); }; c.appendChild(x); }
+function rmVipOpen() { if (!auth) { showToast('✍️ سجّل حساب حتى تقدّم على العضوية المميزة'); return; } RM.vipWant = 1; rmSend({ t: 'rm_mytime' }); }
+function rmTimeOpen() { if (!auth) { showToast('✍️ سجّل حساب حتى ينحسب وقتك'); return; } RM.timeWant = 1; rmSend({ t: 'rm_mytime' }); }
+function rmVipShow(d) {
+  const c = rmPanel('rmVip', '⭐ طلب العضوية المميزة'), ok1 = d.total >= d.need.total * 3600, ok2 = d.today >= d.need.day * 3600, mod = RM.isMod || RM.myAdm;
+  const n = document.createElement('div'); n.className = 'vipNote'; n.textContent = 'العضو المميز ياخذ نجمة ⭐ جنب اسمه ويكدر يطرد ويحذر ويحظر بالغرفة. شروط الانضمام:'; c.appendChild(n);
+  [[ok1, '🕹️ مجموع ساعات اللعب بالمنتجع ' + d.need.total + ' ساعة أو أكثر', rmHrs(d.total)], [ok2, '📅 تواجد يومي ' + d.need.day + ' ساعات (اليوم)', rmHrs(d.today)]].forEach(q => { const r = document.createElement('div'); r.className = 'vipReq ' + (q[0] ? 'ok' : 'no'); const b = document.createElement('b'); b.textContent = q[0] ? '✅' : '❌'; const sp = document.createElement('span'); sp.textContent = q[1]; const sm = document.createElement('small'); sm.textContent = q[2]; r.append(b, sp, sm); c.appendChild(r); });
+  const n2 = document.createElement('div'); n2.className = 'vipNote'; n2.textContent = '📊 أيام تواجدت بيها ' + d.need.day + ' ساعات خلال آخر أسبوع: ' + (d.d8 || 0) + ' / 7 — والطلب يروح للمشرفين حتى يوافقون عليه'; c.appendChild(n2);
+  const b = document.createElement('button'); b.type = 'button'; if (mod) { b.textContent = '⭐ أنت عضو مميز من قبل'; b.disabled = true; } else if (d.pend) { b.textContent = '⏳ طلبك عند المشرفين'; b.disabled = true; } else if (!(ok1 && ok2)) { b.textContent = '🔒 كمّل الشروط حتى تكدر تقدّم'; b.disabled = true; } else { b.textContent = '📨 قدّم الطلب'; b.onclick = () => { rmSend({ t: 'rm_vip_apply' }); const o = $('rmVip'); if (o) o.remove(); }; }
+  c.appendChild(b); rmCloseBtn(c, 'rmVip');
+}
+function rmTimeShow(d) {
+  const c = rmPanel('rmTimeP', '⏱️ ساعات تواجدك بالمنتجع'); const big = document.createElement('div'); big.className = 'vipBig'; big.id = 'rmTimeBig'; c.appendChild(big);
+  const L = document.createElement('div'); L.className = 'vipNote'; L.id = 'rmTimeL'; c.appendChild(L); const upd = () => { const t = rmTimeNow(); if (!t || !$('rmTimeBig')) return; $('rmTimeBig').textContent = rmHrs(t.total); $('rmTimeL').textContent = '📅 اليوم: ' + rmHrs(t.today) + ' • أيام فيها ' + (d.need ? d.need.day : 8) + ' ساعات بآخر أسبوع: ' + t.d8 + '/7'; }; upd(); clearInterval(RM.tmI); RM.tmI = setInterval(() => { if (!$('rmTimeP')) { clearInterval(RM.tmI); return; } upd(); }, 1000);
+  const n = document.createElement('div'); n.className = 'vipNote'; n.textContent = 'الوقت ينحسب بس وانت داخل المنتجع. إذا وصلت ' + (d.need ? d.need.total : 500) + ' ساعة وتواجدت ' + (d.need ? d.need.day : 8) + ' ساعات باليوم تكدر تقدّم على العضوية المميزة من اللوحة ⭐'; c.appendChild(n); rmCloseBtn(c, 'rmTimeP');
+}
+function rmVipListShow(list) {
+  RM.vipCnt = list.length; rmVipBadge(); const c = rmPanel('rmVipL', '⭐ طلبات العضوية المميزة (' + list.length + ')');
+  if (!list.length) { const e = document.createElement('div'); e.className = 'vipNote'; e.textContent = 'ماكو طلبات هسه'; c.appendChild(e); }
+  list.forEach(q => { const r = document.createElement('div'); r.className = 'vipRow'; const t = document.createElement('div'); t.textContent = '👤 ' + q.n + ' • 🏝️ ' + q.room; const nd = q.need || { total: 500, day: 8 }, dt = new Date(q.ts), ds = dt.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' }) + ' • ' + dt.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+    const t2 = document.createElement('div'); t2.innerHTML = '';
+    [['🕒 وقت الطلب: ' + ds, null], [(q.total >= nd.total * 3600 ? '✅' : '❌') + ' مجموع ساعات اللعب: ' + rmHrs(q.total) + ' (الشرط ' + nd.total + ' ساعة)', null], [(q.day0 >= nd.day * 3600 ? '✅' : '❌') + ' تواجده يوم الطلب: ' + rmHrs(q.day0) + ' (الشرط ' + nd.day + ' ساعات)', null], ['📅 تواجده اليوم: ' + rmHrs(q.today) + ' • أيام فيها ' + nd.day + ' ساعات بآخر أسبوع: ' + q.d8 + '/7', null]].forEach(x => { const l = document.createElement('div'); l.textContent = x[0]; t2.appendChild(l); });
+    const mr = document.createElement('div'); mr.className = 'mr'; const y = document.createElement('button'); y.type = 'button'; y.className = 'y'; y.textContent = '✅ موافقة'; y.onclick = () => rmSend({ t: 'rm_vip_dec', id: q.id, ok: 1 }); const n = document.createElement('button'); n.type = 'button'; n.className = 'n'; n.textContent = '✖ رفض'; n.onclick = () => rmSend({ t: 'rm_vip_dec', id: q.id, ok: 0 }); mr.append(y, n); r.append(t, t2, mr); c.appendChild(r); });
+  rmCloseBtn(c, 'rmVipL');
+}
+function rmVipBadge() { const b = $('rmVipBd'); if (!b) return; b.textContent = RM.vipCnt || ''; b.style.display = RM.vipCnt ? 'flex' : 'none'; }
+(function () {   // زر عداد الساعات للكل + زر الطلبات للمشرفين داخل اللوحة اليمنى
+  const D = $('rmDock'), hd = D && D.querySelector('.admHd'); if (!D) return;
+  const tb = document.createElement('button'); tb.type = 'button'; tb.id = 'rmTimeB'; tb.className = 'rmC rc-time'; tb.innerHTML = '<i>⏱️</i><small id="rmTimeS">--</small>'; tb.onclick = rmTimeOpen; D.insertBefore(tb, hd || null);
+  const vb = document.createElement('button'); vb.type = 'button'; vb.className = 'rmC rc-vip admB'; vb.innerHTML = '<i>⭐</i><small>الطلبات</small><span class="bd" id="rmVipBd" style="display:none"></span>'; vb.onclick = () => rmSend({ t: 'rm_vip_list' }); if (hd) hd.after(vb); else D.appendChild(vb);
+  setInterval(rmTimeTile, 5000);
+})();
 function rmDecor() {
   const L = [];
   [[44, 224, 1.1, 0], [304, 232, 1, 1.4], [520, 224, 1.15, 2.2], [782, 238, 1.05, 3.1], [70, 560, 1.2, 4], [748, 600, 1.1, 5.2], [532, 606, 0.9, 6]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));
@@ -6072,6 +6125,7 @@ function rmDecor() {
   [[150, 296, '#ff4d6d'], [660, 296, '#ffd166']].forEach(u => L.push({ y: u[1], f: c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0 + u[0], u[1], 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 3; c.beginPath(); c.moveTo(u[0], u[1]); c.lineTo(u[0], u[1] - 64); c.stroke(); } }));
   [[1000, 236, 1.05, 7.3], [1170, 230, 1.1, 8.1], [1185, 610, 1.0, 9]].forEach(p => L.push({ y: p[1], f: c => rmPalm(c, p[0], p[1], p[2], p[3]) }));   // نخل الساحل الجديد
   L.push({ y: RM_IDB.y, f: c => rmIdeaBoard(c) });   // لوحة الأفكار
+  L.push({ y: RM_VIPB.y, f: c => rmVipBoard(c) });   // لوحة العضوية المميزة
   L.push({ y: 262, f: c => {   // لافتة «منطقة الألعاب»
     const x = 1012, y = 262; c.save(); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x, y, 30, 5, 0, 0, 7); c.fill(); c.fillStyle = '#7a4a22'; c.fillRect(x - 24, y - 34, 4, 34); c.fillRect(x + 20, y - 34, 4, 34);
     c.fillStyle = '#c8873e'; c.strokeStyle = '#5a3418'; c.lineWidth = 2; c.beginPath(); if (c.roundRect) c.roundRect(x - 52, y - 58, 104, 28, 8); else c.rect(x - 52, y - 58, 104, 28); c.fill(); c.stroke();
@@ -7014,12 +7068,12 @@ var rmPrKey = '';
 function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
-  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '');
+  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '');
   if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (RM.holds[rmMe()]) mk('✋ فلت الإيد', () => rmSend({ t: 'rm_hold', on: 0 }));
   if (m.sit || (m.goal && m.jump)) { if (m.sit) { mk('🧍 قيام', () => rmStand()); if (m.seat && m.seat.seat && m.seat.seat.kind === 'stool') mk('🛎️ اطلب من جربوع', rmOrderMenu); } return; }   // كراسي البار الحمر: تطلب وجربوع يجيبه لمكانك
-  if (!near) { if (m.jump || m.goal) return; if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart);  return; }
+  if (!near) { if (m.jump || m.goal) return; if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart);  return; }
   if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
@@ -7031,7 +7085,7 @@ function rmOnMsg(d) {
     RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
     (d.members || []).forEach(x => { if (x.n === rmMe()) return; RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; } RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    RM.holds = {}; RM.holdLead = {}; RM.pair = null; setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
+    RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; RM.vipCnt = d.vipCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
   } else if (T === 'rm_join') { if (d.m.n === rmMe()) return; if (!d.m.hid) rmJoinBanner(d.m.n); if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; if (RM.pair && RM.pair.with === d.n) rmPairEnd(); rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
@@ -7047,6 +7101,9 @@ function rmOnMsg(d) {
   else if (T === 'rm_d2') rmD2Start(d.a, d.b);
   else if (T === 'rm_hold') rmHoldMsg(d);
   else if (T === 'rm_hinv') rmHoldInvite(d.from);
+  else if (T === 'rm_mytime') { RM.myTime = { total: d.total || 0, today: d.today || 0, d8: d.d8 || 0, t0: performance.now() }; rmTimeTile(); if (RM.vipWant) { RM.vipWant = 0; rmVipShow(d); } if (RM.timeWant) { RM.timeWant = 0; rmTimeShow(d); } }
+  else if (T === 'rm_vip_list') rmVipListShow(d.list || []);
+  else if (T === 'rm_vipnew') { RM.vipCnt = d.cnt || 0; rmVipBadge(); showToast('⭐ طلب عضوية مميزة جديد من ' + d.n); }
   else if (T === 'rm_ideas') { if (d.open) rmIdeasShow(); rmIdeasRender(d.list, d.canDel); }
   else if (T === 'rm_stats') { RM.stats = d.st; rmStatsRender(); }
   else if (T === 'rm_whisper') { RM.log.push({ n: d.from, txt: d.txt, whs: d.to === rmMe() ? 1 : 2, to: d.to, ts: Date.now() }); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); if (d.to === rmMe()) { showToast('🤫 همسة من ' + d.from + ': ' + d.txt.slice(0, 60)); try { if (!RM.ambMute) { blip('sine', 880, 1175, 0.12, 0.06); blip('sine', 1175, 1568, 0.16, 0.05, 0.1); } } catch (e) {} } }
@@ -7286,7 +7343,7 @@ function rmSetFull(on, auto, soft) {
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); rmTapMark(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
