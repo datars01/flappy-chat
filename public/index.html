@@ -6568,7 +6568,7 @@ function rmCupDraw(c, o) {
   c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.3; c.lineCap = 'round'; if (d.k === 'tea' || d.k === 'coffee') for (let i = 0; i < 3; i++) { const ph = ((T / 50 + i / 3) % 1); c.globalAlpha = (1 - ph) * .8; c.beginPath(); c.moveTo((i - 1) * 2.4 + Math.sin(T / 9 + i) * 1.4, -9 - ph * 12); c.quadraticCurveTo((i - 1) * 2.4 + 3 + Math.sin(T / 7 + i) * 2, -13 - ph * 12, (i - 1) * 2.4, -17 - ph * 12); c.stroke(); } c.restore();
 }
 function rmNearNpc() { const n = RM_NPC, m = RM.me; return Math.hypot(m.x - n.x, (m.y - n.y) * 1.2) < 80; }
-function rmOrder(k) { const D = RM_DRINKS[k]; if (!D) return; rmDrinkSet(RM.me, k); rmSend({ t: 'rm_drink', k }); rmNpcSay('تفضل ' + D[1] + 'ك ' + D[0] + ' بالهناء والعافية!', 230); try { if (!RM.ambMute) { blip('sine', 500, 900, 0.14, 0.05); blip('sine', 700, 1100, 0.16, 0.05, 0.14); } } catch (e) {} rmPrompt(true); }
+function rmOrder(k) { const D = RM_DRINKS[k]; if (!D) return; rmDrinkSet(RM.me, k, 5000, true); rmSend({ t: 'rm_drink', k }); rmNpcSay('تفضل ' + D[1] + 'ك ' + D[0] + ' بالهناء والعافية!', 230); try { if (!RM.ambMute) { blip('sine', 500, 900, 0.14, 0.05); blip('sine', 700, 1100, 0.16, 0.05, 0.14); } } catch (e) {} rmPrompt(true); }
 function rmGiftShow(d) {
   const txt = '🎁 هدية زيارتك اليوم: +' + d.coins + ' عملة' + (d.streak > 1 ? ' (' + d.streak + ' أيام متتالية 🔥)' : '') + (d.away > 1 ? ' — اشتقنا لك!' : ''); setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt, by: 'جربوع' }); rmNpcSay('أهلاً بعودتك ' + rmMe() + '! جبتلك هدية ' + d.coins + ' عملة 🎁', 300); try { loadMe(); } catch (e) {} }, 1200);
 }
@@ -6774,7 +6774,7 @@ function rmOnMsg(d) {
   else if (T === 'rm_wx') { rmWxSync(d); if (d.mode === 'fw') rmFwStart(30);  showToast(({ rain: '🌧️ المشرف استدعى المطر', day: '☀️ المشرف جعل الوقت نهار', night: '🌙 المشرف جعل الوقت ليل', fw: '🎆 المشرف أطلق ألعاب نارية', snow: '❄️ المشرف استدعى الثلج', fast: '⏩ المشرف سرّع الوقت', slow: '⏹ توقف التسريع', reset: '↩️ رجع الوقت للوضع الافتراضي' })[d.mode] || ''); }
   else if (T === 'rm_castles') rmCastleSet(d.list);
   else if (T === 'rm_treat') { const n = RM_NPC; n.q = n.q || []; if (n.q.length < 4) n.q.push({ from: d.from, to: d.to, k: d.k }); }
-  else if (T === 'rm_drink') { if (d.n !== rmMe()) { const o = RM.others[d.n]; if (o) rmDrinkSet(o, d.k); } }
+  else if (T === 'rm_drink') { if (d.n !== rmMe()) { const o = RM.others[d.n]; if (o) rmDrinkSet(o, d.k, 5000, true); } }
   else if (T === 'rm_gift') rmGiftShow(d);
   else if (T === 'rm_react') rmReactAdd(d.n, d.e);
   else if (T === 'rm_hug') { rmHugFx(d.from, d.to, d.k); if (d.to === rmMe()) showToast(({ hug: '🤗 ' + d.from + ' عانقك', shake: '🤝 ' + d.from + ' صافحك', heart: '💞 ' + d.from + ' أرسل لك قلب', clap: '👏 ' + d.from + ' صفّق لك' })[d.k] || ''); }
