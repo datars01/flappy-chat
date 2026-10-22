@@ -1607,7 +1607,7 @@ function rmOnMsg(ws, d) {
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, vipCnt: rmAdm(ws) ? vipReqs().length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1743,7 +1743,7 @@ function rmOnMsg(ws, d) {
   else if (d.t === 'rm_kick' || d.t === 'rm_mute' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmCanMod(r, ws.key)) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة أو المميزين يكدرون يسوون هذا' });
     const isOwn = rmIsOwner(r, ws.key); if ((d.t === 'rm_unban' || d.t === 'rm_mod' || d.t === 'rm_unmod') && !isOwn) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة' });
-    if (!isOwn && d.t !== 'rm_warn') return send(ws, { t: 'rm_err', error: '⭐ العضو المميز يكدر يدز رسالة تحذير بس' });   // صلاحية المميز: تحذير فقط
+    if (!isOwn && d.t !== 'rm_warn' && d.t !== 'rm_mute') return send(ws, { t: 'rm_err', error: '⭐ العضو المميز يكدر يحذّر أو يكتم بس' });   // صلاحية المميز: تحذير وكتم (5-20 دقيقة)
     const tname = String(d.n || '');
     const tws = [...r.mem].find(w => rmNm(w) === tname);
     let k = tws ? (tws.guest ? 'ip:' + tws.ip : tws.key) : (d.t === 'rm_unban' ? ([...(r.banNm || [])].find(e => e[1] === tname) || [])[0] || keyOfName(tname) : keyOfName(tname));
@@ -1755,13 +1755,13 @@ function rmOnMsg(ws, d) {
       if (!tws || tws.guest || !db.users[k]) return send(ws, { t: 'rm_err', error: 'الرتبة للأعضاء المسجلين اللي داخل الغرفة بس' });
       if (d.t === 'rm_mod') r.mods.add(k); else r.mods.delete(k); rmPersist();
       rmBc(r, { t: 'rm_mods', mods: rmModNames(r), who: tn, on: d.t === 'rm_mod' });
-      return send(ws, { t: 'rm_ok', msg: d.t === 'rm_mod' ? '⭐ أعطيت ' + tn + ' رتبة مميز (يكدر يحذّر بس)' : 'شلت رتبة مميز من ' + tn });
+      return send(ws, { t: 'rm_ok', msg: d.t === 'rm_mod' ? '⭐ أعطيت ' + tn + ' رتبة مميز (يحذّر ويكتم)' : 'شلت رتبة مميز من ' + tn });
     }
     if (r.mods.has(k) && !isOwn) return send(ws, { t: 'rm_err', error: 'ما تكدر تتعامل مع عضو مميز' });
     if (d.t === 'rm_mute') {
-      if (!tws) return send(ws, { t: 'rm_err', error: 'الشخص مو موجود' }); const mn = [0, 1, 5, 15, 60].includes(Number(d.min)) ? Number(d.min) : 5; r.mutes = r.mutes || new Map();
-      if (!mn) { r.mutes.delete(rmMuteKey(tws)); send(tws, { t: 'rm_ok', msg: '🔊 انفك الكتم عنك' }); rmSlog(r, me.name, 'فكّ الكتم عن ' + tn); return send(ws, { t: 'rm_ok', msg: '🔊 فكيت الكتم عن ' + tn }); }
-      r.mutes.set(rmMuteKey(tws), now + mn * 60000); send(tws, { t: 'rm_err', error: '🔇 كتمك ' + me.name + ' لمدة ' + mn + ' دقيقة' }); rmSlog(r, me.name, 'كتم ' + tn + ' ' + mn + ' د'); return send(ws, { t: 'rm_ok', msg: '🔇 كتمت ' + tn + ' ' + mn + ' دقيقة' });
+      if (!tws) return send(ws, { t: 'rm_err', error: 'الشخص مو موجود' }); const okM = isOwn ? [0, 1, 5, 10, 15, 20, 60] : [0, 5, 10, 15, 20]; if (!okM.includes(Number(d.min))) return send(ws, { t: 'rm_err', error: 'مدة الكتم من 5 إلى 20 دقيقة' }); const mn = Number(d.min); r.mutes = r.mutes || new Map();
+      if (!mn) { r.mutes.delete(rmMuteKey(tws)); send(tws, { t: 'rm_muted', until: 0 }); send(tws, { t: 'rm_ok', msg: '🔊 انفك الكتم عنك' }); rmSlog(r, me.name, 'فكّ الكتم عن ' + tn); return send(ws, { t: 'rm_ok', msg: '🔊 فكيت الكتم عن ' + tn }); }
+      r.mutes.set(rmMuteKey(tws), now + mn * 60000); send(tws, { t: 'rm_muted', until: now + mn * 60000, by: me.name, min: mn }); send(tws, { t: 'rm_err', error: '🔇 كتمك ' + me.name + ' لمدة ' + mn + ' دقيقة' }); rmSlog(r, me.name, 'كتم ' + tn + ' ' + mn + ' د'); return send(ws, { t: 'rm_ok', msg: '🔇 كتمت ' + tn + ' ' + mn + ' دقيقة' });
     }
     const banList = () => [...r.bans].map(x => rmBanNm(r, x));
     if (d.t === 'rm_warn') {
