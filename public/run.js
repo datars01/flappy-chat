@@ -38,6 +38,10 @@
   try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) S = Object.assign(S, o); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
   const isAdm = () => { try { return !!(typeof auth !== 'undefined' && auth && (auth.admin || auth.name === 'بابي' || auth.name === 'بابيتو')); } catch (e) { return false; } };
+  /* المشرفين (بابي وبابيتو): عملات لانهائية ♾️ */
+  const CN = () => isAdm() ? Infinity : S.coins;
+  const CT = () => isAdm() ? '♾️' : String(S.coins);
+  const spend = c => { if (!isAdm()) S.coins -= c; };
   const ownC = i => isAdm() || CH[i].p === 0 || S.own.c.includes(i);
   const ownH = i => isAdm() || HATS[i].p === 0 || S.own.h.includes(i);
 
@@ -300,8 +304,8 @@
   }
   const REV = () => 60 + R.revived * 60;
   function revive() {
-    const c = REV(); if (S.coins < c) { showToastR('😅 تحتاج ' + c + ' 🪙'); return; }
-    S.coins -= c; save(); R.revived++; R.ph = 'play'; R.dead = 0; R.killer = null; R.inv = 2.5; R.y = Math.max(R.y, 0); R.vy = 0; R.slide = 0; R.stT = 0; R.shake = 0;
+    const c = REV(); if (CN() < c) { showToastR('😅 تحتاج ' + c + ' 🪙'); return; }
+    spend(c); save(); R.revived++; R.ph = 'play'; R.dead = 0; R.killer = null; R.inv = 2.5; R.y = Math.max(R.y, 0); R.vy = 0; R.slide = 0; R.stT = 0; R.shake = 0;
     R.obs = R.obs.filter(o => o.z > 18); R.busy = [0, 0, 0]; R.x = LX[R.lane]; R.plane = R.lane;
     hideOv(); sfx('revive'); showToastR('💖 رجعت للحياة! عندك حماية ثانيتين');
   }
@@ -539,7 +543,7 @@
     setTimeout(() => requestAnimationFrame(animPreviews), on ? 30 : 400);
   }
   function renderPick() {
-    const G = $r('runGrid'); G.innerHTML = ''; $r('runBank').textContent = '🪙 ' + S.coins;
+    const G = $r('runGrid'); G.innerHTML = ''; $r('runBank').textContent = '🪙 ' + CT();
     document.querySelectorAll('#runTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === pickTab));
     const list = pickTab === 'c' ? CH : pickTab === 'h' ? HATS : COLS;
     list.forEach((it, i) => {
@@ -550,7 +554,7 @@
       b.appendChild(mk('b', '', pickTab === 'c' ? it.n : pickTab === 'h' ? it.n : '🎨'));
       if (!own) b.appendChild(mk('small', 'pr', '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
       b.onclick = () => {
-        if (!own) { if (S.coins < it.p) { sfx('click'); showToastR('😅 ينقصك ' + (it.p - S.coins) + ' 🪙 — اركض واجمع أكثر!'); return; } if (!confirm('تشتري «' + it.n + '» بـ ' + it.p + ' عملة ركض؟')) return; S.coins -= it.p; (pickTab === 'c' ? S.own.c : S.own.h).push(i); sfx('buy'); showToastR('🎉 صار عندك «' + it.n + '»!'); }
+        if (!own) { if (CN() < it.p) { sfx('click'); showToastR('😅 ينقصك ' + (it.p - S.coins) + ' 🪙 — اركض واجمع أكثر!'); return; } if (!confirm('تشتري «' + it.n + '» بـ ' + it.p + ' عملة ركض؟')) return; spend(it.p); (pickTab === 'c' ? S.own.c : S.own.h).push(i); sfx('buy'); showToastR('🎉 صار عندك «' + it.n + '»!'); }
         else sfx('click');
         if (pickTab === 'c') S.sel.c = i; else if (pickTab === 'h') S.sel.h = i; else S.sel.col = i; save(); renderPick(); menuInfo();
       };
@@ -558,11 +562,11 @@
     });
     $r('runPickName').textContent = CH[S.sel.c].n + (S.sel.h ? ' ' + HATS[S.sel.h].e : '');
   }
-  function menuInfo() { const e = $r('runMenuInfo'); if (e) e.innerHTML = '🏆 أعلى نتيجة: <b>' + S.best.toLocaleString('en') + '</b> &nbsp;•&nbsp; 🪙 عملات الركض: <b>' + S.coins + '</b>'; const n = $r('runMenuName'); if (n) n.textContent = CH[S.sel.c].n; }
+  function menuInfo() { const e = $r('runMenuInfo'); if (e) e.innerHTML = '🏆 أعلى نتيجة: <b>' + S.best.toLocaleString('en') + '</b> &nbsp;•&nbsp; 🪙 عملات الركض: <b>' + CT() + '</b>'; const n = $r('runMenuName'); if (n) n.textContent = CH[S.sel.c].n; }
   function showOver() {
     const O = $r('runOver'); O.classList.add('on'); R.ph = 'over';
     $r('runOvB').innerHTML = '<div class="ro1">' + (R.newBest ? '🎉 رقم قياسي جديد!' : '👻 الشبح لزمك!') + '</div><div class="ro2">' + R.score.toLocaleString('en') + '</div><div class="ro3"><span>📏 ' + Math.floor(R.dist) + ' متر</span><span>🪙 +' + R.coins + '</span><span>🏆 ' + S.best.toLocaleString('en') + '</span></div>';
-    const rv = $r('runRev'), c = REV(); if (rv) { rv.hidden = R.revived >= 3; rv.innerHTML = '💖 كمّل من وين وكفت <small>' + c + ' 🪙 (عندك ' + S.coins + ')</small>'; rv.classList.toggle('no', S.coins < c); }
+    const rv = $r('runRev'), c = REV(); if (rv) { rv.hidden = R.revived >= 3; rv.innerHTML = '💖 كمّل من وين وكفت <small>' + c + ' 🪙 (عندك ' + CT() + ')</small>'; rv.classList.toggle('no', CN() < c); }
   }
   function build() {
     const B = $r('runBody'); if (!B || B.dataset.ok) return; B.dataset.ok = '1';
