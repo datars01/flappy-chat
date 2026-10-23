@@ -973,10 +973,23 @@
   .runIt.on { border-color: #2ee48d; box-shadow: 0 0 0 3px rgba(46,228,141,.45); background: linear-gradient(180deg, #fff, #d8ffe9); } .runIt.on .ok { color: #0e7a48; }
   .runIt.lock canvas { filter: grayscale(.7) brightness(.8); } .runIt .pr { background: #1a2448; color: #ffd23a; border-radius: 8px; padding: 0 6px; }
   #runOvB .ro1 { font-size: 26px; font-weight: 900; } #runOvB .ro2 { font-size: 54px; font-weight: 900; color: #ffd23a; text-shadow: 0 4px 0 #b8520c; } #runOvB .ro3 { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; } #runOvB .ro3 span { background: rgba(255,255,255,.14); padding: 6px 10px; border-radius: 12px; font-weight: 800; }
-  .tileLudo { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; border: 2px solid rgba(255,255,255,.55); background: linear-gradient(135deg, #ff8a2a, #e53b6a 55%, #7a3bff); color: #fff; text-align: right; overflow: hidden; }
-  .tileLudo .ldEm { font-size: 40px; animation: ldBob 1.8s ease-in-out infinite; } @keyframes ldBob { 50% { transform: translateY(-5px) rotate(10deg); } }
-  .tileLudo .ldTx { flex: 1; display: flex; flex-direction: column; gap: 2px; } .tileLudo .ldTx small { font-size: 12px; opacity: .92; } .tileLudo .ldGo { font-weight: 800; background: rgba(0,0,0,.28); padding: 7px 12px; border-radius: 999px; font-size: 13px; }
-  .tileLudo .ldNew { position: absolute; top: 5px; left: 8px; display: flex; gap: 4px; } .tileLudo .ldNew i { font-style: normal; font-size: 10px; background: #ffd23a; color: #4a2a00; border-radius: 999px; padding: 2px 7px; font-weight: 800; } .tileLudo .ldNew i.b { background: #fff; color: #7a1f4a; }
+  /* ===== بطاقة لودو بالقائمة الرئيسية ===== */
+  .gqRow > .tileLudo { flex: 1; min-width: 0; } .gqRow > .gQ:has(+ .tileLudo) { margin: 4px 0 8px; }
+  .tile.tileLudo { grid-column: 1 / -1; width: 100%; display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 36px 14px 26px; min-height: 100px; margin: 4px 0 8px; border-radius: 20px; border: 2px solid #ffd27a; color: #fff; text-align: right; position: relative; overflow: hidden; cursor: pointer;
+    background: radial-gradient(circle at 12% 25%, rgba(255,255,255,.3) 0 2px, transparent 3px), radial-gradient(circle at 78% 65%, rgba(255,255,255,.22) 0 1.5px, transparent 2.5px), radial-gradient(circle at 88% 18%, rgba(255,210,90,.38), transparent 46%), radial-gradient(circle at 8% 95%, rgba(255,70,140,.42), transparent 52%), linear-gradient(135deg, #1a1050 0%, #4a1a8a 50%, #c2307a 100%);
+    box-shadow: 0 6px 22px rgba(194,48,122,.5); animation: ldGlow 2.4s ease-in-out infinite; }
+  @keyframes ldGlow { 50% { box-shadow: 0 6px 30px rgba(255,170,60,.8), 0 0 0 2px rgba(255,210,122,.45); } }
+  .tileLudo::after { content: ''; position: absolute; top: 0; bottom: 0; width: 56px; left: -90px; background: linear-gradient(100deg, transparent, rgba(255,255,255,.3), transparent); transform: skewX(-18deg); animation: ldShine 3.2s ease-in-out infinite; pointer-events: none; }
+  @keyframes ldShine { 0% { left: -90px; } 60%, 100% { left: 115%; } }
+  .tileLudo .ldEm { font-size: 40px; z-index: 2; margin-bottom: 8px; filter: drop-shadow(0 4px 4px rgba(0,0,0,.4)); animation: ldTumble 2.4s ease-in-out infinite; }
+  @keyframes ldTumble { 0% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-9px) rotate(90deg); } 50% { transform: translateY(0) rotate(180deg); } 75% { transform: translateY(-5px) rotate(270deg); } 100% { transform: translateY(0) rotate(360deg); } }
+  .tileLudo .ldTx { flex: 1; display: flex; flex-direction: column; gap: 2px; z-index: 2; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,.5); } .tileLudo .tl { font-size: 22px; font-weight: 900; } .tileLudo small { font-size: 12px; opacity: .92; }
+  .tileLudo .ldGo { z-index: 2; margin-bottom: 8px; background: #fff; color: #b0285a; font-weight: 900; padding: 8px 14px; border-radius: 12px; font-size: 13px; box-shadow: 0 3px 10px rgba(0,0,0,.28); animation: ldGoP 1.3s ease-in-out infinite; } @keyframes ldGoP { 50% { transform: scale(1.09); } }
+  .tileLudo .ldNew { position: absolute; top: 8px; right: 12px; display: flex; gap: 5px; z-index: 3; white-space: nowrap; } .tileLudo .ldNew i { font-style: normal; font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 20px; box-shadow: 0 3px 10px rgba(0,0,0,.3); background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; animation: nwP 1.4s infinite; } .tileLudo .ldNew i.b { background: rgba(10,40,25,.78); color: #7dffb5; border: 1px solid #3ee08a; animation: none; }
+  .tileLudo .ldDice { position: absolute; z-index: 1; font-size: 22px; opacity: .85; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); animation: ldFloat 3s ease-in-out infinite; } .tileLudo .ldDice.a { left: 16%; top: 14px; animation-delay: -.4s; } .tileLudo .ldDice.b { left: 44%; bottom: 20px; font-size: 18px; animation-delay: -1.3s; } .tileLudo .ldDice.c { left: 64%; top: 12px; font-size: 16px; animation-delay: -2.1s; }
+  @keyframes ldFloat { 0%, 100% { transform: translateY(0) rotate(-12deg); } 50% { transform: translateY(-8px) rotate(14deg); } }
+  .tileLudo .ldPawns { position: absolute; left: 14px; bottom: 7px; display: flex; gap: 6px; z-index: 2; } .tileLudo .ldPawns u { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #fff; text-decoration: none; background: var(--pc); box-shadow: 0 2px 5px rgba(0,0,0,.45); animation: ldHop 1.2s ease-in-out infinite; } .tileLudo .ldPawns u:nth-child(1) { --pc: #ef3b3b; } .tileLudo .ldPawns u:nth-child(2) { --pc: #2fbf5b; animation-delay: .15s; } .tileLudo .ldPawns u:nth-child(3) { --pc: #f4c21d; animation-delay: .3s; } .tileLudo .ldPawns u:nth-child(4) { --pc: #2f7bff; animation-delay: .45s; }
+  @keyframes ldHop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
   #pg-sus .pgBody { max-width: none; padding: 0; gap: 0; overflow: hidden; position: relative; background: radial-gradient(ellipse at top, #24184e, #07060f); }
   #susBody[data-v="menu"], #susBody[data-v="lobby"] { overflow-y: auto; padding: 12px; align-items: center; }
   .susMenu, .susLobby { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; color: #fff; padding-bottom: 60px; }
@@ -1211,7 +1224,7 @@
   </div>
   <div class="gqRow"><button class="rsQ gQ" type="button" data-guide="sus" aria-label="دليل مين الخاين؟"><b>؟</b><small>دليل</small></button><button class="tile tileSus" data-pg="sus" type="button"><span class="susNew"><i class="snNew">✨ جديد</i><i class="snOn"><b></b>أونلاين</i></span><span class="susEm">🥔🍆🍅</span><span class="susTx"><span class="tl">مين الخاين؟</span><small>3 إلى 5 لاعبين • اكشفوا الخاين قبل ما يطيّركم 😈</small></span><span class="susGo">العب ◀</span></button></div>
   <div class="gqRow"><button class="rsQ gQ" type="button" data-guide="run" aria-label="دليل ركض ربش"><b>؟</b><small>دليل</small></button><button class="tile tileRun" data-pg="run" type="button"><span class="runNew"><i>✨ جديد</i><i class="b">🎵 بموسيقى</i></span><span class="trCoin" style="left:40%">🪙</span><span class="trCoin" style="left:47%">🪙</span><span class="trCoin" style="left:54%">🪙</span><span class="trRunner">🏃‍♂️</span><span class="trTrain">🚆</span><span class="runEm">🏃‍♂️💨</span><span class="runTx"><span class="tl">ركض ربش</span><small>اقفز، ازحف وتفادى القطارات 🚆</small></span><span class="runGo">اركض ◀</span></button></div>
-  <div class="gqRow"><button class="rsQ gQ" type="button" data-guide="ludo" aria-label="دليل لودو"><b>؟</b><small>دليل</small></button><button class="tile tileLudo" data-pg="ludo" type="button"><span class="ldNew"><i>✨ جديد</i><i class="b">🪑 4 مقاعد</i></span><span class="ldEm">🎲</span><span class="ldTx"><span class="tl">لودو</span><small>طاولة لين 4 لاعبين • تكدرون تلعبون اثنين بس 👌</small></span><span class="ldGo">العب ◀</span></button></div>
+  <div class="gqRow"><button class="rsQ gQ" type="button" data-guide="ludo" aria-label="دليل لودو"><b>؟</b><small>دليل</small></button><button class="tile tileLudo" data-pg="ludo" type="button"><span class="ldNew"><i>✨ جديد</i><i class="b">🌐 أونلاين</i></span><span class="ldDice a">⚀</span><span class="ldDice b">⚃</span><span class="ldDice c">✨</span><span class="ldPawns"><u></u><u></u><u></u><u></u></span><span class="ldEm">🎲</span><span class="ldTx"><span class="tl">لودو</span><small>طاولة لين 4 لاعبين • تكدرون تلعبون اثنين بس 👌</small></span><span class="ldGo">العب ◀</span></button></div>
   <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
@@ -8447,7 +8460,7 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 </script>
 <script src="/sus.js?v=4"></script>
 <script src="/run.js?v=4"></script>
-<script src="/ludo.js?v=2"></script>
+<script src="/ludo.js?v=3"></script>
 <script src="/rate.js?v=2"></script>
 </body>
 </html>
