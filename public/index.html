@@ -640,6 +640,12 @@
   #rmLogP .m.admM::after { content: ''; position: absolute; top: 0; bottom: 0; width: 38%; left: -50%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.6), transparent); transform: skewX(-18deg); animation: admShine 2.6s ease-in-out infinite; pointer-events: none; }
   #rmLogP .m.admM b { color: #fff6c8; }
   @keyframes admBg { to { background-position: -250% 0; } }
+  #rmLogP .m.admM.admM2 { background: linear-gradient(110deg, #d7a6ff, #a453ff, #6a22d6, #d7a6ff); background-size: 250% 100%; animation: admBg 4s linear infinite, admGlow2 1.8s ease-in-out infinite; text-shadow: 0 1px 3px rgba(50,0,110,.85); }
+  #rmLogP .m.admM.admM2 b { color: #f3e2ff; }
+  #rmLogP .m.admM.admM2::before { content: '✨💜'; position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; animation: admTw2 1.4s ease-in-out infinite; pointer-events: none; }
+  #rmLogP .m.admM.admM2 { padding-inline-end: 34px; }
+  @keyframes admGlow2 { 0%, 100% { box-shadow: 0 0 4px rgba(160,80,255,.55); } 50% { box-shadow: 0 0 14px rgba(190,130,255,1); } }
+  @keyframes admTw2 { 0%, 100% { opacity: .55; transform: translateY(-50%) scale(.85); } 50% { opacity: 1; transform: translateY(-50%) scale(1.15); } }
   @keyframes admGlow { 0%, 100% { box-shadow: 0 0 4px rgba(255,80,160,.5); } 50% { box-shadow: 0 0 13px rgba(255,120,190,.95); } }
   @keyframes admShine { 0% { left: -50%; } 55%, 100% { left: 130%; } }
 
@@ -6873,6 +6879,7 @@ function rmBub(c, name, x, y, adm) {
 }
 RM.bubN = 0;
 function rmAdmBub(c, it, b, bx, by, w, h, LH) {
+  if (it.adm === 2) return rmAdmBub2(c, it, b, bx, by, w, h, LH);
   const T = RM.T, x = it.x, pul = 0.5 + 0.5 * Math.sin(T / 8); c.save(); c.globalAlpha = Math.min(1, b.t / 20);
   c.shadowColor = 'rgba(255,60,150,' + (0.55 + 0.35 * pul) + ')'; c.shadowBlur = 8 + 8 * pul;
   const g = c.createLinearGradient(bx, by, bx + w, by + h); g.addColorStop(0, '#ff9ccf'); g.addColorStop(0.5, '#ff5fae'); g.addColorStop(1, '#d6338f');
@@ -6883,6 +6890,24 @@ function rmAdmBub(c, it, b, bx, by, w, h, LH) {
   c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(150,20,90,.85)'; c.fillStyle = '#fff';
   b.lines.forEach((l, k) => { const yy = by + 4 + LH * (k + 1) - 3; c.strokeText(l, bx + w / 2, yy, w - 8); c.fillText(l, bx + w / 2, yy, w - 8); });
   [[bx + 4, by - 1, 0], [bx + w - 4, by + 2, 2], [bx + w / 2, by - 3, 4]].forEach((p, i) => { const a = 0.5 + 0.5 * Math.sin(T / 6 + p[2]); c.globalAlpha = Math.min(1, b.t / 20) * a; c.fillStyle = '#fff'; c.font = '8px sans-serif'; c.fillText(i === 1 ? '💖' : '✦', p[0], p[1] - a * 3); });
+  c.restore();
+}
+// ببل بابيتو: بنفسجي ملكي + لمعة وبريق ✨ يدور حوله + قلب بنفسجي 💜 (مختلف عن ببل بابي الوردي)
+function rmAdmBub2(c, it, b, bx, by, w, h, LH) {
+  const T = RM.T, x = it.x, pul = 0.5 + 0.5 * Math.sin(T / 8), al = Math.min(1, b.t / 20), cy = by + h / 2; c.save(); c.globalAlpha = al;
+  c.shadowColor = 'rgba(170,80,255,' + (0.6 + 0.35 * pul) + ')'; c.shadowBlur = 9 + 9 * pul;
+  const g = c.createLinearGradient(bx, by, bx + w, by + h); g.addColorStop(0, '#e2b8ff'); g.addColorStop(0.45, '#a453ff'); g.addColorStop(1, '#5b17c9');
+  c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 12); else c.rect(bx, by, w, h); c.fill(); c.shadowBlur = 0;
+  c.strokeStyle = 'rgba(255,240,255,.95)'; c.lineWidth = 1.5; c.stroke();
+  const ty = it.y - 16; if (by + h < ty - 2) { c.strokeStyle = 'rgba(235,210,255,.8)'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.stroke(); c.setLineDash([]); } else { c.fillStyle = '#6a22d6'; c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 8); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
+  c.save(); c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 12); else c.rect(bx, by, w, h); c.clip();
+  const sx = bx + ((T * 2) % (w + 70)) - 35; const sg = c.createLinearGradient(sx - 16, 0, sx + 16, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,245,255,.7)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = sg; c.fillRect(sx - 16, by, 32, h);
+  for (let i = 0; i < 5; i++) { const px = bx + ((i * 37 + T * 0.6) % w), py = by + 3 + ((i * 13) % Math.max(4, h - 6)); c.globalAlpha = al * (0.3 + 0.7 * Math.abs(Math.sin(T / 7 + i * 1.3))); c.fillStyle = '#fff'; c.beginPath(); c.arc(px, py, 0.9, 0, 7); c.fill(); }
+  c.restore(); c.globalAlpha = al;
+  c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(60,10,120,.9)'; c.fillStyle = '#fff';
+  b.lines.forEach((l, k) => { const yy = by + 4 + LH * (k + 1) - 3; c.strokeText(l, bx + w / 2, yy, w - 8); c.fillText(l, bx + w / 2, yy, w - 8); });
+  for (let i = 0; i < 5; i++) { const a = T / 18 + i * 1.2566, px = bx + w / 2 + Math.cos(a) * (w / 2 + 5), py = cy + Math.sin(a) * (h / 2 + 5), tw = 0.5 + 0.5 * Math.sin(T / 4 + i * 2); c.globalAlpha = al * tw; c.font = (7 + 4 * tw).toFixed(1) + 'px sans-serif'; c.fillText('✨', px, py + 3); }
+  const hb = Math.abs(Math.sin(T / 10)); c.globalAlpha = al; c.font = (10 + 3 * hb).toFixed(1) + 'px sans-serif'; c.fillText('💜', bx + w - 2, by - 1 - hb * 3); c.globalAlpha = al * (0.6 + 0.4 * pul); c.font = '9px sans-serif'; c.fillText('💎', bx + 3, by + 1);
   c.restore();
 }
 function rmNpcBub(c, it, b, bx, by, w, h, LH) {
@@ -7926,7 +7951,7 @@ $('rmCreate').onclick = async () => {
 };
 $('rmCancel').onclick = () => { $('rmForm').hidden = true; };
 /* ---------- الواجهة: داخل الغرفة ---------- */
-function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.whs) { d.className = 'm whs'; d.textContent = m.whs === 1 ? '🤫 همسة من ' + m.n + ': ' + m.txt : '🤫 همستَ لـ ' + m.to + ': ' + m.txt; L.appendChild(d); return; } if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) { d.classList.add('admM'); d.appendChild(crownIcon(m.adm)); } const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
+function rmRenderLog() { const L = $('rmLogP'); if (!L) return; L.innerHTML = ''; RM.log.forEach(m => { const d = document.createElement('div'); d.className = 'm'; if (m.whs) { d.className = 'm whs'; d.textContent = m.whs === 1 ? '🤫 همسة من ' + m.n + ': ' + m.txt : '🤫 همستَ لـ ' + m.to + ': ' + m.txt; L.appendChild(d); return; } if (m.sys) { d.style.cssText = 'background:linear-gradient(90deg,rgba(255,200,61,.3),rgba(255,200,61,.08));border-radius:8px;padding:3px 6px;font-weight:700'; d.appendChild(crownIcon(m.adm)); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); return; } if (m.adm) { d.classList.add('admM'); if (m.adm === 2) d.classList.add('admM2'); d.appendChild(crownIcon(m.adm)); } const b = document.createElement('b'); b.textContent = m.n + ': '; d.appendChild(b); d.appendChild(document.createTextNode(m.txt)); L.appendChild(d); }); L.scrollTop = L.scrollHeight; L.hidden = !RM.logOpen; }
 RM.typOn = true; try { RM.typOn = localStorage.getItem('rmTyp') !== '0'; } catch (e) {} RM.typ = {}; RM.kiss = [];
 function rmLbl(id, ic, lb, on) { const b = $(id); if (!b) return; b.innerHTML = '<i>' + ic + '</i><small>' + lb + '</small>'; b.classList.toggle('on', !!on); }
 function rmTypLabel() { rmLbl('rmTypBtn', '✍️', RM.typOn ? 'يكتب: شغّال' : 'يكتب: مطفي'); } rmTypLabel();
