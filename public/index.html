@@ -501,6 +501,20 @@
   .rlCard.rlPerm { --rc: #ffc83d; border: 2px solid #ffc83d; background: linear-gradient(135deg, rgba(255,200,61,.3), rgba(255,140,40,.1) 60%, var(--card2)); padding: 14px 12px; }
   .rlCard.rlPerm::before { content: "⭐ الغرفة الرسمية"; position: absolute; top: -9px; inset-inline-start: 14px; font-size: 10.5px; font-weight: 900; padding: 2px 9px; border-radius: 10px; background: #ffc83d; color: #3a2200; }
   html[dir="ltr"] .rlCard.rlPerm::before { content: "⭐ Official room"; }
+  .rlMain { position: relative; overflow: hidden; text-align: center; padding: 26px 16px 16px; border-radius: 24px; color: #fff; border: 3px solid #ffd166; background: linear-gradient(135deg, #ff4f9a, #ff9f1c, #ffd166, #c04dff, #3a7bff); background-size: 300% 300%; animation: rmGrad 7s ease infinite, tIn .45s both; box-shadow: 0 10px 34px rgba(255,140,40,.5), inset 0 0 0 2px rgba(255,255,255,.35); }
+  @keyframes rmGrad { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .rlMain::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,10,50,.1), rgba(20,10,50,.45)); pointer-events: none; }
+  .rlMain > * { position: relative; } .rlMain .rmFx { position: absolute; inset: 0; pointer-events: none; }
+  .rlMain .rmE { position: absolute; bottom: -30px; font-size: 22px; animation: rmFloat linear infinite; opacity: .9; } @keyframes rmFloat { 0% { transform: translateY(0) rotate(0); opacity: 0; } 15% { opacity: .95; } 100% { transform: translateY(-260px) rotate(25deg); opacity: 0; } }
+  .rlMain .rmTag { position: absolute; top: 8px; inset-inline-start: 10px; font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 12px; background: #fff; color: #b0285a; box-shadow: 0 3px 10px rgba(0,0,0,.25); animation: nwP 1.4s infinite; }
+  .rlMain .rmCrown { font-size: 58px; line-height: 1; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); animation: rmCrown 2.2s ease-in-out infinite; } @keyframes rmCrown { 50% { transform: translateY(-6px) rotate(-6deg) scale(1.08); } }
+  .rlMain .rmNm { font-size: 26px; font-weight: 900; margin-top: 4px; text-shadow: 0 3px 10px rgba(0,0,0,.4); }
+  .rlMain .rmSub { display: inline-block; margin-top: 6px; font-size: 15px; font-weight: 900; padding: 5px 14px; border-radius: 16px; background: rgba(20,10,50,.45); border: 1.5px solid rgba(255,255,255,.55); }
+  .rlMain .rmHint { font-size: 12.5px; margin-top: 8px; opacity: .95; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  .rlMain .rmRow2 { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; } .rlMain .rlChip { background: rgba(20,10,50,.5); color: #fff; font-size: 12px; padding: 3px 10px; }
+  .rlMain .rlBar { background: rgba(20,10,50,.45); height: 8px; } .rlMain .rlBar i { background: linear-gradient(90deg, #fff, #ffd166); }
+  .rlMain .rmGoBig { display: block; width: 100%; margin-top: 12px; border: 0; border-radius: 16px; padding: 14px; font-size: 18px; font-weight: 900; color: #b0285a; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.3); animation: rmPulse 1.8s ease-in-out infinite; } @keyframes rmPulse { 50% { transform: scale(1.03); box-shadow: 0 8px 26px rgba(255,255,255,.55); } }
+  .rlMain .rmGoBig:disabled { color: #777; animation: none; }
   .rlEmpty { text-align: center; padding: 22px 12px; border-radius: 18px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 13.5px; line-height: 1.7; } .rlEmpty b { display: block; font-size: 34px; margin-bottom: 4px; }
   .rlInfo { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 14px 0 4px; } .rlInfo span { font-size: 11.5px; padding: 4px 10px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); color: var(--muted); }
   .rmForm { border: 2px solid #c04dff !important; border-style: solid !important; background: linear-gradient(160deg, rgba(192,77,255,.16), var(--card2)); border-radius: 18px !important; }
@@ -991,7 +1005,7 @@
   .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
-<script src="/lang.js?v=5"></script>
+<script src="/lang.js?v=6"></script>
 </head>
 <body>
 <div id="bgFx" aria-hidden="true"></div>
@@ -7725,6 +7739,17 @@ function rmDrawList() {
   const own = r.rooms.filter(x => !x.perm);
   let rooms = r.rooms.filter(x => RM.lf === 'all' || x.perm || (RM.lf === 'open' ? !x.locked : x.locked));
   rooms.forEach((x, k) => {
+    if (x.perm) {   // الغرفة الرئيسية: كارت كبير ومميز
+      const full = x.count >= x.cap, pct = Math.min(100, Math.round((x.count || 0) / (x.cap || 1) * 100));
+      const card = document.createElement('div'); card.className = 'rlMain';
+      let em = ''; ['👑', '✨', '🌴', '⭐', '🎉', '💎', '🏝️', '❤️'].forEach((e, i) => { em += '<span class="rmE" style="left:' + (6 + i * 12) + '%;animation-delay:' + (-i * 0.7) + 's;animation-duration:' + (4 + (i % 3)) + 's">' + e + '</span>'; });
+      card.innerHTML = '<div class="rmFx">' + em + '</div><div class="rmTag">⭐ الغرفة الرسمية</div><div class="rmCrown">👑</div><div class="rmNm" data-notr></div><div class="rmSub">الغرفة الرئيسية المتاحة للجميع</div><div class="rmHint">🏝️ هنا تلتقي بكل الناس • ادخل وسولف ويانا</div><div class="rmRow2"><span class="rlChip" data-notr></span><span class="rlChip" data-notr></span><span class="rlChip">🟢 مفتوحة للضيوف</span></div><div class="rlBar"><i></i></div>';
+      card.querySelector('.rmNm').textContent = '🏝️ ' + x.name;
+      const ch = card.querySelectorAll('.rmRow2 .rlChip'); ch[0].textContent = '👑 ' + x.owner; ch[1].textContent = '👥 ' + (x.count || 0) + '/' + x.cap;
+      card.querySelector('.rlBar i').style.width = Math.max(4, pct) + '%';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rmGoBig'; b.textContent = full ? '⛔ ممتلئة' : '🚀 ادخل الغرفة الرئيسية'; b.disabled = full; b.onclick = () => rmEnter(x.id, ''); card.appendChild(b);
+      L.appendChild(card); return;
+    }
     const full = x.count >= x.cap, mine = x.id === r.mine, h = hv(x.id || x.name), pct = Math.min(100, Math.round((x.count || 0) / (x.cap || 1) * 100));
     const card = document.createElement('div'); card.className = 'rlCard' + (x.perm ? ' rlPerm' : ''); card.style.animationDelay = (k * 50) + 'ms'; if (!x.perm) card.style.setProperty('--rc', RL_C[h % RL_C.length]);
     const av = document.createElement('div'); av.className = 'rlAv'; av.textContent = x.perm ? '👑' : RL_EM[h % RL_EM.length];
