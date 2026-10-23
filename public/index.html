@@ -491,7 +491,8 @@
   .rlTabs button.on { background: linear-gradient(135deg, #1fbf7a, #2ee48d); color: #073b24; box-shadow: 0 3px 10px rgba(46,228,141,.35); }
   #rmMainSlot { margin-bottom: 12px; } #rmMainSlot:empty { display: none; }
   .rlSecH { display: flex; align-items: center; gap: 10px; margin: 14px 0 2px; } .rlSecT { flex: 1; font-weight: 900; font-size: 16px; } .rlSecT small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); }
-  .rlSecH .rlNew { border: 0; border-radius: 14px; padding: 10px 14px; font-weight: 900; font-size: 14px; color: #fff; }
+  .rlNewBig { display: block; width: 100%; margin: 8px 0 4px; border: 0; border-radius: 16px; padding: 13px 14px; font-weight: 900; font-size: 16px; color: #fff; }
+  .rlHeroLow { margin-top: 14px; } #rmList { transition: none; } .rlEmpty { text-align: center; padding: 22px 10px; border-radius: 16px; background: var(--card2); border: 1px dashed var(--line); color: var(--muted); font-weight: 700; }
   #rmList { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
   #rmLobby > *, #rmList > * { flex-shrink: 0; } #rmLobby { overflow: visible; }
   .rlCard { position: relative; display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 18px; background: linear-gradient(135deg, color-mix(in srgb, var(--rc) 22%, var(--card2)), var(--card2) 70%); border: 1px solid color-mix(in srgb, var(--rc) 45%, var(--line)); box-shadow: 0 4px 14px rgba(0,0,0,.18); animation: tIn .4s both; }
@@ -1327,13 +1328,8 @@
 <div class="page" id="pg-rooms"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏝️ المنتجع</span></div><div class="pgBody">
   <div class="card" id="rmLobby">
     <div id="rmMainSlot"></div>
-    <div class="rlHero"><div class="rlWaves"><i></i><i></i><i></i></div><span class="rlSun"></span>
-      <div class="rlTop"><div class="rlLogo">🏝️</div><div class="rlTx"><h2>المنتجع</h2><small>اختار غرفة وادخل الشاطئ ويه الناس</small></div></div>
-      <div class="rlStats"><div class="rlSt"><b id="rmCount">0/15</b><small>🏝️ غرف</small></div><div class="rlSt"><b id="rmOnline">0</b><small>👥 موجودين</small></div><div class="rlSt"><b id="rmOpenN">0</b><small>🌐 مفتوحة</small></div></div>
-      <div class="rlBtns"><button id="rmHelpL" class="rlHelp" type="button">📖 دليل المنتجع</button></div>
-    </div>
-    <div class="rlSecH"><div class="rlSecT">🏖️ غرف الأعضاء<small>غرف سوّاها اللاعبين</small></div><button id="rmNew" class="rlNew" type="button" hidden>➕ غرفة جديدة</button></div>
-    <div class="rlTabs" id="rmTabs"><button type="button" data-f="all" class="on">الكل</button><button type="button" data-f="open">🌐 مفتوحة</button><button type="button" data-f="lock">🔒 بالرمز</button></div>
+    <div class="rlSecH"><div class="rlSecT">🏖️ غرف الأعضاء<small>غرف سوّاها اللاعبين — ادخل وحدة أو سوّي غرفتك</small></div></div>
+    <button id="rmNew" class="rlNew rlNewBig" type="button" hidden>➕ أنشئ غرفة جديدة</button>
     <div id="rmForm" class="rmForm" hidden>
       <div class="rlFH">🏗️ سوّي غرفتك<small>كل عضو يكدر يسوي غرفة وحدة</small></div>
       <input id="rmName" maxlength="24" placeholder="اسم الغرفة (مثال: شاطئ الأصدقاء)" autocomplete="off">
@@ -1341,7 +1337,13 @@
       <div class="rmFB"><button id="rmCreate" type="button">🏝️ أنشئ الغرفة</button><button id="rmCancel" class="ghost" type="button">إلغاء</button></div>
       <div id="rmMsg" class="rmMsg"></div>
     </div>
+    <div class="rlTabs" id="rmTabs"><button type="button" data-f="all" class="on">الكل</button><button type="button" data-f="open">🌐 مفتوحة</button><button type="button" data-f="lock">🔒 بالرمز</button></div>
     <div id="rmList"></div>
+    <div class="rlHero rlHeroLow"><div class="rlWaves"><i></i><i></i><i></i></div><span class="rlSun"></span>
+      <div class="rlTop"><div class="rlLogo">🏝️</div><div class="rlTx"><h2>المنتجع</h2><small>اختار غرفة وادخل الشاطئ ويه الناس</small></div></div>
+      <div class="rlStats"><div class="rlSt"><b id="rmCount">0/15</b><small>🏝️ غرف</small></div><div class="rlSt"><b id="rmOnline">0</b><small>👥 موجودين</small></div><div class="rlSt"><b id="rmOpenN">0</b><small>🌐 مفتوحة</small></div></div>
+      <div class="rlBtns"><button id="rmHelpL" class="rlHelp" type="button">📖 دليل المنتجع</button></div>
+    </div>
     <div class="rlInfo"><span>👥 15 شخص بكل غرفة</span><span>🏝️ لحد 15 غرفة</span><span>⏳ الغرفة الفاضية يوم كامل تنحذف</span><span>🛡️ صاحب الغرفة يطرد ويحظر ويحذّر</span></div>
   </div>
   <div class="card" id="rmRoom" hidden>
@@ -8055,9 +8057,12 @@ function rmEnter(id, code) { if (!auth && id !== 'babi') { showToast('✍️ س�
 
 const RL_EM = ['🏖️', '🌴', '🌊', '🐚', '⛱️', '🌅', '🦀', '🍹', '🐬', '🪸', '🏄', '🌺'], RL_C = ['#3aa0ff', '#2ee48d', '#c04dff', '#ff8a3d', '#ff5a8a', '#18c8c0', '#ffb020', '#7a8cff'];
 RM.lf = 'all';
-document.querySelectorAll('#rmTabs button').forEach(b => b.onclick = () => { RM.lf = b.dataset.f; document.querySelectorAll('#rmTabs button').forEach(x => x.classList.toggle('on', x === b)); rmDrawList(); });
+document.querySelectorAll('#rmTabs button').forEach(b => b.onclick = e => { if (e) e.preventDefault(); try { b.blur(); } catch (er) {} RM.lf = b.dataset.f; document.querySelectorAll('#rmTabs button').forEach(x => x.classList.toggle('on', x === b)); rmDrawList(); });
 function rmDrawList() {
-  const L = $('rmList'), r = RM.lr; if (!L || !r) return; L.innerHTML = ''; const MS = $('rmMainSlot'); if (MS) MS.innerHTML = '';
+  const L = $('rmList'), r = RM.lr; if (!L || !r) return; const SB = document.querySelector('#pg-rooms .pgBody'), sy = SB ? SB.scrollTop : 0, wy = window.scrollY; L.style.minHeight = L.offsetHeight + 'px'; L.innerHTML = ''; const MS = $('rmMainSlot'); if (MS) { MS.style.minHeight = MS.offsetHeight + 'px'; MS.innerHTML = ''; }
+  try { rmDrawList2(L, r, MS); } finally { if (!L.children.length) L.innerHTML = '<div class="rlEmpty">' + (RM.lf === 'lock' ? '🔒 ماكو غرف بالرمز هسه' : RM.lf === 'open' ? '🌐 ماكو غرف مفتوحة هسه' : '🏖️ ماكو غرف أعضاء بعد — سوّي أول غرفة!') + '</div>'; requestAnimationFrame(() => { L.style.minHeight = ''; if (MS) MS.style.minHeight = ''; }); if (SB) SB.scrollTop = sy; if (window.scrollY !== wy) window.scrollTo(0, wy); }
+}
+function rmDrawList2(L, r, MS) {
   const hv = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; };
   const own = r.rooms.filter(x => !x.perm);
   let rooms = r.rooms.filter(x => x.perm).concat(r.rooms.filter(x => !x.perm && (RM.lf === 'all' || (RM.lf === 'open' ? !x.locked : x.locked))));
