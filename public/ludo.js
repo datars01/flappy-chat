@@ -1,4 +1,4 @@
-/* ===================== لعبة «لودو» 🎲 — الواجهة =====================
+/* ===================== لعبة «غوكو» 🎲 — الواجهة =====================
    طاولة 4 مقاعد، تلعبون من لاعبين اثنين لين 4. السيرفر هو اللي يرمي النرد ويتحقق من الحركات. */
 'use strict';
 var LUDOG = { s: null, raf: 0, cv: null, disp: {}, dice: 0, rolling: 0, lastEv: 0, last: null, t: 0, mode: 'page', fx: [], winT: 0, popT: 0 };
@@ -29,7 +29,7 @@ function ludoCell(seat, pos, k) {
   const c = LUDO_LANE[seat][Math.min(5, pos - 51)]; return [c[0] + 0.5, c[1] + 0.5];
 }
 function ludoOpen() {
-  if (!auth) { showToast('✍️ سجّل حساب حتى تلعب لودو'); closePage(); setTimeout(() => openPage('account'), 200); return; }
+  if (!auth) { showToast('✍️ سجّل حساب حتى تلعب غوكو'); closePage(); setTimeout(() => openPage('account'), 200); return; }
   ludoCss(); ludoSend({ t: 'ludo_get' }); ludoRender();
 }
 function ludoClose() { cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; }
@@ -46,6 +46,7 @@ function ludoRmOpen() { LUDOG.mode = 'rm'; LUDOG.s = null; LUDOG.disp = {}; LUDO
 function ludoRmClose() { LUDOG.mode = 'page'; cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; LUDOG.s = null; LUDOG.cv = null; const o = document.getElementById('rmLudo'); if (o) o.hidden = true; const b = document.getElementById('rmLdBody'); if (b) b.innerHTML = ''; }
 function ludoMsg(d) {
   if (d.t === 'ludo_emo') return ludoEmoFloat(d.s, d.e);
+  if (d.t === 'ludo_join') { ludoSfx('turn'); showToast('👋 دخل ' + d.n + ' الطاولة' + (d.host && d.cnt >= 2 ? ' — تكدر تبدي اللعبة هسه ▶️' : '')); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} return; }
   if (d.t === 'ludo_state') { const old = LUDOG.s; LUDOG.s = d.s; ludoOnState(old, d.s); }
   else if (d.t === 'ludo_list') ludoRenderList(d.list);
   else if (d.t === 'ludo_err') showToast('⚠️ ' + d.error);
@@ -53,7 +54,7 @@ function ludoMsg(d) {
 function ludoOnState(old, s) {
   if (s && s.last && s.last.id !== LUDOG.lastEv) {
     LUDOG.lastEv = s.last.id; LUDOG.last = s.last;
-    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 650; LUDOG.dice = s.last.d; ludoSfx('roll'); }
+    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 1000; LUDOG.dice = s.last.d; ludoSfx('roll'); }
     else if (s.last.k === 'sixes') { showToast('🎲 ثلاث ستات ورا بعض، ضاع الدور!'); }
     else if (s.last.k === 'move') { ludoSfx(s.last.cap ? 'cap' : s.last.home ? 'home' : 'move'); try { const q = ludoCell(s.last.s, s.last.pos, s.last.tk); ludoBurst(q[0], q[1], s.last.cap ? 'cap' : s.last.home ? 'home' : 'dust', LUDO_COL[s.last.s].c); if (s.last.cap) LUDOG.shake = performance.now() + 380; } catch (e) {} }
   }
@@ -73,7 +74,7 @@ function ludoRender() {
 }
 function ludoMenuEl() {
   const w = lel('div', 'ludoMenu');
-  const hero = lel('div', 'ludoHero'); hero.append(lel('div', 'ludoHeroEm', '🎲'), lel('h2', '', 'لودو'), lel('p', '', 'طاولة بـ 4 مقاعد. تكدرون تلعبون لاعبين اثنين بس، أو لين 4. اللي يوصّل أحجاره الأربعة للبيت أول يفوز!'));
+  const hero = lel('div', 'ludoHero'); hero.append(lel('div', 'ludoHeroEm', '🎲'), lel('h2', '', 'غوكو'), lel('div', 'ludoHeroDots', '🔴 🟢 🟡 🔵'), lel('p', '', 'طاولة بـ 4 مقاعد. تكدرون تلعبون لاعبين اثنين بس، أو لين 4. اللي يوصّل أحجاره الأربعة للبيت أول يفوز!'));
   const q = lel('button', 'ludoBtn big', '⚡ لعب سريع'); q.onclick = () => { ludoSfx(); ludoSend({ t: 'ludo_quick' }); };
   const cr = lel('button', 'ludoBtn', '➕ طاولة خاصة لأصدقائي'); cr.onclick = () => { ludoSfx(); ludoSend({ t: 'ludo_create' }); };
   const jr = lel('div', 'ludoJoin'); const inp = lel('input'); inp.placeholder = 'رمز الطاولة (4 أرقام)'; inp.maxLength = 4; inp.inputMode = 'numeric';
@@ -100,7 +101,7 @@ function ludoLobbyEl(s) {
   });
   w.appendChild(g);
   const n = s.seats.filter(Boolean).length;
-  if (me && me.host) { const st = lel('button', 'ludoBtn big', n >= 2 ? '▶️ ابدأ اللعبة' : '⏳ لازم لاعبين اثنين على الأقل'); st.disabled = n < 2; st.onclick = () => ludoSend({ t: 'ludo_start' }); w.appendChild(st); }
+  if (me && me.host) { if (n >= 2) w.appendChild(lel('div', 'ludoReady', '🎉 دخل لاعب! اضغط «ابدأ» وخلّوا اللعب يبدي')); const st = lel('button', 'ludoBtn big' + (n >= 2 ? ' pulse' : ''), n >= 2 ? '▶️ ابدأ اللعبة' : '⏳ لازم لاعبين اثنين على الأقل'); st.disabled = n < 2; st.onclick = () => ludoSend({ t: 'ludo_start' }); w.appendChild(st); }
   else w.appendChild(lel('div', 'ludoWait', '⏳ بانتظار صاحب الطاولة يبدي اللعبة'));
   w.appendChild(lel('small', 'ludoNote', 'ما يلزم تكتمل المقاعد الأربعة، تكدرون تلعبون اثنين بس 👌'));
   if (ludoRm()) w.appendChild(lel('small', 'ludoNote', 'كل كرسي حول الطاولة = لون. للطلوع اضغط «قيام» فوق 🪑'));
@@ -112,7 +113,7 @@ function ludoGameEl() {
   const top = lel('div', 'ludoTop'); top.id = 'ludoTop';
   const cv = lel('canvas', 'ludoCv'); cv.id = 'ludoCv'; LUDOG.cv = cv; LUDOG.disp = {};
   cv.addEventListener('pointerdown', ludoClick);
-  const bar = lel('div', 'ludoBar'); const dice = lel('button', 'ludoDice', '🎲'); dice.id = 'ludoDice'; dice.onclick = () => { const s = LUDOG.s; if (s && s.ph === 'play' && s.turn === s.my && !s.rolled) ludoSend({ t: 'ludo_roll' }); };
+  const bar = lel('div', 'ludoBar'); const dice = ludoDiceEl(); dice.onclick = () => { const s = LUDOG.s; if (s && s.ph === 'play' && s.turn === s.my && !s.rolled) ludoSend({ t: 'ludo_roll' }); };
   const msg = lel('div', 'ludoMsg'); msg.id = 'ludoMsg'; bar.append(dice, msg);
   const lv = lel('button', 'ludoBtn ghost small', '🚪 طلوع'); lv.onclick = () => { if (confirm('تطلع من اللعبة؟')) ludoSend({ t: 'ludo_leave' }); };
   w.append(top, cv, bar, ludoEmoBar()); if (!ludoRm()) w.appendChild(lv); return w;
@@ -135,7 +136,7 @@ function ludoLoop() {
 function ludoGeom() {
   const cv = LUDOG.cv; const sz = Math.min(cv.parentNode.clientWidth, window.innerHeight * 0.62, 520) || 320; const dpr = window.devicePixelRatio || 1;
   if (cv.width !== Math.round(sz * dpr)) { cv.width = Math.round(sz * dpr); cv.height = Math.round(sz * dpr); cv.style.width = sz + 'px'; cv.style.height = sz + 'px'; }
-  return { sz, dpr, u: sz / 15 };
+  LUDOG.sz = sz; return { sz, dpr, u: sz / 15 };
 }
 function ludoTokenSpots(s) {   /* مواقع الحجار الحالية (هدف) + تجميع الأحجار اللي بنفس الخانة */
   const out = [], seen = {};
@@ -155,6 +156,54 @@ function ludoFx(c, u) {
     else { c.fillStyle = p.c; if (p.rect) { c.save(); c.translate(p.x * u, p.y * u); c.rotate(p.rot); c.fillRect(-p.r * u, -p.r * u * 0.5, p.r * u * 2, p.r * u); c.restore(); } else { c.beginPath(); c.arc(p.x * u, p.y * u, p.r * u, 0, 7); c.fill(); } } });
   c.globalAlpha = 1; LUDOG.fx = keep.slice(-260);
 }
+/* ---------- شخصية حيّة بدل الخرزة: جسم + راس + عيون ترمش وتتابع + ابتسامة + إكسسوار لكل لون ---------- */
+function ludoPawn(c, x, y, r, seat, t, o) {
+  const C = LUDO_COL[seat], lw = Math.max(1.4, r * 0.09), idle = Math.sin(t / 420 + o.idx * 1.3), sq = 1 + (o.jump ? Math.sin(t / 90 + o.idx) * 0.07 : idle * 0.03);
+  c.save(); c.translate(x, y + r * 0.5); c.scale(1 / sq, sq); c.translate(0, -r * 0.5);
+  c.lineJoin = 'round'; c.lineCap = 'round';
+  c.fillStyle = C.d; [-1, 1].forEach(sg => { c.beginPath(); c.ellipse(sg * r * 0.34, r * 0.8, r * 0.28, r * 0.17, 0, 0, 7); c.fill(); });   // أرجل
+  const wv = o.wave ? Math.sin(t / 110) * 0.55 : 0;   // أيدي (اليمين تلوّح)
+  c.fillStyle = C.c; c.strokeStyle = C.d; c.lineWidth = lw;
+  [-1, 1].forEach(sg => { c.save(); c.translate(sg * r * 0.8, -r * 0.05); c.rotate(o.wave && sg > 0 ? -2.3 + wv : -sg * 0.45); c.beginPath(); c.ellipse(0, r * 0.28, r * 0.17, r * 0.34, 0, 0, 7); c.fill(); c.stroke(); c.restore(); });
+  const g = c.createLinearGradient(-r, -r * 0.3, r, r * 0.8); g.addColorStop(0, C.l); g.addColorStop(0.38, C.c); g.addColorStop(1, C.d);   // الجسم
+  c.fillStyle = g; c.strokeStyle = '#fff'; c.lineWidth = lw * 1.3; c.beginPath(); c.moveTo(-r * 0.78, r * 0.74); c.bezierCurveTo(-r * 1.0, r * 0.05, -r * 0.55, -r * 0.4, 0, -r * 0.4); c.bezierCurveTo(r * 0.55, -r * 0.4, r * 1.0, r * 0.05, r * 0.78, r * 0.74); c.quadraticCurveTo(0, r * 0.98, -r * 0.78, r * 0.74); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.38)'; c.beginPath(); c.ellipse(-r * 0.32, r * 0.12, r * 0.13, r * 0.28, 0.3, 0, 7); c.fill();
+  const hy = -r * 0.62, hr = r * 0.72;   // الراس
+  const hg = c.createRadialGradient(-hr * 0.3, hy - hr * 0.35, hr * 0.1, 0, hy, hr); hg.addColorStop(0, '#fffaf2'); hg.addColorStop(1, '#ffd6b0');
+  c.fillStyle = hg; c.strokeStyle = '#fff'; c.lineWidth = lw * 1.3; c.beginPath(); c.arc(0, hy, hr, 0, 7); c.fill(); c.stroke();
+  /* إكسسوار حسب اللون */
+  c.lineWidth = lw; c.strokeStyle = C.d;
+  if (seat === 0) { c.fillStyle = C.c; c.beginPath(); c.arc(0, hy, hr * 1.01, Math.PI * 1.07, Math.PI * 1.93); c.closePath(); c.fill(); c.stroke(); c.beginPath(); c.ellipse(hr * 0.55, hy - hr * 0.62, hr * 0.6, hr * 0.14, -0.12, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(0, hy - hr * 0.98, hr * 0.12, 0, 7); c.fill(); }   // كاب
+  else if (seat === 1) { const sw = Math.sin(t / 300 + o.idx) * 0.25; c.strokeStyle = '#1a7a3a'; c.lineWidth = lw * 1.2; c.beginPath(); c.moveTo(0, hy - hr * 0.95); c.lineTo(0, hy - hr * 1.3); c.stroke(); c.fillStyle = C.c; c.strokeStyle = C.d; c.lineWidth = lw; [-1, 1].forEach(sg => { c.save(); c.translate(0, hy - hr * 1.3); c.rotate(sg * (0.7 + sw)); c.beginPath(); c.ellipse(sg * hr * 0.26, -hr * 0.1, hr * 0.32, hr * 0.15, 0, 0, 7); c.fill(); c.stroke(); c.restore(); }); }   // برعم ورق
+  else if (seat === 2) { c.fillStyle = '#ffd23a'; c.strokeStyle = '#a97a00'; c.beginPath(); c.moveTo(-hr * 0.6, hy - hr * 0.78); c.lineTo(-hr * 0.62, hy - hr * 1.3); c.lineTo(-hr * 0.3, hy - hr * 1.0); c.lineTo(0, hy - hr * 1.38); c.lineTo(hr * 0.3, hy - hr * 1.0); c.lineTo(hr * 0.62, hy - hr * 1.3); c.lineTo(hr * 0.6, hy - hr * 0.78); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#ff3d6e'; c.beginPath(); c.arc(0, hy - hr * 0.98, hr * 0.1, 0, 7); c.fill(); }   // تاج
+  else { c.strokeStyle = C.d; c.lineWidth = lw; c.beginPath(); c.moveTo(0, hy - hr * 0.97); c.quadraticCurveTo(hr * 0.2, hy - hr * 1.3, hr * 0.12 + Math.sin(t / 260 + o.idx) * hr * 0.14, hy - hr * 1.5); c.stroke(); c.fillStyle = '#7fe7ff'; c.beginPath(); c.arc(hr * 0.12 + Math.sin(t / 260 + o.idx) * hr * 0.14, hy - hr * 1.5, hr * 0.15, 0, 7); c.fill(); c.stroke(); c.fillStyle = C.c; c.beginPath(); c.arc(0, hy, hr * 1.01, Math.PI * 1.12, Math.PI * 1.88); c.closePath(); c.fill(); c.stroke(); }   // عصابة وهوائي
+  /* الوجه */
+  const ey = hy + hr * 0.06, ex = hr * 0.38, er = hr * 0.21, blink = ((t / 1000 + o.idx * 1.7) % 4.2) < 0.13;
+  if (o.sleep) { c.strokeStyle = '#3a2a40'; c.lineWidth = lw; [-1, 1].forEach(sg => { c.beginPath(); c.arc(sg * ex, ey, er * 0.8, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 2; c.font = 'bold ' + (r * 0.55) + 'px system-ui'; c.textAlign = 'center'; const zy = hy - hr * 0.9 - ((t / 60) % 14); c.globalAlpha = 1 - ((t / 60) % 14) / 14; c.strokeText('z', hr * 1.0, zy); c.fillText('z', hr * 1.0, zy); c.globalAlpha = 1; }
+  else if (blink) { c.strokeStyle = '#3a2a40'; c.lineWidth = lw; [-1, 1].forEach(sg => { c.beginPath(); c.moveTo(sg * ex - er * 0.8, ey); c.lineTo(sg * ex + er * 0.8, ey); c.stroke(); }); }
+  else { [-1, 1].forEach(sg => { c.fillStyle = '#fff'; c.strokeStyle = '#3a2a40'; c.lineWidth = lw * 0.8; c.beginPath(); c.ellipse(sg * ex, ey, er, er * 1.15, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#2a1a30'; c.beginPath(); c.arc(sg * ex + o.look[0] * er * 0.38, ey + o.look[1] * er * 0.38, er * 0.62, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(sg * ex + o.look[0] * er * 0.38 - er * 0.2, ey + o.look[1] * er * 0.38 - er * 0.22, er * 0.22, 0, 7); c.fill(); }); }
+  c.fillStyle = 'rgba(255,110,140,.5)'; [-1, 1].forEach(sg => { c.beginPath(); c.ellipse(sg * hr * 0.66, hy + hr * 0.38, hr * 0.17, hr * 0.11, 0, 0, 7); c.fill(); });   // خدود
+  c.strokeStyle = '#6a2a3a'; c.lineWidth = lw;
+  if (o.happy) { c.fillStyle = '#7a1f3a'; c.beginPath(); c.ellipse(0, hy + hr * 0.5, hr * 0.26, hr * 0.2, 0, 0, Math.PI); c.closePath(); c.fill(); c.fillStyle = '#ff7a9a'; c.beginPath(); c.ellipse(0, hy + hr * 0.6, hr * 0.13, hr * 0.07, 0, 0, Math.PI); c.fill(); }
+  else if (o.sleep) { c.beginPath(); c.arc(0, hy + hr * 0.55, hr * 0.07, 0, 7); c.stroke(); }
+  else { c.beginPath(); c.arc(0, hy + hr * 0.38, hr * 0.24, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }
+  c.restore();
+}
+/* ---------- نرد ثلاثي الأبعاد: يتقلّب ويقفز وقت الرمي وبعدين يستقر على الرقم ---------- */
+const LUDO_PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const LUDO_FACE = { 1: 'rotateY(0deg)', 2: 'rotateY(-90deg)', 3: 'rotateX(-90deg)', 4: 'rotateX(90deg)', 5: 'rotateY(90deg)', 6: 'rotateY(180deg)' };
+function ludoDiceEl() {
+  const b = lel('button', 'ludoDice'); b.id = 'ludoDice'; b.type = 'button'; const cube = lel('div', 'ludoCube'); cube.id = 'ludoCube';
+  for (let n = 1; n <= 6; n++) { const f = lel('div', 'ludoFace f' + n); for (let i = 0; i < 9; i++) f.appendChild(LUDO_PIPS[n].includes(i) ? lel('i', n === 1 ? 'r' : '') : lel('b')); cube.appendChild(f); }
+  b.append(lel('span', 'ludoDsh'), cube); cube.style.transform = 'rotateX(-22deg) rotateY(28deg) ' + LUDO_FACE[5]; return b;
+}
+function ludoDiceUpdate(t, s) {
+  const b = document.getElementById('ludoDice'), cube = document.getElementById('ludoCube'); if (!b || !cube) return;
+  const rolling = t < LUDOG.rolling;
+  if (rolling && !LUDOG.dRoll) { LUDOG.dRoll = true; cube.classList.add('rolling'); b.classList.add('rolling'); b.classList.remove('land'); }
+  else if (!rolling && LUDOG.dRoll) { LUDOG.dRoll = false; cube.classList.remove('rolling'); b.classList.remove('rolling'); b.classList.add('land'); setTimeout(() => b.classList.remove('land'), 450); }
+  if (!rolling) { const v = s.dice || LUDOG.dice || 5; if (LUDOG.dShown !== v) { LUDOG.dShown = v; cube.style.transform = 'rotateX(-22deg) rotateY(28deg) ' + LUDO_FACE[v]; } }
+}
 function ludoDraw() {
   const s = LUDOG.s, cv = LUDOG.cv; if (!s || !cv) return; const G = ludoGeom(), c = cv.getContext('2d'), u = G.u; const t = performance.now();
   c.setTransform(G.dpr, 0, 0, G.dpr, 0, 0); c.clearRect(0, 0, G.sz, G.sz); c.save(); if ((LUDOG.shake || 0) > t) c.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
@@ -173,7 +222,7 @@ function ludoDraw() {
   const tri = (pts, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(pts[0] * u, pts[1] * u); c.lineTo(pts[2] * u, pts[3] * u); c.lineTo(pts[4] * u, pts[5] * u); c.closePath(); c.fill(); };
   tri([6, 6, 6, 9, 7.5, 7.5], LUDO_COL[0].c); tri([6, 6, 9, 6, 7.5, 7.5], LUDO_COL[1].c); tri([9, 6, 9, 9, 7.5, 7.5], LUDO_COL[2].c); tri([6, 9, 9, 9, 7.5, 7.5], LUDO_COL[3].c);
   /* الأحجار */
-  const spots = ludoTokenSpots(s), me = s.my, mv = new Set(s.movable || []);
+  const spots = ludoTokenSpots(s), me = s.my, mv = new Set(t < LUDOG.rolling ? [] : (s.movable || []));
   spots.sort((a, b) => a.y - b.y);
   spots.forEach(o => {
     const id = o.seat + '_' + o.k; let d = LUDOG.disp[id]; const off = o.cnt > 1 && o.pos >= 0 ? [(o.n - (o.cnt - 1) / 2) * 0.28, 0] : [0, 0];
@@ -182,8 +231,8 @@ function ludoDraw() {
     const lift = Math.min(0.6, Math.hypot(tx - d.x, ty - d.y) * 0.3), px = d.x * u, gy = (d.y + bob) * u, py = gy - lift * u;   // القفزة أثناء الحركة
     c.fillStyle = 'rgba(0,0,0,' + (0.28 - lift * 0.2) + ')'; c.beginPath(); c.ellipse(px, gy + r * 0.9, r * 0.95, r * 0.4, 0, 0, 7); c.fill();
     if (canMove) { c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(px, py, r + 5 + Math.sin(t / 120) * 2, 0, 7); c.stroke(); c.strokeStyle = C.c; c.lineWidth = 1.5; c.stroke(); }
-    const gr = c.createRadialGradient(px - r * 0.3, py - r * 0.35, r * 0.1, px, py, r); gr.addColorStop(0, '#fff'); gr.addColorStop(0.25, C.c); gr.addColorStop(1, C.d);
-    c.fillStyle = gr; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); c.lineWidth = 2; c.strokeStyle = '#fff'; c.stroke();
+    const look = [Math.max(-1, Math.min(1, (7.5 - d.x) / 6)), Math.max(-1, Math.min(1, (7.5 - d.y) / 6))], won = !!(s.ph === 'over' && s.win && s.win.s === o.seat);
+    ludoPawn(c, px, py - r * 0.25, r * 1.15, o.seat, t, { idx: o.seat * 4 + o.k, jump: canMove || lift > 0.15 || won, wave: canMove || won, sleep: o.pos < 0 && !canMove && s.ph === 'play', happy: o.pos === 56 || lift > 0.15 || won, look });
     o.px = px; o.py = py; o.r = r;
   });
   LUDOG.spots = spots; ludoFx(c, u);
@@ -192,20 +241,21 @@ function ludoDraw() {
   if (s.ph === 'over' && s.win) { const w = s.seats[s.win.s], C = LUDO_COL[s.win.s], k = Math.min(1, (t - (LUDOG.winT || t)) / 500); c.fillStyle = 'rgba(10,6,30,' + (0.55 * k) + ')'; c.fillRect(0, 0, G.sz, G.sz); c.save(); c.translate(G.sz / 2, G.sz / 2); c.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = (u * 3.2) + 'px system-ui'; c.fillText('🏆', 0, -u * 1.6 + Math.sin(t / 200) * 4); c.font = 'bold ' + (u * 1.15) + 'px Cairo, system-ui, sans-serif'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.7)'; c.fillStyle = C.c; const tx = 'فاز ' + (w ? w.n : '؟') + '!'; c.strokeText(tx, 0, u * 1.2); c.fillText(tx, 0, u * 1.2); c.restore(); }
   c.restore();
   /* النرد */
-  const dice = document.getElementById('ludoDice');
-  if (dice) { const rolling = performance.now() < LUDOG.rolling; dice.textContent = rolling ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][Math.floor(t / 70) % 6] : (s.dice ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][s.dice - 1] : '🎲'); dice.classList.toggle('shake', rolling); }
+  ludoDiceUpdate(t, s);
 }
 function ludoClick(e) {
-  const s = LUDOG.s; if (!s || s.ph !== 'play' || s.turn !== s.my || !s.rolled || !LUDOG.spots) return;
-  const r = LUDOG.cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 1e9;
-  LUDOG.spots.forEach(o => { if (o.seat !== s.my || !s.movable.includes(o.k)) return; const dd = Math.hypot((o.px || 0) / (LUDOG.cv.width / r.width) - x, (o.py || 0) / (LUDOG.cv.height / r.height) - y); if (dd < bd) { bd = dd; best = o; } });
-  if (best && bd < 44) ludoSend({ t: 'ludo_move', k: best.k });
+  const s = LUDOG.s; if (performance.now() < LUDOG.rolling) return; if (!s || s.ph !== 'play' || s.turn !== s.my || !s.rolled || !LUDOG.spots || !(s.movable || []).length) return;
+  /* الإحداثيات بوحدات CSS (الرسم يستخدم setTransform بنسبة الشاشة، فلا نقسم على dpr) */
+  const r = LUDOG.cv.getBoundingClientRect(), k = (LUDOG.sz || r.width) / (r.width || 1), x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k; let best = null, bd = 1e9;
+  LUDOG.spots.forEach(o => { if (o.seat !== s.my || !s.movable.includes(o.k)) return; const dd = Math.hypot((o.px || 0) - x, (o.py || 0) - (o.r || 10) * 0.45 - y); if (dd < bd) { bd = dd; best = o; } });
+  if (best && bd < Math.max(30, (best.r || 10) * 2)) return ludoSend({ t: 'ludo_move', k: best.k });
+  if (s.movable.length === 1) ludoSend({ t: 'ludo_move', k: s.movable[0] });   // خيار وحيد: أي لمسة على اللوحة تحرّكه
 }
 function ludoCss() {
   if (document.getElementById('ludoCss')) return; const st = document.createElement('style'); st.id = 'ludoCss';
   st.textContent = `#pg-ludo .pgBody{max-width:none;padding:10px;gap:0;overflow:auto;background:radial-gradient(ellipse at top,#2a1a52,#0a0814)}
 .ludoMenu,.ludoGame{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:10px;color:#fff;padding-bottom:60px}
-.ludoHero{text-align:center;background:radial-gradient(circle at 80% 10%,rgba(255,210,90,.28),transparent 50%),radial-gradient(circle at 10% 100%,rgba(255,70,140,.3),transparent 55%),rgba(255,255,255,.07);border:1px solid rgba(255,210,122,.5);border-radius:18px;padding:12px;animation:ludoHeroG 2.4s ease-in-out infinite}@keyframes ludoHeroG{50%{box-shadow:0 0 22px rgba(255,170,60,.5)}}.ludoHero h2{margin:2px 0}.ludoHero p{margin:4px 0 0;font-size:13px;opacity:.85}.ludoHeroEm{font-size:46px;animation:ludoBob 1.6s ease-in-out infinite}
+.ludoHero{text-align:center;background:radial-gradient(circle at 80% 10%,rgba(255,210,90,.28),transparent 50%),radial-gradient(circle at 10% 100%,rgba(255,70,140,.3),transparent 55%),rgba(255,255,255,.07);border:1px solid rgba(255,210,122,.5);border-radius:18px;padding:12px;animation:ludoHeroG 2.4s ease-in-out infinite}@keyframes ludoHeroG{50%{box-shadow:0 0 22px rgba(255,170,60,.5)}}.ludoHero h2{margin:2px 0}.ludoHero p{margin:4px 0 0;font-size:13px;opacity:.85}.ludoHeroDots{font-size:15px;letter-spacing:4px;margin:2px 0}.ludoHeroEm{font-size:46px;animation:ludoBob 1.6s ease-in-out infinite}
 @keyframes ludoBob{50%{transform:translateY(-6px) rotate(8deg)}}
 .ludoBtn{width:100%;padding:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:linear-gradient(135deg,#ff8a2a,#e53b6a);color:#fff;font-weight:800;font-size:15px;font-family:inherit}.ludoBtn.big{padding:15px;font-size:17px}.ludoBtn.ghost{background:rgba(255,255,255,.1)}.ludoBtn.small{padding:8px;font-size:13px}.ludoBtn:disabled{opacity:.5}
 .ludoJoin{display:flex;gap:8px}.ludoJoin input{flex:1;min-width:0;padding:10px;font-size:16px;border-radius:12px;border:2px solid #ffd1a0;background:#fff;color:#222}.ludoJoin .ludoBtn{width:auto;padding:10px 16px}
@@ -215,7 +265,13 @@ function ludoCss() {
 .ludoWait,.ludoNote{text-align:center;opacity:.85;font-size:13px}
 .ludoTop{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.ludoChip{padding:5px 10px;border-radius:999px;border:2px solid var(--c);background:rgba(255,255,255,.08);font-size:12px;font-weight:700}.ludoChip.on{background:var(--c);box-shadow:0 0 12px var(--c)}.ludoChip.off{opacity:.45;text-decoration:line-through}
 .ludoCv{display:block;margin:0 auto;border-radius:14px;touch-action:manipulation;box-shadow:0 8px 28px rgba(0,0,0,.5)}
-.ludoBar{display:flex;align-items:center;gap:12px;justify-content:center}.ludoDice{font-size:44px;width:70px;height:70px;border-radius:16px;border:3px solid #fff;background:#fff;color:#222;line-height:1;padding:0}.ludoDice:disabled{opacity:.55}.ludoDice.go{animation:ludoPulse .8s ease-in-out infinite;border-color:#ffb020}.ludoDice.shake{animation:ludoShake .12s linear infinite}
+.ludoBar{display:flex;align-items:center;gap:12px;justify-content:center}.ludoDice{position:relative;width:84px;height:84px;perspective:360px;background:none;border:0;padding:0;margin:0;-webkit-tap-highlight-color:transparent}.ludoDice:disabled{opacity:.7}.ludoDice.go{animation:ludoPulse .8s ease-in-out infinite}
+.ludoCube{position:absolute;left:12px;top:10px;width:60px;height:60px;transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,1.5,.4,1)}.ludoCube.rolling{transition:none;animation:ludoTumble .5s linear infinite}
+.ludoFace{position:absolute;inset:0;background:linear-gradient(145deg,#fff 0%,#efe9ff 60%,#d9d0ff 100%);border:2px solid #bdb0f5;border-radius:12px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;box-shadow:inset 0 0 14px rgba(110,80,200,.28)}.ludoFace i{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#111);place-self:center;box-shadow:inset 0 -1px 2px rgba(255,255,255,.3)}.ludoFace i.r{background:radial-gradient(circle at 35% 30%,#ff7a8a,#d3153a);width:14px;height:14px}
+.ludoFace.f1{transform:translateZ(30px)}.ludoFace.f6{transform:rotateY(180deg) translateZ(30px)}.ludoFace.f2{transform:rotateY(90deg) translateZ(30px)}.ludoFace.f5{transform:rotateY(-90deg) translateZ(30px)}.ludoFace.f3{transform:rotateX(90deg) translateZ(30px)}.ludoFace.f4{transform:rotateX(-90deg) translateZ(30px)}
+.ludoDsh{position:absolute;left:14px;right:14px;bottom:2px;height:11px;border-radius:50%;background:rgba(0,0,0,.4);filter:blur(3px);transition:transform .2s,opacity .2s}.ludoDice.rolling{animation:ludoBounce .5s ease-in-out infinite}.ludoDice.rolling .ludoDsh{animation:ludoDsh .5s ease-in-out infinite}.ludoDice.land{animation:ludoLand .45s ease-out}
+@keyframes ludoTumble{0%{transform:rotateX(-22deg) rotateY(28deg) rotateZ(0)}100%{transform:rotateX(518deg) rotateY(748deg) rotateZ(180deg)}}@keyframes ludoBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px) scale(1.12)}}@keyframes ludoDsh{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.45}}@keyframes ludoLand{0%{transform:translateY(-8px) scale(1.15)}55%{transform:translateY(2px) scale(.94)}100%{transform:none}}
+.ludoReady{text-align:center;font-weight:800;color:#7dffb5;background:rgba(20,70,45,.6);border:1px solid #3ee08a;border-radius:12px;padding:8px;animation:ludoPulse 1.2s ease-in-out infinite}.ludoBtn.pulse{animation:ludoPulse 1s ease-in-out infinite}
 @keyframes ludoPulse{50%{transform:scale(1.12)}}@keyframes ludoShake{0%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}100%{transform:rotate(-12deg)}}
 .ludoMsg{font-weight:700;font-size:14px;max-width:230px}
 .ludoEmo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.ludoEmo button{font-size:22px;width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);padding:0;transition:transform .12s}.ludoEmo button:active{transform:scale(1.3)}

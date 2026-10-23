@@ -1,9 +1,9 @@
-/* ===================== لعبة «لودو» 🎲 — السيرفر =====================
+/* ===================== لعبة «غوكو» 🎲 — السيرفر =====================
    طاولة بـ 4 مقاعد (أحمر، أخضر، أصفر، أزرق). تبدأ اللعبة بلاعبين أو أكثر (مو لازم تكتمل 4 مقاعد).
    السيرفر هو الحَكَم: يرمي النرد، يتحقق من الحركات، ويقرر الفائز. */
 'use strict';
 module.exports = function ludoInit(ctx) {
-  const { db, save, send, crypto, alog } = ctx; const onTable = ctx.onTable || (() => {});   // onTable: يبلّغ المنتجع بحالة طاولة اللودو
+  const { db, save, send, crypto, alog } = ctx; const onTable = ctx.onTable || (() => {});   // onTable: يبلّغ المنتجع بحالة طاولة الغوكو
   const SEATS = 4, MIN_P = 2, TURN_MS = 25000, OVER_MS = 12000, WIN_COINS = 20;
   const TRACK = 52, LANE_END = 56;                       // مواقع الحجر: -1 قاعدة، 0..50 مسار، 51..55 ممر البيت، 56 وصل
   const START = [0, 13, 26, 39];                         // خانة بداية كل لون على المسار
@@ -42,7 +42,10 @@ module.exports = function ludoInit(ctx) {
   }
   function sit(l, ws, want) {
     const i = freeSeat(l, want); if (i === undefined) return false;
-    l.seats[i] = { key: ws.key, ws, name: nameOf(ws), tk: [-1, -1, -1, -1], left: false, rank: 0 }; return true;
+    const nm = nameOf(ws);
+    l.seats[i] = { key: ws.key, ws, name: nm, tk: [-1, -1, -1, -1], left: false, rank: 0 };
+    const cnt = seatedCount(l); l.seats.forEach(q => { if (q && q.ws && q.ws !== ws && !q.left) send(q.ws, { t: 'ludo_join', n: nm, cnt, host: q.key === l.host }); });   // يبلّغ اللي قاعدين (وصاحب الطاولة) إن واحد دخل
+    return true;
   }
   function removeP(l, ws) {
     const i = seatOf(l, ws); if (i < 0) return;
@@ -62,7 +65,7 @@ module.exports = function ludoInit(ctx) {
     if (liveSeats(l).length < MIN_P) return;
     l.seats.forEach(p => { if (p) { p.tk = [-1, -1, -1, -1]; p.rank = 0; } });
     const live = liveSeats(l); l.turn = live[rnd(live.length)]; l.ph = 'play'; l.dice = 0; l.rolled = false; l.movable = []; l.sixes = 0; l.win = null; l.lastEv = null; l.rank = 0; l.t = now() + TURN_MS;
-    try { alog('🎲', 'بدت لعبة لودو بـ ' + live.length + ' لاعبين'); } catch (e) {}
+    try { alog('🎲', 'بدت لعبة غوكو بـ ' + live.length + ' لاعبين'); } catch (e) {}
     bc(l);
   }
   function canMove(p, seat, k, d) {
@@ -105,7 +108,7 @@ module.exports = function ludoInit(ctx) {
     l.ph = 'over'; l.win = { s: seat, why: why || '' }; l.t = now() + OVER_MS; l.movable = [];
     const w = l.seats[seat]; const u = w && db.users[w.key];
     // العملات للفوز الحقيقي فقط (مو لما الباقين يطلعون)
-    if (u && !why) { u.coins = (u.coins || 0) + WIN_COINS; try { save(); } catch (e) {} if (w.ws) send(w.ws, { t: 'rm_ok', msg: '🎉 فزت بلودو! +' + WIN_COINS + ' عملة' }); }
+    if (u && !why) { u.coins = (u.coins || 0) + WIN_COINS; try { save(); } catch (e) {} if (w.ws) send(w.ws, { t: 'rm_ok', msg: '🎉 فزت بغوكو! +' + WIN_COINS + ' عملة' }); }
     bc(l);
   }
   function autoPlay(l) {                                              // انتهى وقت اللاعب: العبها عنه
@@ -124,7 +127,7 @@ module.exports = function ludoInit(ctx) {
   }, 500);
 
   function onMsg(ws, d) {
-    if (ws.guest || !db.users[ws.key]) return send(ws, { t: 'ludo_err', error: 'سجّل حساب حتى تلعب لودو' });
+    if (ws.guest || !db.users[ws.key]) return send(ws, { t: 'ludo_err', error: 'سجّل حساب حتى تلعب غوكو' });
     let l = lobbyOf(ws);
     switch (d.t) {
       case 'ludo_list': return send(ws, { t: 'ludo_list', list: [...L.values()].filter(x => !x.priv && !x.table && x.ph === 'lobby' && seatedCount(x) < SEATS).map(x => ({ id: x.id, n: seatedCount(x), host: (x.seats.find(p => p && p.key === x.host) || {}).name || '' })) });
@@ -160,9 +163,9 @@ module.exports = function ludoInit(ctx) {
       case 'ludo_move': { if (l.ph !== 'play' || l.turn !== me || !l.rolled) return; const k = d.k | 0; if (!l.movable.includes(k)) return; return move(l, me, k); }
     }
   }
-  /* طاولة لودو داخل المنتجع: كل غرفة منتجع إلها طاولة وحدة (4 كراسي)، الجلوس على الكرسي = مقعد باللعبة */
+  /* طاولة غوكو داخل المنتجع: كل غرفة منتجع إلها طاولة وحدة (4 كراسي)، الجلوس على الكرسي = مقعد باللعبة */
   function sitTable(ws, rmId, seat) {
-    if (ws.guest || !db.users[ws.key]) return 'سجّل حساب حتى تلعب لودو';
+    if (ws.guest || !db.users[ws.key]) return 'سجّل حساب حتى تلعب غوكو';
     const id = 'rm:' + rmId; let l = L.get(id), cur = lobbyOf(ws);
     if (cur && cur !== l) removeP(cur, ws);
     if (!l) { l = newLobby(ws, false); l.id = id; l.table = true; l.rmId = rmId; L.set(id, l); }

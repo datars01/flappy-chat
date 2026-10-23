@@ -1649,7 +1649,7 @@ const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.user
 
 /* ---------- طاولات الالعاب (سلم وثعبان / إكس أو / منقلة / دومينو) ---------- */
 const GM_TB = [{ x: 925, y: 345, k: 'snake' }, { x: 1100, y: 345, k: 'xo' }, { x: 925, y: 525, k: 'rps' }, { x: 1100, y: 525, k: 'domino' }];   // منطقة الألعاب بالجهة اليمنى: 2 يسار و 2 يمين
-const RM_LUDO = { x: 1012, y: 435, seats: [[-56, 11], [0, 50], [56, 11], [0, -16]] };   // طاولة لودو: كرسي لكل لون (أحمر يسار، أخضر فوق، أصفر يمين، أزرق تحت)
+const RM_LUDO = { x: 1012, y: 435, seats: [[-56, 11], [0, 50], [56, 11], [0, -16]] };   // طاولة غوكو: كرسي لكل لون (أحمر يسار، أخضر فوق، أصفر يمين، أزرق تحت)
 const GM_L = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 }, GM_S = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
 const GM_XL = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const gmNew = tb => ({ tb, k: GM_TB[tb].k, p: [null, null], ph: 'idle', rd: [0, 0], turn: 0, msg: '', seq: 0, win: -1, rt: [0, 0] });
@@ -1826,7 +1826,7 @@ function rmOnMsg(ws, d) {
     const h = ws.rm; if (!h) return; if (!rmAdm(ws)) { send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' }); return; } const r = rmRooms.get(h.id); if (!r) return; const u = String(d.url || '').trim().slice(0, 300);
     if (!u) r.music = null; else { const m = u.match(/[?&]list=([A-Za-z0-9_-]{10,64})/), v = u.match(/(?:[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/); if (!m && !v) { send(ws, { t: 'rm_err', error: 'رابط يوتيوب غير صالح' }); return; } r.music = m ? { k: 'pl', id: m[1] } : { k: 'v', id: v[1] }; r.music.by = me.name; }
     rmBc(r, { t: 'rm_music', music: r.music || null });
-  } else if (d.t === 'rm_lj' || d.t === 'rm_ll') {   // طاولة لودو (4 كراسي) داخل المنتجع
+  } else if (d.t === 'rm_lj' || d.t === 'rm_ll') {   // طاولة غوكو (4 كراسي) داخل المنتجع
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return;
     if (d.t === 'rm_ll') return LUDO.leaveTable(ws);
     const sd = d.side | 0; if (sd < 0 || sd > 3) return; const sp = RM_LUDO.seats[sd];
@@ -2000,13 +2000,13 @@ function rmOnMsg(ws, d) {
   }
 }
 const SUS = require('./sus-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b) });
-const LUDO = require('./ludo-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b), onTable: (rmId, st) => { const r = rmRooms.get(rmId); if (r) rmBc(r, { t: 'rm_lt', s: st }); } });   // لعبة «لودو»
+const LUDO = require('./ludo-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b), onTable: (rmId, st) => { const r = rmRooms.get(rmId); if (r) rmBc(r, { t: 'rm_lt', s: st }); } });   // لعبة «غوكو»
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
   if (typeof d.t === 'string' && d.t.startsWith('hv_')) return hvOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('rm_')) return rmOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('sus_')) return SUS.onMsg(ws, d);   // لعبة «مين الخاين؟»
-  if (typeof d.t === 'string' && d.t.startsWith('ludo_')) return LUDO.onMsg(ws, d);   // لعبة «لودو»
+  if (typeof d.t === 'string' && d.t.startsWith('ludo_')) return LUDO.onMsg(ws, d);   // لعبة «غوكو»
   if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
