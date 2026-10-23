@@ -95,6 +95,44 @@ async function protRestore() {   // عند التشغيل: ندمج الرسائ
   await protSave();
 }
 
+/* ===== التقييمات وعدد الزوار: تخزين خاص ودائم (ما ينمسح بالديبلوي أو الريستارت أو لو انمسح db) ===== */
+// كل جهاز إله تقييم واحد (يكدر يغيّره)، وكل جهاز يندز مرة وحدة بعدد الزوار. نحفظها بمكان مستقل + نسخة احتياطية ودمج بدون حذف.
+let stats = { ratings: {}, devs: {}, since: Date.now() };
+const STATS_FILE = path.join(PROT_DIR, 'stats.json');
+let statsSig = '', statsBakAt = 0, statsTimer = null;
+async function statsRead() {
+  const out = [];
+  try {
+    if (pool) { const r = await pool.query("SELECT key, value FROM kv WHERE key IN ('stats', 'statsbak')"); r.rows.forEach(x => { try { out.push(JSON.parse(x.value)); } catch (e) {} }); }
+    else for (const f of [STATS_FILE, STATS_FILE + '.bak']) { try { out.push(JSON.parse(fs.readFileSync(f, 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') console.error('stats read:', f, e.message); } }
+  } catch (e) { console.error('stats load failed:', e.message); }
+  if (db.stats) out.push(db.stats);
+  return out;
+}
+function statsMerge(list) {   // union: ما نحذف أي تقييم أو زائر، والأحدث يغلب
+  list.forEach(o => { if (!o || typeof o !== 'object') return;
+    for (const [k, v] of Object.entries(o.ratings || {})) { const c = stats.ratings[k]; if (!c || (v.ts || 0) > (c.ts || 0)) stats.ratings[k] = v; }
+    for (const [k, v] of Object.entries(o.devs || {})) { const c = stats.devs[k]; stats.devs[k] = c ? { f: Math.min(c.f || v.f, v.f || c.f), l: Math.max(c.l || 0, v.l || 0), n: Math.max(c.n || 0, v.n || 0), u: v.u || c.u } : v; }
+    if (o.since && o.since < stats.since) stats.since = o.since;
+  });
+}
+async function statsSaveNow() {
+  statsTimer = null; const json = JSON.stringify(stats); if (json === statsSig) return;
+  try {
+    if (pool) {
+      await pool.query("INSERT INTO kv (key, value) VALUES ('stats', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [json]);
+      if (Date.now() - statsBakAt > 3 * 3600e3) { await pool.query("INSERT INTO kv (key, value) VALUES ('statsbak', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [json]); statsBakAt = Date.now(); }
+    } else {
+      fs.mkdirSync(PROT_DIR, { recursive: true });
+      if (fs.existsSync(STATS_FILE) && Date.now() - statsBakAt > 600e3) { fs.copyFileSync(STATS_FILE, STATS_FILE + '.bak'); statsBakAt = Date.now(); }
+      fs.writeFileSync(STATS_FILE + '.tmp', json); fs.renameSync(STATS_FILE + '.tmp', STATS_FILE);
+    }
+    statsSig = json; db.stats = stats; save();   // نسخة ثالثة داخل db نفسه
+  } catch (e) { console.error('stats save failed:', e.message); }
+}
+function statsSave() { if (!statsTimer) statsTimer = setTimeout(statsSaveNow, 800); }
+async function statsInit() { statsMerge(await statsRead()); db.stats = stats; console.log('stats: ' + Object.keys(stats.devs).length + ' زائر | ' + Object.keys(stats.ratings).length + ' تقييم'); await statsSaveNow(); }
+
 let saveTimer = null, writing = false, dirty = false;
 async function writeNow() {
   if (writing) { dirty = true; return; }
@@ -118,6 +156,7 @@ function save() {
   saveTimer = setTimeout(() => { saveTimer = null; writeNow(); }, 500);
 }
 async function flushAndExit() {
+  try { if (statsTimer) { clearTimeout(statsTimer); await statsSaveNow(); } } catch (e) {}
   try { if (typeof rmPersist === 'function') rmPersist(); } catch (e) {}   // تحديث نشاط الغرف قبل الإغلاق
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   const t0 = Date.now();
@@ -379,6 +418,39 @@ function authMw(req, res, next) {
 }
 
 app.get('/health', (req, res) => res.send('ok'));
+/* ---- الزوار والتقييم ---- */
+const devOk = d => typeof d === 'string' && /^[a-z0-9]{12,40}$/i.test(d);
+const optUser = req => { try { const h = req.headers.authorization || ''; const k = keyFromToken(h.startsWith('Bearer ') ? h.slice(7) : ''); return k && db.users[k] ? db.users[k] : null; } catch (e) { return null; } };
+app.post('/api/visit', (req, res) => {
+  const d = req.body && req.body.dev; if (!devOk(d)) return res.status(400).json({ error: 'bad' });
+  if (limited('vis:' + req.ip, 30, 600e3)) return res.json({ ok: 1 });
+  const u = optUser(req), now = Date.now(), c = stats.devs[d];
+  stats.devs[d] = c ? Object.assign(c, { l: now, n: (c.n || 0) + 1 }, u ? { u: u.name } : {}) : Object.assign({ f: now, l: now, n: 1 }, u ? { u: u.name } : {});
+  statsSave(); res.json({ ok: 1, rated: !!(stats.ratings[d] || (u && stats.ratings['u:' + u.name])) });
+});
+app.post('/api/rate', (req, res) => {
+  const b = req.body || {}, d = b.dev; if (!devOk(d)) return res.status(400).json({ error: 'bad' });
+  if (b.v !== 'love' && b.v !== 'no') return res.status(400).json({ error: 'اختار قلب' });
+  if (limited('rate:' + req.ip, 12, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة' });
+  const u = optUser(req), key = u ? 'u:' + u.name : d, prev = stats.ratings[key];
+  let note = String(b.note || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 200), noteLocked = false;
+  if (prev && prev.note) { noteLocked = !!note && note !== prev.note; note = prev.note; }   // تعليق واحد بس لكل حساب
+  stats.ratings[key] = { v: b.v, note, name: u ? u.name : '', guest: !u, dev: d, ts: Date.now(), first: prev ? (prev.first || prev.ts) : Date.now() };
+  if (u && stats.ratings[d] && stats.ratings[d].guest) delete stats.ratings[d];   // الضيف صار حساب: تقييم واحد بس
+  if (!stats.devs[d]) stats.devs[d] = { f: Date.now(), l: Date.now(), n: 1 };
+  statsSave(); res.json({ ok: 1, note, noteLocked });
+});
+app.get('/api/rate/me', (req, res) => {
+  const d = String(new URL(req.url, 'http://x').searchParams.get('dev') || ''), u = optUser(req), r = (u && stats.ratings['u:' + u.name]) || (devOk(d) && stats.ratings[d]) || null;
+  res.json({ r: r ? { v: r.v, note: r.note } : null });
+});
+app.get('/api/admin/stats', authMw, (req, res) => {
+  const u = db.users[req.key]; if (!u || !u.admin) return res.status(403).json({ error: 'للمشرفين فقط' });
+  const R = Object.values(stats.ratings), D = Object.values(stats.devs), day = Date.now() - 864e5;
+  res.json({ visitors: D.length, today: D.filter(x => (x.l || 0) > day).length, accounts: Object.keys(db.users).length, love: R.filter(x => x.v === 'love').length, no: R.filter(x => x.v === 'no').length, since: stats.since,
+    recent: R.sort((a, b) => b.ts - a.ts).slice(0, 60).map(x => ({ v: x.v, note: x.note, name: x.name, guest: x.guest, ts: x.ts })) });
+});
+
 
 app.post('/api/register', (req, res) => {
   if (limited('reg:' + req.ip, 10, 3600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
@@ -2032,5 +2104,6 @@ setInterval(cleanup, 3600e3);
 
 initStorage()
   .then(() => { ensureAdmin(); rmLoad(); return protRestore(); })
+  .then(() => statsInit())
   .then(() => server.listen(PORT, () => { console.log('Flappy server on :' + PORT); const u = process.env.RENDER_EXTERNAL_URL; if (u && typeof fetch === 'function') setInterval(() => { fetch(u + '/healthz').catch(() => {}); }, 9 * 60 * 1000); }))
   .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
