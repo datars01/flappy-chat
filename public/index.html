@@ -908,8 +908,8 @@
   .lgTabs { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 0; }
   .lgTabs .tab { position: relative; z-index: 1; background: none !important; border: 0 !important; color: var(--muted); border-radius: 10px; padding: 9px; font-size: 14px; transition: color .2s; }
   .lgTabs .tab.on { color: #fff; }
-  .lgTabs::before { content: ""; position: absolute; top: 4px; bottom: 4px; right: 4px; width: calc(50% - 4px); border-radius: 10px; background: linear-gradient(135deg, #3a7bff, #7f5bff); box-shadow: 0 3px 10px rgba(58,123,255,.4); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
-  .lgTabs.reg::before { transform: translateX(-100%); }
+  .lgTabs::before { content: ""; position: absolute; top: 4px; bottom: 4px; inset-inline-start: 4px; width: calc(50% - 4px); border-radius: 10px; background: linear-gradient(135deg, #3a7bff, #7f5bff); box-shadow: 0 3px 10px rgba(58,123,255,.4); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+  .lgTabs.reg::before { transform: translateX(-100%); } html[dir="ltr"] .lgTabs.reg::before { transform: translateX(100%); }
   .fld { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 14px; background: var(--card2); border: 1.5px solid var(--line); transition: border-color .2s, box-shadow .2s; }
   .fld:focus-within { border-color: #7f5bff; box-shadow: 0 0 0 3px rgba(127,91,255,.22); }
   .fld .fi { font-size: 17px; opacity: .85; }
@@ -958,7 +958,7 @@
   .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
-<script src="/lang.js?v=2"></script>
+<script src="/lang.js?v=3"></script>
 </head>
 <body>
 <div id="bgFx" aria-hidden="true"></div>

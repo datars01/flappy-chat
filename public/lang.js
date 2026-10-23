@@ -79,7 +79,7 @@
     new MutationObserver(ms => {
       for (const m of ms) {
         if (m.type === 'characterData') doText(m.target);
-        else if (m.type === 'attributes') { if (m.target.nodeType === 1 && !skipNode(m.target)) doEl(m.target); }
+        else if (m.type === 'attributes') { const t = m.target; if (t.nodeType === 1 && (t.nodeName === 'INPUT' || t.nodeName === 'TEXTAREA' || !skipNode(t))) doEl(t); }
         else m.addedNodes.forEach(walk);
       }
     }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
