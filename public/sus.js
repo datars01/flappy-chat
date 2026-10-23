@@ -8,7 +8,7 @@ const SUS_CH = [
 const susSend = o => { try { return hvSend(o); } catch (e) { return false; } };
 const susMe = () => { const s = SUSG.s; return s ? s.players.find(p => p.me) : null; };
 const susWalk = (x, y) => SUSG.map && SUSG.map.walk.some(r => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3]);
-const susOk = (x, y) => susWalk(x - 13, y - 6) && susWalk(x + 13, y - 6) && susWalk(x - 13, y + 8) && susWalk(x + 13, y + 8);
+const susOk = (x, y) => susWalk(x - 13, y - 26) && susWalk(x + 13, y - 26) && susWalk(x - 13, y + 8) && susWalk(x + 13, y + 8);   /* الراس والرجلين لازم داخل الغرفة */
 function susSfx(k) { try { if (k === 'kill') { burst(0.25, 0.25, 0, 400); blip('sawtooth', 300, 60, 0.4, 0.08); } else if (k === 'task') [[660, 0], [880, 0.08], [1175, 0.16]].forEach(q => blip('sine', q[0], q[0], 0.15, 0.07, q[1])); else if (k === 'meet') [[440, 0], [440, 0.25], [440, 0.5]].forEach(q => blip('square', q[0], q[0] * 1.5, 0.18, 0.06, q[1])); else if (k === 'click') blip('sine', 600, 900, 0.06, 0.05); else if (k === 'win') [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.36]].forEach(q => blip('sine', q[0], q[0], 0.25, 0.07, q[1])); else if (k === 'lose') [[392, 0], [330, 0.15], [262, 0.3]].forEach(q => blip('triangle', q[0], q[0], 0.3, 0.07, q[1])); } catch (e) {} }
 
 /* ---------- رسم الشخصيات (أكل بعيون وجلوب ورجول) ---------- */
@@ -228,7 +228,7 @@ function susTick() {
   m.mv = mv; const nowP = performance.now(); if (s.ph === 'play' && nowP - SUSG.lastSend > 90 && (mv || SUSG.wasMv)) { susSend({ t: 'sus_pos', x: Math.round(m.x), y: Math.round(m.y), dir: m.dir, mv: mv ? 1 : 0 }); SUSG.lastSend = nowP; SUSG.wasMv = mv; }
   Object.keys(SUSG.pos).forEach(k => { const o = SUSG.pos[k]; if (!o || o.tx === undefined) return; o.x += (o.tx - o.x) * 0.3; o.y += (o.ty - o.y) * 0.3; });
   // الكاميرا
-  const Z = Math.max(0.85, Math.min(1.7, Math.min(W / 400, H / 560)));   // تقريب مريح للموبايل SUSG.cam[0] += (m.x - SUSG.cam[0]) * 0.2; SUSG.cam[1] += (m.y - SUSG.cam[1]) * 0.2;
+  const Z = Math.max(0.85, Math.min(1.7, Math.min(W / 400, H / 560))) /* تقريب مريح للموبايل */; SUSG.cam[0] += (m.x - SUSG.cam[0]) * 0.2; SUSG.cam[1] += (m.y - SUSG.cam[1]) * 0.2;
   c.fillStyle = '#05060f'; c.fillRect(0, 0, W, H); c.save(); c.translate(W / 2, H / 2); c.scale(Z, Z); c.translate(-SUSG.cam[0], -SUSG.cam[1]);
   // نجوم الفضاء
   c.fillStyle = '#fff'; for (let i = 0; i < 160; i++) { const x = (i * 197) % 2200 - 300, y = (i * 131) % 1500 - 250; c.globalAlpha = 0.3 + 0.5 * Math.abs(Math.sin(t / 40 + i)); c.fillRect(x, y, 2, 2); } c.globalAlpha = 1;
