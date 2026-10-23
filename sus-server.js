@@ -20,7 +20,8 @@ module.exports = function susInit(ctx) {
       tasks: me && me.role === 'crew' ? me.tasks.map(id => ({ id, done: me.done.has(id) })) : [], prog: progress(l), bodies: l.bodies, kcd: me && me.role === 'imp' ? Math.max(0, me.kcd - now()) : 0,
       chat: (l.ph === 'meet' || l.ph === 'vote') ? l.chat.slice(-40) : [], result: l.result || null, pos: me ? [Math.round(me.x), Math.round(me.y)] : null, votes: l.ph === 'eject' || l.ph === 'over' ? l.lastVotes || null : null, win: l.win || null };
   }
-  function progress(l) { let t = 0, d = 0; l.players.forEach(p => { if (p.role === 'crew') { t += p.tasks.length; d += p.done.size; } }); return t ? d / t : 0; }
+  // الفوز: إذا أي لاعب من الطاقم كمّل كل مهامه لوحده، يفوز الطاقم كله. الشريط يبين تقدّم أقرب لاعب للإكمال
+  function progress(l) { let best = 0; l.players.forEach(p => { if (p.role === 'crew' && !p.left && p.tasks.length) best = Math.max(best, p.done.size / p.tasks.length); }); return best; }
   function bc(l) { for (const p of l.players) if (p.ws && p.ws.readyState === 1 && !p.left) send(p.ws, { t: 'sus_state', s: pub(l, p.ws) }); }
   function lobbyOf(ws) { for (const l of L.values()) if (l.players.some(p => p.ws === ws && !p.left)) return l; return null; }
   function freeCh(l) { const used = new Set(l.players.filter(p => !p.left).map(p => p.ch)); for (let c = 0; c < 8; c++) if (!used.has(c)) return c; return 0; }
