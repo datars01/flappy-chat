@@ -4,6 +4,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { WebSocketServer } = require('ws');
 let PgPool = null;
 try { PgPool = require('pg').Pool; } catch (e) {}
@@ -133,6 +134,45 @@ async function statsSaveNow() {
 function statsSave() { if (!statsTimer) statsTimer = setTimeout(statsSaveNow, 800); }
 async function statsInit() { statsMerge(await statsRead()); db.stats = stats; console.log('stats: ' + Object.keys(stats.devs).length + ' زائر | ' + Object.keys(stats.ratings).length + ' تقييم'); await statsSaveNow(); }
 
+
+/* ===== نسخ احتياطية تلقائية =====
+   كل ساعة نخزّن نسخة مضغوطة من كل البيانات (الحسابات، الغرف والدردشة المحمية، التقييمات، البيوت...).
+   نحتفظ بآخر 24 نسخة ساعية + نسخة يومية لآخر 14 يوم. ما نحذف إلا النسخ القديمة، مو بيانات اللعبة.
+   الصور والفيديوهات (uploads) مو داخل النسخة. */
+const BAK_DIR = path.join(DATA_DIR, 'backups');
+const BAK_EVERY = 3600e3, BAK_HOURLY = 24, BAK_DAILY = 14;
+let bakBusy = false, bakSig = '', bakLast = 0;
+const gzip = buf => new Promise((res, rej) => zlib.gzip(buf, { level: 6 }, (e, o) => (e ? rej(e) : res(o))));
+const stamp = d => d.toISOString().replace(/[-:T]/g, '').slice(0, 12);   // 202610232237
+async function bakBuild() { const json = JSON.stringify({ v: 1, ts: Date.now(), db, stats }); return { json, gz: await gzip(Buffer.from(json)) }; }
+async function runBackup(force) {
+  if (bakBusy) return null; bakBusy = true;
+  try {
+    const body = JSON.stringify({ db, stats }), sig = sha(body);
+    if (!force && sig === bakSig) return null;   // ما تغيّر شي من آخر نسخة
+    const { gz } = await bakBuild(), d = new Date(), hn = 'h-' + stamp(d), dn = 'd-' + stamp(d).slice(0, 8);
+    if (pool) {
+      const b64 = gz.toString('base64'), up = k => pool.query("INSERT INTO kv (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [k, b64]);
+      await up('bak:' + hn);
+      const dr = await pool.query("SELECT 1 FROM kv WHERE key = $1", ['bak:' + dn]); if (!dr.rows.length) await up('bak:' + dn);
+      for (const [pre, keep] of [['bak:h-', BAK_HOURLY], ['bak:d-', BAK_DAILY]]) await pool.query("DELETE FROM kv WHERE key LIKE $1 AND key NOT IN (SELECT key FROM kv WHERE key LIKE $1 ORDER BY key DESC LIMIT $2)", [pre + '%', keep]);
+    } else {
+      fs.mkdirSync(BAK_DIR, { recursive: true });
+      fs.writeFileSync(path.join(BAK_DIR, hn + '.json.gz.tmp'), gz); fs.renameSync(path.join(BAK_DIR, hn + '.json.gz.tmp'), path.join(BAK_DIR, hn + '.json.gz'));
+      const dp = path.join(BAK_DIR, dn + '.json.gz'); if (!fs.existsSync(dp)) fs.writeFileSync(dp, gz);
+      for (const [pre, keep] of [['h-', BAK_HOURLY], ['d-', BAK_DAILY]]) fs.readdirSync(BAK_DIR).filter(f => f.startsWith(pre) && f.endsWith('.json.gz')).sort().reverse().slice(keep).forEach(f => { try { fs.unlinkSync(path.join(BAK_DIR, f)); } catch (e) {} });
+    }
+    bakSig = sig; bakLast = Date.now(); console.log('backup: ' + hn + ' (' + Math.round(gz.length / 1024) + ' KB)');
+    return hn;
+  } catch (e) { console.error('backup failed:', e.message); return null; }
+  finally { bakBusy = false; }
+}
+async function bakList() {
+  if (pool) { const r = await pool.query("SELECT key, length(value) AS n FROM kv WHERE key LIKE 'bak:%' ORDER BY key DESC"); return r.rows.map(x => ({ name: x.key.slice(4), kb: Math.round(x.n * 0.75 / 1024) })); }
+  try { return fs.readdirSync(BAK_DIR).filter(f => f.endsWith('.json.gz')).sort().reverse().map(f => ({ name: f.replace('.json.gz', ''), kb: Math.round(fs.statSync(path.join(BAK_DIR, f)).size / 1024) })); } catch (e) { return []; }
+}
+function bakStart() { setTimeout(() => runBackup(true), 90e3); setInterval(() => runBackup(false), BAK_EVERY); }
+
 let saveTimer = null, writing = false, dirty = false;
 async function writeNow() {
   if (writing) { dirty = true; return; }
@@ -242,6 +282,23 @@ function limited(id, max, ms) {
   return h.n > max;
 }
 setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (now - h.t > 3600e3) hits.delete(k); }, 600e3);
+
+/* ===== حماية السبام: نفس الكلمة/الرسالة أكثر من 3 مرات = حظر مؤقت 20 ثانية من الكتابة (شات الغرف، المنتجع، البيوت، الخاص) ===== */
+const SPAM_MAX = 3, SPAM_BLOCK_MS = 20e3, SPAM_WINDOW_MS = 60e3;
+const spamSt = new Map();   // مفتاح اللاعب → { txt, n, t, until }
+function spamNorm(t) { return String(t || '').toLowerCase().replace(/[\u064b-\u065f\u0640]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
+function spamBlock(key, text) {   // يرجّع عدد الثواني المتبقية إذا هو محظور (والرسالة لا تنرسل)، وإلا 0
+  const now = Date.now(), norm = spamNorm(text); if (!key || !norm) return 0;
+  let st = spamSt.get(key); if (!st) { st = { txt: '', n: 0, t: 0, until: 0 }; spamSt.set(key, st); }
+  if (st.until > now) return Math.ceil((st.until - now) / 1000);
+  if (st.txt === norm && now - st.t < SPAM_WINDOW_MS) st.n++; else { st.txt = norm; st.n = 1; }
+  st.t = now;
+  const words = {}; let wordSpam = false; norm.split(' ').forEach(w => { if (w.length > 1 && (words[w] = (words[w] || 0) + 1) > SPAM_MAX) wordSpam = true; });   // نفس الكلمة داخل رسالة وحدة
+  if (st.n > SPAM_MAX || wordSpam) { st.until = now + SPAM_BLOCK_MS; st.n = 0; st.txt = ''; return Math.ceil(SPAM_BLOCK_MS / 1000); }
+  return 0;
+}
+const spamErr = sec => '⛔ تكرار نفس الكلمة! انحظرت من الكتابة ' + sec + ' ثانية';
+setInterval(() => { const now = Date.now(); for (const [k, v] of spamSt) if (now - v.t > 600e3 && v.until < now) spamSt.delete(k); }, 600e3);
 
 function rankOf(key) {
   const u = db.users[key];
@@ -491,6 +548,25 @@ app.get('/api/admin/chat-backup', (req, res) => {
   if (!ak || ak.length < 8 || !safeEq(String(sp.get('key') || ''), ak)) return res.status(403).json({ error: 'مفتاح غلط' });
   const code = String(sp.get('code') || 'rbsh99daklot99').toLowerCase(); if (!PROTECTED.has(code) || !db.rooms[code]) return res.status(404).json({ error: 'غرفة غير موجودة' });
   res.setHeader('Content-Disposition', 'attachment; filename="chat-' + code + '.json"'); res.json(db.rooms[code]);
+});
+// نسخ احتياطية كاملة (للمالك فقط، يحتاج ADMIN_KEY): ?key=... يعرض القائمة، &now=1 ينشئ نسخة جديدة، &get=<اسم> ينزّل نسخة، &get=live ينزّل نسخة حالية
+app.get('/api/admin/backup', async (req, res) => {
+  const sp = new URL(req.url, 'http://x').searchParams, ak = process.env.ADMIN_KEY || '';
+  if (limited('adm:' + req.ip, 10, 600e3)) return res.status(429).json({ error: 'محاولات كثيرة' });
+  if (!ak || ak.length < 8 || !safeEq(String(sp.get('key') || ''), ak)) return res.status(403).json({ error: 'مفتاح غلط' });
+  try {
+    const get = sp.get('get');
+    if (get === 'live') { const { gz } = await bakBuild(); res.setHeader('Content-Type', 'application/gzip'); res.setHeader('Content-Disposition', 'attachment; filename="babito-live-' + stamp(new Date()) + '.json.gz"'); return res.end(gz); }
+    if (get) {
+      const nm = String(get).replace(/[^a-z0-9-]/g, ''); let buf = null;
+      if (pool) { const r = await pool.query('SELECT value FROM kv WHERE key = $1', ['bak:' + nm]); if (r.rows[0]) buf = Buffer.from(r.rows[0].value, 'base64'); }
+      else { const f = path.join(BAK_DIR, nm + '.json.gz'); if (fs.existsSync(f)) buf = fs.readFileSync(f); }
+      if (!buf) return res.status(404).json({ error: 'النسخة مو موجودة' });
+      res.setHeader('Content-Type', 'application/gzip'); res.setHeader('Content-Disposition', 'attachment; filename="babito-' + nm + '.json.gz"'); return res.end(buf);
+    }
+    if (sp.get('now')) await runBackup(true);
+    res.json({ last: bakLast, every: '1h', keep: { hourly: BAK_HOURLY, daily: BAK_DAILY }, backups: await bakList() });
+  } catch (e) { res.status(500).json({ error: 'تعذّر: ' + e.message }); }
 });
 // منح عملات للاعب (للمالك فقط): يحتاج متغير ADMIN_KEY بإعدادات Render
 app.post('/api/admin/grant', (req, res) => {
@@ -972,7 +1048,7 @@ app.use('/uploads', express.static(UP_DIR, {
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
 /* ضغط ملفات اللعبة (gzip) حتى تنزل أسرع: نضغط الملف مرة وحدة ونخزنه بالذاكرة لين يتغير */
-const zlib = require('zlib'); const GZC = new Map();
+const GZC = new Map();
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return next();
@@ -1143,6 +1219,7 @@ app.post('/api/dm', authMw, (req, res) => {
   if (!own(db.users, k) || !mutual(req.key, k)) return res.status(403).json({ error: 'مو صديقك' });
   if (limited('dm:' + req.key, 40, 60e3)) return res.status(429).json({ error: 'بطّء شوي' });
   const text = String((req.body && req.body.text) || '').trim().slice(0, 500);
+  if (text) { const sp = spamBlock(req.key, text); if (sp) return res.status(429).json({ error: spamErr(sp) }); }
   let inv = null;
   const iv = req.body && req.body.inv;
   if (iv && typeof iv === 'object') {
@@ -1507,6 +1584,7 @@ function hvOnMsg(ws, d) {
   } else if (d.t === 'hv_chat') {   // شات داخل البيت (يطلع فوق الراس + سجل محفوظ لصاحب البيت)
     const h = ws.hv; if (!h || now - (h.ct || 0) < 600) return; h.ct = now;
     let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); if (!txt) return; if (!isAdmKey(ws)) txt = profMask(txt);
+    { const sp = spamBlock(ws.key, txt); if (sp) return send(ws, { t: 'rm_err', error: spamErr(sp) }); }
     const ou = db.users[h.owner]; ou.hlog = Array.isArray(ou.hlog) ? ou.hlog : []; const m = { n: me.name, txt, ts: now };
     ou.hlog.push(m); while (ou.hlog.length > 100) ou.hlog.shift(); save();
     hvBc(h.owner, { t: 'hv_chat', m });
@@ -1570,6 +1648,7 @@ const rmPub = r => ({ id: r.id, name: r.name, owner: db.users[r.owner] ? db.user
 
 /* ---------- طاولات الالعاب (سلم وثعبان / إكس أو / منقلة / دومينو) ---------- */
 const GM_TB = [{ x: 925, y: 345, k: 'snake' }, { x: 1100, y: 345, k: 'xo' }, { x: 925, y: 525, k: 'rps' }, { x: 1100, y: 525, k: 'domino' }];   // منطقة الألعاب بالجهة اليمنى: 2 يسار و 2 يمين
+const RM_LUDO = { x: 1012, y: 435, seats: [[-56, 11], [0, 50], [56, 11], [0, -16]] };   // طاولة لودو: كرسي لكل لون (أحمر يسار، أخضر فوق، أصفر يمين، أزرق تحت)
 const GM_L = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 }, GM_S = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
 const GM_XL = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const gmNew = tb => ({ tb, k: GM_TB[tb].k, p: [null, null], ph: 'idle', rd: [0, 0], turn: 0, msg: '', seq: 0, win: -1, rt: [0, 0] });
@@ -1663,7 +1742,7 @@ function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'class
 function rmLeave(ws) {
   if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws), hp = ws.rm.hold || ws.rm.heldBy; ws.rm = null; if (!r) return;
   if (hp) { for (const w of r.mem) if (w.rm && rmNm(w) === hp) { w.rm.hold = w.rm.heldBy = null; } rmBc(r, { t: 'rm_hold', a: nm, b: hp, on: 0 }); }
-  try { gmLeave(r, ws); } catch (e) {} r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) { rmBc(r, { t: 'rm_leave', n: nm }); alog('🚪', nm + ' طلع من غرفة «' + r.name + '»'); }
+  try { gmLeave(r, ws); } catch (e) {} try { LUDO.leaveTable(ws); } catch (e) {} r.mem.delete(ws); if (![...r.mem].some(w => w.key === ws.key)) { rmBc(r, { t: 'rm_leave', n: nm }); alog('🚪', nm + ' طلع من غرفة «' + r.name + '»'); }
   r.lastActive = Date.now(); if (!ws.guest) rmPersist();
 }
 function rmCloseRoom(r, why) { for (const w of [...r.mem]) { send(w, { t: 'rm_closed', txt: why || 'صاحب الغرفة سكّر الغرفة' }); w.rm = null; } r.mem.clear(); rmRooms.delete(r.id); rmPersist(); }
@@ -1720,7 +1799,7 @@ function rmOnMsg(ws, d) {
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1746,6 +1825,12 @@ function rmOnMsg(ws, d) {
     const h = ws.rm; if (!h) return; if (!rmAdm(ws)) { send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' }); return; } const r = rmRooms.get(h.id); if (!r) return; const u = String(d.url || '').trim().slice(0, 300);
     if (!u) r.music = null; else { const m = u.match(/[?&]list=([A-Za-z0-9_-]{10,64})/), v = u.match(/(?:[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/); if (!m && !v) { send(ws, { t: 'rm_err', error: 'رابط يوتيوب غير صالح' }); return; } r.music = m ? { k: 'pl', id: m[1] } : { k: 'v', id: v[1] }; r.music.by = me.name; }
     rmBc(r, { t: 'rm_music', music: r.music || null });
+  } else if (d.t === 'rm_lj' || d.t === 'rm_ll') {   // طاولة لودو (4 كراسي) داخل المنتجع
+    const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return;
+    if (d.t === 'rm_ll') return LUDO.leaveTable(ws);
+    const sd = d.side | 0; if (sd < 0 || sd > 3) return; const sp = RM_LUDO.seats[sd];
+    if (Math.hypot(h.x - (RM_LUDO.x + sp[0]), h.y - (RM_LUDO.y - sp[1])) > 46) return send(ws, { t: 'rm_ok', msg: '⚠️ قرّب من الكرسي' });
+    const er = LUDO.sitTable(ws, r.id, sd); if (er) send(ws, { t: 'rm_err', error: '🎲 ' + er });
   } else if (d.t === 'rm_gj' || d.t === 'rm_gl' || d.t === 'rm_gready' || d.t === 'rm_gact') {   // طاولات الالعاب
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return;
     if (d.t === 'rm_gl') return gmLeave(r, ws);
@@ -1848,6 +1933,7 @@ function rmOnMsg(ws, d) {
     try { alog('💡', rmNm(ws) + ' كتب فكرة: ' + txt); } catch (e) {} send(ws, { t: 'rm_ok', msg: '💡 انضافت فكرتك، شكراً إلك! تكدر تكتب فكرة ثانية بعد أسبوع' }); send(ws, { t: 'rm_ideas', list: pubI(), next: nextAt() }); return bcAll();
   } else if (d.t === 'rm_whisper') {
     const h = ws.rm; if (!h || now - (h.wst || 0) < 800) return; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); } let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
+    { const sp = spamBlock(ws.key, txt); if (sp) return send(ws, { t: 'rm_err', error: spamErr(sp) }); }
     const tw = [...r.mem].find(w => rmNm(w) === String(d.n || '') && w !== ws); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' }); h.wst = now;
     const m = { t: 'rm_whisper', from: rmNm(ws), to: rmNm(tw), txt }; send(tw, m); send(ws, m);
   } else if (d.t === 'rm_wx') {   // تحكم المشرفين بالطقس والوقت
@@ -1873,6 +1959,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_chat') {
     const h = ws.rm; if (!h || now - h.ct < (ws.guest ? 1500 : 600)) return; h.ct = now; const r = rmRooms.get(h.id); if (!r) return; { const mm = rmMuted(r, ws, now); if (mm) return send(ws, { t: 'rm_err', error: '🔇 أنت مكتوم، باقي ' + mm + ' دقيقة' }); }
     let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 500); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
+    { const sp = spamBlock(ws.key, txt); if (sp) return send(ws, { t: 'rm_err', error: spamErr(sp) }); }
     rmStat(r, now).msgs++; const m = { n: me.name, txt, ts: now, adm: rmAdm(ws) }; if (h.hid) m.hid = 1; r.log.push(m); while (r.log.length > 80) r.log.shift(); if (h.hid) rmBcV(r, { t: 'rm_chat', m }, ws), send(ws, { t: 'rm_chat', m }); else rmBc(r, { t: 'rm_chat', m });
   } else if (d.t === 'rm_leave') rmLeave(ws);
   else if (d.t === 'rm_kick' || d.t === 'rm_mute' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
@@ -1912,11 +1999,13 @@ function rmOnMsg(ws, d) {
   }
 }
 const SUS = require('./sus-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b) });
+const LUDO = require('./ludo-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b), onTable: (rmId, st) => { const r = rmRooms.get(rmId); if (r) rmBc(r, { t: 'rm_lt', s: st }); } });   // لعبة «لودو»
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
   if (typeof d.t === 'string' && d.t.startsWith('hv_')) return hvOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('rm_')) return rmOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('sus_')) return SUS.onMsg(ws, d);   // لعبة «مين الخاين؟»
+  if (typeof d.t === 'string' && d.t.startsWith('ludo_')) return LUDO.onMsg(ws, d);   // لعبة «لودو»
   if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
@@ -1947,6 +2036,7 @@ function onMsg(ws, d) {
 
   if (d.t === 'msg') {
     let text = String(d.text || '').trim().slice(0, 500); if (text && !isAdmKey(ws)) text = profMask(text);
+    if (text) { const sp = spamBlock(ws.key, text); if (sp) return send(ws, { t: 'err', error: spamErr(sp) }); }
     let media = null;
     if (d.media && typeof d.media === 'object') {
       const mm = MEDIA_RE.exec(String(d.media.url || ''));
@@ -2078,7 +2168,7 @@ wss.on('connection', (ws, req) => {
   alCntPush();
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (d && typeof d.t === 'string' && d.t.startsWith('al_')) { try { alMsg(ws, d); } catch (e) { console.error(e); } return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => { alSubs.delete(ws); try { SUS.leave(ws); } catch (e) {} hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
+  ws.on('close', () => { alSubs.delete(ws); try { SUS.leave(ws); } catch (e) {} try { LUDO.leave(ws); } catch (e) {} hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
   ws.on('error', () => {});
 });
 setInterval(() => {
@@ -2105,5 +2195,5 @@ setInterval(cleanup, 3600e3);
 initStorage()
   .then(() => { ensureAdmin(); rmLoad(); return protRestore(); })
   .then(() => statsInit())
-  .then(() => server.listen(PORT, () => { console.log('Flappy server on :' + PORT); const u = process.env.RENDER_EXTERNAL_URL; if (u && typeof fetch === 'function') setInterval(() => { fetch(u + '/healthz').catch(() => {}); }, 9 * 60 * 1000); }))
+  .then(() => server.listen(PORT, () => { console.log('Flappy server on :' + PORT); bakStart(); const u = process.env.RENDER_EXTERNAL_URL; if (u && typeof fetch === 'function') setInterval(() => { fetch(u + '/healthz').catch(() => {}); }, 9 * 60 * 1000); }))
   .catch(e => { console.error('startup failed:', e.message); process.exit(1); });
