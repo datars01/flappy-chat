@@ -811,15 +811,16 @@ app.post('/api/avatar', authMw, (req, res, next) => {
   res.json({ avatar: u.avatar });
 });
 // الصور الشخصية الجاهزة والإطارات
-const PFP_MAX = 30;
-const FRAMES = ['', 'gold', 'rainbow', 'neon', 'fire', 'love', 'ice', 'leaf', 'night', 'crown'];
-const FRAME_ADMIN = ['crown'];
+const PFP_MAX = 30, PFP_ADM = [31, 32, 33];   // 31-33 صور بروفيشنال للمشرفين فقط
+const FRAMES = ['', 'gold', 'rainbow', 'neon', 'fire', 'love', 'ice', 'leaf', 'night', 'crown', 'royal', 'plat', 'shield'];
+const FRAME_ADMIN = ['crown', 'royal', 'plat', 'shield'];
 function frameOf(u) { const f = u && u.frame; return FRAMES.includes(f) && (!FRAME_ADMIN.includes(f) || u.admin) ? f : ''; }
 app.post('/api/pfp', authMw, (req, res) => {
   const u = db.users[req.key], b = req.body || {};
   if (b.p !== undefined) {
     const m = /^p(\d{1,2})$/.exec(String(b.p || ''));
-    if (!m || +m[1] < 1 || +m[1] > PFP_MAX) return res.status(400).json({ error: 'صورة غير موجودة' });
+    if (!m || +m[1] < 1 || (+m[1] > PFP_MAX && !PFP_ADM.includes(+m[1]))) return res.status(400).json({ error: 'صورة غير موجودة' });
+    if (PFP_ADM.includes(+m[1]) && !u.admin) return res.status(403).json({ error: 'هذه الصورة للمشرفين فقط 🛡️' });
     if (String(u.avatar || '').startsWith('/uploads/')) mediaDelUrl(u.avatar);
     u.avatar = 'p:' + m[1];
   }

@@ -859,6 +859,15 @@
   @keyframes pfpSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .pfp::before { animation: none !important; } }
 
+  .pfpIn.pro { box-shadow: inset 0 0 0 calc(var(--s) * .03) var(--pc), inset 0 calc(var(--s) * -.12) calc(var(--s) * .2) rgba(0,0,0,.55); font-size: calc(var(--s) * .42); }
+  .pfpIn.pro::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(160deg, rgba(255,255,255,.35), transparent 40%); pointer-events: none; }
+  .fr-royal, .fr-plat, .fr-shield { padding: calc(var(--s) * .1); }
+  .fr-royal::before { background: conic-gradient(from 0deg, #3a2e12, #d4af37, #fff1b8, #d4af37, #3a2e12, #d4af37, #fff1b8, #d4af37, #3a2e12); box-shadow: 0 0 0 calc(var(--s) * .025) #0b0b0f, 0 0 calc(var(--s) * .25) rgba(212,175,55,.55); animation: pfpSpin 8s linear infinite; }
+  .fr-plat::before { background: conic-gradient(#8e9aaf, #ffffff, #b8c4d6, #e6f0ff, #6f7b91, #ffffff, #8e9aaf); box-shadow: 0 0 0 calc(var(--s) * .025) #1a0b2e, 0 0 calc(var(--s) * .22) rgba(200,220,255,.6); animation: pfpSpin 6s linear infinite; }
+  .fr-shield::before { background: conic-gradient(#0d1b3d, #3a7bff, #9fd0ff, #3a7bff, #0d1b3d, #3a7bff, #9fd0ff, #3a7bff, #0d1b3d); box-shadow: 0 0 0 calc(var(--s) * .025) #c0c8d8, 0 0 calc(var(--s) * .25) rgba(58,123,255,.6); animation: pfpSpin 5s linear infinite reverse; }
+  .fr-royal .pfpB, .fr-plat .pfpB, .fr-shield .pfpB { bottom: -8%; inset-inline-end: auto; left: 50%; transform: translateX(-50%); font-size: calc(var(--s) * .26); padding: 1px calc(var(--s) * .06); border-radius: 8px; background: #0b0b0f; border: 1px solid #d4af37; }
+  .fr-plat .pfpB { background: #1a0b2e; border-color: #e6f0ff; } .fr-shield .pfpB { background: #0d1b3d; border-color: #9fd0ff; }
+  .acProH { grid-column: 1 / -1; font-size: 12px; font-weight: 800; color: #ffd166; padding: 6px 2px 0; border-top: 1px dashed var(--line); margin-top: 4px; }
   /* ===== شريط الحساب فوق ===== */
   #homeBar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-radius: 20px; }
   #homeBar #hbAcc { flex: 1 1 100%; display: flex; align-items: center; gap: 12px; padding: 0; background: none; color: #fff; white-space: normal; overflow: visible; max-width: none; text-align: start; }
@@ -903,7 +912,7 @@
   .acHero { position: relative; overflow: hidden; text-align: center; padding: 22px 14px 14px; border-radius: 22px; background: linear-gradient(160deg, #3a2bb0, #1d2a66 60%, #141b45); border: 1px solid #4a56b8; }
   .acHero::before { content: ""; position: absolute; inset: -40% -20% auto; height: 160px; background: radial-gradient(circle, rgba(255,79,154,.35), transparent 65%); pointer-events: none; }
   .acAvBtn { position: relative; background: none; padding: 0; border-radius: 50%; }
-  .acEdit { position: absolute; z-index: 3; bottom: 2px; left: 2px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: #ffd166; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .acEdit { position: absolute; z-index: 3; top: 4px; left: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: #ffd166; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
   .acNm { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
   .acNm b { font-size: 22px; font-weight: 800; color: #fff; }
   #meName { overflow: visible; white-space: normal; }
@@ -1365,12 +1374,14 @@ function renderAuth() {
 }
 /* ================= الصور الشخصية والإطارات ================= */
 const PFP = [['🦊','#ff9a3c','#ff5e62'],['🐼','#a8edea','#5b8def'],['🐯','#ffd166','#f5a623'],['🦁','#f6d365','#fda085'],['🐸','#9be15d','#00b09b'],['🐵','#d4a373','#8d5a3b'],['🐨','#c3cfe2','#7f8fa6'],['🐰','#fbc2eb','#a18cd1'],['🐱','#ffecd2','#fcb69f'],['🐶','#e0c3fc','#8ec5fc'],['🦄','#f9a8d4','#a78bfa'],['🐲','#43e97b','#038f5a'],['🐙','#ff758c','#ff7eb3'],['🦉','#c79081','#6b4f3a'],['🐧','#89f7fe','#2a6fdb'],['🐻','#c9a27e','#7a4b2a'],['🐳','#4facfe','#00c6fb'],['🦋','#a1c4fd','#6a5cff'],['🐝','#ffe259','#ffa751'],['🦖','#56ab2f','#a8e063'],['😎','#f7971e','#ffd200'],['🤖','#bdc3c7','#2c3e50'],['👽','#8e2de2','#4a00e0'],['🥷','#5a5a5a','#111111'],['🧙‍♂️','#654ea3','#eaafc8'],['👑','#f7b733','#fc4a1a'],['🎮','#00c9ff','#92fe9d'],['⚽','#11998e','#38ef7d'],['🌙','#243b55','#141e30'],['🍉','#ff512f','#56ab2f']];
-const PFP_FR = [['', 'بدون'], ['gold', 'ذهبي'], ['rainbow', 'قوس قزح'], ['neon', 'نيون'], ['fire', 'ناري', '🔥'], ['love', 'حب', '💖'], ['ice', 'ثلجي', '❄️'], ['leaf', 'ربيعي', '🍃'], ['night', 'ليلي', '⭐'], ['crown', 'تاج الإدارة', '👑', 1]];
+const PFP_ADM = [['🦅','#0b0b0f','#3a2e12','#d4af37'],['🛡️','#0d1b3d','#1f3a73','#c0c8d8'],['💎','#1a0b2e','#4a1d7a','#e6d3ff']];   // صور بروفيشنال للمشرفين (31-33)
+const PFP_FR = [['', 'بدون'], ['gold', 'ذهبي'], ['rainbow', 'قوس قزح'], ['neon', 'نيون'], ['fire', 'ناري', '🔥'], ['love', 'حب', '💖'], ['ice', 'ثلجي', '❄️'], ['leaf', 'ربيعي', '🍃'], ['night', 'ليلي', '⭐'], ['crown', 'تاج الإدارة', '👑', 1], ['royal', 'ملكي', '⚜️', 1], ['plat', 'بلاتيني', '💠', 1], ['shield', 'الحارس', '🛡️', 1]];
 function pfpEl(av, name, frame, size) {
   const w = document.createElement('span'), i = document.createElement('span'); av = String(av || '');
   w.className = 'pfp fr-' + (frame || 'none'); w.style.setProperty('--s', (size || 44) + 'px'); i.className = 'pfpIn';
-  const pm = /^p:(\d{1,2})$/.exec(av), P = pm && PFP[+pm[1] - 1];
+  const pm = /^p:(\d{1,2})$/.exec(av), P = pm && (+pm[1] > 30 ? PFP_ADM[+pm[1] - 31] : PFP[+pm[1] - 1]);
   if (av.startsWith('/uploads/')) { const im = document.createElement('img'); im.src = av; im.alt = ''; im.loading = 'lazy'; im.onerror = () => { im.remove(); i.textContent = String(name || '?').trim().charAt(0).toUpperCase(); i.classList.add('ini'); }; i.appendChild(im); }
+  else if (P && P[3]) { i.classList.add('pro'); i.style.background = 'radial-gradient(circle at 50% 30%,' + P[2] + ',' + P[1] + ' 75%)'; i.style.setProperty('--pc', P[3]); i.textContent = P[0]; }
   else if (P) { i.style.background = 'linear-gradient(135deg,' + P[1] + ',' + P[2] + ')'; i.textContent = P[0]; }
   else if (av === 'guest') { i.style.background = 'rgba(255,255,255,.18)'; i.textContent = '👤'; }
   else { i.textContent = String(name || '?').trim().charAt(0).toUpperCase() || '?'; i.classList.add('ini'); }
@@ -1389,8 +1400,9 @@ function acRender() {
   [['🏆', auth.best || 0, 'أعلى نتيجة'], ['🎮', auth.games || 0, 'المحاولات'], ['🗺️', auth.cp || 1, 'المرحلة'], ['🪙', auth.coins || 0, 'عملات'], ['🧱', auth.bricks || 0, 'طابوق'], ['🎒', (auth.owned || []).length, 'سكنات']].forEach(x => { const d = frMk('div', 'acSt'); d.append(frMk('b', '', x[0] + ' ' + x[1]), frMk('small', '', x[2])); st.appendChild(d); });
   const g = $('acGrid'); g.innerHTML = '';
   PFP.forEach((P, k) => { const id = 'p:' + (k + 1), b = frMk('button', 'acOpt' + (auth.avatar === id ? ' on' : '')); b.type = 'button'; b.setAttribute('aria-label', 'صورة ' + (k + 1)); b.appendChild(pfpEl(id, '', '', 46)); b.onclick = () => acSetPfp(k + 1); g.appendChild(b); });
+  if (auth.admin) { g.appendChild(frMk('div', 'acProH', '🛡️ صور بروفيشنال للمشرفين')); PFP_ADM.forEach((P, k) => { const id = 'p:' + (31 + k), b = frMk('button', 'acOpt' + (auth.avatar === id ? ' on' : '')); b.type = 'button'; b.appendChild(pfpEl(id, '', '', 46)); b.onclick = () => acSetPfp(31 + k); g.appendChild(b); }); }
   const fr = $('acFrames'); fr.innerHTML = '';
-  PFP_FR.forEach(F => { if (F[3] && !auth.admin) return; const b = frMk('button', 'acFr' + ((auth.frame || '') === F[0] ? ' on' : '')); b.type = 'button'; b.append(pfpEl(auth.avatar, auth.name, F[0], 42), frMk('span', '', F[1])); b.onclick = () => acSetFrame(F[0]); fr.appendChild(b); });
+  PFP_FR.forEach(F => { if (F[3] && !auth.admin) return; if (F[0] === 'royal') fr.appendChild(frMk('div', 'acProH', '🛡️ إطارات بروفيشنال للمشرفين')); const b = frMk('button', 'acFr' + ((auth.frame || '') === F[0] ? ' on' : '')); b.type = 'button'; b.append(pfpEl(auth.avatar, auth.name, F[0], 42), frMk('span', '', F[1])); b.onclick = () => acSetFrame(F[0]); fr.appendChild(b); });
 }
 function acApply(r) { auth.avatar = r.avatar || ''; auth.frame = r.frame || ''; renderHome(); acRender(); try { if (fData) renderFriends(); } catch (e) {} lbRender(lbLast, true); }
 async function acSetPfp(n) { try { acApply(await api('/api/pfp', { method: 'POST', body: { p: 'p' + n } })); acSay('✅ تغيّرت صورتك'); } catch (e) { acSay('❌ ' + e.message, true); } }
