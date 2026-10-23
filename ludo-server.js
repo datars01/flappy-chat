@@ -4,11 +4,12 @@
 'use strict';
 module.exports = function ludoInit(ctx) {
   const { db, save, send, crypto, alog } = ctx; const onTable = ctx.onTable || (() => {});   // onTable: يبلّغ المنتجع بحالة طاولة الغوكو
-  const SEATS = 4, MIN_P = 2, TURN_MS = 25000, OVER_MS = 12000, WIN_COINS = 20;
+  const SEATS = 4, MIN_P = 2, CD_MS = 3000, TURN_MS = 25000, OVER_MS = 12000, WIN_COINS = 20;
   const TRACK = 52, LANE_END = 56;                       // مواقع الحجر: -1 قاعدة، 0..50 مسار، 51..55 ممر البيت، 56 وصل
   const START = [0, 13, 26, 39];                         // خانة بداية كل لون على المسار
   const SAFE = new Set([0, 13, 26, 39, 8, 21, 34, 47]);  // خانات البداية + النجوم (ما ينأكل فيها حجر)
   const L = new Map();                                   // id → طاولة
+  let joinSeq = 0;                                       // ترتيب الدخول (أول واحد دخل = الهوست)
   const rnd = n => crypto.randomInt(n);
   const now = () => Date.now();
   const nameOf = ws => (db.users[ws.key] && db.users[ws.key].name) || '؟';
@@ -18,13 +19,15 @@ module.exports = function ludoInit(ctx) {
   const liveSeats = l => l.seats.map((p, i) => (p && !p.left ? i : -1)).filter(i => i >= 0);
   const lobbyOf = ws => { for (const l of L.values()) if (l.seats.some(p => p && p.ws === ws && !p.left)) return l; return null; };
   const seatOf = (l, ws) => l.seats.findIndex(p => p && p.ws === ws && !p.left);
+  const earliest = l => l.seats.filter(p => p && !p.left).sort((a, b) => (a.at || 0) - (b.at || 0))[0];   // أول واحد دخل = الهوست
 
+  const allReady = l => { const live = liveSeats(l); return live.length >= MIN_P && live.every(i => l.seats[i].rdy); };
   function pub(l, viewer) {
     const mine = viewer ? seatOf(l, viewer) : -1;
     return {
       id: l.id, code: l.priv ? l.code : '', priv: !!l.priv, host: l.host, ph: l.ph, t: l.t ? Math.max(0, l.t - now()) : 0,
       seats: l.seats.map((p, i) => p ? { n: p.name, left: !!p.left, host: p.key === l.host, me: i === mine, tk: p.tk, rank: p.rank || 0, rdy: !!p.rdy } : null),
-      turn: l.turn, dice: l.dice, rolled: l.rolled, movable: l.ph === 'play' && l.turn === mine ? l.movable : [], win: l.win, last: l.lastEv || null, my: mine
+      allRdy: allReady(l), turn: l.turn, dice: l.dice, rolled: l.rolled, movable: l.ph === 'play' && l.turn === mine ? l.movable : [], win: l.win, last: l.lastEv || null, my: mine
     };
   }
   function tablePub(l) { return l ? { ph: l.ph, turn: l.turn, dice: l.dice, win: l.win ? l.win.s : -1, seats: l.seats.map(p => p ? { n: p.name, left: !!p.left, tk: p.tk } : null) } : null; }
@@ -43,7 +46,7 @@ module.exports = function ludoInit(ctx) {
   function sit(l, ws, want) {
     const i = freeSeat(l, want); if (i === undefined) return false;
     const nm = nameOf(ws);
-    l.seats[i] = { key: ws.key, ws, name: nm, tk: [-1, -1, -1, -1], left: false, rank: 0, rdy: false };
+    l.seats[i] = { key: ws.key, ws, name: nm, tk: [-1, -1, -1, -1], left: false, rank: 0, rdy: false, at: ++joinSeq };
     const cnt = seatedCount(l); l.seats.forEach(q => { if (q && q.ws && q.ws !== ws && !q.left) send(q.ws, { t: 'ludo_join', n: nm, cnt, host: q.key === l.host }); });   // يبلّغ اللي قاعدين (وصاحب الطاولة) إن واحد دخل
     return true;
   }
@@ -54,7 +57,7 @@ module.exports = function ludoInit(ctx) {
     else { p.left = true; p.ws = null; p.tk = [-1, -1, -1, -1]; }
     const live = liveSeats(l);
     if (!live.length) { drop(l); return; }
-    if (l.host === p.key) { const h = l.seats[live[0]]; if (h) l.host = h.key; }
+    if (l.host === p.key) { const h = earliest(l); if (h) l.host = h.key; }
     if (l.ph === 'play') {
       if (live.length === 1) return finish(l, live[0], 'الباقين طلعوا من اللعبة');
       if (l.turn === i) nextTurn(l, false);
@@ -64,7 +67,7 @@ module.exports = function ludoInit(ctx) {
   function start(l) {
     if (liveSeats(l).length < MIN_P) return;
     l.seats.forEach(p => { if (p) { p.tk = [-1, -1, -1, -1]; p.rank = 0; p.rdy = false; } });
-    const live = liveSeats(l); /* أول واحد دخل (صاحب الطاولة) هو اللي يبدي */ const hs = live.find(i => l.seats[i].key === l.host); l.turn = hs !== undefined ? hs : live[0]; l.ph = 'play'; l.dice = 0; l.rolled = false; l.movable = []; l.sixes = 0; l.win = null; l.lastEv = null; l.rank = 0; l.t = now() + TURN_MS;
+    const live = liveSeats(l); /* أول واحد دخل (صاحب الطاولة) هو اللي يبدي */ const hs = live.find(i => l.seats[i].key === l.host); l.turn = hs !== undefined ? hs : live[0]; l.ph = 'play'; l.dice = 0; l.rolled = false; l.movable = []; l.sixes = 0; l.win = null; l.lastEv = null; l.rank = 0; l.cdUntil = now() + CD_MS; l.t = now() + TURN_MS + CD_MS;
     try { alog('🎲', 'بدت لعبة غوكو بـ ' + live.length + ' لاعبين'); } catch (e) {}
     bc(l);
   }
@@ -121,7 +124,7 @@ module.exports = function ludoInit(ctx) {
     const t = now();
     for (const l of [...L.values()]) {
       if (l.ph === 'play' && l.t && t >= l.t) { if (l.pass) { l.pass = false; nextTurn(l, false); bc(l); } else autoPlay(l); }
-      else if (l.ph === 'over' && l.t && t >= l.t) { l.ph = 'lobby'; l.t = 0; l.win = null; l.seats.forEach((p, i) => { if (p && p.left) l.seats[i] = null; }); if (!seatedCount(l)) drop(l); else { if (!l.seats.some(p => p && p.key === l.host)) l.host = l.seats.find(Boolean).key; bc(l); } }
+      else if (l.ph === 'over' && l.t && t >= l.t) { l.ph = 'lobby'; l.t = 0; l.win = null; l.seats.forEach((p, i) => { if (p && p.left) l.seats[i] = null; else if (p) p.rdy = false; }); if (!seatedCount(l)) drop(l); else { if (!l.seats.some(p => p && p.key === l.host)) l.host = earliest(l).key; bc(l); } }
       else if (l.ph === 'lobby' && !seatedCount(l)) drop(l);
     }
   }, 500);
@@ -138,7 +141,7 @@ module.exports = function ludoInit(ctx) {
       }
       case 'ludo_create': { if (l) removeP(l, ws); l = newLobby(ws, true); L.set(l.id, l); sit(l, ws); return bc(l); }
       case 'ludo_join': {
-        const x = [...L.values()].find(y => y.code === String(d.code || '').trim()); if (!x) return send(ws, { t: 'ludo_err', error: 'ما لكيت طاولة بهذا الرمز' });
+        const x = [...L.values()].find(y => !y.table && y.code === String(d.code || '').trim()); if (!x) return send(ws, { t: 'ludo_err', error: 'ما لكيت طاولة بهذا الرمز' });
         if (x.ph !== 'lobby') return send(ws, { t: 'ludo_err', error: 'اللعبة بديت، انتظر تخلص' });
         if (seatedCount(x) >= SEATS) return send(ws, { t: 'ludo_err', error: 'الطاولة مليانة (4 مقاعد)' });
         if (l && l !== x) removeP(l, ws); if (!x.seats.some(p => p && p.ws === ws)) sit(x, ws); return bc(x);
@@ -154,14 +157,21 @@ module.exports = function ludoInit(ctx) {
         if (l.ph !== 'lobby') return; const to = d.s | 0; if (to < 0 || to >= SEATS || l.seats[to]) return;
         l.seats[to] = l.seats[me]; l.seats[me] = null; return bc(l);
       }
-      case 'ludo_ready': {                                             // زر استعداد: يبدي أوتوماتيك إذا الكل جاهز (واللعب يبدي بأول واحد دخل)
+      case 'ludo_ready': {                                             // زر استعداد: كل لاعب (حتى الهوست) يدوس جاهز؛ بعدها الهوست هو اللي يشغّل اللعبة
         if (l.ph !== 'lobby') return;
         if (liveSeats(l).length < MIN_P) return send(ws, { t: 'ludo_err', error: 'لازم لاعبين اثنين على الأقل' });
-        const p = l.seats[me]; p.rdy = !p.rdy;
-        if (liveSeats(l).every(i => l.seats[i].rdy)) return start(l);
-        return bc(l);
+        const p = l.seats[me]; p.rdy = !p.rdy; bc(l);
+        if (p.rdy && allReady(l)) l.seats.forEach(q => { if (q && q.ws && !q.left) send(q.ws, { t: 'ludo_allready', host: q.key === l.host }); });
+        return;
       }
-      case 'ludo_roll': { if (l.ph !== 'play' || l.turn !== me || l.rolled) return; return roll(l, me); }
+      case 'ludo_start': {                                             // الهوست بس (أول واحد دخل) يشغّل اللعبة بعد ما الكل مستعد
+        if (l.ph !== 'lobby') return;
+        if (l.seats[me].key !== l.host) return send(ws, { t: 'ludo_err', error: 'بس الهوست (أول واحد دخل) يشغّل اللعبة 👑' });
+        if (liveSeats(l).length < MIN_P) return send(ws, { t: 'ludo_err', error: 'لازم لاعبين اثنين على الأقل' });
+        if (!allReady(l)) return send(ws, { t: 'ludo_err', error: 'لازم الكل يضغط «استعداد» أول' });
+        return start(l);
+      }
+      case 'ludo_roll': { if (l.ph !== 'play' || l.turn !== me || l.rolled || now() < (l.cdUntil || 0)) return; return roll(l, me); }
       case 'ludo_move': { if (l.ph !== 'play' || l.turn !== me || !l.rolled) return; const k = d.k | 0; if (!l.movable.includes(k)) return; return move(l, me, k); }
     }
   }
