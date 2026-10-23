@@ -953,6 +953,9 @@
   .rmInfo { background: rgba(20,30,70,.55); border-radius: 14px; padding: 8px; font-size: 13px; } .rmInfo b { color: #ffd23a; }
   .rmTog { display: flex; gap: 8px; } .rmTog button { flex: 1; border: 0; border-radius: 12px; padding: 8px; font: 800 13px Cairo, system-ui; background: rgba(20,30,70,.55); color: #fff; } .rmTog button.off { opacity: .55; }
   .rmHow { font-size: 12.5px; color: #1a2448; font-weight: 700; }
+  .rmPws { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; } .rmPws span { font-size: 11.5px; font-weight: 800; color: #2a1a5a; background: rgba(162,74,255,.14); border: 1px solid rgba(162,74,255,.3); border-radius: 10px; padding: 3px 7px; }
+  .rmBtn.rev { background: linear-gradient(135deg, #ff3a7a, #ff7a3a); box-shadow: 0 5px 0 #a01a4a, 0 8px 18px rgba(255,58,122,.45); animation: rvP 1.2s ease-in-out infinite; } .rmBtn.rev small { display: block; font-size: 12px; opacity: .9; } .rmBtn.rev.no { filter: grayscale(.7); opacity: .7; animation: none; }
+  @keyframes rvP { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
   .rpHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #1a2448; } .rpHead button { border: 0; border-radius: 12px; padding: 6px 12px; background: rgba(20,30,70,.6); color: #fff; font: 800 13px Cairo, system-ui; } .rpHead span { background: rgba(20,30,70,.6); color: #ffd23a; padding: 5px 10px; border-radius: 12px; font-weight: 900; }
   #runTabs { display: flex; gap: 6px; } #runTabs button { flex: 1; border: 0; border-radius: 12px; padding: 8px 4px; font: 800 13px Cairo, system-ui; background: rgba(20,30,70,.45); color: #fff; } #runTabs button.on { background: #fff; color: #6a3aff; }
   #runGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } @media (min-width: 600px) { #runGrid { grid-template-columns: repeat(5, 1fr); } }
@@ -8374,6 +8377,6 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 <script src="/sus.js?v=4"></script>
-<script src="/run.js?v=1"></script>
+<script src="/run.js?v=2"></script>
 </body>
 </html>
