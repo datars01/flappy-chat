@@ -7454,16 +7454,25 @@ function rmLTable(c, sd) {
   c.fillStyle = COL[0]; c.beginPath(); c.moveTo(6 * u, 6 * u); c.lineTo(6 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[1]; c.beginPath(); c.moveTo(6 * u, 6 * u); c.lineTo(9 * u, 6 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[2]; c.beginPath(); c.moveTo(9 * u, 6 * u); c.lineTo(9 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[3]; c.beginPath(); c.moveTo(6 * u, 9 * u); c.lineTo(9 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill();
   if (lt) lt.seats.forEach((p, i) => { if (!p) return; p.tk.forEach((pos, k) => { const q = ludoCell(i, pos, k); c.fillStyle = COL[i]; c.strokeStyle = '#fff'; c.lineWidth = 1; c.beginPath(); c.arc(q[0] * u, q[1] * u, u * 0.55, 0, 7); c.fill(); c.stroke(); }); });
   c.restore();
-  /* لوحة «جديد» بجنب الطاولة */
-  { const T2 = RM.T, bx = 140, by = 18, pulse = 0.5 + 0.5 * Math.sin(T2 / 9);
-    rmRR(c, bx - 3, by - 14, 6, 16, 2, '#5a3a22'); rmRR(c, bx - 45, by - 76, 90, 64, 6, '#6f4524'); rmRR(c, bx - 42, by - 73, 84, 58, 4, '#fff1d0');
-    c.fillStyle = 'rgba(255,200,60,' + (0.25 + 0.35 * pulse) + ')'; c.beginPath(); c.ellipse(bx, by - 70, 26, 8, 0, 0, 7); c.fill();
-    rmRR(c, bx - 22, by - 82, 44, 13, 6, '#e53b6a'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 9px Cairo, system-ui, Arial'; c.fillStyle = '#fff'; c.fillText('✨ جديد ✨', bx, by - 75.5);
-    c.font = 'bold 7.5px Cairo, system-ui, Arial'; c.fillStyle = '#4a2a10'; ['🎲 لودو: العب من هنا', 'ويا أصدقائك داخل', 'المنتجع، أو العب', 'أونلاين من الخارج', '(الشاشة الرئيسية)'].forEach((t, i) => c.fillText(t, bx, by - 61 + i * 9.4)); c.textBaseline = 'alphabetic'; }
+  /* لوحة «جديد» بجنب الطاولة + زر ينقلك لللودو أونلاين مباشرة */
+  { const T2 = RM.T, bx = 140, by = 36, pulse = 0.5 + 0.5 * Math.sin(T2 / 9);
+    rmRR(c, bx - 3, by - 14, 6, 16, 2, '#5a3a22'); rmRR(c, bx - 47, by - 92, 94, 80, 6, '#6f4524'); rmRR(c, bx - 44, by - 89, 88, 74, 4, '#fff1d0');
+    c.fillStyle = 'rgba(255,200,60,' + (0.25 + 0.35 * pulse) + ')'; c.beginPath(); c.ellipse(bx, by - 86, 28, 8, 0, 0, 7); c.fill();
+    rmRR(c, bx - 22, by - 99, 44, 13, 6, '#e53b6a'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 9px Cairo, system-ui, Arial'; c.fillStyle = '#fff'; c.fillText('✨ جديد ✨', bx, by - 92.5);
+    c.font = 'bold 7.5px Cairo, system-ui, Arial'; c.fillStyle = '#4a2a10'; ['🎲 لودو: العب من هنا', 'ويا أصدقائك داخل', 'المنتجع، أو العب', 'أونلاين من الخارج', '(الشاشة الرئيسية)'].forEach((t, i) => c.fillText(t, bx, by - 77 + i * 9.4));
+    const bw = 78 + pulse * 3, bh = 16 + pulse * 1.5; rmRR(c, bx - bw / 2, by - 33 - bh / 2 + 8, bw, bh, 8, '#1e9d5a'); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.beginPath(); if (c.roundRect) c.roundRect(bx - bw / 2, by - 33 - bh / 2 + 8, bw, bh, 8); else c.rect(bx - bw / 2, by - 33 - bh / 2 + 8, bw, bh); c.stroke();
+    c.font = 'bold 8px Cairo, system-ui, Arial'; c.fillStyle = '#fff'; c.fillText('🌐 العب أونلاين ◀', bx, by - 25 + 0.5); c.textBaseline = 'alphabetic';
+    RM.ldBtn = { x: sd.x + bx, y: sd.y + by - 25, w: 82, h: 18 }; }
   c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 2.5;
   const lab = '🎲 لودو' + (act ? ' • جارية' : cnt ? ' • ' + cnt + '/4' : ' • 4 كراسي'), ly = -50 + Math.sin(T / 15) * 1.2; c.strokeText(lab, 0, ly - 24); c.fillText(lab, 0, ly - 24);
   if (!act && !cnt) { c.font = '14px system-ui'; c.fillText(['🎲', '✨'][Math.floor(T / 20) % 2], 0, ly - 36 + Math.sin(T / 9) * 2); }
   c.restore();
+}
+function rmLudoBtnHit(x, y) { const b = RM.ldBtn; return !!b && Math.abs(x - b.x) < b.w / 2 + 3 && Math.abs(y - b.y) < b.h / 2 + 3; }
+function rmLudoGo() {   // اختصار: من لوحة المنتجع مباشرة إلى لودو أونلاين (بدون مشي)
+  if (!auth) { showToast('✍️ سجّل حساب حتى تلعب لودو أونلاين'); return; }
+  try { if (window.ludoRmClose) ludoRmClose(); } catch (e) {} RM.lSide = null; showToast('🌐 رايح للودو أونلاين...');
+  rmLeaveRoom(true); setTimeout(() => openPage('ludo'), 60);
 }
 function rmLudoTick() {
   const m = RM.me, sp = m.sit && m.seat, ok = !!(sp && sp.seat && sp.seat.kind === 'ltable'), side = ok ? sp.i : null;
@@ -8293,7 +8302,7 @@ function rmSetFull(on, auto, soft) {
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (rmLudoBtnHit(x, y)) { rmLudoGo(); return; } if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); rmTapMark(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
