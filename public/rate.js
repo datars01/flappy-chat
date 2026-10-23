@@ -1,5 +1,5 @@
 /* ===================== تقييم اللعبة ❤️ / 💔 =====================
-   - بعد 4 دقايق لعب (ضيف أو عضو) تطلع لوحة التقييم مرة وحدة، وإذا قال «بعدين» ترجع بعد 4 دقايق ثانية.
+   - بعد 4 دقايق لعب (ضيف أو عضو) تطلع لوحة التقييم مرة وحدة بس، وبعدها تصير زر «❤️ قيّم اللعبة» بالقائمة الرئيسية.
    - قلب عدل = حبيتها، قلب مكسور = ما حبيتها. تعليق اختياري واحد بس لكل حساب.
    - التقييمات وعدد الزوار تنحفظ بالسيرفر بتخزين خاص دائم (ما ينمسح بالديبلوي أو الريستارت).
    - المشرفين يشوفون العدد والتعليقات من زر ⭐ بلوحة المشرفين أو من صفحة المطور. */
@@ -101,7 +101,7 @@
       if (!choice) return; const b = $q('rtSend'); b.disabled = true; b.textContent = '⏳ لحظة...';
       try {
         const r = await post('/api/rate', { dev, v: choice, note: $q('rtNote').value });
-        LS.s('flappyRated', choice); myNote = r.note || ''; if (r.noteLocked) toast('💬 عندك تعليق من قبل، يبقى نفسه (تعليق واحد لكل حساب)');
+        LS.s('flappyRated', choice); tile(); myNote = r.note || ''; if (r.noteLocked) toast('💬 عندك تعليق من قبل، يبقى نفسه (تعليق واحد لكل حساب)');
         $q('rtIn').innerHTML = '<div class="rtThanks">' + (choice === 'love' ? '🥰' : '🙏') + '</div><h2>' + (choice === 'love' ? 'شكراً! فرحتنا ❤️' : 'شكراً لصراحتك 💜') + '</h2><div class="rtSub">' + (choice === 'love' ? 'كمّل لعب وانطي اللعبة لأصدقائك 🎮' : 'راح نشتغل حتى تصير أحلى، ارسل أفكارك للمطور') + '</div><button id="rtSend" type="button">👌 تمام</button>';
         $q('rtSend').onclick = close; if (choice === 'love') sndLove(); $q('rtFl').innerHTML = floaters(24, choice === 'love' ? ['❤️', '🎉', '💖', '✨', '🥳'] : ['💜', '✨', '🌱']);
       } catch (e) { b.disabled = false; b.textContent = '💌 ارسل التقييم'; toast('⚠️ ' + (e.message || 'ما وصل، جرب مرة ثانية')); }
@@ -132,16 +132,18 @@
   }
 
   /* ---------- عدّاد الـ4 دقايق ---------- */
-  const NEED = 240; let sec = +(LS.g('flappyRateSec') || 0) || 0, snoozedUntil = 0, visited = false;
-  function snooze() { if (!LS.g('flappyRated')) { snoozedUntil = sec + NEED; LS.s('flappyRateSnz', String(snoozedUntil)); } }
-  snoozedUntil = +(LS.g('flappyRateSnz') || 0) || 0;
-  async function visit() { if (visited) return; visited = true; try { const r = await post('/api/visit', { dev }); if (r.rated) LS.s('flappyRated', LS.g('flappyRated') || '1'); } catch (e) { visited = false; } }
+  const NEED = 240; let sec = +(LS.g('flappyRateSec') || 0) || 0, visited = false;
+  // «بعدين» أو ✕: اللوحة ما ترجع تطلع لحالها أبداً، وتصير زر اختياري بالقائمة الرئيسية
+  function snooze() { LS.s('flappyRateSeen', '1'); tile(); }
+  function tile() { const t = $q('tileRate'); if (!t) return; t.hidden = !LS.g('flappyRateSeen') && !LS.g('flappyRated'); if (!t.dataset.on) { t.dataset.on = '1'; t.addEventListener('click', () => window.rateOpen()); } }
+  tile();
+  async function visit() { if (visited) return; visited = true; try { const r = await post('/api/visit', { dev }); if (r.rated) { LS.s('flappyRated', LS.g('flappyRated') || '1'); tile(); } } catch (e) { visited = false; } }
   setInterval(() => {
     addBtns(); if (!visited && navigator.onLine) visit();
     if (document.hidden || $q('splash') || $q('langPick')) return;
     sec++; if (sec % 5 === 0) LS.s('flappyRateSec', String(sec));
-    if (LS.g('flappyRated') || sec < NEED || sec < snoozedUntil || (ov && !ov.hidden) || !navigator.onLine) return;
+    if (LS.g('flappyRated') || LS.g('flappyRateSeen') || sec < NEED || (ov && !ov.hidden) || !navigator.onLine) return;
     if (window.curPage === 'run' || window.curPage === 'sus' || document.fullscreenElement || document.webkitFullscreenElement) return;   // ما نقاطع وسط اللعب
-    snoozedUntil = sec + NEED; window.rateOpen();
+    LS.s('flappyRateSeen', '1'); tile(); window.rateOpen();
   }, 1000);
 })();
