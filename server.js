@@ -339,7 +339,7 @@ function houseOf(u) {
 const userInfo = key => {
   const u = db.users[key], dy = dayOf(u);
   return {
-    name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '',
+    name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '', frame: frameOf(u),
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
     bricks: u.bricks || 0, admin: !!u.admin, zones: u.zones || 1, cp: u.cp || 1, freeSkips: u.freeSkips || 0, house: houseOf(u), likes: (u.hlikes || []).length,
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
@@ -505,7 +505,7 @@ app.get('/api/leaderboard', (req, res) => {
     .filter(u => u.best > 0)
     .sort((a, b) => b.best - a.best || (a.bestAt || 0) - (b.bestAt || 0))
     .slice(0, 10)
-    .map(u => ({ name: u.name, best: u.best, games: u.games || 0, avatar: u.avatar || '' }));
+    .map(u => ({ name: u.name, best: u.best, games: u.games || 0, avatar: u.avatar || '', frame: frameOf(u) }));
   res.json({ top });
 });
 
@@ -810,6 +810,28 @@ app.post('/api/avatar', authMw, (req, res, next) => {
   u.avatar = '/uploads/' + name; save();
   res.json({ avatar: u.avatar });
 });
+// الصور الشخصية الجاهزة والإطارات
+const PFP_MAX = 30;
+const FRAMES = ['', 'gold', 'rainbow', 'neon', 'fire', 'love', 'ice', 'leaf', 'night', 'crown'];
+const FRAME_ADMIN = ['crown'];
+function frameOf(u) { const f = u && u.frame; return FRAMES.includes(f) && (!FRAME_ADMIN.includes(f) || u.admin) ? f : ''; }
+app.post('/api/pfp', authMw, (req, res) => {
+  const u = db.users[req.key], b = req.body || {};
+  if (b.p !== undefined) {
+    const m = /^p(\d{1,2})$/.exec(String(b.p || ''));
+    if (!m || +m[1] < 1 || +m[1] > PFP_MAX) return res.status(400).json({ error: 'صورة غير موجودة' });
+    if (String(u.avatar || '').startsWith('/uploads/')) mediaDelUrl(u.avatar);
+    u.avatar = 'p:' + m[1];
+  }
+  if (b.f !== undefined) {
+    const f = String(b.f || '');
+    if (!FRAMES.includes(f)) return res.status(400).json({ error: 'إطار غير موجود' });
+    if (FRAME_ADMIN.includes(f) && !u.admin) return res.status(403).json({ error: 'هذا الإطار للإدارة فقط 👑' });
+    u.frame = f;
+  }
+  save();
+  res.json({ avatar: u.avatar || '', frame: frameOf(u) });
+});
 app.delete('/api/avatar', authMw, (req, res) => {
   const u = db.users[req.key];
   mediaDelUrl(u.avatar);
@@ -922,7 +944,7 @@ function friendRow(me, key) {
   let room = '';
   if (on) for (const w of wss.clients) if (w.key === key && w.room) { room = w.room; break; }
   let rm = null; if (on) for (const w of wss.clients) if (w.key === key && w.rm && !w.rm.hid && w.readyState === 1) { const rr = rmRooms.get(w.rm.id); if (rr) { rm = { id: rr.id, name: rr.name, locked: !!rr.code }; break; } }
-  return { name: f.name, online: on, lastSeen: f.lastSeen || 0, room, rm, unread, avatar: f.avatar || '',
+  return { name: f.name, online: on, lastSeen: f.lastSeen || 0, room, rm, unread, avatar: f.avatar || '', frame: frameOf(f),
     last: last ? { text: last.inv ? '🎟️ دعوة للعب' : String(last.text || '').slice(0, 40), ts: last.ts, mine: last.k === me } : null };
 }
 const keyOfName = n => String(n || '').trim().toLowerCase();
@@ -978,7 +1000,8 @@ app.get('/api/friends', authMw, (req, res) => {
   const ok = k => own(db.users, k);
   const friends = flist(u, 'friends').filter(ok).map(k => friendRow(req.key, k));
   friends.sort((a, b) => (b.online - a.online) || (b.unread - a.unread) || a.name.localeCompare(b.name));
-  res.json({ friends, inc: flist(u, 'fin').filter(ok).map(k => db.users[k].name), out: flist(u, 'fout').filter(ok).map(k => db.users[k].name) });
+  const pic = k => ({ name: db.users[k].name, avatar: db.users[k].avatar || '', frame: frameOf(db.users[k]) });
+  res.json({ friends, inc: flist(u, 'fin').filter(ok).map(k => db.users[k].name), out: flist(u, 'fout').filter(ok).map(k => db.users[k].name), incP: flist(u, 'fin').filter(ok).map(pic), outP: flist(u, 'fout').filter(ok).map(pic) });
 });
 app.post('/api/friend/add', authMw, (req, res) => {
   if (limited('fadd:' + req.key, 30, 3600e3)) return res.status(429).json({ error: 'طلبات كثيرة، جرب بعد شوي' });
@@ -991,12 +1014,12 @@ app.post('/api/friend/add', authMw, (req, res) => {
   if (flist(me, 'friends').length >= FRIEND_MAX) return res.status(400).json({ error: 'وصلت الحد الأقصى للأصدقاء' });
   if (flist(t, 'fout').includes(req.key)) {                     // هو طالب صداقتك أصلاً: نقبل مباشرة
     makeFriends(req.key, k); save();
-    pushTo(k, { t: 'f_update', toast: '🤝 ' + me.name + ' صار صديقك' }); return res.json({ status: 'friends', name: t.name });
+    pushTo(k, { t: 'f_update', toast: '🤝 ' + me.name + ' صار صديقك' }); return res.json({ status: 'friends', name: t.name, avatar: t.avatar || '', frame: frameOf(t) });
   }
   if (flist(t, 'fin').length >= 100) return res.status(400).json({ error: 'عنده طلبات كثيرة حالياً' });
   me.fout.push(k); flist(t, 'fin').push(req.key); save();
   pushTo(k, { t: 'f_update', toast: '👋 ' + me.name + ' يريد يضيفك صديق', req: me.name });
-  res.json({ status: 'sent', name: t.name });
+  res.json({ status: 'sent', name: t.name, avatar: t.avatar || '', frame: frameOf(t) });
 });
 app.post('/api/friend/accept', authMw, (req, res) => {
   const me = db.users[req.key], k = keyOfName(req.body && req.body.name);

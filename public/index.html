@@ -838,6 +838,101 @@
   .susHold { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #fff; background: radial-gradient(circle, #ff7ab8, #8f5cff); color: #fff; font-size: 15px; font-weight: 900; touch-action: none; user-select: none; -webkit-user-select: none; } .susHold:active { transform: scale(.95); }
   .susSeq { display: grid; grid-template-columns: repeat(3, 70px); gap: 8px; } .susSeq button { height: 70px; border-radius: 14px; border: 2px solid rgba(255,255,255,.4); background: #3a3460; color: #fff; font-size: 26px; font-weight: 900; } .susSeq button.ok { background: #2ecc71; } .susSeq button:disabled { opacity: .3; }
   .susTOk { font-size: 22px; font-weight: 900; color: #7dffa8; }
+
+  /* ===== الصور الشخصية والإطارات ===== */
+  .pfp { --s: 44px; position: relative; flex: none; display: inline-block; width: var(--s); height: var(--s); padding: calc(var(--s) * .075); box-sizing: border-box; border-radius: 50%; vertical-align: middle; }
+  .pfp::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(255,255,255,.55); }
+  .pfpIn { position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #ff7a3a, #ff4f9a); color: #fff; font-weight: 900; font-size: calc(var(--s) * .46); line-height: 1; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .pfpIn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pfpIn.ini { font-size: calc(var(--s) * .4); }
+  .pfpB { position: absolute; z-index: 2; bottom: -2%; inset-inline-end: -4%; font-size: calc(var(--s) * .3); line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+  .pfp.fr-crown .pfpB { bottom: auto; top: -22%; inset-inline-end: auto; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: calc(var(--s) * .38); }
+  .fr-gold::before { background: conic-gradient(#fff3b0, #f5a623, #ffd166, #b97a00, #fff3b0); }
+  .fr-rainbow::before { background: conic-gradient(#ff4d4d, #ffd166, #35c27a, #4ec0ca, #7f77dd, #ff4f9a, #ff4d4d); animation: pfpSpin 3s linear infinite; }
+  .fr-neon::before { background: #3ef0ff; box-shadow: 0 0 calc(var(--s) * .2) #3ef0ff; }
+  .fr-fire::before { background: conic-gradient(#ff3d00, #ffb300, #ff6d00, #ffd54f, #ff3d00); box-shadow: 0 0 calc(var(--s) * .18) rgba(255,90,0,.7); animation: pfpSpin 2.2s linear infinite; }
+  .fr-love::before { background: conic-gradient(#ff8fb1, #ff2e6e, #ffc2d4, #ff2e6e, #ff8fb1); }
+  .fr-ice::before { background: conic-gradient(#e0f7ff, #7fd3ff, #ffffff, #4aa8ff, #e0f7ff); }
+  .fr-leaf::before { background: conic-gradient(#b7f08a, #2fa84f, #e6ff9e, #1f7a3a, #b7f08a); }
+  .fr-night::before { background: conic-gradient(#2b1a6e, #7f77dd, #141b45, #a78bfa, #2b1a6e); }
+  .fr-crown::before { background: conic-gradient(#ffe680, #ff9f1c, #fff6c9, #d48800, #ffe680); box-shadow: 0 0 calc(var(--s) * .22) rgba(255,200,40,.75); }
+  @keyframes pfpSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .pfp::before { animation: none !important; } }
+
+  /* ===== شريط الحساب فوق ===== */
+  #homeBar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-radius: 20px; }
+  #homeBar #hbAcc { flex: 1 1 100%; display: flex; align-items: center; gap: 12px; padding: 0; background: none; color: #fff; white-space: normal; overflow: visible; max-width: none; text-align: start; }
+  #homeBar .hbAv { width: auto; height: auto; background: none !important; border: 0; box-shadow: none; display: block; font-size: inherit; }
+  #homeBar .hbTx { flex: 1; min-width: 0; gap: 1px; }
+  #homeBar .hbTx b { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+  #homeBar .hbTx small { font-size: 12px; color: #c9d3ff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .hbTag { font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 8px; background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; }
+  #homeBar:not(.guest) .hbGo { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; font-size: 15px; background: rgba(255,255,255,.12); }
+  #homeBar #hbCoins { flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  #homeBar #hbCoins:empty { display: none; }
+  #homeBar .hbC { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; border-radius: 12px; font-size: 13.5px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12); }
+  #homeBar .hbC i { font-style: normal; font-size: 11px; color: #c9d3ff; font-weight: 600; }
+
+  /* ===== صفحة الدخول ===== */
+  #authCard.in { background: none; border: 0; padding: 0; }
+  #authOut { display: flex; flex-direction: column; gap: 12px; }
+  .lgHero { text-align: center; padding: 6px 0 2px; }
+  .lgLogo { width: 76px; height: 76px; margin: 0 auto 8px; border-radius: 24px; display: grid; place-items: center; font-size: 40px; background: linear-gradient(135deg, #5b2bd6, #ff4f9a); box-shadow: 0 8px 22px rgba(91,43,214,.45); animation: lgBob 3s ease-in-out infinite; }
+  @keyframes lgBob { 50% { transform: translateY(-5px) rotate(-4deg); } }
+  .lgHero h2 { margin: 0; font-size: 21px; font-weight: 800; }
+  .lgHero p { margin: 3px 0 0; font-size: 13px; color: var(--muted); }
+  .lgTabs { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 0; }
+  .lgTabs .tab { position: relative; z-index: 1; background: none !important; border: 0 !important; color: var(--muted); border-radius: 10px; padding: 9px; font-size: 14px; transition: color .2s; }
+  .lgTabs .tab.on { color: #fff; }
+  .lgTabs::before { content: ""; position: absolute; top: 4px; bottom: 4px; right: 4px; width: calc(50% - 4px); border-radius: 10px; background: linear-gradient(135deg, #3a7bff, #7f5bff); box-shadow: 0 3px 10px rgba(58,123,255,.4); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+  .lgTabs.reg::before { transform: translateX(-100%); }
+  .fld { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 14px; background: var(--card2); border: 1.5px solid var(--line); transition: border-color .2s, box-shadow .2s; }
+  .fld:focus-within { border-color: #7f5bff; box-shadow: 0 0 0 3px rgba(127,91,255,.22); }
+  .fld .fi { font-size: 17px; opacity: .85; }
+  .fld input { border: 0 !important; background: none !important; padding: 13px 0; box-shadow: none !important; outline: none; }
+  .fld .eye { background: none; padding: 6px; font-size: 16px; color: var(--muted); }
+  .lgHint { font-size: 12px; color: var(--muted); padding: 0 4px; line-height: 1.6; }
+  .lgBtn { padding: 14px; font-size: 16px; font-weight: 800; border-radius: 14px; color: #fff; background: linear-gradient(135deg, #ff9f1c, #ff4f9a); box-shadow: 0 4px 0 #b3245e, 0 8px 18px rgba(255,79,154,.3); }
+  .lgBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3245e; }
+  .lgPerks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .lgPerks span { font-size: 12px; font-weight: 600; padding: 8px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); text-align: center; }
+  #authOut .help { text-align: center; font-size: 12px; }
+
+  /* ===== صفحة حسابي ===== */
+  #authIn { display: flex; flex-direction: column; gap: 10px; }
+  .acHero { position: relative; overflow: hidden; text-align: center; padding: 22px 14px 14px; border-radius: 22px; background: linear-gradient(160deg, #3a2bb0, #1d2a66 60%, #141b45); border: 1px solid #4a56b8; }
+  .acHero::before { content: ""; position: absolute; inset: -40% -20% auto; height: 160px; background: radial-gradient(circle, rgba(255,79,154,.35), transparent 65%); pointer-events: none; }
+  .acAvBtn { position: relative; background: none; padding: 0; border-radius: 50%; }
+  .acEdit { position: absolute; z-index: 3; bottom: 2px; left: 2px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: #ffd166; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .acNm { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .acNm b { font-size: 22px; font-weight: 800; color: #fff; }
+  #meName { overflow: visible; white-space: normal; }
+  .acSub { font-size: 12px; color: #c9d3ff; margin-top: 2px; }
+  .acStats { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
+  .acSt { padding: 8px 4px; border-radius: 14px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.1); }
+  .acSt b { display: block; font-size: 17px; font-weight: 800; color: #fff; line-height: 1.3; }
+  .acSt small { font-size: 11px; color: #c9d3ff; font-weight: 600; }
+  .acSec { gap: 10px; }
+  .acH { display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 15px; }
+  .acH small { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .acRow { display: flex; gap: 8px; } .acRow button { flex: 1; padding: 10px 8px; font-size: 13.5px; border-radius: 12px; }
+  .acUp { background: linear-gradient(135deg, #3a7bff, #7f5bff); color: #fff; }
+  .acGrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .acOpt { background: none; padding: 3px; border-radius: 50%; border: 2px solid transparent; display: grid; place-items: center; transition: transform .15s; }
+  .acOpt.on { border-color: #ffd166; transform: scale(1.06); }
+  .acOpt:active { transform: scale(.88); }
+  .acFrames { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .acFr { background: var(--card2); border: 2px solid var(--line); border-radius: 14px; padding: 10px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: var(--text); }
+  .acFr.on { border-color: #ffd166; background: rgba(255,209,102,.12); }
+  .acFr.lock { opacity: .45; }
+  #acMsg { text-align: center; font-size: 13px; min-height: 18px; color: #6ee7a0; } #acMsg.bad { color: #ffb3b3; }
+  .acOut { background: rgba(255,77,77,.12); color: #ff8a8a; border: 1px solid rgba(255,77,77,.35); border-radius: 14px; padding: 11px; font-size: 14px; }
+
+  /* صور الأصدقاء والصدارة */
+  .fr .av2 { position: relative; flex: none; display: flex; }
+  .fr .av2 .dot { z-index: 3; }
+  .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -847,7 +942,7 @@
   <div id="sponsor"><b class="rbName">Rbsh</b> <svg class="rbHeart" viewBox="0 0 32 29" aria-hidden="true"><defs><linearGradient id="rbhga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8e"/><stop offset="1" stop-color="#d4143f"/></linearGradient></defs><path d="M16 28C5 20 1 14 1 8.5 1 4.3 4.3 1 8.3 1c3 0 5.6 1.7 7.7 4.6C18.100 2.700 20.700 1 23.700 1 27.700 1 31 4.300 31 8.500 31 14 27 20 16 28z" fill="url(#rbhga)" stroke="#fff" stroke-width="1.200"/><path d="M7 7.500c1-2 3-2.800 4.800-2.200" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.800" stroke-linecap="round"/></svg></div>
 
   <div id="homeBar">
-    <button id="hbAcc" type="button"><span class="hbAv" id="hbAv">👤</span><span class="hbTx"><b id="hbName">أهلاً بك</b><small id="hbSub">سجّل دخول أو سوّي حساب جديد</small></span><span class="hbGo" id="hbGo">دخول ◀</span></button>
+    <button id="hbAcc" type="button"><span class="hbAv" id="hbAv"></span><span class="hbTx"><b id="hbName">أهلاً بك</b><small id="hbSub">سجّل دخول أو سوّي حساب جديد</small></span><span class="hbGo" id="hbGo">دخول ◀</span></button>
     <span id="hbCoins"></span>
   </div>
 
@@ -896,22 +991,41 @@
   <!-- الحساب -->
   <div class="card" id="authCard">
     <div id="authOut">
-      <div class="tabs">
+      <div class="lgHero"><div class="lgLogo">🎯</div><h2 id="lgTtl">أهلاً بيك من جديد 👋</h2><p id="lgSub">سجّل دخولك وكمّل من وين ما وكفت</p></div>
+      <div class="tabs lgTabs" id="lgTabs">
         <button id="tabLogin" class="tab on" type="button">دخول</button>
         <button id="tabReg" class="tab" type="button">حساب جديد</button>
       </div>
-      <form id="authForm" class="col" style="margin-top:8px">
-        <input id="uIn" placeholder="اسم المستخدم (3-5 أحرف، حروف وأرقام فقط)" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false">
-        <input id="pIn" type="password" placeholder="كلمة السر" maxlength="64" autocomplete="current-password">
-        <input id="pIn2" type="password" placeholder="تأكيد كلمة السر" maxlength="64" autocomplete="new-password" style="display:none">
-        <button id="authBtn" type="submit">دخول</button>
+      <form id="authForm" class="col">
+        <label class="fld"><span class="fi">👤</span><input id="uIn" placeholder="اسم المستخدم" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+        <label class="fld"><span class="fi">🔒</span><input id="pIn" type="password" placeholder="كلمة السر" maxlength="64" autocomplete="current-password"><button class="eye" type="button" data-eye="pIn" aria-label="إظهار كلمة السر">👁️</button></label>
+        <label class="fld" id="pIn2Wrap" style="display:none"><span class="fi">🔐</span><input id="pIn2" type="password" placeholder="تأكيد كلمة السر" maxlength="64" autocomplete="new-password"><button class="eye" type="button" data-eye="pIn2" aria-label="إظهار كلمة السر">👁️</button></label>
+        <div class="lgHint" id="regHint" style="display:none">✍️ الاسم من 3 إلى 5 حروف أو أرقام، بدون مسافات أو رموز. الاسم إلك وحدك وما يكدر أحد ياخذه.</div>
+        <button id="authBtn" class="lgBtn" type="submit">دخول</button>
       </form>
       <div id="authMsg"></div>
-      <div class="help">تكدر تلعب كضيف، بس لازم تسجّل حساب حتى تنحفظ نتائجك وتدخل قائمة أفضل 10. الاسم اللي تسجله ما يكدر أحد غيرك يستخدمه.</div>
+      <div class="lgPerks"><span>💾 يحفظ تقدّمك</span><span>🏆 قائمة أفضل 10</span><span>🖼️ صورة وإطار</span><span>👥 أصدقاء ورسائل</span></div>
+      <div class="help">تكدر تلعب كضيف، بس بالحساب تنحفظ نتائجك ومشترياتك.</div>
     </div>
     <div id="authIn" style="display:none">
-      <div class="meLine"><span id="meName"></span><button id="logoutBtn" class="ghost" type="button">تسجيل خروج</button></div>
-      <div id="meStats"></div>
+      <div class="acHero">
+        <button id="acAvBtn" class="acAvBtn" type="button" aria-label="غيّر صورتك"><span id="acAv"></span><span class="acEdit">✏️</span></button>
+        <div class="acNm"><b id="meName"></b><span id="meTag"></span></div>
+        <div class="acSub" id="meSub"></div>
+        <div id="meStats" class="acStats"></div>
+      </div>
+      <div class="card acSec" id="acPicSec">
+        <div class="acH"><span>🖼️ صورتك الشخصية</span><small>اختار وحدة أو نزّل من جهازك</small></div>
+        <div class="acRow"><button id="acUp" class="acUp" type="button">📷 من جهازي</button><button id="acRnd" class="ghost" type="button">🎲 عشوائية</button></div>
+        <input id="acFile" type="file" accept="image/*" hidden>
+        <div id="acGrid" class="acGrid"></div>
+      </div>
+      <div class="card acSec">
+        <div class="acH"><span>✨ إطار الصورة</span><small>يشوفه أصدقاؤك</small></div>
+        <div id="acFrames" class="acFrames"></div>
+      </div>
+      <div id="acMsg"></div>
+      <button id="logoutBtn" class="acOut" type="button">🚪 تسجيل خروج</button>
     </div>
   </div>
 
@@ -1226,7 +1340,8 @@ function setMode(m) {
   $('tabReg').classList.toggle('on', m === 'register');
   $('authBtn').textContent = m === 'login' ? 'دخول' : 'إنشاء الحساب';
   $('pIn').setAttribute('autocomplete', m === 'login' ? 'current-password' : 'new-password');
-  $('pIn').setAttribute('autocomplete', m === 'login' ? 'current-password' : 'new-password'); $('pIn2').style.display = m === 'login' ? 'none' : ''; $('pIn2').value = '';
+  $('pIn2Wrap').style.display = m === 'login' ? 'none' : ''; $('pIn2').value = ''; $('regHint').style.display = m === 'login' ? 'none' : ''; $('lgTabs').classList.toggle('reg', m !== 'login');
+  $('lgTtl').textContent = m === 'login' ? 'أهلاً بيك من جديد 👋' : 'سوّي حسابك الجديد ✨'; $('lgSub').textContent = m === 'login' ? 'سجّل دخولك وكمّل من وين ما وكفت' : 'ثواني وتصير عندك صورة وإطار وأصدقاء'; $('uIn').placeholder = m === 'login' ? 'اسم المستخدم' : 'اختار اسم (3-5 حروف أو أرقام)';
   authSay('');
 }
 $('tabLogin').onclick = () => setMode('login');
@@ -1240,16 +1355,64 @@ setTimeout(() => { let rf = ''; try { rf = localStorage.getItem('flappyRef') || 
 function renderAuth() {
   $('authOut').style.display = auth ? 'none' : 'block';
   $('authIn').style.display = auth ? 'block' : 'none';
-  if (auth) {
-    $('meName').textContent = '👤 ' + auth.name;
-    $('meStats').textContent = 'أعلى نتيجة: ' + (auth.best || 0) + '  •  المحاولات: ' + (auth.games || 0) + (auth.rank ? '  •  ترتيبك: #' + auth.rank : '') + '  •  🪙 ' + (auth.coins || 0);
-  }
+  $('authCard').classList.toggle('in', !!auth);
+  if (auth) acRender();
   lbRender(lbLast, true);
   renderRewards();
   renderShop();
   presenceSync();
   renderHome();
 }
+/* ================= الصور الشخصية والإطارات ================= */
+const PFP = [['🦊','#ff9a3c','#ff5e62'],['🐼','#a8edea','#5b8def'],['🐯','#ffd166','#f5a623'],['🦁','#f6d365','#fda085'],['🐸','#9be15d','#00b09b'],['🐵','#d4a373','#8d5a3b'],['🐨','#c3cfe2','#7f8fa6'],['🐰','#fbc2eb','#a18cd1'],['🐱','#ffecd2','#fcb69f'],['🐶','#e0c3fc','#8ec5fc'],['🦄','#f9a8d4','#a78bfa'],['🐲','#43e97b','#038f5a'],['🐙','#ff758c','#ff7eb3'],['🦉','#c79081','#6b4f3a'],['🐧','#89f7fe','#2a6fdb'],['🐻','#c9a27e','#7a4b2a'],['🐳','#4facfe','#00c6fb'],['🦋','#a1c4fd','#6a5cff'],['🐝','#ffe259','#ffa751'],['🦖','#56ab2f','#a8e063'],['😎','#f7971e','#ffd200'],['🤖','#bdc3c7','#2c3e50'],['👽','#8e2de2','#4a00e0'],['🥷','#5a5a5a','#111111'],['🧙‍♂️','#654ea3','#eaafc8'],['👑','#f7b733','#fc4a1a'],['🎮','#00c9ff','#92fe9d'],['⚽','#11998e','#38ef7d'],['🌙','#243b55','#141e30'],['🍉','#ff512f','#56ab2f']];
+const PFP_FR = [['', 'بدون'], ['gold', 'ذهبي'], ['rainbow', 'قوس قزح'], ['neon', 'نيون'], ['fire', 'ناري', '🔥'], ['love', 'حب', '💖'], ['ice', 'ثلجي', '❄️'], ['leaf', 'ربيعي', '🍃'], ['night', 'ليلي', '⭐'], ['crown', 'تاج الإدارة', '👑', 1]];
+function pfpEl(av, name, frame, size) {
+  const w = document.createElement('span'), i = document.createElement('span'); av = String(av || '');
+  w.className = 'pfp fr-' + (frame || 'none'); w.style.setProperty('--s', (size || 44) + 'px'); i.className = 'pfpIn';
+  const pm = /^p:(\d{1,2})$/.exec(av), P = pm && PFP[+pm[1] - 1];
+  if (av.startsWith('/uploads/')) { const im = document.createElement('img'); im.src = av; im.alt = ''; im.loading = 'lazy'; im.onerror = () => { im.remove(); i.textContent = String(name || '?').trim().charAt(0).toUpperCase(); i.classList.add('ini'); }; i.appendChild(im); }
+  else if (P) { i.style.background = 'linear-gradient(135deg,' + P[1] + ',' + P[2] + ')'; i.textContent = P[0]; }
+  else if (av === 'guest') { i.style.background = 'rgba(255,255,255,.18)'; i.textContent = '👤'; }
+  else { i.textContent = String(name || '?').trim().charAt(0).toUpperCase() || '?'; i.classList.add('ini'); }
+  w.appendChild(i);
+  const F = PFP_FR.find(x => x[0] === frame); if (F && F[2]) { const b = document.createElement('span'); b.className = 'pfpB'; b.textContent = F[2]; w.appendChild(b); }
+  return w;
+}
+function acSay(m, bad) { const e = $('acMsg'); if (!e) return; e.textContent = m || ''; e.className = bad ? 'bad' : ''; }
+function acRender() {
+  if (!auth) return;
+  const a = $('acAv'); a.innerHTML = ''; a.appendChild(pfpEl(auth.avatar, auth.name, auth.frame, 104));
+  $('meName').textContent = auth.name;
+  const tg = $('meTag'); tg.innerHTML = ''; if (auth.admin) tg.appendChild(frMk('span', 'hbTag', '👑 إدارة'));
+  $('meSub').textContent = auth.rank ? '🏆 ترتيبك #' + auth.rank + ' بقائمة الصدارة' : 'العب وسجّل نتيجة حتى تدخل الصدارة';
+  const st = $('meStats'); st.innerHTML = '';
+  [['🏆', auth.best || 0, 'أعلى نتيجة'], ['🎮', auth.games || 0, 'المحاولات'], ['🗺️', auth.cp || 1, 'المرحلة'], ['🪙', auth.coins || 0, 'عملات'], ['🧱', auth.bricks || 0, 'طابوق'], ['🎒', (auth.owned || []).length, 'سكنات']].forEach(x => { const d = frMk('div', 'acSt'); d.append(frMk('b', '', x[0] + ' ' + x[1]), frMk('small', '', x[2])); st.appendChild(d); });
+  const g = $('acGrid'); g.innerHTML = '';
+  PFP.forEach((P, k) => { const id = 'p:' + (k + 1), b = frMk('button', 'acOpt' + (auth.avatar === id ? ' on' : '')); b.type = 'button'; b.setAttribute('aria-label', 'صورة ' + (k + 1)); b.appendChild(pfpEl(id, '', '', 46)); b.onclick = () => acSetPfp(k + 1); g.appendChild(b); });
+  const fr = $('acFrames'); fr.innerHTML = '';
+  PFP_FR.forEach(F => { if (F[3] && !auth.admin) return; const b = frMk('button', 'acFr' + ((auth.frame || '') === F[0] ? ' on' : '')); b.type = 'button'; b.append(pfpEl(auth.avatar, auth.name, F[0], 42), frMk('span', '', F[1])); b.onclick = () => acSetFrame(F[0]); fr.appendChild(b); });
+}
+function acApply(r) { auth.avatar = r.avatar || ''; auth.frame = r.frame || ''; renderHome(); acRender(); try { if (fData) renderFriends(); } catch (e) {} lbRender(lbLast, true); }
+async function acSetPfp(n) { try { acApply(await api('/api/pfp', { method: 'POST', body: { p: 'p' + n } })); acSay('✅ تغيّرت صورتك'); } catch (e) { acSay('❌ ' + e.message, true); } }
+async function acSetFrame(f) { try { acApply(await api('/api/pfp', { method: 'POST', body: { f } })); acSay(f ? '✨ لبست الإطار الجديد' : 'شلت الإطار'); } catch (e) { acSay('❌ ' + e.message, true); } }
+$('acRnd').onclick = () => { let n; do { n = 1 + Math.floor(Math.random() * PFP.length); } while (auth && auth.avatar === 'p:' + n); acSetPfp(n); };
+$('acAvBtn').onclick = () => { try { $('acPicSec').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} };
+$('acUp').onclick = () => $('acFile').click();
+$('acFile').onchange = async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f || !auth) return;
+  if (!/^image\//.test(f.type)) { acSay('⚠️ اختار صورة', true); return; }
+  acSay('⏳ دا أرفع صورتك...');
+  try {
+    const url = URL.createObjectURL(f), img = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = url; });
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), m = Math.min(img.width, img.height);
+    x.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S); URL.revokeObjectURL(url);
+    const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.85));
+    const r = await fetch('/api/avatar', { method: 'POST', headers: { 'Content-Type': 'image/jpeg', Authorization: 'Bearer ' + auth.token }, body: blob });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'فشل الرفع');
+    acApply({ avatar: j.avatar, frame: auth.frame }); acSay('✅ صارت صورتك من جهازك');
+  } catch (er) { acSay('❌ ' + (er.message || 'ما قدرت أقرأ الصورة'), true); }
+};
+document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => { const i = $(b.dataset.eye); i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? '👁️' : '🙈'; });
 $('authForm').addEventListener('submit', async e => {
   e.preventDefault();
   const u = $('uIn').value.trim(), p = $('pIn').value;
@@ -1263,7 +1426,7 @@ $('authForm').addEventListener('submit', async e => {
     let refSaved = ''; try { refSaved = localStorage.getItem('flappyRef') || ''; } catch (e) {}
     const r = await api('/api/' + (mode === 'register' ? 'register' : 'login'), { method: 'POST', body: mode === 'register' ? (refSaved ? { u, p, p2: $('pIn2').value, ref: refSaved } : { u, p, p2: $('pIn2').value }) : { u, p } });
     if (mode === 'register') { try { localStorage.removeItem('flappyRef'); } catch (e) {} }
-    auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin };
+    auth = { token: r.token, name: r.user.name, best: r.user.best, games: r.user.games, rank: r.user.rank, skin: r.user.skin, avatar: r.user.avatar || '', frame: r.user.frame || '' };
     syncUser(r.user);
     saveAuth(); $('pIn').value = ''; $('pIn2').value = ''; authSay('');
     renderAuth(); lbRefresh(); closePage();
@@ -1274,7 +1437,7 @@ $('logoutBtn').onclick = () => { auth = null; saveAuth(); renderAuth(); lbSay(''
 let dailyToastShown = false;
 function syncUser(u) {
   if (!auth || !u) return;
-  auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin;
+  auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin; auth.avatar = u.avatar || ''; auth.frame = u.frame || '';
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
   auth.freeSkips = u.freeSkips || 0; auth.admin = !!u.admin; auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
   if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
@@ -2595,7 +2758,7 @@ function lbRender(top, force) {
     const row = document.createElement('div');
     row.className = 'lbRow r' + (mine && String(p.name).toLowerCase() === mine ? ' me' : '');
     const k = document.createElement('span'); k.className = 'k'; k.textContent = medals[i] || String(i + 1);
-    const n = document.createElement('span'); n.className = 'n'; n.textContent = String(p.name);
+    const n = document.createElement('span'); n.className = 'n'; n.append(pfpEl(p.avatar, p.name, p.frame, 28), frMk('span', 'lbNm', String(p.name)));
     const s = document.createElement('span'); s.className = 's'; s.textContent = String(p.best || 0);
     const g = document.createElement('span'); g.className = 'g'; g.textContent = String(p.games || 0);
     row.append(k, n, s, g); body.appendChild(row);
@@ -3949,7 +4112,7 @@ async function frAddName() {
   try {
     const r = await api('/api/friend/add', { method: 'POST', body: { name } });
     $('frName').value = '';
-    frSay(r.status === 'friends' ? '🤝 صرتم أصدقاء مع ' + r.name : '✅ انرسل طلب الصداقة لـ ' + r.name + '، لما يقبل يطلع بقائمتك', true);
+    frSay(''); const fm = $('frMsg'), fb = frMk('div', 'frFound'); fb.append(pfpEl(r.avatar, r.name, r.frame, 40), frMk('span', '', r.status === 'friends' ? '🤝 صرتم أصدقاء مع ' + r.name : '✅ انرسل طلب الصداقة لـ ' + r.name + '، لما يقبل يطلع بقائمتك')); fm.appendChild(fb);
     loadFriends();
   } catch (e) { frSay('❌ ' + e.message); }
   $('frAdd').disabled = false;
@@ -3973,15 +4136,16 @@ function renderFriends() {
   const L = $('frList'); if (!L) return;
   L.innerHTML = ''; $('frReq').innerHTML = '';
   if (!auth) { L.appendChild(frMk('div', 'help', 'سجّل دخول حتى تضيف أصدقاء وتشوف مين فاتح اللعبة وتراسلهم')); $('frBadge').style.display = 'none'; return; }
+  const frPic = (arr, n) => (arr || []).find(x => x.name === n) || { name: n };
   fData.inc.forEach(n => {
-    const r = frMk('div', 'fr'), i = frMk('div', 'inf');
+    const r = frMk('div', 'fr'), i = frMk('div', 'inf'), pp = frPic(fData.incP, n); r.appendChild(pfpEl(pp.avatar, n, pp.frame, 40));
     i.append(frMk('div', 'nm', n), frMk('div', 'sub', '👋 يريد يضيفك صديق'));
     const a = frMk('button', '', 'قبول'), d = frMk('button', 'ghost', 'رفض'); a.type = d.type = 'button';
     a.onclick = () => frAct('/api/friend/accept', n, '🤝 صرتم أصدقاء'); d.onclick = () => frAct('/api/friend/remove', n);
     r.append(i, a, d); $('frReq').appendChild(r);
   });
   fData.out.forEach(n => {
-    const r = frMk('div', 'fr'), i = frMk('div', 'inf');
+    const r = frMk('div', 'fr'), i = frMk('div', 'inf'), pp = frPic(fData.outP, n); r.appendChild(pfpEl(pp.avatar, n, pp.frame, 40));
     i.append(frMk('div', 'nm', n), frMk('div', 'sub', '⏳ بانتظار موافقته'));
     const c = frMk('button', 'ghost', 'إلغاء'); c.type = 'button'; c.onclick = () => frAct('/api/friend/remove', n);
     r.append(i, c); $('frReq').appendChild(r);
@@ -3990,8 +4154,7 @@ function renderFriends() {
   let total = 0;
   fData.friends.forEach(f => {
     total += f.unread || 0;
-    const r = frMk('div', 'fr'), av = frMk('div', 'av');
-    if (f.avatar) { const im = document.createElement('img'); im.src = f.avatar; im.alt = ''; av.appendChild(im); } else av.textContent = f.name.slice(0, 1).toUpperCase();
+    const r = frMk('div', 'fr'), av = frMk('div', 'av2'); av.appendChild(pfpEl(f.avatar, f.name, f.frame, 44));
     av.appendChild(frMk('span', 'dot' + (f.online ? ' on' : '')));
     const i = frMk('div', 'inf'), nm = frMk('div', 'nm', f.name);
     if (f.unread) nm.appendChild(frMk('span', 'bdg', String(f.unread)));
@@ -4148,10 +4311,12 @@ function renderHome() {
   const n = $('hbName'), c = $('hbCoins'); if (!n) return;
   const h = $('homeBar'); h.classList.toggle('guest', !auth);
   n.textContent = auth ? auth.name : 'أهلاً بك 👋';
-  $('hbSub').textContent = auth ? 'مرحباً بعودتك' : 'سجّل دخول أو سوّي حساب جديد';
-  $('hbAv').textContent = auth ? String(auth.name || '?').trim().charAt(0).toUpperCase() : '👤';
-  $('hbGo').textContent = auth ? 'حسابي ◀' : 'دخول ◀';
-  c.innerHTML = auth ? '<span class="hbC">🪙 ' + (auth.coins || 0) + '</span><span class="hbC b">🧱 ' + (auth.bricks || 0) + '</span>' : '';
+  if (auth && auth.admin) n.appendChild(frMk('span', 'hbTag', '👑 إدارة'));
+  $('hbSub').textContent = auth ? (auth.rank ? '🏆 ترتيبك #' + auth.rank + ' • اضغط لحسابك' : 'اضغط حتى تغيّر صورتك وإطارك') : 'سجّل دخول أو سوّي حساب جديد';
+  const hv = $('hbAv'); hv.innerHTML = ''; hv.appendChild(auth ? pfpEl(auth.avatar, auth.name, auth.frame, 50) : pfpEl('guest', '', '', 50));
+  $('hbGo').textContent = auth ? '◀' : 'دخول ◀';
+  c.innerHTML = '';
+  if (auth) [['🪙', auth.coins || 0, 'عملة'], ['🧱', auth.bricks || 0, 'طابوق'], ['🏆', auth.best || 0, 'أعلى']].forEach(x => { const e = frMk('span', 'hbC', x[0] + ' ' + x[1]); e.appendChild(frMk('i', '', x[2])); c.appendChild(e); });
 }
 function openPage(id) {
   if (GW.wall && !auth) id = 'account';
