@@ -551,7 +551,8 @@
   #nAlert .ni { font-size: 26px; flex: none; } #nAlert .nt { flex: 1; font-size: 13px; line-height: 1.5; } #nAlert .nt b { display: block; font-size: 14px; }
   #nAlert .nx { flex: none; width: auto; padding: 4px 10px; background: rgba(255,255,255,.22); border: 0; color: #fff; border-radius: 10px; }
   #hStage.full { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at center, #1a2336 0%, #05070d 100%); display: flex; align-items: center; justify-content: center; }
-  #hStage.full #hBox { width: min(var(--hvw, 100vw), calc(var(--hvh, 100vh) * 1.28)); max-width: 100vw; }
+  #hStage.full #hBox { width: var(--hvw, 100vw); height: var(--hvh, 100vh); max-width: 100vw; }
+  #hStage.full #houseCv { width: 100%; height: 100%; aspect-ratio: auto; }
   @media (orientation: landscape) and (max-height: 560px) { #pg-house #hStage:not(.full) #hBox { width: min(100%, calc((100vh - 130px) * 1.28)); margin: 0 auto; } }
   #hStage.full #houseCv { border-radius: 0; border: 0; }
   #hStage.full #hFsTabs { display: flex; flex-direction: column; gap: 6px; position: absolute; top: 52px; left: 6px; }
@@ -1005,7 +1006,7 @@
   .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
-<script src="/lang.js?v=6"></script>
+<script src="/lang.js?v=7"></script>
 </head>
 <body>
 <div id="bgFx" aria-hidden="true"></div>
@@ -1239,7 +1240,7 @@
       <canvas id="houseCv" width="640" height="500"></canvas>
       <div id="hOv">
         <div class="hOvTop">
-          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">⛶ تكبير</button><button id="hZoomBtn" class="hOvB" type="button">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button><button id="hPetBtn" class="hOvB" type="button" hidden>🐾 بيت الحيوان</button></div>
+          <div class="hOvG"><button id="hFsBtn" class="hOvB" type="button">→ رجوع</button><button id="hZoomBtn" class="hOvB" type="button" hidden style="display:none">🔍 قرّب</button><button id="hEditBtn" class="hOvB" type="button" hidden>🛠️ تعديل البيت</button><button id="hPetBtn" class="hOvB" type="button" hidden>🐾 بيت الحيوان</button></div>
           <div class="hOvG"><button id="hMineBtn" class="hOvB" type="button" hidden>🏠 رجوع لبيتي</button><button id="hLightBtn" class="hOvB" type="button" hidden>💡 الضوء</button><button id="hExitBtn" class="hOvB" type="button" hidden>🚪 خروج للحديقة</button></div>
         </div>
         <div id="hFsTabs"><button class="hOvB" data-v="home" type="button">🏠</button><button class="hOvB" data-v="inside" type="button">🛋️</button><button class="hOvB" data-v="garden" type="button">🌳</button></div>
@@ -4122,9 +4123,9 @@ function hvJoin() {
 }
 function hvStop() { hvSend({ t: 'hv_leave' }); hvOn = false; hOthers = {}; hVis = null; hRenderVis(); }
 function hvTick() {
-  if (!hvOn) return; const k = hView + '|' + Math.round(hChar.x) + '|' + Math.round(hChar.y) + '|' + hChar.dir + '|' + (hChar.sit ? 1 : 0);
+  if (!hvOn) return; const k = hView + hFloor + '|' + Math.round(hChar.x) + '|' + Math.round(hChar.y) + '|' + hChar.dir + '|' + (hChar.sit ? 1 : 0);
   if (k === hLastSent || hT - hLastSend < 6) return;
-  if (hvSend({ t: 'hv_pos', view: hView, x: Math.round(hChar.x * 10) / 10, y: Math.round(hChar.y * 10) / 10, dir: hChar.dir, sit: !!(hChar.sit && Math.hypot(hChar.tx - hChar.x, hChar.ty - hChar.y) < 2) })) { hLastSent = k; hLastSend = hT; }
+  if (hvSend({ t: 'hv_pos', view: hView === 'inside' && hFloor ? 'up' : hView, x: Math.round(hChar.x * 10) / 10, y: Math.round(hChar.y * 10) / 10, dir: hChar.dir, sit: !!(hChar.sit && Math.hypot(hChar.tx - hChar.x, hChar.ty - hChar.y) < 2) })) { hLastSent = k; hLastSend = hT; }
 }
 function hvPut(m) { hOthers[m.n] = { name: m.n, skin: m.skin, view: m.view, x: m.x, y: m.y, tx: m.x, ty: m.y, dir: m.dir || 1, sit: !!m.sit }; }
 function hvHearts() { for (let i = 0; i < 12; i++) hFloats.push({ x: 30 + Math.random() * 260, y: 190 + Math.random() * 50, t: 70 + i * 4, txt: i % 3 ? '❤️' : '💕' }); }
@@ -4424,7 +4425,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') houseLoad(); else if (id === 'sus') susOpen(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') { houseLoad(); setTimeout(() => { if (curPage === 'house' && !hFull) hSetFull(true, true); }, 0); } else if (id === 'sus') susOpen(); else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
@@ -4440,7 +4441,7 @@ var hBans = [], hVis = null, hTarget = null, hOthers = {}, hvOn = false, hLastSe
 var hFull = false, hDown = null, hHold = false, hGoing = false, hDoorT = 0, hPetT = 0, hBubs = [], hFloats = [], hLastBark = -9999, hOvKey = '', hDk = null, hKeys = {};
 const HV = {
   home: { slots: ['home', 'walls', 'roof', 'door', 'upg'], first: 'home', walk: [198, 247], start: [160, 224] },
-  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [172, 247], start: [196, 222] },
+  inside: { slots: ['paper', 'floor', 'tv', 'shelf', 'lamp', 'seat', 'rug', 'pet', 'plant'], first: 'seat', walk: [172, 300], start: [196, 226] },
   garden: { slots: ['tree', 'flowers', 'feature', 'play', 'car', 'fence', 'lantern'], first: 'tree', walk: [160, 247], start: [160, 226] }
 };
 const HDEF = { home: 'h1', walls: '#f4efe6', roof: '#c9483c', door: '#7a4a2a', paper: '#f3e6cf', floor: '#b98a5a' };
@@ -4463,6 +4464,12 @@ const EXT = [
 ];
 /* أماكن الأغراض التلقائية (والمستخدم يقدر يزيحها) */
 var hCT = 0;   // مستوى البيت الحالي (0 كوخ ... 3 فيلا)
+/* داخل البيت صار أوسع: عرض الغرفة حسب المستوى، والأرضية أعمق (لين 316). الإحداثيات الأصلية 0..320 بالنص */
+var hFloor = 0;   // الفيلا: 0 الطابق الأول، 1 الطابق الثاني
+const HIW = [420, 460, 520, 580], HIH = 316, HMINW = 215;
+const hXL = () => -(HIW[hCT] - 320) / 2, hXR = () => 320 + (HIW[hCT] - 320) / 2;
+const hWorldBox = () => hView === 'inside' ? [hXL(), 0, hXR(), HIH] : [0, 0, 320, 250];
+var hVW = 320, hVH = 250, hCamSnap = true, hTapMk = null;
 const HPOS_T = [
   { inside: [['tv', 130, 124, 48], ['shelf', 96, 174, 56], ['plant', 62, 200, 46], ['lamp', 190, 192, 38], ['seat', 140, 214, 64], ['pet', 236, 240, 28]],
     garden: [['tree', 60, 196, 80], ['feature', 112, 206, 50], ['play', 190, 214, 48], ['car', 250, 244, 42], ['flowers', 36, 244, 18], ['flowers', 62, 244, 18], ['flowers', 88, 244, 18], ['flowers', 114, 244, 18], ['flowers', 140, 244, 18], ['lantern', 22, 236, 30], ['lantern', 298, 236, 30]] },
@@ -4473,10 +4480,10 @@ const HPOS_T = [
   { inside: [['tv', 190, 112, 72], ['shelf', 276, 180, 80], ['plant', 104, 196, 62], ['lamp', 238, 196, 48], ['seat', 160, 214, 84], ['pet', 124, 242, 34]],
     garden: [['tree', 30, 190, 100], ['feature', 92, 206, 62], ['play', 232, 216, 60], ['car', 278, 246, 52], ['flowers', 24, 246, 20], ['flowers', 52, 246, 20], ['flowers', 128, 246, 20], ['flowers', 156, 246, 20], ['flowers', 184, 246, 20], ['lantern', 52, 238, 36], ['lantern', 268, 238, 36]] }
 ];
-const HPOS = { get inside() { return HPOS_T[hCT].inside; }, get garden() { return HPOS_T[hCT].garden; } };
+const HPOS = { get inside() { return hFloor ? [] : HPOS_T[hCT].inside; }, get garden() { return HPOS_T[hCT].garden; } };
 const HLIM_T = [{ inside: [56, 264, 100, 247], garden: [20, 300, 150, 247] }, { inside: [20, 300, 100, 247], garden: [20, 300, 150, 247] }, { inside: [24, 296, 100, 247], garden: [20, 300, 150, 247] }, { inside: [28, 292, 100, 247], garden: [20, 300, 150, 247] }];
-const HLIM = { get inside() { return HLIM_T[hCT].inside; }, get garden() { return HLIM_T[hCT].garden; } };
-const hWX = () => hView === 'inside' ? [HLIM_T[hCT].inside[0] - 4, HLIM_T[hCT].inside[1] + 4] : [14, 306];
+const HLIM = { get inside() { return [hXL() + (hCT === 0 ? 56 : 30), hXR() - (hCT === 0 ? 56 : 30), 100, 300]; }, get garden() { return HLIM_T[hCT].garden; } };
+const hWX = () => hView === 'inside' ? [HLIM.inside[0] - 4, HLIM.inside[1] + 4] : [14, 306];
 const HMOVE = { inside: ['tv', 'shelf', 'plant', 'lamp', 'seat', 'pet', 'rug'], garden: ['tree', 'feature', 'play', 'car', 'flowers', 'lantern'] };
 const hSclOf = slot => { const p = hHouse().pos; return (p && p[slot] && p[slot][2]) || 1; };
 function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0]; }
@@ -4484,9 +4491,9 @@ function hOffOf(slot) { const p = hHouse().pos; return (p && p[slot]) || [0, 0];
 var hPetW = { x: 0, y: 0, tx: 0, ty: 0, next: 0, dir: -1, mv: false, on: false };
 function hPetStep(S) {
   const v = hVal(S, 'pet');
-  if (hView !== 'inside' || !v || v === '🐠' || (hDown && hDown.slot === 'pet')) { hPetW.on = false; hPetW.mv = false; return; }
+  if (hView !== 'inside' || hFloor || !v || v === '🐠' || (hDown && hDown.slot === 'pet')) { hPetW.on = false; hPetW.mv = false; return; }
   if (!hPetW.on) { const be = (HPOS.inside || []).find(e => e[0] === 'pet') || ['pet', 200, 235], bo = hOffOf('pet'); hPetW.x = hPetW.tx = be[1] + bo[0]; hPetW.y = hPetW.ty = be[2] + bo[1]; hPetW.next = hT + 150 + Math.random() * 150; hPetW.mv = false; hPetW.on = true; }
-  const WX = hWX(), x0 = WX[0] + 12, x1 = WX[1] - 12, y0 = HV.inside.walk[0] + 8, y1 = 244;   // حدود أرضية البيت (داخل الإطار)
+  const WX = hWX(), x0 = WX[0] + 12, x1 = WX[1] - 12, y0 = HV.inside.walk[0] + 8, y1 = 294;   // حدود أرضية البيت (داخل الإطار)
   hPetW.x = Math.max(x0, Math.min(x1, hPetW.x)); hPetW.y = Math.max(y0, Math.min(y1, hPetW.y));
   if (!hPetW.mv && hT >= hPetW.next) {   // وجهة عشوائية بكل الأرضية، وأحياناً زاوية من زواياها، وبعيدة عن مكانه الحالي
     let tx, ty, k = 0;
@@ -4514,14 +4521,14 @@ const hRugC = () => { const o = hOffOf('rug'); return [150 + o[0], 214 + o[1]]; 
 const hRectOf = e => { const s = Math.max(e.s, 30); return [e.x - s * 0.6, e.y - s * 0.95, s * 1.2, s * 1.05]; };
 function hClampOff(slot, o) {
   const L = HLIM[hView]; let x0 = -999, x1 = 999, y0 = -999, y1 = 999;
-  if (slot === 'rug') { x0 = 96 - 150; x1 = 224 - 150; y0 = 190 - 214; y1 = 246 - 214; }
+  if (slot === 'rug') { x0 = hXL() + 96 - 150; x1 = hXR() - 96 - 150; y0 = 190 - 214; y1 = 296 - 214; }
   else (HPOS[hView] || []).filter(e => e[0] === slot).forEach(e => { x0 = Math.max(x0, L[0] - e[1]); x1 = Math.min(x1, L[1] - e[1]); y0 = Math.max(y0, L[2] - e[2]); y1 = Math.min(y1, L[3] - e[2]); });
   return [Math.round(Math.max(x0, Math.min(x1, o[0]))), Math.round(Math.max(y0, Math.min(y1, o[1])))];
 }
 /* مناطق اللمس لكل منظر */
 function hAreas(view, S) {
   if (view === 'home') { const E = EXT[hTier(S)]; return { door: [E.door], upg: [[E.rx0, E.rt - 14, E.rx1 - E.rx0, 22]], roof: [[E.rx0, E.rt, E.rx1 - E.rx0, E.top - E.rt]], walls: [[E.x0, E.top, E.x1 - E.x0, 205 - E.top]], home: [[226, 14, 84, 26]] }; }
-  const A = view === 'inside' ? { floor: [[0, 230, 320, 20]], paper: [[0, 0, 320, 44]] } : { fence: [[0, 206, 320, 14]] };
+  const A = view === 'inside' ? { floor: [[hXL(), 230, HIW[hCT], 86]], paper: [[hXL(), 0, HIW[hCT], 44]] } : { fence: [[0, 206, 320, 14]] };
   hEntries(view, S, true).forEach(e => { (A[e.slot] = A[e.slot] || []).push(hRectOf(e)); });
   if (view === 'inside') { const r = hRugC(); A.rug = [[r[0] - 86, r[1] - 12, 172, 26]]; }
   return A;
@@ -4543,6 +4550,7 @@ function hStart() { if (!hRaf) hRaf = requestAnimationFrame(hLoop); }
 function hLoop() { if (curPage !== 'house') { hRaf = 0; if (hFull) hSetFull(false); if (hvOn) hvStop(); return; } hT++; try { hDraw(); } catch (e) {} hRaf = requestAnimationFrame(hLoop); }
 function hSetView(v, keep, pos) {
   if (!keep && v !== hView) { hFade = 1; const p = pos || HV[v].start; hChar.x = hChar.tx = p[0]; hChar.y = hChar.ty = p[1]; hDown = null; hBubs = []; hChar.sit = false; hChar.sitGoal = false; hChar.jump = null; hChar.seat = null; hChar.after = null; hSclSel = ''; }
+  if (!keep && v !== hView) { hFloor = 0; hTapMk = null; hCamSnap = true; }
   hView = v; if (!keep || !HV[v].slots.includes(hSel)) hSel = HV[v].first; hPrev = null;
   document.querySelectorAll('#hTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   hRenderUi(); hOvKey = ''; hUpdateOv();
@@ -4726,7 +4734,7 @@ async function hSavePos(slots) {
 }
 (function () {
   const cvh = $('houseCv'); if (!cvh) return;
-  const sc = e => { const r = cvh.getBoundingClientRect(); return [hCX + (e.clientX - r.left) / r.width * 320 / hCZ, hCY + (e.clientY - r.top) / r.height * 250 / hCZ]; };
+  const sc = e => { const r = cvh.getBoundingClientRect(); return [hCX + (e.clientX - r.left) / r.width * hVW, hCY + (e.clientY - r.top) / r.height * hVH]; };
   cvh.addEventListener('pointerdown', e => {
     const [x, y] = sc(e), S = hSetNow(); hDown = null; hHold = false;
     const hit = hHit(x, y, S);
@@ -4734,14 +4742,14 @@ async function hSavePos(slots) {
     if (hit && !['roof', 'walls', 'floor', 'paper', 'fence', 'rug'].includes(hit.slot)) { hTap(hit.slot, x, y); return; }
     if (hit) hSelect(hit.slot);
     if (hSclSel) { hSclSel = ''; hOvKey = ''; }
-    hWalkTo(x, y); hHold = true; try { cvh.setPointerCapture(e.pointerId); } catch (er) {}
+    hWalkTo(x, y); hTapMark(); hHold = true; try { cvh.setPointerCapture(e.pointerId); } catch (er) {}
   });
   cvh.addEventListener('pointermove', e => {
     const [x, y] = sc(e);
     if (hDown) {
       if (!hDown.moved && Math.hypot(x - hDown.sx, y - hDown.sy) > 5) { hDown.moved = true; sfx('click'); hSelect(hDown.slot); }
       if (hDown.moved) { const o = hClampOff(hDown.slot, [hDown.o0[0] + x - hDown.sx, hDown.o0[1] + y - hDown.sy]); auth.house = auth.house || {}; auth.house.pos = auth.house.pos || {}; const sc0 = hSclOf(hDown.slot); auth.house.pos[hDown.slot] = sc0 === 1 ? o : o.concat(sc0); }
-    } else if (hHold) hWalkTo(x, y);
+    } else if (hHold) { hWalkTo(x, y); hTapMark(); }
   });
   const up = e => {
     hHold = false; if (!hDown) return; const d = hDown; hDown = null;
@@ -4787,11 +4795,11 @@ function hSetFull(on, auto) {
   hOvKey = ''; hUpdateOv(); if (on && !auto && innerHeight > innerWidth) showToast('📱 دوّر الجوال بالعرض حتى تشوف المكان أكبر');
 }
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && hFull) { hFull = false; $('hStage').classList.remove('full'); document.body.style.overflow = ''; hOvKey = ''; hUpdateOv(); } });
-$('hFsBtn').onclick = () => hSetFull(!hFull);
+$('hFsBtn').onclick = () => { sfx('click'); if (hFull) hSetFull(false); hidePage(); };
 /* دوران الجهاز: بالعرض يفتح المشهد بوضع ملء الشاشة تلقائياً، وبالطول يرجع */
 const IS_TABLET = Math.min(screen.width || 0, screen.height || 0) >= 600 || /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // الوضع العرضي التلقائي للايبادات/التابلت فقط
 const hLandMQ = window.matchMedia ? matchMedia('(orientation: landscape)') : null;
-function hOrient() { if (curPage !== 'house') return; if (hLandMQ && hLandMQ.matches && IS_TABLET) { if (!hFull) hSetFull(true, true); } else if (hFull && hAutoFull) hSetFull(false); hFitFs(); }
+function hOrient() { if (curPage !== 'house') return; if (!hFull) hSetFull(true, true); hFitFs(); }
 if (hLandMQ) (hLandMQ.addEventListener ? hLandMQ.addEventListener('change', hOrient) : hLandMQ.addListener(hOrient));
 window.addEventListener('resize', () => { hFitFs(); }); window.addEventListener('orientationchange', () => setTimeout(() => { hOrient(); }, 250));
 $('hLightBtn').onclick = () => hSetLight(!hLight);
@@ -4812,12 +4820,13 @@ function hUpdateOv() {
     else if (hView === 'garden') { const d = hDoorXY('garden'); if (Math.abs(hChar.x - d[0]) < 42 && hChar.y - d[1] < 52) near = 'garden'; }
   }
   const items = []; if (hView !== 'home') { const need = inn ? ['seat', 'tv', 'lamp', 'pet', 'plant'] : ['tree', 'play', 'flowers']; hEntries(hView, hSetNow()).forEach(e => { if (need.includes(e.slot) && !items.includes(e.slot) && (e.slot === 'tv' ? Math.abs(e.x - hChar.x) < 56 : Math.hypot(e.x - hChar.x, (e.y - hChar.y) * 1.2) < 46 + Math.max(0, e.s - 60) * 0.5)) items.push(e.slot); }); }
-  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hChar.jump ? 1 : 0) + (items.includes('seat') ? hSeatFree('seat') + '' + (function () { const se = hEntries(hView, hSetNow()).find(q => q.slot === 'seat'); return se ? hSeatsOf('seat', se).map(x => hSeatBusy(x) ? 1 : 0).join('') : ''; })() : '') + '|' + hSclSel + hSclOf(hSclSel || 'x') + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
-  $('hFsBtn').textContent = hFull ? '✕ إغلاق' : '⛶ تكبير'; $('hEditBtn').hidden = !!hVis || !auth; $('hPetBtn').hidden = !!hVis || !auth || !petPets.length;
+  const key = hView + '|' + near + '|' + hLight + '|' + hFull + '|' + (auth ? 1 : 0) + (hVis ? 1 : 0) + petPets.length + '|' + items.join() + '|' + (hChar.sit ? 1 : 0) + (hChar.jump ? 1 : 0) + (items.includes('seat') ? hSeatFree('seat') + '' + (function () { const se = hEntries(hView, hSetNow()).find(q => q.slot === 'seat'); return se ? hSeatsOf('seat', se).map(x => hSeatBusy(x) ? 1 : 0).join('') : ''; })() : '') + '|' + hSclSel + hSclOf(hSclSel || 'x') + (hTvOn ? 1 : 0) + (hLampOn ? 1 : 0) + '|' + hFloor + (hStairNear() ? 1 : 0); if (key === hOvKey) return; hOvKey = key;
+  $('hFsBtn').textContent = '→ رجوع'; $('hEditBtn').hidden = !!hVis || !auth; $('hPetBtn').hidden = !!hVis || !auth || !petPets.length;
   $('hLightBtn').hidden = !inn; $('hLightBtn').textContent = hLight ? '💡 اطفي الضوء' : '🔦 شغّل الضوء'; $('hExitBtn').hidden = !inn; $('hMineBtn').hidden = !hVis;
   const sb = $('hSclBox'); if (sb) { const ok = !hVis && !!auth && hView !== 'home' && !!hSclSel; sb.hidden = !ok; if (ok) { $('hSclName').textContent = hSlotName(hSclSel); $('hSclV').textContent = Math.round(hSclOf(hSclSel) * 100) + '%'; const cid = auth.house && auth.house.set && auth.house.set[hSclSel], cit = cid && hmap()[cid]; $('hSclS').hidden = !(cit && cit.price > 0); } }
   const P = $('hPrompt'); P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
+  if (hStairNear()) mk(hFloor ? '⬇️ انزل للطابق الأول' : '⬆️ اطلع للطابق الثاني', () => hStairs(hFloor ? 0 : 1));
   if (near === 'home') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🌳 روح للحديقة', () => hGo('garden')); }
   else if (near === 'garden') { mk('🚪 ادخل البيت', () => hGo('inside')); mk('🏠 واجهة البيت', () => hGo('home')); }
   if (hChar.sit) mk('🧍 قيام', hStand);
@@ -5142,15 +5151,16 @@ function hTank(c, x, y, ex, S) {
 const hEx = slot => ({ lift: !!(hDown && hDown.moved && hDown.slot === slot), flip: slot === 'pet' && hPetW.on ? hPetW.dir : 0, hop: slot === 'pet' ? (hPetT > 0 ? Math.abs(Math.sin(hPetT / 3)) * 9 : hPetW.on && hPetW.mv ? 0 : Math.abs(Math.sin(hT / 22)) * 1.2) : 0 });
 function hDarkDraw(c, S) {
   if (hLight) return;
-  hDk = hDk || (() => { const q = document.createElement('canvas'); q.width = 320; q.height = 250; return q; })();
-  const d = hDk.getContext('2d'); d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = 'source-over'; d.clearRect(0, 0, 320, 250); d.fillStyle = 'rgba(5,8,26,0.86)'; d.fillRect(0, 0, 320, 250);
+  const OX = hXL() - 60, OY = -120, DW = HIW[hCT] + 120, DH = HIH + 240;
+  if (!hDk || hDk.width !== DW) { hDk = document.createElement('canvas'); hDk.width = DW; hDk.height = DH; }
+  const d = hDk.getContext('2d'); d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = 'source-over'; d.clearRect(0, 0, DW, DH); d.fillStyle = 'rgba(5,8,26,0.86)'; d.fillRect(0, 0, DW, DH); d.translate(-OX, -OY);
   d.globalCompositeOperation = 'destination-out';
   const hole = (x, y, r, a) => { const g = d.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); d.fillStyle = g; d.fillRect(x - r, y - r, 2 * r, 2 * r); };
   hole(hChar.x, hChar.y - 14, 44, 0.9); hole(60, 72, 52, 0.5);
   const ents = hEntries('inside', S), lamp = ents.find(q => q.slot === 'lamp'), tv = ents.find(q => q.slot === 'tv');
   const tk = ents.find(q => q.slot === 'pet' && hVal(S, 'pet') === '🐠'); if (tk) hole(tk.x, tk.y - 34, 46, 0.7);
   if (lamp && hLampOn) hole(lamp.x, lamp.y - 22, 38, 0.95); if (tv) hole(tv.x, tv.y - 30, 56, hTvOn ? 0.8 : 0.5);
-  c.drawImage(hDk, 0, 0, 320, 250);
+  c.drawImage(hDk, OX, OY, DW, DH);
   c.save(); c.globalCompositeOperation = 'lighter';
   const glow = (x, y, r, col) => { const g = c.createRadialGradient(x, y, 2, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
   if (lamp && hLampOn) glow(lamp.x, lamp.y - 22, 70, 'rgba(255,190,100,' + (0.3 + 0.05 * Math.sin(hT / 9)) + ')');
@@ -5171,12 +5181,13 @@ function hWin(c, x, y, w, h, arch) {
 function hTierRoom(c, S) {
   const t = hCT;
   if (t === 0) {   // كوخ: جذوع خشب + مدفأة حجر + عوارض
-    c.fillStyle = 'rgba(70,40,15,.28)'; for (let y = 0; y < 168; y += 14) c.fillRect(0, y, 320, 2);
-    c.fillStyle = 'rgba(0,0,0,.16)'; for (let y = 7; y < 168; y += 14) c.fillRect(0, y, 320, 1);
-    c.fillStyle = '#4a2c14'; c.fillRect(0, 0, 320, 22); c.fillStyle = '#5e3a1c'; for (let x = 0; x < 320; x += 64) c.fillRect(x, 0, 8, 30);
-    c.fillStyle = '#3d2410'; c.fillRect(0, 0, 46, 250); c.fillRect(274, 0, 46, 250);
-    c.fillStyle = '#5a361a'; for (let y = 0; y < 250; y += 18) { c.beginPath(); c.arc(22, y + 9, 9, 0, 7); c.arc(298, y + 9, 9, 0, 7); c.fill(); }
-    c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(44, 0, 3, 250); c.fillRect(273, 0, 3, 250);
+    const XL = hXL(), XR = hXR(), IW = XR - XL;
+    c.fillStyle = 'rgba(70,40,15,.28)'; for (let y = -196; y < 168; y += 14) c.fillRect(XL, y, IW, 2);
+    c.fillStyle = 'rgba(0,0,0,.16)'; for (let y = -189; y < 168; y += 14) c.fillRect(XL, y, IW, 1);
+    c.fillStyle = '#4a2c14'; c.fillRect(XL, -200, IW, 222); c.fillStyle = '#5e3a1c'; for (let x = XL; x < XR; x += 64) c.fillRect(x, -200, 8, 230);
+    c.fillStyle = '#3d2410'; c.fillRect(XL, -200, 46, 600); c.fillRect(XR - 46, -200, 46, 600);
+    c.fillStyle = '#5a361a'; for (let y = -198; y < HIH + 60; y += 18) { c.beginPath(); c.arc(XL + 22, y + 9, 9, 0, 7); c.arc(XR - 22, y + 9, 9, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(XL + 44, -200, 3, 600); c.fillRect(XR - 47, -200, 3, 600);
     hWin(c, 70, 42, 44, 52, false); c.fillStyle = '#7a4a2a'; c.fillRect(66, 94, 52, 5);
     // مدفأة
     c.fillStyle = '#8b8b92'; c.fillRect(208, 86, 56, 84); c.fillStyle = 'rgba(0,0,0,.2)'; for (let y = 92; y < 170; y += 12) { c.fillRect(208, y, 56, 1); } for (let y = 98; y < 170; y += 24) c.fillRect(224, y - 12, 1, 12);
@@ -5187,29 +5198,33 @@ function hTierRoom(c, S) {
     // فانوس معلّق
     c.strokeStyle = '#222'; c.lineWidth = 1; c.beginPath(); c.moveTo(150, 22); c.lineTo(150, 40); c.stroke(); c.fillStyle = '#ffd36b'; c.fillRect(144, 40, 12, 14); c.fillStyle = 'rgba(255,220,120,.25)'; c.beginPath(); c.arc(150, 47, 18 + Math.sin(hT / 9) * 1.5, 0, 7); c.fill();
   } else if (t === 2) {   // بيت واسع: ألواح جدار + نافذتين كبيرتين + درج + برواز
-    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(0, 118, 320, 52); c.strokeStyle = 'rgba(0,0,0,.14)'; c.lineWidth = 1; for (let x = 0; x < 320; x += 40) c.strokeRect(x + 3, 122, 34, 42);
-    c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(0, 116, 320, 3);
+    const XL = hXL(), XR = hXR(), IW = XR - XL;
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(XL, 118, IW, 52); c.strokeStyle = 'rgba(0,0,0,.14)'; c.lineWidth = 1; for (let x = XL; x < XR - 30; x += 40) c.strokeRect(x + 3, 122, 34, 42);
+    c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(XL, 116, IW, 3);
     hWin(c, 82, 30, 56, 70, false); hWin(c, 196, 30, 56, 70, false);
     [[82, 56], [196, 56]].forEach(p => { c.fillStyle = '#b5413a'; c.fillRect(p[0] - 12, 24, 8, 84); c.fillRect(p[0] + p[1] + 4, 24, 8, 84); c.fillRect(p[0] - 14, 20, p[1] + 28, 6); });
     c.fillStyle = '#e9e1d0'; c.fillRect(78, 100, 64, 4); c.fillRect(192, 100, 64, 4);
     // درج على اليسار
-    c.fillStyle = '#7a5230'; for (let i = 0; i < 7; i++) c.fillRect(0, 170 - i * 14, 10 + (7 - i) * 6, 14); c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 0; i < 7; i++) c.fillRect(0, 183 - i * 14, 10 + (7 - i) * 6, 1);
-    c.fillStyle = '#4a2c14'; c.fillRect(0, 70, 8, 100);
+    c.fillStyle = '#7a5230'; for (let i = 0; i < 7; i++) c.fillRect(XL, 170 - i * 14, 10 + (7 - i) * 6, 14); c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 0; i < 7; i++) c.fillRect(XL, 183 - i * 14, 10 + (7 - i) * 6, 1);
+    c.fillStyle = '#4a2c14'; c.fillRect(XL, 70, 8, 100);
     // برواز
     c.fillStyle = '#c99a3c'; c.fillRect(150, 34, 40, 30); c.fillStyle = '#9ad0f2'; c.fillRect(154, 38, 32, 22); c.fillStyle = '#6ab960'; c.fillRect(154, 52, 32, 8);
     // ثريا بسيطة
     c.strokeStyle = '#999'; c.beginPath(); c.moveTo(160, 0); c.lineTo(160, 14); c.stroke(); c.fillStyle = '#ffe9a8'; c.beginPath(); c.ellipse(160, 17, 14, 5, 0, 0, 7); c.fill();
   } else {   // فيلا: رخام + أعمدة + 3 نوافذ مقوّسة + درج كبير + ثريا
-    c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(0, 0, 320, 170);
-    c.fillStyle = '#d9c9a0'; c.fillRect(0, 150, 320, 20); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(0, 150, 320, 2);
-    for (let r = 0; r < 4; r++) for (let x = -1; x < 12; x++) { if ((x + r) % 2) { const y0 = 170 + r * r * 3 + r * 6, y1 = 170 + (r + 1) * (r + 1) * 3 + (r + 1) * 6; c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(x * 28, y0, 28, y1 - y0); } }
+    const XL = hXL(), XR = hXR(), IW = XR - XL;
+    c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(XL, -200, IW, 370);
+    c.fillStyle = '#d9c9a0'; c.fillRect(XL, 150, IW, 20); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(XL, 150, IW, 2);
+    for (let r = 0; r < 7; r++) for (let x = Math.floor(XL / 28) - 1; x < Math.ceil(XR / 28) + 1; x++) { if ((x + r) % 2) { const y0 = 170 + r * r * 3 + r * 6, y1 = 170 + (r + 1) * (r + 1) * 3 + (r + 1) * 6; c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(Math.max(XL, x * 28), y0, Math.min(XR, x * 28 + 28) - Math.max(XL, x * 28), y1 - y0); } }
     [[52, 46], [136, 46], [220, 46]].forEach(p => hWin(c, p[0], 36, 44, 104, true));
     c.fillStyle = '#7a1f2b'; [[44], [128], [212]].forEach(p => { c.fillRect(p[0], 30, 7, 116); c.fillRect(p[0] + 52, 30, 7, 116); });
-    c.fillStyle = '#c99a3c'; for (let x = 0; x < 320; x += 4) if (x % 8 === 0) c.fillRect(x, 0, 4, 6);
-    [14, 306].forEach(x => { c.fillStyle = '#f2ead8'; c.fillRect(x - 9, 10, 18, 160); c.fillStyle = '#d6cbb0'; c.fillRect(x - 12, 6, 24, 8); c.fillRect(x - 12, 164, 24, 8); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(x + 3, 14, 3, 150); });
+    c.fillStyle = '#c99a3c'; for (let x = XL; x < XR; x += 8) c.fillRect(x, 0, 4, 6);
+    [XL + 14, XR - 14].forEach(x => { c.fillStyle = '#f2ead8'; c.fillRect(x - 9, 10, 18, 160); c.fillStyle = '#d6cbb0'; c.fillRect(x - 12, 6, 24, 8); c.fillRect(x - 12, 164, 24, 8); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(x + 3, 14, 3, 150); });
     // درج كبير مع سجادة حمراء
-    c.fillStyle = '#e8dfc6'; for (let i = 0; i < 6; i++) c.fillRect(24, 170 - i * 14, 60 + (6 - i) * 4, 14);
-    c.fillStyle = '#a3202e'; for (let i = 0; i < 6; i++) c.fillRect(30, 170 - i * 14, 18 + (6 - i) * 4, 14);
+    c.fillStyle = '#e8dfc6'; for (let i = 0; i < 6; i++) c.fillRect(XL + 30, 170 - i * 14, 60 + (6 - i) * 4, 14);
+    c.fillStyle = '#a3202e'; for (let i = 0; i < 6; i++) c.fillRect(XL + 36, 170 - i * 14, 18 + (6 - i) * 4, 14);
+    c.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 6; i++) c.fillRect(XL + 30, 183 - i * 14, 60 + (6 - i) * 4, 1);
+    c.strokeStyle = '#8a6a2a'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(XL + 112, 170); c.lineTo(XL + 92, 86); c.stroke(); for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(XL + 110 - i * 3.4, 170 - i * 14); c.lineTo(XL + 110 - i * 3.4, 154 - i * 14); c.stroke(); }   // درابزين
     // ثريا
     c.strokeStyle = '#c99a3c'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(160, 0); c.lineTo(160, 18); c.stroke();
     const gl = c.createRadialGradient(160, 26, 2, 160, 26, 40); gl.addColorStop(0, 'rgba(255,235,160,' + (0.5 + 0.1 * Math.sin(hT / 7)) + ')'); gl.addColorStop(1, 'rgba(255,235,160,0)'); c.fillStyle = gl; c.fillRect(110, 0, 100, 70);
@@ -5217,6 +5232,66 @@ function hTierRoom(c, S) {
   }
 }
 /* ديكور الحديقة والواجهة حسب المستوى */
+/* ===== علامة الضغط (خطوات سودة مثل المنتجع) ===== */
+function hTapMark() { if (hChar.sitGoal || hChar.jump) { hTapMk = null; return; } const nx = hChar.tx, ny = hChar.ty; if (hTapMk && !hTapMk.at && Math.hypot(hTapMk.x - nx, hTapMk.y - ny) < 2) return; hTapMk = { x: nx, y: ny, t0: performance.now() }; }
+function hTapDraw(c) {
+  const k = hTapMk; if (!k || hView === 'home' && false) return; if (!k) return;
+  const el = performance.now() - k.t0, arrived = Math.hypot(hChar.x - k.x, hChar.y - k.y) < 3; if (arrived && !k.at) k.at = performance.now();
+  const fade = k.at ? 1 - (performance.now() - k.at) / 450 : 1; if (fade <= 0 || el > 9000) { hTapMk = null; return; } const a = Math.max(0, Math.min(1, el / 120)) * fade;
+  c.save(); c.translate(k.x, k.y); c.globalAlpha = 0.5 * a; c.fillStyle = '#120c06';
+  [[-4.2, -1.5, -0.25], [4.2, 1.2, 0.25]].forEach(f => { c.beginPath(); c.ellipse(f[0], f[1], 2.6, 5.2, f[2], 0, 7); c.fill(); c.beginPath(); c.ellipse(f[0] + Math.sin(f[2]) * 6.2, f[1] - 6.6, 2, 2.2, 0, 0, 7); c.fill(); });
+  const p = (el % 1100) / 1100; c.globalAlpha = 0.4 * a * (1 - p); c.strokeStyle = '#120c06'; c.lineWidth = 1.3; c.beginPath(); c.ellipse(0, 0, 7 + p * 9, 3 + p * 3.6, 0, 0, 7); c.stroke(); c.restore();
+}
+/* ===== زينة الجوانب بالمساحة الجديدة ===== */
+function hSideDecor(c, S, XL, XR) {
+  const sides = []; const lw = hCT === 0 ? 46 : 0;
+  if (hCT !== 3) sides.push((XL + lw + 0) / 2 + (hCT === 0 ? 4 : 0)); sides.push((320 + XR - lw) / 2);
+  sides.forEach((x, i) => {
+    // برواز
+    c.fillStyle = '#7a4a2a'; c.fillRect(x - 17, 46, 34, 28); c.fillStyle = i ? '#ffd6a5' : '#a0d8ff'; c.fillRect(x - 13, 50, 26, 20); c.fillStyle = i ? '#ff8c69' : '#6ab960'; c.beginPath(); c.moveTo(x - 13, 70); c.lineTo(x - 3, 58); c.lineTo(x + 4, 66); c.lineTo(x + 8, 61); c.lineTo(x + 13, 70); c.fill();
+    if (i === 0 || hCT === 3) { c.fillStyle = '#ffe066'; c.beginPath(); c.arc(x + 8, 55, 3, 0, 7); c.fill(); }
+    // نبتة بأصيص
+    const px = x + (i ? -8 : 8); c.fillStyle = '#b5523a'; c.beginPath(); c.moveTo(px - 9, 162); c.lineTo(px + 9, 162); c.lineTo(px + 7, 178); c.lineTo(px - 7, 178); c.closePath(); c.fill();
+    c.fillStyle = '#3f9a4a'; for (let j = -2; j <= 2; j++) { c.beginPath(); c.ellipse(px + j * 4, 150 - Math.abs(j) * -3 - 6, 4, 11, j * 0.35, 0, 7); c.fill(); }
+    // رف صغير
+    c.fillStyle = '#8b5a33'; c.fillRect(x - 18, 100, 36, 4); c.fillStyle = ['#e4572e', '#29335c', '#f3a712', '#669bbc'][i % 4]; c.fillRect(x - 14, 88, 6, 12); c.fillStyle = '#4c956c'; c.fillRect(x - 7, 90, 5, 10); c.fillStyle = '#c1121f'; c.fillRect(x - 1, 86, 6, 14); c.fillStyle = '#fff'; c.beginPath(); c.arc(x + 11, 95, 5, 0, 7); c.fill();
+  });
+}
+function hStairSign(c, XL) { if (hFloor) return; const x = XL + 74, y = 76 - Math.abs(Math.sin(hT / 20)) * 3; c.save(); c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const t = '⬆️ الطابق الثاني', w = c.measureText(t).width + 14; c.fillStyle = 'rgba(122,31,43,.92)'; c.beginPath(); if (c.roundRect) c.roundRect(x - w / 2, y - 13, w, 18, 8); else c.rect(x - w / 2, y - 13, w, 18); c.fill(); c.fillStyle = '#ffe9a8'; c.fillText(t, x, y); c.restore(); }
+const hStairNear = () => hView === 'inside' && hCT === 3 && !hChar.sit && !hChar.jump && hChar.x < hXL() + 150 && (hFloor ? hChar.y < 250 : hChar.y < 222);
+function hStairs(f) {
+  if (hGoing) return; hGoing = true; sfx('stand'); hFade = 1; hTapMk = null;
+  setTimeout(() => { hFloor = f; const XL = hXL(); hChar.x = hChar.tx = XL + 150; hChar.y = hChar.ty = f ? 232 : 206; hChar.sit = false; hChar.sitGoal = false; hChar.seat = null; hChar.jump = null; hBubs = []; hCamSnap = true; hOvKey = ''; hGoing = false; showToast(f ? '🏰 وصلت الطابق الثاني' : '🏠 رجعت للطابق الأول'); }, 260);
+}
+/* ===== الطابق الثاني للفيلا ===== */
+function hUpstairs(c, S, XL, XR) {
+  const IW = XR - XL;
+  c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(XL, -200, IW, 370); c.fillStyle = '#c99a3c'; for (let x = XL; x < XR; x += 8) c.fillRect(x, 0, 4, 5);
+  // فتحة الدرج النازل
+  const sx = XL + 30; c.fillStyle = '#3a2a1c'; c.fillRect(sx, 176, 100, 44); c.fillStyle = '#e8dfc6'; for (let i = 0; i < 4; i++) c.fillRect(sx + 4 + i * 4, 180 + i * 10, 92 - i * 8, 8); c.fillStyle = '#a3202e'; for (let i = 0; i < 4; i++) c.fillRect(sx + 40, 180 + i * 10, 22, 8);
+  c.strokeStyle = '#8a6a2a'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(sx, 176); c.lineTo(sx + 100, 176); c.moveTo(sx + 100, 176); c.lineTo(sx + 100, 220); c.stroke(); for (let x = sx + 6; x < sx + 100; x += 10) { c.beginPath(); c.moveTo(x, 176); c.lineTo(x, 164); c.stroke(); } c.beginPath(); c.moveTo(sx, 164); c.lineTo(sx + 100, 164); c.stroke();
+  c.save(); c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const t = '⬇️ الطابق الأول', w = c.measureText(t).width + 14; c.fillStyle = 'rgba(122,31,43,.92)'; c.beginPath(); if (c.roundRect) c.roundRect(sx + 50 - w / 2, 136 - Math.abs(Math.sin(hT / 20)) * 3, w, 18, 8); else c.rect(sx + 50 - w / 2, 136, w, 18); c.fill(); c.fillStyle = '#ffe9a8'; c.fillText(t, sx + 50, 149 - Math.abs(Math.sin(hT / 20)) * 3); c.restore();
+  // باب بلكونة زجاجي كبير
+  const bx = 160 - 46; const sky = c.createLinearGradient(0, 30, 0, 168); sky.addColorStop(0, '#6cc0ff'); sky.addColorStop(1, '#dff4ff'); c.fillStyle = '#f2ead8'; c.fillRect(bx - 8, 22, 108, 150); c.fillStyle = sky; c.beginPath(); c.moveTo(bx, 168); c.lineTo(bx, 60); c.quadraticCurveTo(bx + 46, 20, bx + 92, 60); c.lineTo(bx + 92, 168); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(bx + 30 + Math.sin(hT / 70) * 8, 70, 14, 5, 0, 0, 7); c.fill(); c.fillStyle = '#7bc96f'; c.beginPath(); c.ellipse(bx + 46, 168, 60, 22, 0, Math.PI, 0); c.fill();
+  c.strokeStyle = '#f2ead8'; c.lineWidth = 3; c.beginPath(); c.moveTo(bx + 46, 32); c.lineTo(bx + 46, 168); c.stroke(); c.strokeStyle = '#555'; c.lineWidth = 1.5; for (let x = bx + 4; x < bx + 92; x += 7) { c.beginPath(); c.moveTo(x, 140); c.lineTo(x, 168); c.stroke(); } c.beginPath(); c.moveTo(bx, 140); c.lineTo(bx + 92, 140); c.stroke();
+  c.fillStyle = '#7a1f2b'; c.fillRect(bx - 18, 18, 12, 156); c.fillRect(bx + 98, 18, 12, 156); c.fillRect(bx - 20, 14, 132, 7);
+  // خزانة
+  const wx = 248; c.fillStyle = '#8b5a33'; c.fillRect(wx, 74, 54, 104); c.fillStyle = '#a06a3e'; c.fillRect(wx + 3, 78, 23, 96); c.fillRect(wx + 28, 78, 23, 96); c.fillStyle = '#ffd166'; c.fillRect(wx + 23, 120, 2, 10); c.fillRect(wx + 30, 120, 2, 10);
+  // سرير كبير
+  const ex = XR - 150; c.fillStyle = '#6b3f22'; c.fillRect(ex, 140, 116, 44); c.fillStyle = '#7a4a2a'; c.fillRect(ex + 108, 110, 10, 76); c.fillStyle = '#fff'; c.fillRect(ex + 4, 160, 108, 22); c.fillStyle = '#b5413a'; c.fillRect(ex + 4, 168, 76, 16); c.fillStyle = '#f7f1e3'; c.beginPath(); c.ellipse(ex + 94, 160, 12, 7, 0, 0, 7); c.fill(); c.fillStyle = '#ffc6d0'; c.beginPath(); c.ellipse(ex + 94, 172, 10, 6, 0, 0, 7); c.fill();
+  c.fillStyle = '#5a361a'; c.fillRect(ex + 2, 182, 6, 10); c.fillRect(ex + 108, 182, 6, 10);
+  // مكتب ومصباح
+  const dx = 12; c.fillStyle = '#8b5a33'; c.fillRect(dx, 150, 64, 6); c.fillRect(dx + 4, 156, 5, 26); c.fillRect(dx + 55, 156, 5, 26); c.fillStyle = '#333'; c.fillRect(dx + 18, 130, 28, 18); c.fillStyle = '#6ad1ff'; c.fillRect(dx + 20, 132, 24, 14); c.fillStyle = '#ffd36b'; c.beginPath(); c.moveTo(dx + 52, 136); c.lineTo(dx + 62, 136); c.lineTo(dx + 58, 128); c.lineTo(dx + 56, 128); c.closePath(); c.fill(); c.fillStyle = '#444'; c.fillRect(dx + 56, 136, 2, 14);
+  // سجادة
+  c.fillStyle = '#5b3fb8'; c.beginPath(); c.ellipse(170, 246, 96, 22, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; c.beginPath(); c.ellipse(170, 246, 82, 16, 0, 0, 7); c.stroke();
+  // ثريا
+  const gl = c.createRadialGradient(170, 20, 2, 170, 20, 40); gl.addColorStop(0, 'rgba(255,235,160,.5)'); gl.addColorStop(1, 'rgba(255,235,160,0)'); c.fillStyle = gl; c.fillRect(120, -10, 100, 70); c.fillStyle = '#c99a3c'; c.beginPath(); c.ellipse(170, 16, 18, 4, 0, 0, 7); c.fill();
+  // الشخصيات
+  const list = hOthersIn('up').map(o => o); let done = false; list.sort((a, b) => a.y - b.y);
+  list.forEach(o => { if (!done && hChar.y < o.y) { hChar_(c, S); done = true; } hAvatar(c, o); }); if (!done) hChar_(c, S);
+  hDarkDraw(c, S);
+}
 function hGardenDecor(c, t, back) {
   if (back) {   // خلف الأغراض
     if (t === 0) { c.fillStyle = '#b89968'; [[40, 232, 26], [210, 236, 22], [300, 226, 18]].forEach(p => { c.beginPath(); c.ellipse(p[0], p[1], p[2], 5, 0, 0, 7); c.fill(); }); c.fillStyle = '#9a9a9a'; [[20, 214], [300, 212], [160, 240]].forEach(p => { c.beginPath(); c.ellipse(p[0], p[1], 6, 4, 0, 0, 7); c.fill(); }); c.fillStyle = '#8a5a2a'; for (let i = 0; i < 3; i++) c.fillRect(286, 190 + i * 5, 22, 4); }
@@ -5233,12 +5308,18 @@ function hGardenDecor(c, t, back) {
 }
 function hInterior(c, S) {
   const paper = hVal(S, 'paper') || HDEF.paper, floor = hVal(S, 'floor') || HDEF.floor, rug = hVal(S, 'rug');
-  c.fillStyle = paper; c.fillRect(0, 0, 320, 170); c.fillStyle = 'rgba(0,0,0,.05)'; for (let x = 0; x < 320; x += 20) c.fillRect(x, 0, 10, 170);
-  const sh = c.createLinearGradient(0, 0, 0, 170); sh.addColorStop(0, 'rgba(0,0,0,.12)'); sh.addColorStop(.3, 'rgba(0,0,0,0)'); c.fillStyle = sh; c.fillRect(0, 0, 320, 170);
-  c.fillStyle = floor; c.fillRect(0, 170, 320, 80); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = 1;
-  for (let i = 0; i < 8; i++) { const y = 170 + i * i * 1.3 + i * 3; c.beginPath(); c.moveTo(0, y); c.lineTo(320, y); c.stroke(); }
-  const fl = S.floor; if (fl === 'f2' || fl === 'f3') { for (let x = 0; x < 320; x += 32) { c.beginPath(); c.moveTo(x, 170); c.lineTo(x + (x - 160) * 0.5, 250); c.stroke(); } }
-  c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(0, 166, 320, 5); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(0, 164, 320, 2);
+  if (hCT !== 3) hFloor = 0;
+  const XL = hXL(), XR = hXR(), IW = XR - XL;
+  c.fillStyle = '#2a1d14'; c.fillRect(XL - 900, -900, IW + 1800, 2000);   // برّه حدود البيت
+  c.fillStyle = paper; c.fillRect(XL, -200, IW, 370); c.fillStyle = 'rgba(0,0,0,.05)'; for (let x = XL; x < XR; x += 20) c.fillRect(x, -200, 10, 370);
+  const sh = c.createLinearGradient(0, 0, 0, 170); sh.addColorStop(0, 'rgba(0,0,0,.12)'); sh.addColorStop(.3, 'rgba(0,0,0,0)'); c.fillStyle = sh; c.fillRect(XL, 0, IW, 170);
+  c.fillStyle = floor; c.fillRect(XL, 170, IW, 600); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = 1;
+  for (let i = 0; i < 12; i++) { const y = 170 + i * i * 1.15 + i * 3; c.beginPath(); c.moveTo(XL, y); c.lineTo(XR, y); c.stroke(); }
+  const fl = S.floor; if (fl === 'f2' || fl === 'f3') { for (let x = Math.ceil(XL / 32) * 32; x < XR; x += 32) { c.beginPath(); c.moveTo(x, 170); c.lineTo(x + (x - 160) * 0.5, HIH + 30); c.stroke(); } }
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(XL, 166, IW, 5); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(XL, 164, IW, 2);
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(XL, -200, 3, 520); c.fillRect(XR - 3, -200, 3, 520);   // حدود الغرفة
+  if (hFloor) { hUpstairs(c, S, XL, XR); return; }
+  hSideDecor(c, S, XL, XR);
   if (hCT === 1) {
   // النافذة والستائر
   const wx = 26, wy = 34; c.fillStyle = '#fbfbfb'; c.fillRect(wx - 4, wy - 4, 76, 82); const g = c.createLinearGradient(0, wy, 0, wy + 74); g.addColorStop(0, '#7ec8ff'); g.addColorStop(1, '#d8f1ff'); c.fillStyle = g; c.fillRect(wx, wy, 68, 74);
@@ -5251,6 +5332,7 @@ function hInterior(c, S) {
   if (rug) { c.fillStyle = rug; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(rc[0], rc[1], 74, 15, 0, 0, 7); c.stroke(); {const k = Math.min(1, (hT - (hPlaced.rug === undefined ? -99 : hPlaced.rug)) / 18); if (k < 1) { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(rc[0], rc[1], 86, 20, 0, 0, 7); c.fill(); c.globalAlpha = 1; } } }
   const list = hEntries('inside', S).map(e => [e.slot, e.x, e.y, e.s, 0]);
   hOthersIn('inside').forEach(o => list.push(['_u' + o.name, o.x, o.sit ? hSeatSortY(o.x, o.y) : o.y, 0, 0]));
+  if (hCT === 3) hStairSign(c, XL);
   list.sort((a, b) => a[2] - b[2]); let charDone = false;
   list.forEach(it => { if (!charDone && hSortY() < it[2]) { hChar_(c, S); charDone = true; } String(it[0]).slice(0, 2) === '_u' ? hAvatar(c, hOthers[it[0].slice(2)]) : (it[0] === 'pet' && hVal(S, 'pet') === '🐠') ? (c.save(), c.translate(it[1], it[2]), c.scale(hSclOf('pet'), hSclOf('pet')), c.translate(-it[1], -it[2]), hTank(c, it[1], it[2], hEx('pet'), S), c.restore()) : hItem(c, S, it[0], it[1], it[2], it[3], hEx(it[0])); if (it[0] === 'pet') hPetTag(c, S, it); });
   if (!charDone) hChar_(c, S);
@@ -5284,7 +5366,13 @@ function hHilite(c, S) {
   A.forEach(r => { c.beginPath(); if (c.roundRect) c.roundRect(r[0] - 2, r[1] - 2, r[2] + 4, r[3] + 4, 6); else c.rect(r[0] - 2, r[1] - 2, r[2] + 4, r[3] + 4); c.stroke(); }); c.restore();
 }
 function hDraw() {
-  const cv = $('houseCv'); if (!cv) return; const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0);
+  const cv = $('houseCv'); if (!cv) return; const c = cv.getContext('2d');
+  // الكاميرا: المنظر يملّي الشاشة تلقائياً (موبايل أو آيباد) ويتبع الشخصية
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1), cw = Math.max(60, cv.clientWidth || 320), ch = Math.max(60, cv.clientHeight || 250), PW = Math.round(cw * dpr), PH = Math.round(ch * dpr);
+  if (cv.width !== PW || cv.height !== PH) { cv.width = PW; cv.height = PH; }
+  const WB = hWorldBox(), WWd = WB[2] - WB[0], WHt = WB[3] - WB[1];
+  const kk = Math.min(Math.max(ch / WHt, cw / WWd), cw / (hView === 'inside' ? HMINW : 250)); hVW = cw / kk; hVH = ch / kk;
+  c.setTransform(kk * dpr, 0, 0, kk * dpr, 0, 0);
   const S = hSetNow();
   if (hDoorT > 0) hDoorT--; if (hPetT > 0) hPetT--; hPetStep(S);
   if (hKeys.arrowleft || hKeys.a || hKeys.arrowright || hKeys.d || hKeys.arrowup || hKeys.w || hKeys.arrowdown || hKeys.s) {
@@ -5294,10 +5382,11 @@ function hDraw() {
     const pe = hEntries('inside', S).find(q => q.slot === 'pet'); if (pe && Math.hypot(pe.x - hChar.x, pe.y - hChar.y) < 34) { hLastBark = hT; sfx('pet', { t: 'dog' }); hPetT = 24; hSay('pet', 'هاو! 🐶 ' + ((auth && auth.name) ? 'أهلاً ' + auth.name : 'أهلاً')); }
   }
   c.save();
-  if (hFade > 0) { const z = 1 + hFade * 0.1; c.translate(160, 125); c.scale(z, z); c.translate(-160, -125); }
-  c.beginPath(); c.rect(0, 0, 320, 250); c.clip();
-  hCZ += (hZ - hCZ) * 0.16; if (Math.abs(hZ - hCZ) < 0.003) hCZ = hZ;
-  if (hCZ > 1.001) { const vw = 320 / hCZ, vh = 250 / hCZ; hCX = Math.max(0, Math.min(320 - vw, hChar.x - vw / 2)); hCY = Math.max(0, Math.min(250 - vh, hChar.y - 26 - vh / 2)); c.scale(hCZ, hCZ); c.translate(-hCX, -hCY); } else { hCX = 0; hCY = 0; }
+  { const tx = hVW >= WWd ? (WB[0] + WB[2] - hVW) / 2 : Math.max(WB[0], Math.min(WB[2] - hVW, hChar.x - hVW / 2)), ty = hVH >= WHt ? (WB[1] + WB[3] - hVH) / 2 : Math.max(WB[1], Math.min(WB[3] - hVH, hChar.y - 30 - hVH / 2));
+    if (hCamSnap) { hCX = tx; hCY = ty; hCamSnap = false; } else { hCX += (tx - hCX) * 0.14; hCY += (ty - hCY) * 0.14; } hCZ = 1; }
+  c.translate(-hCX, -hCY);
+  if (hFade > 0) { const z = 1 + hFade * 0.1, mx = hCX + hVW / 2, my = hCY + hVH / 2; c.translate(mx, my); c.scale(z, z); c.translate(-mx, -my); }
+  if (hView !== 'inside') { c.fillStyle = '#7cc8ff'; c.fillRect(-900, -900, 2120, 1105); c.fillStyle = '#4aa24c'; c.fillRect(-900, 205, 2120, 900); }
   if (hBuild > 0) hBuild--;
   if (hView === 'inside') hInterior(c, S);
   else if (hView === 'garden') hGarden(c, S);
@@ -5305,11 +5394,11 @@ function hDraw() {
     hBackdrop(c, false); hHomeExtra(c, hCT); hExterior(c, S, false); hOthersIn('home').forEach(o => hAvatar(c, o)); hChar_(c, S);
     c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(226, 14, 84, 26); c.font = 'bold 12px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#ffe9a8'; c.fillText('🔧 ترقية البيت', 268, 32);
   }
-  hHilite(c, S);
+  hTapDraw(c); hHilite(c, S);
   hBubs = hBubs.filter(b => b.t > 0); hFloats = hFloats.filter(f => f.t > 0);
   hBubs.forEach(b => {
     b.t--; const e = hEntries(hView, S).find(q => q.slot === b.slot); if (!e) return;
-    c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(b.txt).width + 16, bx = Math.max(4, Math.min(316 - w, e.x - w / 2)), by = Math.max(4, e.y - e.s - 30);
+    c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = c.measureText(b.txt).width + 16, bx = Math.max(hCX + 4, Math.min(hCX + hVW - 4 - w, e.x - w / 2)), by = Math.max(hCY + 4, e.y - e.s - 30);
     c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1;
     c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, 20, 8); else c.rect(bx, by, w, 20); c.fill(); c.stroke();
     c.beginPath(); c.moveTo(e.x - 5, by + 20); c.lineTo(e.x, by + 27); c.lineTo(e.x + 5, by + 20); c.fillStyle = '#fff'; c.fill();
@@ -5318,7 +5407,7 @@ function hDraw() {
   hFloats.forEach(f => { f.t--; f.y -= 0.7; c.globalAlpha = Math.min(1, f.t / 20); c.font = '14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText(f.txt, f.x, f.y); c.globalAlpha = 1; });
   { const me0 = (auth && auth.name) || '';
     const drawB = (nm, x, y) => { const b = hChatBub[nm]; if (!b || b.t <= 0) return; b.t--; const words = b.txt, lines = []; for (let i = 0; i < words.length && lines.length < 3; i += 20) lines.push(words.slice(i, i + 20));
-      c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.max(...lines.map(l => c.measureText(l).width)) + 14, h = lines.length * 13 + 8, bx = Math.max(3, Math.min(317 - w, x - w / 2)), by = Math.max(3, y - h - 8);
+      c.font = 'bold 10px Cairo, system-ui, Arial'; c.textAlign = 'center'; const w = Math.max(...lines.map(l => c.measureText(l).width)) + 14, h = lines.length * 13 + 8, bx = Math.max(hCX + 3, Math.min(hCX + hVW - 3 - w, x - w / 2)), by = Math.max(hCY + 3, y - h - 8);
       c.globalAlpha = Math.min(1, b.t / 25); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 8); else c.rect(bx, by, w, h); c.fill(); c.stroke();
       c.beginPath(); c.moveTo(x - 5, by + h); c.lineTo(x, by + h + 6); c.lineTo(x + 5, by + h); c.fill(); c.fillStyle = '#222'; lines.forEach((l, i) => c.fillText(l, bx + w / 2, by + 13 + i * 13)); c.globalAlpha = 1; };
     drawB(me0, hChar.x, hChar.y - 44); hOthersIn(hView).forEach(o => { if (hCZ > 1.2 && Math.hypot(o.x - hChar.x, o.y - hChar.y) > 90) return; drawB(o.name, o.x, o.y - 44); }); }
@@ -5326,7 +5415,7 @@ function hDraw() {
   for (const p of hParts) { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.t--; c.globalAlpha = Math.min(1, p.t / 14); c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.sz, 0, 7); c.fill(); }
   c.globalAlpha = 1; if (hParts.length) hParts = hParts.filter(p => p.t > 0);
   c.restore();
-  if (hFade > 0) { c.fillStyle = 'rgba(0,0,0,' + hFade * 0.75 + ')'; c.fillRect(0, 0, 320, 250); hFade = Math.max(0, hFade - 0.07); }
+  if (hFade > 0) { c.fillStyle = 'rgba(0,0,0,' + hFade * 0.75 + ')'; c.fillRect(0, 0, hVW, hVH); hFade = Math.max(0, hFade - 0.07); }
 }
 
 /* ================= خريطة المراحل ================= */

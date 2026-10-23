@@ -899,6 +899,23 @@ app.use('/uploads', express.static(UP_DIR, {
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
+/* ضغط ملفات اللعبة (gzip) حتى تنزل أسرع: نضغط الملف مرة وحدة ونخزنه بالذاكرة لين يتغير */
+const zlib = require('zlib'); const GZC = new Map();
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return next();
+  let rel = decodeURIComponent(req.path); if (rel === '/') rel = '/index.html';
+  if (!/\.(html|js|json|css|svg)$/i.test(rel) || rel.includes('..')) return next();
+  const fp = path.join(__dirname, 'public', rel);
+  fs.stat(fp, (err, st) => {
+    if (err || !st.isFile()) return next();
+    const key = fp + ':' + st.mtimeMs + ':' + st.size; let gzb = GZC.get(fp);
+    if (!gzb || gzb.key !== key) { try { gzb = { key, buf: zlib.gzipSync(fs.readFileSync(fp), { level: 9 }) }; GZC.set(fp, gzb); } catch (e) { return next(); } }
+    const ext = rel.split('.').pop().toLowerCase(), ct = { html: 'text/html; charset=utf-8', js: 'application/javascript; charset=utf-8', json: 'application/json; charset=utf-8', css: 'text/css; charset=utf-8', svg: 'image/svg+xml' }[ext];
+    res.set({ 'Content-Type': ct, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Cache-Control': 'public, max-age=0', 'Content-Length': gzb.buf.length });
+    if (req.method === 'HEAD') return res.end(); res.end(gzb.buf);
+  });
+});
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 /* ============ الشات (WebSocket) ============ */
@@ -1361,7 +1378,7 @@ function leave(ws) {
 
 /* ============ زيارة البيوت (حضور حي + إعجاب) ============ */
 const hvRooms = new Map();   // مفتاح صاحب البيت -> Set(ws)
-const HV_VIEWS = ['home', 'inside', 'garden'];
+const HV_VIEWS = ['home', 'inside', 'garden', 'up'];
 function hvPubM(w) { const u = db.users[w.key], h = w.hv; return { n: u.name, skin: skinOf(w.key), view: h.view, x: h.x, y: h.y, dir: h.dir, sit: h.sit }; }
 function hvBc(owner, msg, except) { const set = hvRooms.get(owner); if (!set) return; const str = JSON.stringify(msg); for (const w of set) if (w !== except && w.readyState === 1) w.send(str); }
 function hvLeave(ws) {
@@ -1408,7 +1425,7 @@ function hvOnMsg(ws, d) {
   } else if (d.t === 'hv_pos') {
     const h = ws.hv; if (!h || now - h.t < 90) return; h.t = now;
     const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.view = HV_VIEWS.includes(d.view) ? d.view : 'home'; h.x = Math.max(0, Math.min(320, x)); h.y = Math.max(0, Math.min(250, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    h.view = HV_VIEWS.includes(d.view) ? d.view : 'home'; h.x = Math.max(-200, Math.min(520, x)); h.y = Math.max(0, Math.min(330, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     hvBc(h.owner, { t: 'hv_pos', n: me.name, view: h.view, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
   } else if (d.t === 'hv_say') {
     const h = ws.hv; if (!h || now - h.st < 800) return; h.st = now;
