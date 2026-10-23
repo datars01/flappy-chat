@@ -957,6 +957,7 @@
   .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
+<script src="/lang.js?v=1"></script>
 </head>
 <body>
 <div id="bgFx" aria-hidden="true"></div>
@@ -5365,9 +5366,12 @@ renderHome();
     timers.push(setTimeout(finish, 4200));
   }
   raf = requestAnimationFrame(tick);
+  const goIntro = () => {
   try { introSnd(); if (actx && actx.state !== 'running') { const g = () => { if (!done) introSnd(); document.removeEventListener('pointerdown', g, true); }; document.addEventListener('pointerdown', g, true); } } catch (e) {}
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { n = 0; }
   setTimeout(step, 150);
+  };
+  if (window.__langReady) window.__langReady(goIntro); else goIntro();
 })();
 
 
