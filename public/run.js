@@ -185,7 +185,7 @@
     for (let l = 0; l < 3; l++) if (R.busy[l] > z) types[l] = 'busy';
     const free = [0, 1, 2].filter(l => !types[l]);
     const lvl = Math.min(1, R.dist / 1500);
-    free.forEach(l => { const r = Math.random(); const tooMany = trains + (3 - free.length) >= 2; if (!tooMany && r < 0.22 + lvl * 0.12) { types[l] = 'train'; trains++; } else if (r < 0.45 + lvl * 0.1) types[l] = 'barrier'; else if (r < 0.62 + lvl * 0.12) types[l] = 'bar'; });
+    free.forEach(l => { const r = Math.random(); const tooMany = trains + (3 - free.length) >= 1; if (!tooMany && r < 0.22 + lvl * 0.12) { types[l] = 'train'; trains++; } else if (r < 0.45 + lvl * 0.1) types[l] = 'barrier'; else if (r < 0.62 + lvl * 0.12) types[l] = 'bar'; });
     if (types.every(t => t && t !== 'barrier' && t !== 'bar') || (types.filter(t => t === 'train' || t === 'busy').length >= 3)) { const l = free.length ? free[Math.floor(Math.random() * free.length)] : 1; types[l] = null; }
     for (let l = 0; l < 3; l++) { const t = types[l]; if (t === 'train') { const len = rnd(10, 22); R.obs.push({ k: 'train', l, z, len, c: Math.floor(Math.random() * 4) }); R.busy[l] = z + len + 6; } else if (t === 'barrier' || t === 'bar') R.obs.push({ k: t, l, z, len: 0.5 }); }
     // وكت الصاروخ: خط عملات بالسما
@@ -389,23 +389,60 @@
     void k;
   }
   const TRC = [['#e8382e', '#ffd23a'], ['#3a8bff', '#eef2f8'], ['#2eae6a', '#ffd23a'], ['#ff8a2a', '#3a2a5a']];
+  /* ---------- قطار مترو احترافي: سقف بتدرّج + فتحات تكييف، جوانب بشبابيك وأبواب وخط ملوّن وعجلات، ووجه بمقصورة وكشّافات وصدّام ---------- */
+  function drawTrain(g, o) {
+    const x = LX[o.l], z0 = Math.max(NEAR + 0.2, o.z), z1 = o.z + o.len, w = 0.78, h = 2.4, C = TRC[o.c], acc = C[1];
+    const camX = R.cx * 0.55, inside = o.z < 0.6 && o.z + o.len > -0.6 && Math.abs(x - R.x) < 1.2 && R.y < 2.5; g.save(); if (inside) g.globalAlpha = 0.3;
+    // ظل تحت القطار
+    quad(g, P(x - w - 0.15, 0, z0), P(x + w + 0.15, 0, z0), P(x + w + 0.15, 0, z1), P(x - w - 0.15, 0, z1), 'rgba(0,0,0,.28)');
+    // السقف: 3 شرائح (أطراف أغمق ووسط ألمع) + خط وسطي + فتحات تكييف
+    const rl = 0.42; quad(g, P(x - w, h, z0), P(x - w + rl, h + 0.1, z0), P(x - w + rl, h + 0.1, z1), P(x - w, h, z1), shade(C[0], 6));
+    quad(g, P(x - w + rl, h + 0.1, z0), P(x + w - rl, h + 0.1, z0), P(x + w - rl, h + 0.1, z1), P(x - w + rl, h + 0.1, z1), shade(C[0], 38));
+    quad(g, P(x + w - rl, h + 0.1, z0), P(x + w, h, z0), P(x + w, h, z1), P(x + w - rl, h + 0.1, z1), shade(C[0], 6));
+    for (let zz = o.z + 1.4; zz < z1 - 1.2; zz += 3.6) { if (zz + 1.5 < z0 || zz > 70) continue; const za = Math.max(z0, zz), zb = zz + 1.5; quad(g, P(x - 0.34, h + 0.1, za), P(x + 0.34, h + 0.1, za), P(x + 0.34, h + 0.1, zb), P(x - 0.34, h + 0.1, zb), '#c9ced8'); quad(g, P(x - 0.3, h + 0.2, za), P(x + 0.3, h + 0.2, za), P(x + 0.3, h + 0.2, zb), P(x - 0.3, h + 0.2, zb), '#e8ecf3'); }
+    // الجانب الظاهر مع التفاصيل
+    const xs = x - w > camX ? x - w : (x + w < camX ? x + w : null);
+    if (xs !== null) {
+      quad(g, P(xs, 0, z0), P(xs, h, z0), P(xs, h, z1), P(xs, 0, z1), shade(C[0], -34));
+      quad(g, P(xs, h - 0.14, z0), P(xs, h, z0), P(xs, h, z1), P(xs, h - 0.14, z1), shade(C[0], -8));          // حافة السقف
+      quad(g, P(xs, 0.62, z0), P(xs, 0.98, z0), P(xs, 0.98, z1), P(xs, 0.62, z1), acc);                         // الخط الملوّن الطويل
+      quad(g, P(xs, 0.3, z0), P(xs, 0.62, z0), P(xs, 0.62, z1), P(xs, 0.3, z1), shade(C[0], -62));              // تنورة
+      quad(g, P(xs, 0, z0), P(xs, 0.3, z0), P(xs, 0.3, z1), P(xs, 0, z1), '#1b1822');                           // الهيكل السفلي
+      for (let zz = o.z + 0.9; zz < z1 - 0.8; zz += 1.8) {                                                    // الشبابيك
+        const zb = zz + 1.15; if (zb < z0 || zz > 62) continue; const za = Math.max(z0, zz), door = Math.round((zz - o.z) / 1.8) % 5 === 2;
+        if (door) { quad(g, P(xs, 0.3, za), P(xs, 2.05, za), P(xs, 2.05, zb), P(xs, 0.3, zb), shade(C[0], -58)); quad(g, P(xs, 1.1, za), P(xs, 1.95, za), P(xs, 1.95, zb), P(xs, 1.1, zb), '#1d3358'); continue; }
+        quad(g, P(xs, 1.12, za), P(xs, 1.98, za), P(xs, 1.98, zb), P(xs, 1.12, zb), '#14264a');
+        quad(g, P(xs, 1.62, za), P(xs, 1.96, za), P(xs, 1.96, zb), P(xs, 1.62, zb), 'rgba(140,190,255,.28)');
+      }
+      for (let zw = o.z + 1.6; zw < z1 - 1; zw += 4.2) { if (zw < z0 || zw > 55) continue; [0, 0.9].forEach(d => { const q = P(xs, 0.2, zw + d); g.fillStyle = '#0d0b12'; g.beginPath(); g.arc(q[0], q[1], 0.19 * q[2], 0, 7); g.fill(); g.fillStyle = '#6a6f7e'; g.beginPath(); g.arc(q[0], q[1], 0.07 * q[2], 0, 7); g.fill(); }); }   // عجلات
+    }
+    // الواجهة (تظهر بس لما القطار قدّام)
+    if (o.z > NEAR + 0.2) {
+      const a = P(x - w, 0, z0), b = P(x + w, h, z0), ww = b[0] - a[0], hh = a[1] - b[1], X = a[0], Y = b[1];
+      const bg = g.createLinearGradient(0, Y, 0, Y + hh); bg.addColorStop(0, shade(C[0], 42)); bg.addColorStop(0.5, C[0]); bg.addColorStop(1, shade(C[0], -48));
+      g.fillStyle = bg; rr(g, X, Y, ww, hh, ww * 0.11); g.fill(); g.lineWidth = Math.max(1, ww * 0.018); g.strokeStyle = shade(C[0], -70); g.stroke();
+      g.fillStyle = acc; g.fillRect(X, Y + hh * 0.6, ww, hh * 0.08);                                                    // الخط الملوّن
+      // شاشة الوجهة
+      g.fillStyle = '#0b0b10'; rr(g, X + ww * 0.3, Y + hh * 0.025, ww * 0.4, hh * 0.075, ww * 0.02); g.fill(); g.fillStyle = '#ffb020'; for (let i = 0; i < 6; i++) g.fillRect(X + ww * (0.33 + i * 0.056), Y + hh * 0.045, ww * 0.032, hh * 0.035);
+      // الزجاج الأمامي
+      const wx = X + ww * 0.1, wy = Y + hh * 0.12, wW = ww * 0.8, wH = hh * 0.38, gl = g.createLinearGradient(0, wy, 0, wy + wH); gl.addColorStop(0, '#2f4d86'); gl.addColorStop(1, '#0d1830');
+      g.fillStyle = gl; rr(g, wx, wy, wW, wH, ww * 0.06); g.fill(); g.lineWidth = Math.max(1, ww * 0.02); g.strokeStyle = '#05070f'; g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.moveTo(wx + wW * 0.08, wy + wH * 0.08); g.lineTo(wx + wW * 0.38, wy + wH * 0.08); g.lineTo(wx + wW * 0.18, wy + wH * 0.92); g.lineTo(wx + wW * 0.02, wy + wH * 0.92); g.closePath(); g.fill();
+      g.strokeStyle = '#05070f'; g.beginPath(); g.moveTo(wx + wW / 2, wy); g.lineTo(wx + wW / 2, wy + wH); g.stroke();
+      // كشّافات مع توهج
+      [0.19, 0.81].forEach(f => { const cx = X + ww * f, cy = Y + hh * 0.79, r = ww * 0.07, gg = g.createRadialGradient(cx, cy, 0, cx, cy, r * 3.2); gg.addColorStop(0, 'rgba(255,246,170,.55)'); gg.addColorStop(1, 'rgba(255,246,170,0)'); g.fillStyle = gg; g.beginPath(); g.arc(cx, cy, r * 3.2, 0, 7); g.fill(); g.fillStyle = '#fffbe0'; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.lineWidth = Math.max(1, r * 0.35); g.strokeStyle = '#7a7466'; g.stroke(); });
+      // لوحة رقم القطار
+      g.fillStyle = '#f4f4ee'; rr(g, X + ww * 0.4, Y + hh * 0.73, ww * 0.2, hh * 0.09, ww * 0.015); g.fill(); g.fillStyle = '#c0392b'; g.fillRect(X + ww * 0.42, Y + hh * 0.755, ww * 0.16, hh * 0.02);
+      // الصدّام (خطوط تحذير)
+      g.save(); rr(g, X + ww * 0.03, Y + hh * 0.89, ww * 0.94, hh * 0.1, ww * 0.02); g.clip(); g.fillStyle = '#ffd23a'; g.fillRect(X, Y + hh * 0.89, ww, hh * 0.11); g.fillStyle = '#16131c'; for (let i = -2; i < 12; i++) { g.beginPath(); g.moveTo(X + i * ww / 8, Y + hh); g.lineTo(X + (i + 0.5) * ww / 8, Y + hh); g.lineTo(X + (i + 1.5) * ww / 8, Y + hh * 0.89); g.lineTo(X + (i + 1) * ww / 8, Y + hh * 0.89); g.closePath(); g.fill(); } g.restore();
+      g.fillStyle = '#2b2833'; g.fillRect(X + ww * 0.44, Y + hh * 0.985, ww * 0.12, hh * 0.03);                      // الكابلر
+    }
+    g.restore();
+  }
   function drawObs(g, o) {
     const x = LX[o.l];
     if (o.k === 'train') {
-      const z0 = Math.max(NEAR + 0.2, o.z), z1 = o.z + o.len, w = 0.78, h = 2.4, C = TRC[o.c];
-      const camX = R.cx * 0.55, inside = o.z < 0.6 && o.z + o.len > -0.6 && Math.abs(x - R.x) < 1.2 && R.y < 2.5; g.save(); if (inside) g.globalAlpha = 0.3;
-      // السقف
-      quad(g, P(x - w, h, z0), P(x + w, h, z0), P(x + w, h, z1), P(x - w, h, z1), shade(C[0], 25));
-      // الجانب الظاهر
-      if (x - w > camX) quad(g, P(x - w, 0, z0), P(x - w, h, z0), P(x - w, h, z1), P(x - w, 0, z1), shade(C[0], -40));
-      if (x + w < camX) quad(g, P(x + w, 0, z0), P(x + w, h, z0), P(x + w, h, z1), P(x + w, 0, z1), shade(C[0], -40));
-      if (o.z > NEAR + 0.2) {
-        const a = P(x - w, 0, z0), b = P(x + w, h, z0), ww = b[0] - a[0], hh = a[1] - b[1];
-        g.fillStyle = C[0]; rr(g, a[0], b[1], ww, hh, ww * 0.12); g.fill(); g.fillStyle = C[1]; g.fillRect(a[0], b[1] + hh * 0.62, ww, hh * 0.1);
-        g.fillStyle = '#1a2a48'; rr(g, a[0] + ww * 0.12, b[1] + hh * 0.12, ww * 0.76, hh * 0.32, ww * 0.06); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(a[0] + ww * 0.16, b[1] + hh * 0.15, ww * 0.18, hh * 0.08);
-        g.fillStyle = '#fff6a0'; [0.2, 0.8].forEach(f => { g.beginPath(); g.arc(a[0] + ww * f, b[1] + hh * 0.82, ww * 0.07, 0, 7); g.fill(); });
-      }
-      g.restore();
+      drawTrain(g, o);
     } else if (o.k === 'barrier') {
       const z = Math.max(NEAR, o.z), a = P(x - 0.8, 0, z), b = P(x + 0.8, 0.95, z), ww = b[0] - a[0], hh = a[1] - b[1];
       g.fillStyle = '#555'; g.fillRect(a[0] + ww * 0.08, b[1], ww * 0.06, hh); g.fillRect(a[0] + ww * 0.86, b[1], ww * 0.06, hh);

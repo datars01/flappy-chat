@@ -46,7 +46,7 @@ function ludoRmOpen() { LUDOG.mode = 'rm'; LUDOG.s = null; LUDOG.disp = {}; LUDO
 function ludoRmClose() { LUDOG.mode = 'page'; cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; LUDOG.s = null; LUDOG.cv = null; const o = document.getElementById('rmLudo'); if (o) o.hidden = true; const b = document.getElementById('rmLdBody'); if (b) b.innerHTML = ''; }
 function ludoMsg(d) {
   if (d.t === 'ludo_emo') return ludoEmoFloat(d.s, d.e);
-  if (d.t === 'ludo_join') { ludoSfx('turn'); showToast('👋 دخل ' + d.n + ' الطاولة' + (d.host && d.cnt >= 2 ? ' — تكدر تبدي اللعبة هسه ▶️' : '')); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} return; }
+  if (d.t === 'ludo_join') { ludoSfx('turn'); showToast('👋 دخل ' + d.n + ' الطاولة' + (d.cnt >= 2 ? ' — اضغط «استعداد» ✅' : '')); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} return; }
   if (d.t === 'ludo_state') { const old = LUDOG.s; LUDOG.s = d.s; ludoOnState(old, d.s); }
   else if (d.t === 'ludo_list') ludoRenderList(d.list);
   else if (d.t === 'ludo_err') showToast('⚠️ ' + d.error);
@@ -95,14 +95,20 @@ function ludoLobbyEl(s) {
   s.seats.forEach((p, i) => {
     const C = LUDO_COL[i], c = lel('div', 'ludoSeat' + (p ? '' : ' empty') + (p && p.me ? ' me' : '')); c.style.setProperty('--c', C.c); c.style.setProperty('--d', C.d);
     const dot = lel('span', 'ludoDot'); c.appendChild(dot);
-    if (p) { c.appendChild(lel('b', '', (p.host ? '👑 ' : '') + p.n)); c.appendChild(lel('small', '', C.n)); }
+    if (p) { c.appendChild(lel('b', '', (p.host ? '👑 ' : '') + p.n + (p.rdy ? ' ✅' : ''))); c.appendChild(lel('small', '', p.rdy ? 'جاهز' : C.n)); }
     else { c.appendChild(lel('b', '', 'مقعد فارغ')); c.appendChild(lel('small', '', C.n)); if (me && !ludoRm()) { const sb = lel('button', 'ludoSit', '🪑 اجلس هنا'); sb.onclick = () => ludoSend({ t: 'ludo_seat', s: i }); c.appendChild(sb); } }
     g.appendChild(c);
   });
   w.appendChild(g);
   const n = s.seats.filter(Boolean).length;
-  if (me && me.host) { if (n >= 2) w.appendChild(lel('div', 'ludoReady', '🎉 دخل لاعب! اضغط «ابدأ» وخلّوا اللعب يبدي')); const st = lel('button', 'ludoBtn big' + (n >= 2 ? ' pulse' : ''), n >= 2 ? '▶️ ابدأ اللعبة' : '⏳ لازم لاعبين اثنين على الأقل'); st.disabled = n < 2; st.onclick = () => ludoSend({ t: 'ludo_start' }); w.appendChild(st); }
-  else w.appendChild(lel('div', 'ludoWait', '⏳ بانتظار صاحب الطاولة يبدي اللعبة'));
+  const rd = s.seats.filter(p => p && p.rdy).length, first = s.seats.find(p => p && p.host);
+  if (me) {
+    if (n < 2) { const st = lel('button', 'ludoBtn big', '⏳ لازم لاعبين اثنين على الأقل'); st.disabled = true; w.appendChild(st); }
+    else {
+      w.appendChild(lel('div', 'ludoReady', '✅ جاهزين ' + rd + ' من ' + n + ' • إذا كلكم جاهزين تبدي اللعبة وياخذ الدور الأول ' + (first ? first.n : 'اللي دخل أول') + ' 👑'));
+      const st = lel('button', 'ludoBtn big' + (me.rdy ? ' ghost' : ' pulse'), me.rdy ? '✔️ أنت جاهز — اضغط للتراجع' : '✅ استعداد'); st.onclick = () => ludoSend({ t: 'ludo_ready' }); w.appendChild(st);
+    }
+  }
   w.appendChild(lel('small', 'ludoNote', 'ما يلزم تكتمل المقاعد الأربعة، تكدرون تلعبون اثنين بس 👌'));
   if (ludoRm()) w.appendChild(lel('small', 'ludoNote', 'كل كرسي حول الطاولة = لون. للطلوع اضغط «قيام» فوق 🪑'));
   else { const lv = lel('button', 'ludoBtn ghost', '🚪 طلوع'); lv.onclick = () => ludoSend({ t: 'ludo_leave' }); w.appendChild(lv); }

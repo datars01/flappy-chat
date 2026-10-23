@@ -23,7 +23,7 @@ module.exports = function ludoInit(ctx) {
     const mine = viewer ? seatOf(l, viewer) : -1;
     return {
       id: l.id, code: l.priv ? l.code : '', priv: !!l.priv, host: l.host, ph: l.ph, t: l.t ? Math.max(0, l.t - now()) : 0,
-      seats: l.seats.map((p, i) => p ? { n: p.name, left: !!p.left, host: p.key === l.host, me: i === mine, tk: p.tk, rank: p.rank || 0 } : null),
+      seats: l.seats.map((p, i) => p ? { n: p.name, left: !!p.left, host: p.key === l.host, me: i === mine, tk: p.tk, rank: p.rank || 0, rdy: !!p.rdy } : null),
       turn: l.turn, dice: l.dice, rolled: l.rolled, movable: l.ph === 'play' && l.turn === mine ? l.movable : [], win: l.win, last: l.lastEv || null, my: mine
     };
   }
@@ -43,7 +43,7 @@ module.exports = function ludoInit(ctx) {
   function sit(l, ws, want) {
     const i = freeSeat(l, want); if (i === undefined) return false;
     const nm = nameOf(ws);
-    l.seats[i] = { key: ws.key, ws, name: nm, tk: [-1, -1, -1, -1], left: false, rank: 0 };
+    l.seats[i] = { key: ws.key, ws, name: nm, tk: [-1, -1, -1, -1], left: false, rank: 0, rdy: false };
     const cnt = seatedCount(l); l.seats.forEach(q => { if (q && q.ws && q.ws !== ws && !q.left) send(q.ws, { t: 'ludo_join', n: nm, cnt, host: q.key === l.host }); });   // يبلّغ اللي قاعدين (وصاحب الطاولة) إن واحد دخل
     return true;
   }
@@ -63,8 +63,8 @@ module.exports = function ludoInit(ctx) {
   }
   function start(l) {
     if (liveSeats(l).length < MIN_P) return;
-    l.seats.forEach(p => { if (p) { p.tk = [-1, -1, -1, -1]; p.rank = 0; } });
-    const live = liveSeats(l); l.turn = live[rnd(live.length)]; l.ph = 'play'; l.dice = 0; l.rolled = false; l.movable = []; l.sixes = 0; l.win = null; l.lastEv = null; l.rank = 0; l.t = now() + TURN_MS;
+    l.seats.forEach(p => { if (p) { p.tk = [-1, -1, -1, -1]; p.rank = 0; p.rdy = false; } });
+    const live = liveSeats(l); /* أول واحد دخل (صاحب الطاولة) هو اللي يبدي */ const hs = live.find(i => l.seats[i].key === l.host); l.turn = hs !== undefined ? hs : live[0]; l.ph = 'play'; l.dice = 0; l.rolled = false; l.movable = []; l.sixes = 0; l.win = null; l.lastEv = null; l.rank = 0; l.t = now() + TURN_MS;
     try { alog('🎲', 'بدت لعبة غوكو بـ ' + live.length + ' لاعبين'); } catch (e) {}
     bc(l);
   }
@@ -154,10 +154,12 @@ module.exports = function ludoInit(ctx) {
         if (l.ph !== 'lobby') return; const to = d.s | 0; if (to < 0 || to >= SEATS || l.seats[to]) return;
         l.seats[to] = l.seats[me]; l.seats[me] = null; return bc(l);
       }
-      case 'ludo_start': {
-        if (l.ph !== 'lobby' || l.host !== ws.key) return;
+      case 'ludo_ready': {                                             // زر استعداد: يبدي أوتوماتيك إذا الكل جاهز (واللعب يبدي بأول واحد دخل)
+        if (l.ph !== 'lobby') return;
         if (liveSeats(l).length < MIN_P) return send(ws, { t: 'ludo_err', error: 'لازم لاعبين اثنين على الأقل' });
-        return start(l);
+        const p = l.seats[me]; p.rdy = !p.rdy;
+        if (liveSeats(l).every(i => l.seats[i].rdy)) return start(l);
+        return bc(l);
       }
       case 'ludo_roll': { if (l.ph !== 'play' || l.turn !== me || l.rolled) return; return roll(l, me); }
       case 'ludo_move': { if (l.ph !== 'play' || l.turn !== me || !l.rolled) return; const k = d.k | 0; if (!l.movable.includes(k)) return; return move(l, me, k); }
