@@ -95,7 +95,7 @@
     try { localStorage.setItem(KEY, l); } catch (e) {}
     if (reload) { location.reload(); return; }
     lang = l; window.BABITO_LANG = l;
-    const lb = document.getElementById('langBtn'); if (lb) lb.textContent = l === 'en' ? '🌐 عربي' : '🌐 English';
+    const lb = document.getElementById('langBtn'); if (lb) lb.textContent = l === 'en' ? '🌐 عربي' : '🌐 English'; document.querySelectorAll('#lgLang button').forEach(b => b.classList.toggle('on', b.dataset.l === l));
     if (l === 'en') startEn();
     waiters.splice(0).forEach(cb => { try { cb(); } catch (e) {} });
   }

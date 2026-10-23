@@ -905,6 +905,8 @@
   @keyframes lgBob { 50% { transform: translateY(-5px) rotate(-4deg); } }
   .lgHero h2 { margin: 0; font-size: 21px; font-weight: 800; }
   .lgHero p { margin: 3px 0 0; font-size: 13px; color: var(--muted); }
+  #lgLang { display: flex; align-items: center; justify-content: center; gap: 4px; width: max-content; margin: 0 auto 6px; padding: 3px; border-radius: 20px; background: var(--card2); border: 1px solid var(--line); direction: ltr; } #lgLang span { font-size: 15px; padding: 0 4px; }
+  #lgLang button { border: 0; border-radius: 16px; padding: 5px 13px; font: inherit; font-size: 13px; font-weight: 800; color: var(--muted); background: none; cursor: pointer; } #lgLang button.on { color: #fff; background: linear-gradient(135deg, #3a7bff, #7f5bff); box-shadow: 0 2px 8px rgba(58,123,255,.4); }
   .lgTabs { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 0; }
   .lgTabs .tab { position: relative; z-index: 1; background: none !important; border: 0 !important; color: var(--muted); border-radius: 10px; padding: 9px; font-size: 14px; transition: color .2s; }
   .lgTabs .tab.on { color: #fff; }
@@ -958,7 +960,7 @@
   .lbRow .n { display: flex; align-items: center; gap: 7px; min-width: 0; } .lbRow .n .lbNm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .frFound { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(53,194,122,.12); border: 1px solid rgba(53,194,122,.4); margin-top: 4px; font-size: 13px; font-weight: 600; }
 </style>
-<script src="/lang.js?v=3"></script>
+<script src="/lang.js?v=4"></script>
 </head>
 <body>
 <div id="bgFx" aria-hidden="true"></div>
@@ -1022,6 +1024,7 @@
   <!-- الحساب -->
   <div class="card" id="authCard">
     <div id="authOut">
+      <div id="lgLang" data-notr><span>🌐</span><button type="button" data-l="ar">العربية</button><button type="button" data-l="en">English</button></div>
       <div class="lgHero"><div class="lgLogo">🎯</div><h2 id="lgTtl">أهلاً بيك من جديد 👋</h2><p id="lgSub">سجّل دخولك وكمّل من وين ما وكفت</p></div>
       <div class="tabs lgTabs" id="lgTabs">
         <button id="tabLogin" class="tab on" type="button">دخول</button>
@@ -1375,6 +1378,7 @@ function setMode(m) {
   $('lgTtl').textContent = m === 'login' ? 'أهلاً بيك من جديد 👋' : 'سوّي حسابك الجديد ✨'; $('lgSub').textContent = m === 'login' ? 'سجّل دخولك وكمّل من وين ما وكفت' : 'ثواني وتصير عندك صورة وإطار وأصدقاء'; $('uIn').placeholder = m === 'login' ? 'اسم المستخدم' : 'اختار اسم (3-5 حروف أو أرقام)';
   authSay('');
 }
+document.querySelectorAll('#lgLang button').forEach(b => { b.classList.toggle('on', b.dataset.l === (window.BABITO_LANG || 'ar')); b.onclick = () => { if (window.babitoSetLang) window.babitoSetLang(b.dataset.l); }; });
 $('tabLogin').onclick = () => setMode('login');
 $('tabReg').onclick = () => setMode('register');
 try {
