@@ -687,6 +687,10 @@
   #stage:not(.x) { display: none; }
   #rsInfo { position: fixed; inset: 0; z-index: 90; background: rgba(5,6,20,.75); display: flex; align-items: flex-end; justify-content: center; }
   #rsInfo[hidden] { display: none; }
+  #gGuide { position: fixed; inset: 0; z-index: 90; background: rgba(5,6,20,.75); display: flex; align-items: flex-end; justify-content: center; } #gGuide[hidden] { display: none; }
+  #gGuide .rsBox { max-height: 86vh; overflow-y: auto; } #gGuide #gGuideGo { background: linear-gradient(135deg, #8e3bff, #c04dff); } #gGuide #gGuideX { background: linear-gradient(135deg, #ffd166, #ff9f1c); color: #3a2200; }
+  .gqRow { display: flex; gap: 8px; align-items: flex-start; width: 100%; grid-column: 1 / -1; } .gqRow > #gameCard, .gqRow > .tileSus { flex: 1; min-width: 0; }
+  .gqRow > .gQ { align-self: stretch; max-height: 110px; } .gqRow > .tileSus + .gQ, .gqRow > .gQ:has(+ .tileSus) { margin: 4px 0 8px; }
   .rsBox { width: min(480px, 100%); background: #1a2147; border-top: 2px solid #6a4af0; border-radius: 26px 26px 0 0; padding: 18px 16px max(20px, env(safe-area-inset-bottom)); color: #fff; animation: shUp .3s ease-out; max-height: 90vh; overflow: auto; }
   @keyframes shUp { from { transform: translateY(100%); } }
   .rsBox h3 { margin: 0 0 6px; font-size: 19px; } .rsBox p { font-size: 14px; line-height: 1.7; margin: 0; } .rsBox ul { padding-inline-start: 20px; font-size: 14px; line-height: 1.9; margin: 8px 0; }
@@ -970,9 +974,10 @@
     <button id="installBtn" class="ghost" type="button" style="display:none">📲 تثبيت</button>
   </div>
   <div id="gSec">🎮 ألعاب أخرى</div>
+  <div class="gqRow"><button class="rsQ gQ" type="button" data-guide-pg="help" aria-label="دليل فجّر الكرات الملونة"><b>؟</b><small>دليل</small></button>
   <div id="gameCard">
     <div id="gHead"><span class="gi">🎯</span><div><h2>فجّر الكرات الملونة</h2><small>أطلق الكرات، كوّن ثلاث متشابهة وفجّرها قبل ما توصل للحفرة. العب لوحدك أو ويا صديقك أونلاين.</small></div></div>
-    <div class="gTiles"><button class="tile" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button><button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button><button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button><button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button><button class="tile" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button><button class="tile" data-c="#7a7fa0" data-pg="help" type="button"><span class="ti">📖</span><span class="tl">الدليل</span></button></div>
+    <div class="gTiles"><button class="tile" data-c="#ff4f9a" data-pg="shop" type="button"><span class="ti">🛍️</span><span class="tl">المتجر</span></button><button class="tile" data-c="#ff7a3a" data-pg="skins" type="button"><span class="ti">🎒</span><span class="tl">السكنات</span></button><button class="tile" data-c="#a24aff" data-pg="levels" type="button"><span class="ti">📍</span><span class="tl">المراحل</span></button><button class="tile" data-c="#18a0c8" data-pg="zones" type="button"><span class="ti">🗺️</span><span class="tl">المناطق</span></button><button class="tile" data-c="#e0a516" data-pg="earn" type="button"><span class="ti">💰</span><span class="tl">اكسب عملات</span></button></div>
     <div id="modeBar" class="tabs">
       <button id="modeSolo" class="tab on" type="button">👤 فردي</button>
       <button id="modeDuo" class="tab" type="button">👥 زوجي</button>
@@ -986,11 +991,15 @@
     <button id="playNow" type="button">▶ ابدأ اللعب</button>
     <button id="shareBtn" type="button">📤 شارك نتيجتك</button>
   </div>
-  <button class="tile tileSus" data-pg="sus" type="button"><span class="susNew">✨ جديد • أونلاين</span><span class="susEm">🥔🍆🍅</span><span class="susTx"><span class="tl">مين الخاين؟</span><small>3 إلى 5 لاعبين • اكشفوا الخاين قبل ما يطيّركم 😈</small></span><span class="susGo">العب ◀</span></button>
+  </div>
+  <div class="gqRow"><button class="rsQ gQ" type="button" data-guide="sus" aria-label="دليل مين الخاين؟"><b>؟</b><small>دليل</small></button><button class="tile tileSus" data-pg="sus" type="button"><span class="susNew">✨ جديد • أونلاين</span><span class="susEm">🥔🍆🍅</span><span class="susTx"><span class="tl">مين الخاين؟</span><small>3 إلى 5 لاعبين • اكشفوا الخاين قبل ما يطيّركم 😈</small></span><span class="susGo">العب ◀</span></button></div>
   <div id="gSoon">✨ ألعاب جديدة قريباً</div>
   <div id="stage"><canvas id="c" width="320" height="480"></canvas><div id="duoOv"><div id="duoCard"></div></div></div>
 
   <div id="offMod" hidden><div class="rsBox" style="text-align:center"><div style="font-size:54px">📴</div><h3>لازم تتصل بالإنترنت</h3><p>المنتجع أونلاين، وتحتاج إنترنت حتى تدخله وتدردش وتلعب وياه أصدقائك. شغّل الإنترنت وحاول مرة ثانية.</p><button id="offModX" type="button">حسناً ✔</button></div></div>
+<div id="gGuide" hidden><div class="rsBox"><div id="gGuideB"></div><button id="gGuideGo" type="button">🎮 العب هسه</button><button id="gGuideX" type="button">فهمت ✔</button></div></div>
+<!-- أدلة الألعاب: أي لعبة جديدة تنضاف بـ ألعاب أخرى، سوّ إلها صف .gqRow وزر ؟ (data-guide="اسم") وقالب <template id="guide-اسم"> هنا (data-play = صفحة اللعبة) -->
+<template id="guide-sus" data-play="sus"><h3>🥔 دليل «مين الخاين؟»</h3><p>من 3 إلى 5 لاعبين على سفينة فضاء. واحد منكم خاين بالسر والباقين طاقم.</p><ul><li>🥔 <b>الطاقم:</b> روحوا للمهمات المعلّمة بـ ❗ ودوسوا «استخدم».</li><li>🏆 إذا واحد من الطاقم خلّص كل مهماته، الطاقم كله يفوز.</li><li>😈 <b>الخاين:</b> قرّب من واحد ودوس «طيّر» بدون ما ينكشف أمرك، ويفوز إذا صار عدد الخونة مثل عدد الطاقم.</li><li>📢 لكيت واحد طايح؟ دوس «بلّغ»، أو الزر الأحمر بالكافتيريا لاجتماع طارئ (مرة وحدة باللعبة).</li><li>🗳️ بالاجتماع تتناقشون بالشات وتصوتون، وإذا طلع الخاين الطاقم يفوز.</li><li>👻 اللي يطير يصير شبح: يكمل مهماته بس ما يحجي ولا يصوّت.</li><li>🪙 الفوز: الطاقم ياخذ 25 عملة والخاين 40.</li><li>⚡ «لعب سريع» يدخلك غرفة مفتوحة، أو سوّ غرفة خاصة برمز من 4 أرقام لأصدقائك.</li></ul></template>
 <div id="rsInfo" hidden><div class="rsBox"><h3>🏝️ ما هو المنتجع؟</h3><p>شاطئ تدخله مع الناس بشخصيتك: تمشي وتجلس وتسولف.</p><ul><li>💬 دردشة فوق الرؤوس وهمسات خاصة</li><li>🎲 ألعاب على الطاولات (سلم وثعبان، دومينو، حجرة ورقة مقص، إكس أو)</li><li>🎣 صيد وقلاع رمل وقهوة من جربوع</li><li>🌧️🌙❄️ مطر وليل وثلج كل 10 دقائق</li><li>🔥 سهرة حول النار وألعاب نارية</li></ul><button id="rsInfoGo" type="button">🏝️ ادخل المنتجع</button><button id="rsInfoX" type="button">فهمت ✔</button></div></div>
 </div>
 
@@ -2735,6 +2744,11 @@ $('rmHelp').addEventListener('click', e => { if (e.target === $('rmHelp')) $('rm
 function rmHelpFirst() { try { if (localStorage.getItem('rmHelpSeen')) return; localStorage.setItem('rmHelpSeen', '1'); } catch (e) { return; } setTimeout(rmHelpOpen, 1200); }
 $('offModX').onclick = () => { $('offMod').hidden = true; };
 $('rsInfoX').onclick = () => { $('rsInfo').hidden = true; };
+let gGuidePlay = '';
+document.querySelectorAll('.gQ').forEach(b => { b.addEventListener('pointerdown', e => e.stopPropagation()); b.addEventListener('click', e => { e.stopPropagation(); try { unlockAudio(); } catch (er) {} if (b.dataset.guidePg) { openPage(b.dataset.guidePg); return; } const t = document.getElementById('guide-' + b.dataset.guide); if (!t) return; $('gGuideB').innerHTML = t.innerHTML; gGuidePlay = t.dataset.play || ''; $('gGuideGo').style.display = gGuidePlay ? '' : 'none'; $('gGuide').hidden = false; }); });
+$('gGuideX').onclick = () => { $('gGuide').hidden = true; };
+$('gGuide').addEventListener('click', e => { if (e.target === $('gGuide')) $('gGuide').hidden = true; });
+$('gGuideGo').onclick = () => { $('gGuide').hidden = true; if (gGuidePlay) openPage(gGuidePlay); };
 $('rsInfo').addEventListener('click', e => { if (e.target === $('rsInfo')) $('rsInfo').hidden = true; });
 $('rsInfoGo').onclick = () => { $('rsInfo').hidden = true; openPage('rooms'); };
 
