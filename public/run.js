@@ -156,7 +156,7 @@
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = a => a[Math.floor(Math.random() * a.length)];
   function reset() {
-    Object.assign(R, { t: 0, dist: 0, sp: 13, coins: 0, score: 0, extra: 0, lane: 1, plane: 1, x: 0, y: 0, vy: 0, slide: 0, jb: 0, djUsed: false, sq: 0, tilt: 0, cx: 0, cy: 0, obs: [], coinsA: [], pws: [], blds: [], fx: [], nextZ: 34, nextB: -12, busy: [0, 0, 0], pw: {}, shield: 0, inv: 0, stT: 0, pause: false, shake: 0, dead: 0, zone: 0, zoneT: 0, flash: 0, banked: 0, revived: 0, killer: null });
+    Object.assign(R, { t: 0, dist: 0, sp: 13, coins: 0, score: 0, extra: 0, lane: 1, plane: 1, x: 0, y: 0, vy: 0, slide: 0, jb: 0, djUsed: false, sq: 0, tilt: 0, cx: 0, cy: 0, obs: [], coinsA: [], pws: [], blds: [], fx: [], nextZ: 34, nextB: -12, busy: [0, 0, 0], pw: {}, shield: 0, inv: 0, stT: 0, pause: false, resumeAt: 0, shake: 0, dead: 0, zone: 0, zoneT: 0, flash: 0, banked: 0, revived: 0, killer: null });
     while (R.nextB < 90) spawnB();
   }
   /* المناظر على جانبين السكة: تتغير حسب العالم (عماير، شاطئ وبحر، ثلج وجبال، صحراء) */
@@ -242,6 +242,7 @@
       R.fx.forEach(f => { f.t -= dt; f.x += (f.vx || 0) * dt; f.y += (f.vy || 0) * dt; f.z += (f.vz || 0) * dt; if (!f.txt) f.vy -= 9 * dt; }); R.fx = R.fx.filter(f => f.t > 0);
       if (R.dead > GHOST_D && !$r('runOver').classList.contains('on')) showOver(); return;
     }
+    if (R.pause && R.resumeAt && performance.now() - R.resumeAt > 2000) { R.pause = false; R.resumeAt = 0; }
     if (R.ph !== 'play' || R.pause) return;
     const slow = R.pw.slow > 0 ? 0.62 : 1;
     R.sp = Math.min(31, 13 + R.dist / 110); const d = R.sp * dt * slow; R.dist += d;
@@ -493,6 +494,7 @@
     if (R.flash > 0) { g.fillStyle = 'rgba(120,220,255,' + R.flash + ')'; g.fillRect(0, 0, W, H); }
     if (R.pw.slow > 0) { g.fillStyle = 'rgba(80,140,255,.12)'; g.fillRect(0, 0, W, H); }
     if (R.ph === 'dead' || (R.ph === 'over' && R.killer)) { if (R.ph === 'over') R.dead = Math.max(R.dead, GHOST_D); drawKill(g, W, H); }
+    if (R.pause && R.resumeAt) { const el = performance.now() - R.resumeAt, n = 3 - Math.floor(el / 667); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, W, H); g.font = '900 96px Cairo, system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.strokeStyle = '#ff8a2a'; g.lineWidth = 8; const tx = n > 0 ? String(n) : 'يلا!'; g.save(); g.translate(W / 2, H * 0.42); const k = 1 + (el % 667) / 667 * 0.3; g.scale(k, k); g.strokeText(tx, 0, 0); g.fillText(tx, 0, 0); g.restore(); }
     if (R.ph === 'count') { const n = 3 - Math.floor((performance.now() - R.cnt) / 667); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, W, H); g.font = '900 96px Cairo, system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.strokeStyle = '#a24aff'; g.lineWidth = 8; const tx = n > 0 ? String(n) : 'يلا!'; const sc = 1 + ((performance.now() - R.cnt) % 667) / 667 * 0.3; g.save(); g.translate(W / 2, H * 0.42); g.scale(sc, sc); g.strokeText(tx, 0, 0); g.fillText(tx, 0, 0); g.restore(); }
     if (R.zoneT > 0) { g.globalAlpha = Math.min(1, R.zoneT); g.font = '900 30px Cairo, system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 6; g.strokeText(THEMES[R.zone].n, W / 2, H * 0.22); g.fillText(THEMES[R.zone].n, W / 2, H * 0.22); g.globalAlpha = 1; }
   }
@@ -516,10 +518,15 @@
     const h = $r('runHud'); if (!h) return; h.hidden = !(R.ph === 'play' || R.ph === 'count' || R.ph === 'dead');
     $r('runSc').textContent = R.score.toLocaleString('en'); $r('runCo').textContent = R.coins; $r('runM').textContent = Math.floor(R.dist) + 'م';
     const pw = $r('runPw'); let s = ''; for (const k in R.pw) if (R.pw[k] > 0) s += '<span><i>' + PW[k].e + '</i><b style="width:' + Math.max(0, R.pw[k] / PW[k].d * 100) + '%"></b></span>'; if (R.shield > 0) s += '<span><i>🛡️</i></span>'; if (pw.dataset.s !== s) { pw.innerHTML = s; pw.dataset.s = s; }
-    $r('runPause').hidden = R.ph !== 'play';
+    $r('runPause').hidden = R.ph !== 'play' || R.pause;
   }
   function hideOv() { ['runMenu', 'runOver', 'runPick', 'runPauseOv'].forEach(i => { const e = $r(i); if (e) e.classList.remove('on'); }); }
-  function togglePause() { if (R.ph !== 'play') return; R.pause = !R.pause; $r('runPauseOv').classList.toggle('on', R.pause); sfx('click'); }
+  /* توقيف مؤقت: يوقف كلشي. وعند الرجوع عد 3-2-1 حتى اللاعب يتجهز وما يصطدم فجأة */
+  function togglePause() {
+    if (R.ph !== 'play') return;
+    if (!R.pause) { R.pause = true; R.resumeAt = 0; const i = $r('runPzInfo'); if (i) i.innerHTML = '⭐ ' + R.score.toLocaleString('en') + ' &nbsp;•&nbsp; 🪙 ' + R.coins + ' &nbsp;•&nbsp; 📏 ' + Math.floor(R.dist) + 'م'; $r('runPauseOv').classList.add('on'); sfx('click'); return; }
+    if (R.resumeAt) return; $r('runPauseOv').classList.remove('on'); R.resumeAt = performance.now(); sfx('go');
+  }
   function prev(cv, id, o, big) {
     const g = cv.getContext('2d'), dpr = 2; cv.width = cv.clientWidth * dpr || 160; cv.height = cv.clientHeight * dpr || 160;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); const s = cv.height / (big ? 175 : 165); g.translate(cv.width / 2, cv.height * 0.93); g.scale(s, s);
@@ -560,7 +567,7 @@
   function build() {
     const B = $r('runBody'); if (!B || B.dataset.ok) return; B.dataset.ok = '1';
     B.innerHTML = `<canvas id="runCv"></canvas>
-<div id="runHud" hidden><div class="rh1"><span class="rhSc">⭐ <b id="runSc">0</b></span><span class="rhCo">🪙 <b id="runCo">0</b></span><span class="rhM" id="runM">0م</span></div><div id="runPw"></div><button id="runPause" type="button">⏸️</button></div>
+<div id="runHud" hidden><div class="rh1"><span class="rhSc">⭐ <b id="runSc">0</b></span><span class="rhCo">🪙 <b id="runCo">0</b></span><span class="rhM" id="runM">0م</span></div><div id="runPw"></div><button id="runPause" type="button" aria-label="توقيف مؤقت"><i>⏸️</i><small>توقيف</small></button></div>
 <div id="runToast"></div>
 <div id="runMenu" class="runOv on"><div class="rmBox"><div class="rmTitle"><span class="rmE">🏃‍♂️💨</span><h2>ركض ربش</h2><small>اركض على سكة القطار، تفادى، اقفز، ازحف واجمع العملات!</small></div>
 <div class="rmStage"><canvas id="runMenuChar"></canvas><div class="rmName" id="runMenuName"></div></div>
@@ -572,10 +579,12 @@
 <div id="runTabs"><button data-t="c" type="button">🧍 الشخصيات</button><button data-t="col" type="button">🎨 لون الملابس</button><button data-t="h" type="button">🎩 القبعات</button></div>
 <div id="runGrid"></div><button id="runPickGo" class="rmBtn big" type="button">▶ يلا نركض</button></div></div>
 <div id="runOver" class="runOv"><div class="rmBox"><div id="runOvB"></div><button id="runRev" class="rmBtn big rev" type="button"></button><button id="runAgain" class="rmBtn big" type="button">🔁 مرة ثانية</button><button id="runOvPick" class="rmBtn" type="button">🧍 غيّر الشخصية</button><button id="runOvMenu" class="rmBtn ghost" type="button">🏠 القائمة</button></div></div>
-<div id="runPauseOv" class="runOv"><div class="rmBox"><h2>⏸️ موقّف</h2><small>اللعبة تنتظرك، كمّل وقت ما تريد</small><button id="runResume" class="rmBtn big" type="button">▶ كمّل</button><button id="runQuit" class="rmBtn ghost" type="button">🏠 اطلع للقائمة</button></div></div>`;
+<div id="runPauseOv" class="runOv"><div class="rmBox"><div class="pzIco">⏸️</div><h2>اللعبة موقّفة</h2><small>خذ راحتك، اللعبة تنتظرك وتكمّل من نفس المكان</small><div id="runPzInfo" class="rmInfo"></div><button id="runResume" class="rmBtn big" type="button">▶ كمّل اللعب</button><div class="rmTog"><button id="runPzMus" type="button"></button><button id="runPzSfx" type="button"></button></div><button id="runPzRe" class="rmBtn" type="button">🔁 ابدأ من جديد</button><button id="runQuit" class="rmBtn ghost" type="button">🏠 اطلع للقائمة</button></div></div>`;
     R.cv = $r('runCv'); bindInput(R.cv);
     const tg = () => { $r('runMusB').textContent = (S.mus ? '🎵' : '🔇') + ' الموسيقى'; $r('runSfxB').textContent = (S.sfx ? '🔊' : '🔈') + ' الأصوات'; $r('runMusB').classList.toggle('off', !S.mus); $r('runSfxB').classList.toggle('off', !S.sfx); };
-    $r('runMusB').onclick = () => { S.mus = S.mus ? 0 : 1; save(); tg(); sfx('click'); }; $r('runSfxB').onclick = () => { S.sfx = S.sfx ? 0 : 1; save(); tg(); sfx('click'); }; tg();
+    const tg2 = () => { tg(); const a = $r('runPzMus'), b = $r('runPzSfx'); a.textContent = (S.mus ? '🎵' : '🔇') + ' الموسيقى'; b.textContent = (S.sfx ? '🔊' : '🔈') + ' الأصوات'; a.classList.toggle('off', !S.mus); b.classList.toggle('off', !S.sfx); };
+    $r('runMusB').onclick = $r('runPzMus').onclick = () => { S.mus = S.mus ? 0 : 1; save(); tg2(); sfx('click'); }; $r('runSfxB').onclick = $r('runPzSfx').onclick = () => { S.sfx = S.sfx ? 0 : 1; save(); tg2(); sfx('click'); }; tg2();
+    $r('runPzRe').onclick = () => { if (R.coins > R.banked) { S.coins += R.coins - R.banked; R.banked = R.coins; } S.best = Math.max(S.best, R.score); save(); start(); };
     const openPick = () => { sfx('click'); hideOv(); $r('runPick').classList.add('on'); renderPick(); };
     $r('runRev').onclick = revive; $r('runGo').onclick = start; $r('runAgain').onclick = start; $r('runPickGo').onclick = start;
     $r('runPickBtn').onclick = openPick; $r('runOvPick').onclick = openPick;

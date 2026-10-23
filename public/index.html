@@ -948,7 +948,8 @@
   #runHud { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 3; pointer-events: none; } #runHud[hidden] { display: none; }
   #runHud .rh1 { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; } #runHud .rh1 span { background: rgba(10,12,30,.62); color: #fff; padding: 5px 12px; border-radius: 14px; font-weight: 900; font-size: 15px; border: 1px solid rgba(255,255,255,.2); } .rhCo b { color: #ffd23a; }
   #runPw { display: flex; gap: 6px; justify-content: center; margin-top: 6px; } #runPw span { position: relative; background: rgba(10,12,30,.6); border-radius: 12px; padding: 3px 8px 6px; min-width: 34px; text-align: center; } #runPw i { font-style: normal; font-size: 18px; } #runPw b { position: absolute; left: 4px; bottom: 3px; height: 3px; border-radius: 3px; background: #2ee48d; max-width: calc(100% - 8px); }
-  #runPause { position: absolute; top: 0; left: 0; pointer-events: auto; width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); background: rgba(10,12,30,.6); font-size: 18px; padding: 0; } #runPause[hidden] { display: none; }
+  #runPause { position: absolute; top: 0; left: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 56px; height: 56px; border-radius: 18px; border: 2px solid #fff; background: linear-gradient(135deg, #ff8a2a, #ff4a6a); box-shadow: 0 4px 14px rgba(0,0,0,.35); color: #fff; padding: 0; cursor: pointer; } #runPause i { font-style: normal; font-size: 22px; line-height: 1; } #runPause small { font: 900 10.5px Cairo, system-ui; } #runPause:active { transform: scale(.92); } #runPause[hidden] { display: none; }
+  #runPauseOv .pzIco { font-size: 54px; animation: rtBeat 1.6s ease-in-out infinite; }
   #runToast { position: absolute; top: 90px; left: 50%; transform: translate(-50%, -10px); z-index: 4; background: linear-gradient(135deg, #a24aff, #ff4f9a); color: #fff; font-weight: 900; padding: 8px 16px; border-radius: 16px; opacity: 0; transition: .25s; pointer-events: none; white-space: nowrap; } #runToast.on { opacity: 1; transform: translate(-50%, 0); }
   .runOv { position: absolute; inset: 0; z-index: 5; display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at top, rgba(60,30,120,.55), rgba(5,6,20,.82)); overflow-y: auto; padding: 14px; box-sizing: border-box; } .runOv.on { display: flex; }
   #runMenu, #runPick { background: linear-gradient(180deg, #4fb4ff 0%, #bfe6ff 40%, #ffcf8a 70%, #ff8a4a 100%); }
@@ -8388,7 +8389,7 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 <script src="/sus.js?v=4"></script>
-<script src="/run.js?v=2"></script>
+<script src="/run.js?v=3"></script>
 <script src="/rate.js?v=2"></script>
 </body>
 </html>
