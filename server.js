@@ -904,7 +904,7 @@ const zlib = require('zlib'); const GZC = new Map();
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return next();
-  let rel = decodeURIComponent(req.path); if (rel === '/') rel = '/index.html';
+  let rel; try { rel = decodeURIComponent(req.path); } catch (e) { return next(); } if (rel === '/') rel = '/index.html';
   if (!/\.(html|js|json|css|svg)$/i.test(rel) || rel.includes('..')) return next();
   const fp = path.join(__dirname, 'public', rel);
   fs.stat(fp, (err, st) => {
