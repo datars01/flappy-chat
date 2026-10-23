@@ -289,6 +289,7 @@ const spamSt = new Map();   // مفتاح اللاعب → { txt, n, t, until }
 function spamNorm(t) { return String(t || '').toLowerCase().replace(/[\u064b-\u065f\u0640]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
 function spamBlock(key, text) {   // يرجّع عدد الثواني المتبقية إذا هو محظور (والرسالة لا تنرسل)، وإلا 0
   const now = Date.now(), norm = spamNorm(text); if (!key || !norm) return 0;
+  { const u = db.users[key]; if (u && u.admin) return 0; }   // المشرفين (بابي وبابيتو) مستثنين من حظر السبام
   let st = spamSt.get(key); if (!st) { st = { txt: '', n: 0, t: 0, until: 0 }; spamSt.set(key, st); }
   if (st.until > now) return Math.ceil((st.until - now) / 1000);
   if (st.txt === norm && now - st.t < SPAM_WINDOW_MS) st.n++; else { st.txt = norm; st.n = 1; }

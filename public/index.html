@@ -7454,6 +7454,12 @@ function rmLTable(c, sd) {
   c.fillStyle = COL[0]; c.beginPath(); c.moveTo(6 * u, 6 * u); c.lineTo(6 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[1]; c.beginPath(); c.moveTo(6 * u, 6 * u); c.lineTo(9 * u, 6 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[2]; c.beginPath(); c.moveTo(9 * u, 6 * u); c.lineTo(9 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill(); c.fillStyle = COL[3]; c.beginPath(); c.moveTo(6 * u, 9 * u); c.lineTo(9 * u, 9 * u); c.lineTo(7.5 * u, 7.5 * u); c.fill();
   if (lt) lt.seats.forEach((p, i) => { if (!p) return; p.tk.forEach((pos, k) => { const q = ludoCell(i, pos, k); c.fillStyle = COL[i]; c.strokeStyle = '#fff'; c.lineWidth = 1; c.beginPath(); c.arc(q[0] * u, q[1] * u, u * 0.55, 0, 7); c.fill(); c.stroke(); }); });
   c.restore();
+  /* لوحة «جديد» بجنب الطاولة */
+  { const T2 = RM.T, bx = 140, by = 18, pulse = 0.5 + 0.5 * Math.sin(T2 / 9);
+    rmRR(c, bx - 3, by - 14, 6, 16, 2, '#5a3a22'); rmRR(c, bx - 45, by - 76, 90, 64, 6, '#6f4524'); rmRR(c, bx - 42, by - 73, 84, 58, 4, '#fff1d0');
+    c.fillStyle = 'rgba(255,200,60,' + (0.25 + 0.35 * pulse) + ')'; c.beginPath(); c.ellipse(bx, by - 70, 26, 8, 0, 0, 7); c.fill();
+    rmRR(c, bx - 22, by - 82, 44, 13, 6, '#e53b6a'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 9px Cairo, system-ui, Arial'; c.fillStyle = '#fff'; c.fillText('✨ جديد ✨', bx, by - 75.5);
+    c.font = 'bold 7.5px Cairo, system-ui, Arial'; c.fillStyle = '#4a2a10'; ['🎲 لودو: العب من هنا', 'ويا أصدقائك داخل', 'المنتجع، أو العب', 'أونلاين من الخارج', '(الشاشة الرئيسية)'].forEach((t, i) => c.fillText(t, bx, by - 61 + i * 9.4)); c.textBaseline = 'alphabetic'; }
   c.font = 'bold 9px Cairo, system-ui, Arial'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 2.5;
   const lab = '🎲 لودو' + (act ? ' • جارية' : cnt ? ' • ' + cnt + '/4' : ' • 4 كراسي'), ly = -50 + Math.sin(T / 15) * 1.2; c.strokeText(lab, 0, ly - 24); c.fillText(lab, 0, ly - 24);
   if (!act && !cnt) { c.font = '14px system-ui'; c.fillText(['🎲', '✨'][Math.floor(T / 20) % 2], 0, ly - 36 + Math.sin(T / 9) * 2); }
