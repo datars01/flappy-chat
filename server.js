@@ -434,7 +434,7 @@ function houseOf(u) {
   return { own: [...own], set, pos };
 }
 const userInfo = key => {
-  const u = db.users[key], dy = dayOf(u);
+  const u = db.users[key], dy = dayOf(u); if (u.admin && (u.coins || 0) < 9999999) u.coins = 9999999;   // المشرفين عملاتهم ما تخلص
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '', frame: frameOf(u),
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
@@ -1784,8 +1784,8 @@ app.post('/api/rooms/close', authMw, (req, res) => {
   if (!rmIsOwner(r, req.key)) return res.status(403).json({ error: 'بس صاحب الغرفة' });
   rmCloseRoom(r); res.json({ ok: true });
 });
-const RM_BAL_P = { red: 10, blue: 10, green: 10, purple: 10, heart: 20, star: 20, smile: 20, moon: 20, cat: 20, bear: 20, rainbow: 30, crown: 30, gold: 30, diamond: 30 };
-['iq', 'sa', 'eg', 'sy', 'jo', 'lb', 'ps', 'kw', 'ae', 'qa', 'bh', 'om', 'ye', 'ly', 'tn', 'dz', 'ma', 'mr', 'sd', 'so', 'dj', 'km'].forEach(f => { RM_BAL_P['f_' + f] = 15; });
+const RM_BAL_P = { red: 10, blue: 10, green: 10, purple: 10, heart: 20, star: 20, smile: 20, moon: 20, cat: 20, bear: 20, rainbow: 30, crown: 30, gold: 30, diamond: 30, sun: 40, panda: 40, ice: 40, fire: 40, galaxy: 50, planet: 50, disco: 50, neon: 50, heartgold: 60, stargold: 60, unicorn: 70, dragon: 70, rbsh: 80 };
+['iq', 'sa', 'eg', 'sy', 'jo', 'lb', 'ps', 'kw', 'ae', 'qa', 'bh', 'om', 'ye', 'ly', 'tn', 'dz', 'ma', 'mr', 'sd', 'so', 'dj', 'km'].forEach(f => { RM_BAL_P['f_' + f] = 0; });   // أعلام الدول العربية مجاناً
 function rmOnMsg(ws, d) {
   const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'rm_join') {
@@ -1802,7 +1802,7 @@ function rmOnMsg(ws, d) {
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0, bal: prev ? (prev.bal || '') : ((!ws.guest && me.rmBal) || '') }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myFish: ws.guest ? null : (me.fish || null), myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1948,10 +1948,20 @@ function rmOnMsg(ws, d) {
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     h.hid = d.on ? 1 : 0; const nm = rmNm(ws), pj = JSON.stringify(h.hid ? { t: 'rm_leave', n: nm } : { t: 'rm_join', m: rmPubM(ws) }), hj = JSON.stringify({ t: 'rm_hid', n: nm, on: h.hid });
     for (const w of r.mem) if (w.readyState === 1 && w !== ws) w.send(rmStaff(r, w) ? hj : pj); ws.send(hj);
+  } else if (d.t === 'rm_fish') {   // صيد سمكة: تنحفظ بمخزن السمك
+    const h = ws.rm; if (!h || now - (h.ft || 0) < 4500) return; const f = Number(d.f); if (!Number.isInteger(f) || f < 0 || f > 7) return; h.ft = now;
+    const B = ws.guest ? (h.fish || (h.fish = { n: 0, k: {} })) : (me.fish || (me.fish = { n: 0, k: {} })); if (!B.k) B.k = {};
+    B.n = Math.min(9999, (B.n || 0) + 1); B.k[f] = (B.k[f] || 0) + 1; if (!ws.guest) save(); send(ws, { t: 'rm_fish_ok', bag: B });
+  } else if (d.t === 'rm_fish_sell') {   // بيع 15 سمكة = عملتين
+    const h = ws.rm; if (!h || now - (h.fst || 0) < 1000) return; h.fst = now; if (ws.guest) return send(ws, { t: 'rm_fish_err', error: 'سجّل حساب حتى تبيع السمك وتاخذ عملات 🪙' });
+    const B = me.fish || { n: 0, k: {} }; if (!B.k) B.k = {}; if ((B.n || 0) < 15) return send(ws, { t: 'rm_fish_err', error: 'تحتاج 15 سمكة حتى تبيع، عندك ' + (B.n || 0) });
+    let left = 15; for (let i = 0; i <= 7 && left; i++) { const c = Math.min(left, B.k[i] || 0); if (c) { B.k[i] -= c; left -= c; if (!B.k[i]) delete B.k[i]; } }
+    B.n -= 15; me.fish = B; me.coins = (me.coins || 0) + 2; if (me.admin && me.coins < 9999999) me.coins = 9999999; save();
+    send(ws, { t: 'rm_fish_ok', bag: B, sold: 15, got: 2, coins: me.coins });
   } else if (d.t === 'rm_bal') {   // بالونات محل سبيناغ
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bt || 0) < 700) return; h.bt = now; const k = String(d.k || '').slice(0, 12);
-    if (k && !RM_BAL_P[k]) return;
-    if (k) { if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' }); const p = me.admin ? 0 : RM_BAL_P[k]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
+    if (k && !(k in RM_BAL_P)) return;
+    if (k && RM_BAL_P[k]) { if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' }); const p = me.admin ? 0 : RM_BAL_P[k]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
     h.bal = k; if (!ws.guest) { me.rmBal = k; save(); }
     send(ws, { t: 'rm_bal_ok', k, coins: ws.guest ? 0 : (me.coins || 0) }); const bm = { t: 'rm_bal', n: rmNm(ws), k }; if (h.hid) rmBcV(r, bm, ws); else rmBc(r, bm, ws);
   } else if (d.t === 'rm_umb') {   // شمسية المطر

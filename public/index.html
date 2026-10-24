@@ -1662,7 +1662,7 @@ function acRender() {
   const tg = $('meTag'); tg.innerHTML = ''; if (auth.admin) tg.appendChild(frMk('span', 'hbTag', '👑 إدارة'));
   $('meSub').textContent = auth.rank ? '🏆 ترتيبك #' + auth.rank + ' بقائمة الصدارة' : 'العب وسجّل نتيجة حتى تدخل الصدارة';
   const st = $('meStats'); st.innerHTML = '';
-  [['🏆', auth.best || 0, 'أعلى نتيجة'], ['🎮', auth.games || 0, 'المحاولات'], ['🗺️', auth.cp || 1, 'المرحلة'], ['🪙', auth.coins || 0, 'عملات'], ['🧱', auth.bricks || 0, 'طابوق'], ['🎒', (auth.owned || []).length, 'سكنات']].forEach(x => { const d = frMk('div', 'acSt'); d.append(frMk('b', '', x[0] + ' ' + x[1]), frMk('small', '', x[2])); st.appendChild(d); });
+  [['🏆', auth.best || 0, 'أعلى نتيجة'], ['🎮', auth.games || 0, 'المحاولات'], ['🗺️', auth.cp || 1, 'المرحلة'], ['🪙', coinTxt(), 'عملات'], ['🧱', auth.bricks || 0, 'طابوق'], ['🎒', (auth.owned || []).length, 'سكنات']].forEach(x => { const d = frMk('div', 'acSt'); d.append(frMk('b', '', x[0] + ' ' + x[1]), frMk('small', '', x[2])); st.appendChild(d); });
   const g = $('acGrid'); g.innerHTML = '';
   PFP.forEach((P, k) => { const id = 'p:' + (k + 1), b = frMk('button', 'acOpt' + (auth.avatar === id ? ' on' : '')); b.type = 'button'; b.setAttribute('aria-label', 'صورة ' + (k + 1)); b.appendChild(pfpEl(id, '', '', 46)); b.onclick = () => acSetPfp(k + 1); g.appendChild(b); });
   if (auth.admin) { g.appendChild(frMk('div', 'acProH', '🛡️ صور بروفيشنال للمشرفين')); PFP_ADM.forEach((P, k) => { const id = 'p:' + (31 + k), b = frMk('button', 'acOpt' + (auth.avatar === id ? ' on' : '')); b.type = 'button'; b.appendChild(pfpEl(id, '', '', 46)); b.onclick = () => acSetPfp(31 + k); g.appendChild(b); }); }
@@ -2103,7 +2103,7 @@ function renderEarn() {
 function renderShop() {
   renderEarn();
   const g = $('shopGrid'); if (!g) return;
-  $('coinBal').textContent = auth ? '🪙 ' + (auth.coins || 0) : '🪙 —';
+  $('coinBal').textContent = auth ? '🪙 ' + coinTxt() : '🪙 —';
   renderDaily();
   g.innerHTML = '';
   const owned = new Set(auth && auth.owned || []), eq = curSkin().id, coins = auth ? (auth.coins || 0) : 0;
@@ -4678,7 +4678,7 @@ function renderHome() {
   const hv = $('hbAv'); hv.innerHTML = ''; hv.appendChild(auth ? pfpEl(auth.avatar, auth.name, auth.frame, 50) : pfpEl('guest', '', '', 50));
   $('hbGo').textContent = auth ? '◀' : 'دخول ◀';
   c.innerHTML = '';
-  if (auth) [['🪙', auth.coins || 0, 'عملة'], ['🧱', auth.bricks || 0, 'طابوق'], ['🏆', auth.best || 0, 'أعلى']].forEach(x => { const e = frMk('span', 'hbC', x[0] + ' ' + x[1]); e.appendChild(frMk('i', '', x[2])); c.appendChild(e); });
+  if (auth) [['🪙', coinTxt(), 'عملة'], ['🧱', auth.bricks || 0, 'طابوق'], ['🏆', auth.best || 0, 'أعلى']].forEach(x => { const e = frMk('span', 'hbC', x[0] + ' ' + x[1]); e.appendChild(frMk('i', '', x[2])); c.appendChild(e); });
 }
 function openPage(id) {
   if (GW.wall && !auth) id = 'account';
@@ -7147,7 +7147,7 @@ function rmNpcBub(c, it, b, bx, by, w, h, LH) {
 }
 function rmBubFlush(c) {
   const Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = [];
-  c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; const LH = 14, placed = [];
+  c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; try { c.direction = 'rtl'; } catch (e) {} const LH = 14, placed = [];
   Q.sort((p, q) => p.b.st - q.b.st).forEach(it => {
     const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
@@ -7885,7 +7885,7 @@ function rmMeow(vol, pitch, dur) {
   } catch (e) {}
 }
 function rmPetHit(x, y) {
-  const c = RM.pets.cat, t = RM.pets.tur; if (Math.abs(x - c.x) < 18 && y > c.y - 34 && y < c.y + 6) { if (c.sleep) { c.wake = 170; RM.bubs['روح'] = { txt: 'القطة روح: أريد أنام! لا تزعجني 😾💢', t: 170, t0: 170 }; try { if (!RM.ambMute) { blip('sawtooth', 330, 150, 0.32, 0.06); blip('square', 240, 110, 0.28, 0.035, 0.1); blip('sawtooth', 400, 170, 0.18, 0.05, 0.38); } } catch (e) {} RM.fx.push({ x: c.x + 6, y: c.y - 30, vx: 0, vy: -0.4, g: 0, t: 0, life: 60, col: '#fff', e: '💢', r: 4, rot: 0, vr: 0 }); return true; } RM.bubs['روح'] = { txt: 'القطة روح: مياو 😺 أريد ربش مامتي 🥺', t: 140, t0: 140 }; try { if (!RM.ambMute) rmMeow(0.2, 1, 0.8); } catch (e) {} RM.fx.push({ x: c.x, y: c.y - 34, vx: 0, vy: -0.5, g: 0, t: 0, life: 60, col: '#fff', e: '💗', r: 4, rot: 0, vr: 0 }); return true; }
+  const c = RM.pets.cat, t = RM.pets.tur; if (Math.abs(x - c.x) < 18 && y > c.y - 34 && y < c.y + 6) { if (c.sleep) { c.wake = 170; RM.bubs['روح'] = { txt: 'القطة روح: أريد أنام! لا تزعجني 😾💢', t: 170, t0: 170 }; try { if (!RM.ambMute) { blip('sawtooth', 330, 150, 0.32, 0.06); blip('square', 240, 110, 0.28, 0.035, 0.1); blip('sawtooth', 400, 170, 0.18, 0.05, 0.38); } } catch (e) {} RM.fx.push({ x: c.x + 6, y: c.y - 30, vx: 0, vy: -0.4, g: 0, t: 0, life: 60, col: '#fff', e: '💢', r: 4, rot: 0, vr: 0 }); return true; } RM.bubs['روح'] = { txt: 'مياو 😺', t: 90, t0: 90 }; clearTimeout(RM.catT); RM.catT = setTimeout(() => { RM.bubs['روح'] = { txt: 'أريد ربش مامتي 🥺', t: 150, t0: 150 }; }, 1700); try { if (!RM.ambMute) rmMeow(0.2, 1, 0.8); } catch (e) {} RM.fx.push({ x: c.x, y: c.y - 34, vx: 0, vy: -0.5, g: 0, t: 0, life: 60, col: '#fff', e: '💗', r: 4, rot: 0, vr: 0 }); return true; }
   if (Math.abs(x - t.x) < 16 && y > t.y - 22 && y < t.y + 6) { RM.bubs['سلحوفة'] = { txt: 'ببطء بس أوصل 🐢', t: 140, t0: 140 }; return true; } return false;
 }
 /* --- قلاع الرمل --- */
@@ -7904,22 +7904,104 @@ function rmCastleHit(x, y) {
   const k = RM.castles.find(c => Math.abs(x - c.x) < 22 && y > c.y - 48 && y < c.y + 8); if (!k) return false; if (k.by === rmMe() || RM.myAdm || RM.isMod) { rmSend({ t: 'rm_castle_del', id: k.id }); showToast('💥 هدمت القلعة'); } else showToast('🏰 قلعة ' + k.by); return true;
 }
 function rmCastleBuild() { const m = RM.me; rmSend({ t: 'rm_castle', x: Math.round(m.x + m.dir * 24), y: Math.round(m.y) }); try { if (!RM.ambMute) { blip('triangle', 300, 500, 0.1, 0.06); blip('triangle', 400, 650, 0.1, 0.06, 0.12); } } catch (e) {} }
-/* --- صيد السمك --- */
-RM.fish = { st: 'idle', bite: 0, end: 0, n: 0 }; try { RM.fish.n = +(localStorage.getItem('rmFish') || 0); } catch (e) {}
-const RM_FISH = [[0.55, '🐟', 'سمكة'], [0.8, '🐠', 'سمكة ملونة'], [0.92, '🦀', 'سلطعون'], [0.975, '🐡', 'سمكة منتفخة'], [1.01, '🏆', 'سمكة ذهبية نادرة']];
-function rmFishStart() { const m = RM.me; if (m.sit || m.jump || m.y >= 262) return; RM.fish.st = 'wait'; RM.fish.bite = performance.now() + 4000 + Math.random() * 7000; rmSetDance(9); showToast('🎣 رميت السنارة... انتظر السمكة'); rmPrompt(true); }
-function rmFishStop() { RM.fish.st = 'idle'; if (RM.me.dance === 9) rmSetDance(0); rmPrompt(true); }
+/* --- صيد السمك (رمي السنارة + سحب + مخزن السمك: كل 15 سمكة = عملتين) --- */
+RM.fish = { st: 'idle', bite: 0, end: 0, n: 0, cast: 0, nib: 0, nibAt: 0, bag: { n: 0, k: {} } }; try { RM.fish.n = +(localStorage.getItem('rmFish') || 0); } catch (e) {}
+// [احتمال تراكمي، شكل، اسم، ندرة 1-5، أقل وزن، أكثر وزن]
+const RM_FISH = [[0.38, '🐟', 'سمكة', 1, 0.3, 1.4], [0.6, '🐠', 'سمكة ملونة', 2, 0.2, 1.1], [0.72, '🦐', 'روبيان', 1, 0.05, 0.3], [0.84, '🦀', 'سلطعون', 2, 0.3, 1.6], [0.92, '🐡', 'سمكة منتفخة', 3, 0.5, 2.2], [0.965, '🦑', 'حبّار', 3, 0.6, 3.5], [0.99, '🐙', 'أخطبوط', 4, 1.2, 6], [1.01, '🏆', 'سمكة ذهبية نادرة', 5, 2, 9]];
+const RM_BAGN = 15, RM_BAGC = 2;
+function rmFishSnd(k) {
+  if (RM.ambMute) return; try {
+    if (k === 'cast') { blip('sine', 900, 300, 0.25, 0.05); blip('triangle', 300, 120, 0.12, 0.04, 0.32); }
+    else if (k === 'plop') { blip('sine', 600, 180, 0.12, 0.07); blip('sine', 900, 400, 0.08, 0.03, 0.05); }
+    else if (k === 'nib') blip('sine', 420, 360, 0.05, 0.04);
+    else if (k === 'bite') { blip('square', 520, 260, 0.1, 0.06); blip('sine', 300, 120, 0.2, 0.07, 0.08); }
+    else if (k === 'reel') blip('triangle', 500 + RM.fish.p * 6, 520 + RM.fish.p * 6, 0.035, 0.035);
+    else if (k === 'lost') { blip('sawtooth', 400, 140, 0.35, 0.05); }
+    else if (k === 'win') { const r = RM.fish.cur ? RM.fish.cur[3] : 1, ns = [523, 659, 784, 1046, 1318, 1568].slice(0, 3 + Math.min(3, r)); ns.forEach((f, i) => blip('sine', f, f * 1.01, 0.22, 0.07, i * 0.09)); blip('sine', 200, 900, 0.3, 0.04, 0.05); if (r >= 4) for (let i = 0; i < 6; i++) blip('triangle', 1600 + i * 180, 1800 + i * 180, 0.08, 0.03, 0.5 + i * 0.06); }
+    else if (k === 'coin') [988, 1319, 1568, 1976].forEach((f, i) => blip('square', f, f, 0.09, 0.04, i * 0.08));
+  } catch (e) {}
+}
+function rmFishStart() {
+  const m = RM.me, F = RM.fish; if (m.sit || m.jump || m.y >= 262 || F.st !== 'idle') return; rmSetDance(9);
+  F.st = 'cast'; F.cast = 0; F.nib = 0; rmFishSnd('cast'); rmPrompt(true);
+}
+function rmFishWait(n) { const F = RM.fish; F.st = 'wait'; F.bite = n + 4200 + Math.random() * 6500; F.nibAt = n + 1200 + Math.random() * 2000; }
+function rmFishStop() { RM.fish.st = 'idle'; rmReelHide(); if (RM.me.dance === 9) rmSetDance(0); rmPrompt(true); }
+function rmBobber() { const m = RM.me, d = m.dir || 1; return [m.x + d * 62, m.y - 92]; }
+function rmSplash(x, y, k) { for (let i = 0; i < (k || 10); i++) RM.sparks.push({ x: x + (Math.random() - .5) * 8, y, vx: (Math.random() - .5) * 2.2, vy: -1.2 - Math.random() * 1.8, t: 26 + Math.random() * 10, drop: 1 }); RM.fx.push({ ring: 1, x, y: y + 2, t: 0 }); }
 function rmFishTick() {
-  const F = RM.fish; if (F.st === 'idle') return; if (RM.me.dance !== 9) { F.st = 'idle'; rmPrompt(true); return; } const n = performance.now();
-  if (F.st === 'wait' && n > F.bite) { F.st = 'bite'; F.end = n + 2300; try { blip('sine', 520, 280, 0.12, 0.08); } catch (e) {} showToast('🐟 سمكة عضّت! اسحب بسرعة'); rmPrompt(true); }
-  else if (F.st === 'bite' && n > F.end) { F.st = 'wait'; F.bite = n + 3500 + Math.random() * 6000; showToast('😅 هربت السمكة، ننتظر غيرها'); rmPrompt(true); }
+  const F = RM.fish; if (F.st === 'idle') return; if (RM.me.dance !== 9) { F.st = 'idle'; rmReelHide(); rmPrompt(true); return; } const n = performance.now();
+  if (F.st === 'cast') { F.cast++; if (F.cast >= 28) { const b = rmBobber(); rmSplash(b[0], b[1], 12); rmFishSnd('plop'); rmFishWait(n); showToast('🎣 السنارة بالمي... انتظر لحد ما السمكة تعض'); rmPrompt(true); } return; }
+  if (F.nib > 0) F.nib--;
+  if (F.st === 'wait') { if (n > F.nibAt && n < F.bite - 700) { F.nib = 16; F.nibAt = n + 900 + Math.random() * 1800; rmFishSnd('nib'); } if (n > F.bite) { F.st = 'bite'; F.end = n + 1900; const b = rmBobber(); rmSplash(b[0], b[1], 16); rmFishSnd('bite'); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} showToast('❗ سمكة عضّت! اسحب بسرعة'); rmPrompt(true); } }
+  else if (F.st === 'bite' && n > F.end) { rmFishWait(n); showToast('😅 تأخرت شوية وهربت، ننتظر غيرها'); rmPrompt(true); }
+  else if (F.st === 'reel') rmReelTick(n);
 }
 function rmFishPull() {
-  const F = RM.fish; if (F.st !== 'bite') return; const r = Math.random(), f = RM_FISH.find(x => r < x[0]), kg = (0.2 + Math.random() * 2.2).toFixed(1); F.st = 'wait'; F.bite = performance.now() + 4000 + Math.random() * 6000; F.n++; try { localStorage.setItem('rmFish', F.n); } catch (e) {}
-  rmSend({ t: 'rm_react', e: f[1] }); showToast('🎣 صدت ' + f[1] + ' ' + f[2] + ' (' + kg + ' كغم) — مجموع صيدك ' + F.n); try { blip('sine', 660, 990, 0.15, 0.08); blip('sine', 990, 1320, 0.2, 0.07, 0.12); } catch (e) {} if (f[1] === '🏆') rmJoinFx(RM.me.x, RM.me.y, 1); rmPrompt(true);
+  const F = RM.fish; if (F.st !== 'bite') return; const r = Math.random(); F.cur = RM_FISH.find(x => r < x[0]); F.curI = RM_FISH.indexOf(F.cur);
+  F.st = 'reel'; F.p = 32; F.r0 = performance.now(); F.rEnd = F.r0 + 6500 + F.cur[3] * 600; F.pow = 0.22 + F.cur[3] * 0.075; F.tug = 0; rmReelShow(); rmPrompt(true);
 }
+function rmReelTap() { const F = RM.fish; if (F.st !== 'reel') return; F.p = Math.min(100, F.p + 10.5 - F.cur[3] * 1.1); F.tug = 8; rmFishSnd('reel'); if (F.p >= 100) rmFishWin(); }
+function rmReelTick(n) {
+  const F = RM.fish; const surge = Math.sin(n / 260 + F.curI) > 0.6 ? 2.2 : 1; F.p -= F.pow * surge; if (F.tug > 0) F.tug--;
+  if (Math.random() < 0.02 * surge) { const b = rmBobber(); rmSplash(b[0], b[1], 5); }
+  if (F.p <= 0 || n > F.rEnd) { rmReelHide(); rmFishSnd('lost'); showToast(F.p <= 0 ? '💔 السمكة قطعت الخيط وهربت! حاول تسحب أسرع' : '⏱️ خلص الوقت وهربت السمكة'); rmFishWait(n); rmPrompt(true); return; }
+  const P = $('rmReel'); if (!P) return; P.querySelector('.rlFill').style.width = F.p + '%'; P.querySelector('.rlFish').style.left = 'calc(' + F.p + '% - 14px)'; P.querySelector('.rlTime').style.width = Math.max(0, (F.rEnd - n) / (F.rEnd - F.r0) * 100) + '%'; P.classList.toggle('surge', surge > 1);
+}
+function rmFishWin() {
+  const F = RM.fish, f = F.cur, kg = (f[4] + Math.random() * (f[5] - f[4])).toFixed(1), m = RM.me, b = rmBobber(), d = m.dir || 1; rmReelHide();
+  F.n++; try { localStorage.setItem('rmFish', F.n); } catch (e) {}
+  rmSplash(b[0], b[1], 20); RM.fx.push({ x: b[0], y: b[1] - 4, vx: -d * 1.55, vy: -5.2, g: 0.2, t: 0, life: 44, col: '#fff', e: f[1], r: 9, rot: 0, vr: 0 });
+  for (let i = 0; i < 22; i++) RM.sparks.push({ x: m.x, y: m.y - 60, vx: (Math.random() - .5) * 4, vy: -1 - Math.random() * 3, t: 30 + Math.random() * 20 });
+  if (f[3] >= 4) rmJoinFx(m.x, m.y, 1); rmFishSnd('win'); try { navigator.vibrate && navigator.vibrate(f[3] >= 4 ? [80, 50, 80, 50, 140] : 90); } catch (e) {}
+  rmSend({ t: 'rm_fish', f: F.curI }); rmSend({ t: 'rm_react', e: f[1] });
+  F.bag.n = (F.bag.n || 0) + 1; F.bag.k[F.curI] = (F.bag.k[F.curI] || 0) + 1;   // يتأكد من السيرفر بعدين
+  rmCatchCard(f, kg); rmFishWait(performance.now() + 1500); rmPrompt(true);
+}
+function rmFishCss() {
+  if ($('rmFishCss')) return; const st = document.createElement('style'); st.id = 'rmFishCss';
+  st.textContent = '#rmReel{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);width:min(340px,calc(100% - 20px));z-index:25;background:linear-gradient(160deg,#0f4c75,#1b6ca8);color:#fff;border:3px solid #9be3ff;border-radius:20px;padding:10px 12px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);text-align:center;animation:rlPop .25s cubic-bezier(.2,1.4,.5,1);user-select:none;-webkit-user-select:none;touch-action:manipulation}#rmReel.surge{animation:rlShake .18s infinite}#rmReel h4{margin:0 0 8px;font-size:15px}#rmReel .rlBar{direction:ltr;position:relative;height:24px;border-radius:12px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.5);overflow:visible}#rmReel .rlFill{position:absolute;inset:0 auto 0 0;width:30%;border-radius:10px;background:linear-gradient(90deg,#ff5d5d,#ffd23f 50%,#3ddc84)}#rmReel .rlFish{position:absolute;top:-6px;font-size:26px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}#rmReel .rlTB{direction:ltr;height:6px;margin-top:8px;border-radius:4px;background:rgba(0,0,0,.3);overflow:hidden}#rmReel .rlTime{height:100%;width:100%;background:#9be3ff}#rmReel button{margin-top:10px;width:100%;padding:13px;border:0;border-radius:16px;font-size:20px;font-weight:900;background:linear-gradient(180deg,#ffe066,#ffb300);color:#4a2c00;box-shadow:0 5px 0 #b86f00;touch-action:manipulation}#rmReel button:active{transform:translateY(3px);box-shadow:0 2px 0 #b86f00}#rmReel small{display:block;margin-top:6px;font-size:11px;opacity:.85}@keyframes rlPop{from{transform:translateX(-50%) scale(.6);opacity:0}}@keyframes rlShake{25%{transform:translateX(calc(-50% - 2px))}75%{transform:translateX(calc(-50% + 2px))}}'
+    + '#rmCatch{position:absolute;inset:0;z-index:26;display:flex;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(circle,rgba(255,240,150,.35),rgba(0,0,0,.25) 70%);animation:spnFade .2s}#rmCatch .ccC{position:relative;min-width:210px;max-width:86%;padding:16px 18px 14px;border-radius:24px;background:linear-gradient(170deg,#fffbe6,#ffe9a8);border:4px solid #ffc83d;color:#4a2c00;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.45);animation:ccPop .45s cubic-bezier(.2,1.6,.4,1)}#rmCatch .ccR{position:absolute;inset:-40px;z-index:-1;background:conic-gradient(from 0deg,rgba(255,210,60,.0),rgba(255,210,60,.55),rgba(255,210,60,0) 12%,rgba(255,210,60,.55) 25%,rgba(255,210,60,0) 37%,rgba(255,210,60,.55) 50%,rgba(255,210,60,0) 62%,rgba(255,210,60,.55) 75%,rgba(255,210,60,0) 87%);border-radius:50%;animation:ccSpin 4s linear infinite}#rmCatch .ccE{font-size:64px;line-height:1.1;display:block;animation:ccJump .9s ease-in-out infinite}#rmCatch b{display:block;font-family:Lalezar,Cairo,system-ui;font-weight:400;font-size:24px}#rmCatch .ccS{color:#ff9f1c;font-size:18px;letter-spacing:2px}#rmCatch .ccK{font-size:13px;font-weight:700;opacity:.85}#rmCatch .ccB{margin-top:8px;font-size:13px;font-weight:800;padding:6px 10px;border-radius:12px;background:#fff;border:2px solid #ffd36a}#rmCatch .ccBar{height:8px;margin-top:5px;border-radius:5px;background:#f4e2b0;overflow:hidden}#rmCatch .ccBar i{display:block;height:100%;background:linear-gradient(90deg,#3ddc84,#16a34a)}@keyframes ccPop{from{transform:scale(.3) rotate(-12deg);opacity:0}}@keyframes ccSpin{to{transform:rotate(360deg)}}@keyframes ccJump{50%{transform:translateY(-8px) rotate(-8deg)}}'
+    + '#rmBag{position:absolute;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,20,40,.45);animation:spnFade .2s}#rmBag .bgC{width:100%;max-width:480px;max-height:84%;overflow-y:auto;background:linear-gradient(170deg,#eef9ff,#d4efff);color:#0d3550;border:3px solid #5cc8ff;border-bottom:0;border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.4);animation:spnUp .28s cubic-bezier(.2,1.3,.5,1)}#rmBag .bgH{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,#1b6ca8,#2e9be6);color:#fff}#rmBag .bgH span{font-size:34px}#rmBag .bgH b{font-family:Lalezar,Cairo,system-ui;font-weight:400;font-size:21px;display:block;line-height:1.2}#rmBag .bgH small{font-size:11.5px;opacity:.92}#rmBag .bgX{margin-inline-start:auto;width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.2);color:#fff;font-size:16px;flex:none}#rmBag .bgP{padding:12px 14px 4px}#rmBag .bgN{display:flex;justify-content:space-between;font-weight:800;font-size:14px}#rmBag .bgBar{height:16px;margin-top:6px;border-radius:9px;background:#fff;border:2px solid #9fd8ff;overflow:hidden}#rmBag .bgBar i{display:block;height:100%;background:linear-gradient(90deg,#4cc3ff,#1b8ad8);transition:width .4s}#rmBag .bgBar.full i{background:linear-gradient(90deg,#ffd23f,#ff9f1c)}#rmBag .bgM{margin-top:8px;font-size:13px;font-weight:700;text-align:center;padding:7px;border-radius:12px;background:#fff}#rmBag .bgG{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 14px}#rmBag .bgI{display:flex;flex-direction:column;align-items:center;padding:7px 2px;border-radius:14px;background:#fff;border:2px solid #cdeaff;font-size:10.5px;font-weight:700;text-align:center}#rmBag .bgI span{font-size:28px;line-height:1.2}#rmBag .bgI.no{opacity:.35;filter:grayscale(1)}#rmBag .bgI i{font-style:normal;font-size:13px;font-weight:900;color:#1b6ca8}#rmBag .bgS{display:block;width:calc(100% - 28px);margin:4px 14px 14px;padding:13px;border:0;border-radius:16px;font-size:17px;font-weight:900;background:linear-gradient(180deg,#ffe066,#ffb300);color:#4a2c00;box-shadow:0 5px 0 #b86f00}#rmBag .bgS:disabled{background:#c9d6df;color:#62707a;box-shadow:0 5px 0 #98a6b0}#rmBag .bgT{text-align:center;font-size:11.5px;padding:0 14px 12px;opacity:.8}@keyframes spnUp{from{transform:translateY(60%)}}@keyframes spnFade{from{opacity:0}}';
+  document.head.appendChild(st);
+}
+function rmReelShow() {
+  rmFishCss(); let P = $('rmReel'); if (!P) { P = document.createElement('div'); P.id = 'rmReel'; P.innerHTML = '<h4>🎣 السمكة تسحب! اضغط بسرعة</h4><div class="rlBar"><div class="rlFill"></div><div class="rlFish">🐟</div></div><div class="rlTB"><div class="rlTime"></div></div><button type="button">💪 اسحب!</button><small>وصّل الشريط للآخر قبل ما يخلص الوقت</small>'; const btn = P.querySelector('button'); btn.addEventListener('pointerdown', e => { e.preventDefault(); rmReelTap(); }); P.addEventListener('pointerdown', e => { if (e.target !== btn) rmReelTap(); }); $('rmBox').appendChild(P); }
+  const F = RM.fish; P.querySelector('h4').textContent = F.cur[3] >= 4 ? '🔥 شي كلّش ثقيل يسحب! اضغط بقوة' : F.cur[3] >= 3 ? '🎣 سمكة قوية تسحب! اضغط بسرعة' : '🎣 السمكة تسحب! اضغط بسرعة'; P.querySelector('.rlFish').textContent = F.cur[3] >= 4 ? '❓' : '🐟'; P.style.display = '';
+}
+function rmReelHide() { const P = $('rmReel'); if (P) P.style.display = 'none'; }
+function rmCatchCard(f, kg) {
+  rmFishCss(); let P = $('rmCatch'); if (P) P.remove(); P = document.createElement('div'); P.id = 'rmCatch'; const B = RM.fish.bag, left = RM_BAGN - (B.n % RM_BAGN || (B.n ? RM_BAGN : 0));
+  P.innerHTML = '<div class="ccC"><div class="ccR"></div><span class="ccE"></span><b></b><div class="ccS"></div><div class="ccK"></div><div class="ccB"></div><div class="ccBar"><i></i></div></div>';
+  P.querySelector('.ccE').textContent = f[1]; P.querySelector('b').textContent = (f[3] >= 4 ? '🎉 صيدة أسطورية! ' : f[3] >= 3 ? '🎉 صيدة حلوة! ' : '🎉 صدت ') + f[2]; P.querySelector('.ccS').textContent = '★'.repeat(f[3]) + '☆'.repeat(5 - f[3]); P.querySelector('.ccK').textContent = '⚖️ ' + kg + ' كغم • مجموع صيدك ' + RM.fish.n;
+  const full = B.n >= RM_BAGN; P.querySelector('.ccB').textContent = full ? '🧺 المخزن بيه ' + B.n + ' سمكة — روح بيع ' + RM_BAGN + ' وخذ 🪙 ' + RM_BAGC : B.n === RM_BAGN - 1 ? '🧺 ' + B.n + '/' + RM_BAGN + ' — بعدلك سمكة وحدة وتصير عندك عملتين 🪙' : '🧺 مخزن السمك ' + B.n + '/' + RM_BAGN + ' — بعدلك ' + (RM_BAGN - B.n) + ' وتاخذ 🪙 ' + RM_BAGC;
+  P.querySelector('.ccBar i').style.width = Math.min(100, B.n / RM_BAGN * 100) + '%'; P.onclick = () => P.remove(); $('rmBox').appendChild(P); setTimeout(() => { if (P.isConnected) P.remove(); }, f[3] >= 4 ? 3600 : 2600);
+}
+function rmBagOpen() {
+  rmFishCss(); let P = $('rmBag'); if (!P) { P = document.createElement('div'); P.id = 'rmBag'; P.innerHTML = '<div class="bgC"><div class="bgH"><span>🧺</span><div><b>مخزن السمك</b><small>كل ' + RM_BAGN + ' سمكة تبيعها = عملتين 🪙</small></div><button type="button" class="bgX">✕</button></div><div class="bgP"><div class="bgN"><span class="bgA"></span><span class="bgCo"></span></div><div class="bgBar"><i></i></div><div class="bgM"></div></div><div class="bgG"></div><button type="button" class="bgS"></button><div class="bgT"></div></div>'; P.addEventListener('pointerdown', e => { if (e.target === P) rmBagClose(); }); P.querySelector('.bgX').onclick = rmBagClose; P.querySelector('.bgS').onclick = rmBagSell; $('rmBox').appendChild(P); }
+  P.style.display = ''; rmBagRender(); try { sfx('click'); } catch (e) {}
+}
+function rmBagClose() { const P = $('rmBag'); if (P) P.style.display = 'none'; }
+function rmBagRender() {
+  const P = $('rmBag'); if (!P || P.style.display === 'none') return; const B = RM.fish.bag, n = B.n || 0, full = n >= RM_BAGN;
+  P.querySelector('.bgA').textContent = '🐟 ' + n + ' / ' + RM_BAGN; P.querySelector('.bgCo').textContent = auth ? '🪙 ' + coinTxt() : 'ضيف';
+  const bar = P.querySelector('.bgBar'); bar.classList.toggle('full', full); bar.querySelector('i').style.width = Math.min(100, n / RM_BAGN * 100) + '%';
+  P.querySelector('.bgM').textContent = full ? '🎉 المخزن جاهز! بيع ' + RM_BAGN + ' سمكة وخذ عملتين 🪙' : n === RM_BAGN - 1 ? '🔥 بعدلك سمكة وحدة وتصير عندك عملتين!' : n ? '🎣 بعدلك ' + (RM_BAGN - n) + ' سمكة وتكدر تبيع' : '🎣 روح عالشاطئ، ارمِ السنارة وابدأ صيدك';
+  const G = P.querySelector('.bgG'); G.innerHTML = ''; RM_FISH.forEach((f, i) => { const c = (B.k && B.k[i]) || 0, it = document.createElement('div'); it.className = 'bgI' + (c ? '' : ' no'); it.innerHTML = '<span></span><div></div><i></i>'; it.querySelector('span').textContent = f[1]; it.querySelector('div').textContent = f[2]; it.querySelector('i').textContent = '× ' + c; G.appendChild(it); });
+  const S = P.querySelector('.bgS'); S.disabled = !full; S.textContent = full ? '💰 بيع ' + RM_BAGN + ' سمكة ← 🪙 ' + RM_BAGC : '🔒 تحتاج ' + RM_BAGN + ' سمكة (عندك ' + n + ')';
+  P.querySelector('.bgT').textContent = auth ? 'السمك محفوظ بحسابك، حتى لو طلعت من المنتجع' : 'الضيف ما يكدر يبيع، سجّل حساب حتى ينحفظ صيدك وتاخذ عملات';
+}
+function rmBagSell() { const B = RM.fish.bag; if (!auth) { showToast('🔐 سجّل حساب حتى تبيع السمك وتاخذ عملات'); return; } if ((B.n || 0) < RM_BAGN) return; if (RM.sellT && performance.now() - RM.sellT < 1200) return; RM.sellT = performance.now(); rmSend({ t: 'rm_fish_sell' }); }
+function rmFishOk(d) {
+  const F = RM.fish, prev = F.bag.n || 0; F.bag = d.bag || { n: 0, k: {} }; if (!F.bag.k) F.bag.k = {};
+  if (d.sold) { if (auth && typeof d.coins === 'number') auth.coins = d.coins; try { loadMe(); } catch (e) {} rmFishSnd('coin'); showToast('💰 بعت ' + d.sold + ' سمكة وأخذت عملتين 🪙!'); const m = RM.me; for (let i = 0; i < 10; i++) RM.fx.push({ x: m.x + (Math.random() - .5) * 30, y: m.y - 70, vx: (Math.random() - .5) * 2, vy: -2.5 - Math.random() * 2, g: 0.12, t: 0, life: 50, col: '#fff', e: '🪙', r: 4, rot: 0, vr: 0 }); }
+  else if (F.bag.n === RM_BAGN - 1) showToast('🔥 بعدلك سمكة وحدة وتصير عندك عملتين!');
+  else if (F.bag.n >= RM_BAGN && prev < RM_BAGN) setTimeout(() => showToast('🧺 المخزن تعبّى! افتح «مخزن السمك» وبيع ' + RM_BAGN + ' سمكة بـ 🪙 ' + RM_BAGC), 2700);
+  rmBagRender(); rmPrompt(true);
+}
+function coinTxt() { return auth && auth.admin ? '∞' : auth ? (auth.coins || 0) : 0; }
 function rmRodDraw(c, o, bite, me) {
-  const d = o.dir || 1, T = RM.T, hx = o.x + d * 12, hy = o.y - AV_H * 0.52, tx = o.x + d * 46, ty = o.y - AV_H * 1.18, bx = o.x + d * 62, by = o.y - 92 + (bite ? 7 : Math.sin(T / 14 + o.x) * 1.4);
+  const d = o.dir || 1, T = RM.T, hx = o.x + d * 12, hy = o.y - AV_H * 0.52, tx = o.x + d * 46, ty = o.y - AV_H * 1.18, F = me ? RM.fish : null; let bx = o.x + d * 62, by = o.y - 92 + (bite ? 7 + Math.sin(T / 2) * 2.5 : Math.sin(T / 14 + o.x) * 1.4); if (F && F.nib > 0) by += Math.sin(F.nib / 16 * Math.PI) * 4; if (F && F.st === 'reel') { bx += Math.sin(T / 3) * 3; by += 5 + Math.sin(T / 2.2) * 3; } if (F && F.st === 'cast') { const k = Math.min(1, F.cast / 28); bx = tx + (bx - tx) * k; by = ty + (by - ty) * k - Math.sin(k * Math.PI) * 34; }
   c.save(); c.strokeStyle = '#6a4220'; c.lineWidth = 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo((tx + bx) / 2 + d * 4, Math.min(ty, by) - 6, bx, by - 3); c.stroke();
   c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(bx, by + 2, 7 + Math.sin(T / 10) * 1.5, 2.4, 0, 0, 7); c.fill(); c.fillStyle = '#ff3d4a'; c.beginPath(); c.arc(bx, by, 3, Math.PI, 0); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 3, 0, Math.PI); c.fill();
   if (bite && me) { c.font = 'bold 16px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ff2d4a'; c.strokeStyle = '#fff'; c.lineWidth = 3; c.strokeText('!', bx, by - 14 - Math.abs(Math.sin(T / 4)) * 4); c.fillText('!', bx, by - 14 - Math.abs(Math.sin(T / 4)) * 4); } c.restore();
@@ -7939,7 +8021,8 @@ function rmAmbList(list) { rmPetStep(); list.push([RM.pets.cat.y, rmDrawCat]); l
 /* --- جربوع: نكت ونصائح --- */
 const RM_TIPS = ['⭐ تكدر تصير عضو مميز! روح للوحة «العضوية المميزة» واتبع الشروط: 500 ساعة لعب و 8 ساعات تواجد باليوم، وقدّم طلبك للمشرفين', '💡 عندك فكرة للعبة؟ اكتبها بلوحة الأفكار جنب منطقة الألعاب', '⏱️ عداد ساعاتك موجود بقائمة الأزرار، كل ما تبقى بالمنتجع تزيد ساعاتك وتقترب من العضوية المميزة ⭐', 'تقدر تلعب السلم والثعبان أو إكس أو أو حجرة ورقة مقص أو الدومينو مع صديقك: اجلسوا على مقعدي أي طاولة 🎲', 'دوس على أي شخص وصافحه أو عانقه أو همسله 🤝', 'جرب الصيد قرب الرصيف، يمكن تصيد سمكة نادرة 🎣', 'شفت روح القطة وسلحوفة؟ دوس عليهم 🐱', 'ليش السمكة ما تلعب كرة؟ لأنها تخاف من الشبكة 😄', 'سألوا الدجاجة: شنو تحبين؟ كالت: أحب الأيام اللي بيها بيض 🐔', 'الطماطة ما تحجي لأنها خجولة وتحمر 🍅', 'بالليل نسوي ألعاب نارية فوق البحر، لا تفوتها 🎆', 'تعبان؟ اجلس عالمرجوحة وخذ لك استراحة 🌴', 'الشمسية مو بس للمطر، بس هنا نلبسها وقته ☂️', 'إذا برد الجو تعال يم النار وادفى 🔥'];
 RM.tipI = Math.floor(Math.random() * RM_TIPS.length);
-function rmNpcNext() { const D = RM.dn; if (D && D.d > 0.7 && Math.random() < 0.4) return 'الليل هادي وحلو، شوف النجوم فوق ✨'; RM.tipN = (RM.tipN || 0) + 1; if (RM.tipN % 4 === 1) return RM_TIPS[0];   /* جربوع يذكّر بالعضوية المميزة كل شوية */ RM.tipI = (RM.tipI + 1) % RM_TIPS.length; return RM_TIPS[RM.tipI]; }
+const RM_SHOP_TIPS = ['🎈 خبر حلو! ضفنا محل للبالونات يمين المنتجع، صاحبه سبيناغ، روحوا شوفوه', '🎈 بمحل سبيناغ بالونات الدول العربية كلها مجاناً، لأن احنا نحبكم ❤️', '🎣 تريد عملات للبالونات المميزة؟ اصطاد سمك، وكل 15 سمكة تبيعها تاخذ عملتين 🪙', '✨ بالونات مميزة جديدة بمحل سبيناغ: مجرّة، تنّين، يونيكورن وبالون ربش ❤️'];
+function rmNpcNext() { const D = RM.dn; if (D && D.d > 0.7 && Math.random() < 0.4) return 'الليل هادي وحلو، شوف النجوم فوق ✨'; RM.tipN = (RM.tipN || 0) + 1; if (RM.tipN === 1) return RM_SHOP_TIPS[0]; if (RM.tipN % 4 === 1) return RM_TIPS[0]; if (RM.tipN % 4 === 3) return RM_SHOP_TIPS[Math.floor(RM.tipN / 4) % RM_SHOP_TIPS.length];   /* جربوع يعلن عن محل البالونات */   /* جربوع يذكّر بالعضوية المميزة كل شوية */ RM.tipI = (RM.tipI + 1) % RM_TIPS.length; return RM_TIPS[RM.tipI]; }
 
 function rmClkUpd() {
   const e = document.getElementById('rmClk'); if (!e) return; const w = rmWx(), sp = RM.wxc.spd || 1, f = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
@@ -7955,8 +8038,11 @@ const RM_BAL = [
   { k: 'heart', n: 'قلب', p: 20, c: '#ff3d7f', s: 'heart' }, { k: 'star', n: 'نجمة', p: 20, c: '#ffc21f', s: 'star' }, { k: 'smile', n: 'سمايل', p: 20, c: '#ffd84a', s: 'smile' }, { k: 'moon', n: 'هلال', p: 20, c: '#4a5cd8', s: 'moon' },
   { k: 'cat', n: 'قطة', p: 20, c: '#ff9ec7', s: 'cat' }, { k: 'bear', n: 'دبدوب', p: 20, c: '#c98a55', s: 'bear' },
   { k: 'rainbow', n: 'قوس قزح', p: 30, c: '#ffffff', s: 'rainbow' }, { k: 'crown', n: 'تاج', p: 30, c: '#8a3dff', s: 'crown' }, { k: 'gold', n: 'ذهبي لامع', p: 30, c: '#e8b43a', s: 'gold' }, { k: 'diamond', n: 'ألماسة', p: 30, c: '#6fdcff', s: 'diamond' },
+  { k: 'sun', n: 'شمس', p: 40, c: '#ffcf33', s: 'sun' }, { k: 'panda', n: 'باندا', p: 40, c: '#ffffff', s: 'panda' }, { k: 'ice', n: 'ثلجي', p: 40, c: '#bfeaff', s: 'ice' }, { k: 'fire', n: 'ناري', p: 40, c: '#ff5a1f', s: 'fire' },
+  { k: 'galaxy', n: 'مجرّة', p: 50, c: '#3b1a78', s: 'galaxy' }, { k: 'planet', n: 'كوكب', p: 50, c: '#ff8a5c', s: 'planet' }, { k: 'disco', n: 'ديسكو', p: 50, c: '#c9d3e0', s: 'disco' }, { k: 'neon', n: 'نيون', p: 50, c: '#ff2fd0', s: 'neon' },
+  { k: 'heartgold', n: 'قلب ذهبي', p: 60, c: '#e8b43a', s: 'heartgold' }, { k: 'stargold', n: 'نجمة قزحية', p: 60, c: '#fff', s: 'stargold' }, { k: 'unicorn', n: 'يونيكورن', p: 70, c: '#fff7fd', s: 'unicorn' }, { k: 'dragon', n: 'تنّين', p: 70, c: '#2ec26a', s: 'dragon' }, { k: 'rbsh', n: 'ربش ❤️', p: 80, c: '#ff1f5a', s: 'rbsh' },
   ...[['iq', 'العراق'], ['sa', 'السعودية'], ['eg', 'مصر'], ['sy', 'سوريا'], ['jo', 'الأردن'], ['lb', 'لبنان'], ['ps', 'فلسطين'], ['kw', 'الكويت'], ['ae', 'الإمارات'], ['qa', 'قطر'], ['bh', 'البحرين'],
-    ['om', 'عُمان'], ['ye', 'اليمن'], ['ly', 'ليبيا'], ['tn', 'تونس'], ['dz', 'الجزائر'], ['ma', 'المغرب'], ['mr', 'موريتانيا'], ['sd', 'السودان'], ['so', 'الصومال'], ['dj', 'جيبوتي'], ['km', 'جزر القمر']].map(f => ({ k: 'f_' + f[0], n: f[1], p: 15, f: f[0], c: '#fff' }))
+    ['om', 'عُمان'], ['ye', 'اليمن'], ['ly', 'ليبيا'], ['tn', 'تونس'], ['dz', 'الجزائر'], ['ma', 'المغرب'], ['mr', 'موريتانيا'], ['sd', 'السودان'], ['so', 'الصومال'], ['dj', 'جيبوتي'], ['km', 'جزر القمر']].map(f => ({ k: 'f_' + f[0], n: f[1], p: 0, f: f[0], c: '#fff' }))   // أعلام الدول العربية مجاناً
 ];
 const RM_BALD = {}; RM_BAL.forEach(b => { RM_BALD[b.k] = b; });
 function rmInShop(o) { return (o || RM.me).x >= 1900; }
@@ -7995,7 +8081,7 @@ function rmFlag(c, f, w, h) {
 
 /* ---- شكل البالون ---- */
 function rmBalPath(c, s, R) {
-  c.beginPath();
+  s = RM_BSHP[s] || s; c.beginPath();
   if (s === 'heart') { c.moveTo(0, R * 0.95); c.bezierCurveTo(-R * 1.25, R * 0.1, -R * 1.05, -R * 1.05, 0, -R * 0.42); c.bezierCurveTo(R * 1.05, -R * 1.05, R * 1.25, R * 0.1, 0, R * 0.95); }
   else if (s === 'star') { for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? R * 0.52 : R * 1.1; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); }
   else if (s === 'diamond') { c.moveTo(0, -R * 1.05); c.lineTo(R * 0.85, -R * 0.2); c.lineTo(0, R * 1.05); c.lineTo(-R * 0.85, -R * 0.2); c.closePath(); }
@@ -8003,21 +8089,44 @@ function rmBalPath(c, s, R) {
   else if (s === 'cat' || s === 'bear') { c.ellipse(0, 0, R * 0.95, R * 0.88, 0, 0, 7); if (s === 'cat') { c.moveTo(-R * 0.85, -R * 0.3); c.lineTo(-R * 0.7, -R * 1.15); c.lineTo(-R * 0.15, -R * 0.8); c.moveTo(R * 0.85, -R * 0.3); c.lineTo(R * 0.7, -R * 1.15); c.lineTo(R * 0.15, -R * 0.8); } else { c.moveTo(-R * 0.45, -R * 0.75); c.arc(-R * 0.65, -R * 0.75, R * 0.32, 0, 7); c.moveTo(R * 0.97, -R * 0.75); c.arc(R * 0.65, -R * 0.75, R * 0.32, 0, 7); } }
   else c.ellipse(0, 0, R * 0.86, R, 0, 0, 7);
 }
+const RM_BSHP = { heartgold: 'heart', rbsh: 'heart', stargold: 'star' };
+function rmBalBack(c, s, R, T) {   // أشياء ورا البالون (أشعة الشمس، حلقة الكوكب الخلفية)
+  if (s === 'sun') { c.save(); c.rotate(T / 60); c.fillStyle = '#ffb300'; for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.beginPath(); c.moveTo(-R * 0.18, -R * 0.9); c.lineTo(0, -R * 1.35); c.lineTo(R * 0.18, -R * 0.9); c.fill(); } c.restore(); }
+  if (s === 'neon') { c.shadowColor = '#ff2fd0'; c.shadowBlur = R * 0.9; }
+  if (s === 'planet') { c.strokeStyle = '#ffe0a3'; c.lineWidth = R * 0.16; c.beginPath(); c.ellipse(0, 0, R * 1.45, R * 0.38, -0.35, Math.PI, Math.PI * 2); c.stroke(); }
+  if (s === 'dragon') { c.fillStyle = '#ff9f1c'; for (let i = -2; i <= 2; i++) { const a = -Math.PI / 2 + i * 0.38; c.beginPath(); c.moveTo(Math.cos(a - 0.12) * R * 0.85, Math.sin(a - 0.12) * R * 0.95); c.lineTo(Math.cos(a) * R * 1.28, Math.sin(a) * R * 1.32); c.lineTo(Math.cos(a + 0.12) * R * 0.85, Math.sin(a + 0.12) * R * 0.95); c.fill(); } }
+  if (s === 'unicorn') { c.fillStyle = '#ffd23f'; c.beginPath(); c.moveTo(-R * 0.16, -R * 0.88); c.lineTo(R * 0.05, -R * 1.55); c.lineTo(R * 0.2, -R * 0.86); c.fill(); }
+}
+function rmBalFace(c, s, R, T) {   // تفاصيل البالونات المميزة داخل الشكل
+  const ink = '#2a1830';
+  if (s === 'galaxy') { const g = c.createRadialGradient(R * 0.2, R * 0.1, R * 0.1, 0, 0, R * 1.2); g.addColorStop(0, '#c25bff'); g.addColorStop(0.5, '#3b1a78'); g.addColorStop(1, '#0b0730'); c.fillStyle = g; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6); for (let i = 0; i < 14; i++) { c.globalAlpha = 0.5 + 0.5 * Math.sin(T / 10 + i * 2); c.fillStyle = '#fff'; c.beginPath(); c.arc(Math.cos(i * 2.4) * R * 0.75 * ((i % 3 + 1) / 3), Math.sin(i * 1.7) * R * 0.8 * ((i % 4 + 1) / 4), R * 0.04 + (i % 3) * R * 0.015, 0, 7); c.fill(); } c.globalAlpha = 1; }
+  else if (s === 'fire') { const g = c.createLinearGradient(0, R, 0, -R); g.addColorStop(0, '#ffe14d'); g.addColorStop(0.45, '#ff7a1a'); g.addColorStop(1, '#c4161c'); c.fillStyle = g; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6); c.fillStyle = 'rgba(255,240,140,.85)'; c.beginPath(); c.moveTo(0, R * 0.6); c.quadraticCurveTo(-R * 0.5, R * 0.1, -R * 0.1, -R * 0.5 + Math.sin(T / 6) * R * 0.08); c.quadraticCurveTo(0, -R * 0.1, R * 0.15, -R * 0.25); c.quadraticCurveTo(R * 0.5, R * 0.15, 0, R * 0.6); c.fill(); }
+  else if (s === 'ice') { c.strokeStyle = '#fff'; c.lineWidth = R * 0.08; c.lineCap = 'round'; for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; c.beginPath(); c.moveTo(Math.cos(a) * R * 0.5, Math.sin(a) * R * 0.5); c.lineTo(-Math.cos(a) * R * 0.5, -Math.sin(a) * R * 0.5); c.stroke(); } }
+  else if (s === 'disco') { for (let y = -R; y < R; y += R * 0.26) for (let x = -R; x < R; x += R * 0.26) { const k = (Math.floor(x / (R * 0.26)) + Math.floor(y / (R * 0.26)) + Math.floor(T / 8)) % 4; c.fillStyle = ['#e8eef6', '#a9b6c8', '#ffffff', '#c6d1e0'][(k + 4) % 4]; c.fillRect(x + 0.4, y + 0.4, R * 0.24, R * 0.24); } }
+  else if (s === 'neon') { c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = R * 0.06; c.beginPath(); c.ellipse(0, 0, R * 0.62, R * 0.74, 0, 0, 7); c.stroke(); }
+  else if (s === 'planet') { c.fillStyle = 'rgba(160,60,20,.35)'; c.fillRect(-R, -R * 0.35, R * 2, R * 0.18); c.fillRect(-R, R * 0.15, R * 2, R * 0.14); }
+  else if (s === 'sun' || s === 'panda' || s === 'unicorn' || s === 'dragon') { if (s === 'panda') { c.fillStyle = ink; c.beginPath(); c.ellipse(-R * 0.35, -R * 0.08, R * 0.22, R * 0.27, -0.4, 0, 7); c.ellipse(R * 0.35, -R * 0.08, R * 0.22, R * 0.27, 0.4, 0, 7); c.fill(); } if (s === 'unicorn') { ['#ff9ec7', '#c9a5ff', '#9be3ff'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.ellipse(-R * 0.62 + i * R * 0.14, -R * 0.45 + i * R * 0.25, R * 0.3, R * 0.18, -0.9, 0, 7); c.fill(); }); } c.fillStyle = s === 'panda' ? '#fff' : ink; c.beginPath(); c.arc(-R * 0.33, -R * 0.08, R * 0.08, 0, 7); c.arc(R * 0.33, -R * 0.08, R * 0.08, 0, 7); c.fill(); c.strokeStyle = ink; c.lineWidth = R * 0.07; c.lineCap = 'round'; c.beginPath(); c.arc(0, R * 0.12, R * 0.3, 0.3, Math.PI - 0.3); c.stroke(); if (s === 'dragon') { c.fillStyle = '#fff'; c.beginPath(); c.moveTo(-R * 0.15, R * 0.36); c.lineTo(-R * 0.08, R * 0.5); c.lineTo(0, R * 0.38); c.lineTo(R * 0.08, R * 0.5); c.lineTo(R * 0.15, R * 0.36); c.fill(); } c.fillStyle = 'rgba(255,90,110,.45)'; c.beginPath(); c.arc(-R * 0.58, R * 0.15, R * 0.12, 0, 7); c.arc(R * 0.58, R * 0.15, R * 0.12, 0, 7); c.fill(); }
+  else if (s === 'heartgold') { const g = c.createLinearGradient(-R, -R, R, R); g.addColorStop(0, '#fff2b0'); g.addColorStop(0.45, '#e8b43a'); g.addColorStop(1, '#a8761a'); c.fillStyle = g; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6); }
+  else if (s === 'stargold') { ['#ff4d4d', '#ff9f1c', '#ffe14d', '#3ddc84', '#3a8bff', '#a34dff'].forEach((col, i) => { c.fillStyle = col; c.fillRect(-R * 1.2 + i * R * 0.4, -R * 1.2, R * 0.41, R * 2.4); }); }
+  else if (s === 'rbsh') { c.fillStyle = '#fff'; c.font = 'bold ' + (R * 0.55) + 'px Lalezar, Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; try { c.direction = 'rtl'; } catch (e) {} c.fillText('ربش', 0, -R * 0.08); }
+}
 function rmBal(c, x, y, b, R, tilt) {
-  if (!b) return; const s = b.s || '', bot = s === 'heart' ? R * 0.95 : s === 'star' ? R * 1.1 : s === 'diamond' ? R * 1.05 : s === 'moon' ? R * 0.86 : s === 'cat' || s === 'bear' ? R * 0.88 : R;
+  if (!b) return; const s = b.s || '', s0 = RM_BSHP[s] || s, bot = s0 === 'heart' ? R * 0.95 : s0 === 'star' ? R * 1.1 : s === 'diamond' ? R * 1.05 : s === 'moon' ? R * 0.86 : s === 'cat' || s === 'bear' ? R * 0.88 : R;
   c.save(); c.translate(x, y); if (tilt) c.rotate(tilt);
   c.fillStyle = b.f ? '#ddd' : b.c; c.beginPath(); c.moveTo(0, bot - 1); c.lineTo(-R * 0.14, bot + R * 0.2); c.lineTo(R * 0.14, bot + R * 0.2); c.closePath(); c.fill();   // العقدة
-  rmBalPath(c, s, R); c.save(); c.clip();
+  c.save(); rmBalBack(c, s, R, RM.T); rmBalPath(c, s, R); c.fillStyle = b.c; c.fill(); c.restore(); rmBalPath(c, s, R); c.save(); c.clip();
   if (b.f) { c.fillStyle = '#fff'; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6); rmFlag(c, b.f, R * 2.1, R * 2.05); }
   else if (s === 'rainbow') { ['#ff4d4d', '#ff9f1c', '#ffe14d', '#3ddc84', '#3a8bff', '#a34dff'].forEach((col, i) => { c.fillStyle = col; c.fillRect(-R, -R + i * R / 3, R * 2, R / 3 + 0.5); }); }
   else if (s === 'gold') { const g = c.createLinearGradient(-R, -R, R, R); g.addColorStop(0, '#fff2b0'); g.addColorStop(0.4, '#e8b43a'); g.addColorStop(0.7, '#a8761a'); g.addColorStop(1, '#ffe27a'); c.fillStyle = g; c.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4); }
   else { c.fillStyle = b.c; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6); }
+  rmBalFace(c, s, R, RM.T);
   if (s === 'smile' || s === 'cat' || s === 'bear') { const ink = '#3a2410'; c.fillStyle = ink; c.beginPath(); c.ellipse(-R * 0.3, -R * 0.12, R * 0.09, R * 0.13, 0, 0, 7); c.ellipse(R * 0.3, -R * 0.12, R * 0.09, R * 0.13, 0, 0, 7); c.fill(); c.strokeStyle = ink; c.lineWidth = R * 0.08; c.lineCap = 'round'; c.beginPath(); c.arc(0, R * 0.08, R * 0.38, 0.2, Math.PI - 0.2); c.stroke(); c.fillStyle = 'rgba(255,90,110,.45)'; c.beginPath(); c.arc(-R * 0.55, R * 0.18, R * 0.13, 0, 7); c.arc(R * 0.55, R * 0.18, R * 0.13, 0, 7); c.fill(); if (s === 'cat') { c.lineWidth = R * 0.04; c.beginPath(); [-1, 1].forEach(sd => { c.moveTo(sd * R * 0.55, R * 0.02); c.lineTo(sd * R * 0.92, -R * 0.06); c.moveTo(sd * R * 0.55, R * 0.1); c.lineTo(sd * R * 0.92, R * 0.14); }); c.stroke(); } if (s === 'bear') { c.fillStyle = '#e8c09a'; c.beginPath(); c.ellipse(0, R * 0.22, R * 0.3, R * 0.2, 0, 0, 7); c.fill(); c.fillStyle = ink; c.beginPath(); c.ellipse(0, R * 0.14, R * 0.1, R * 0.07, 0, 0, 7); c.fill(); } }
   if (s === 'crown') { c.fillStyle = '#ffd23f'; c.beginPath(); c.moveTo(-R * 0.5, R * 0.25); c.lineTo(-R * 0.5, -R * 0.2); c.lineTo(-R * 0.25, R * 0.02); c.lineTo(0, -R * 0.35); c.lineTo(R * 0.25, R * 0.02); c.lineTo(R * 0.5, -R * 0.2); c.lineTo(R * 0.5, R * 0.25); c.closePath(); c.fill(); c.fillStyle = '#ff4d6d'; c.beginPath(); c.arc(0, R * 0.12, R * 0.07, 0, 7); c.fill(); }
   if (s === 'diamond') { c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = R * 0.05; c.beginPath(); c.moveTo(-R * 0.85, -R * 0.2); c.lineTo(R * 0.85, -R * 0.2); c.moveTo(-R * 0.3, -R * 0.2); c.lineTo(0, R * 1.05); c.lineTo(R * 0.3, -R * 0.2); c.stroke(); }
   let g = c.createRadialGradient(-R * 0.35, -R * 0.45, R * 0.05, 0, 0, R * 1.25); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(0.35, 'rgba(255,255,255,.08)'); g.addColorStop(1, 'rgba(0,0,0,.32)'); c.fillStyle = g; c.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6);
   c.restore(); c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.ellipse(-R * 0.36, -R * 0.42, R * 0.13, R * 0.24, -0.5, 0, 7); c.fill();   // لمعة
-  if (s === 'gold' || s === 'diamond') { const tw = 0.5 + 0.5 * Math.sin(RM.T / 8 + x); c.globalAlpha = tw; rmStar(c, R * 0.45, -R * 0.55, R * 0.16, '#fff', 4, 0); c.globalAlpha = 1; }
+  if (s === 'planet') { c.strokeStyle = '#ffe0a3'; c.lineWidth = R * 0.16; c.beginPath(); c.ellipse(0, 0, R * 1.45, R * 0.38, -0.35, 0, Math.PI); c.stroke(); }
+  if (s === 'gold' || s === 'diamond' || s === 'heartgold' || s === 'stargold' || s === 'galaxy' || s === 'rbsh' || s === 'unicorn') { const tw = 0.5 + 0.5 * Math.sin(RM.T / 8 + x); c.globalAlpha = tw; rmStar(c, R * 0.45, -R * 0.55, R * 0.16, '#fff', 4, 0); c.globalAlpha = 1; }
   c.restore();
 }
 function rmStr(c, x0, y0, x1, y1, sw) { c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 0.9; c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo((x0 + x1) / 2 + (sw || 0), (y0 + y1) / 2, x1, y1); c.stroke(); }
@@ -8180,8 +8289,8 @@ function rmShopBg(c) {
   // تانكي الهيليوم
   c.fillStyle = '#9aa3b2'; c.beginPath(); c.roundRect ? c.roundRect(2262, 330, 18, 64, 8) : c.rect(2262, 330, 18, 64); c.fill(); c.fillStyle = '#c3cad6'; c.fillRect(2265, 334, 5, 56); c.fillStyle = '#4a4f5a'; c.fillRect(2267, 322, 8, 9); c.fillStyle = '#2fbf71'; c.font = 'bold 7px Arial'; c.textAlign = 'center'; c.fillText('He', 2271, 362);
   // سبيناغ ورا الكاونتر
-  const near = rmNearSpn(); if (near && !RM_SPN.near) { RM_SPN.wave = 70; if (!RM_SPN.say || RM_SPN.say.t <= 0) rmSpnSay('اضغط «اشتري بالون» وشوف كل الأشكال والأعلام 😄', 200); } RM_SPN.near = near;
-  if (near && (!RM_SPN.say || RM_SPN.say.t <= 0) && ++RM_SPN.idleT > 520) { RM_SPN.idleT = 0; rmSpnSay(['عندي بالونات لكل الدول العربية 🎈', 'جرب بالون القلب، الكل يحبه ❤️', 'البالون يطير وياك بكل المنتجع!', 'الذهبي اللامع يلمع حتى بالليل ✨', 'المحل محلك، تدلل 😄'][Math.floor(Math.random() * 5)]); }
+  const near = rmNearSpn(); if (near && !RM_SPN.near) { RM_SPN.wave = 70; if (!RM_SPN.say || RM_SPN.say.t <= 0) rmSpnSay('بالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 220); } RM_SPN.near = near;
+  if (near && (!RM_SPN.say || RM_SPN.say.t <= 0) && ++RM_SPN.idleT > 520) { RM_SPN.idleT = 0; rmSpnSay(['بالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 'جرب بالون القلب، الكل يحبه ❤️', 'البالون يطير وياك بكل المنتجع!', 'الذهبي اللامع يلمع حتى بالليل ✨', 'المحل محلك، تدلل 😄'][Math.floor(Math.random() * 5)]); }
   if (RM_SPN.wave > 0) RM_SPN.wave--; rmSpnDraw(c, RM_SPN.x, RM_SPN.y, 1, RM_SPN.wave > 0);
   // الكاونتر
   g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#ff7ab0'); g.addColorStop(1, '#c9578f'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(2284, 368, 148, 46, 6) : c.rect(2284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(2280, 362, 156, 9); c.strokeStyle = '#7a2d5c'; c.lineWidth = 1.5; c.strokeRect(2280, 362, 156, 9);
@@ -8209,22 +8318,22 @@ function rmSpnOpen() {
   if (!P) {
     const st = document.createElement('style'); st.textContent = '#spnShop{position:absolute;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(30,8,28,.45);animation:spnFade .2s}#spnShop .spC{width:100%;max-width:520px;max-height:82%;display:flex;flex-direction:column;background:linear-gradient(170deg,#fff4fa,#ffe1ef);color:#4a1838;border:3px solid #ff7ab0;border-bottom:0;border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.4);overflow:hidden;animation:spnUp .28s cubic-bezier(.2,1.3,.5,1)}#spnShop .spH{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,#ff3d7f,#ff7ab0);color:#fff}#spnShop .spH canvas{width:52px;height:52px;flex:none;background:rgba(255,255,255,.25);border-radius:50%}#spnShop .spH b{font-family:Lalezar,Cairo,system-ui;font-size:20px;font-weight:400;display:block;line-height:1.2}#spnShop .spH small{font-size:11.5px;opacity:.95}#spnShop .spX{margin-inline-start:auto;width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.2);color:#fff;font-size:16px;flex:none}#spnShop .spCo{background:#fff;color:#b8860b;font-weight:800;font-size:13px;padding:4px 10px;border-radius:14px;flex:none}#spnShop .spT{display:flex;gap:6px;padding:8px 10px 4px}#spnShop .spT button{flex:1;width:auto;border:2px solid #ffb3d1;background:#fff;color:#a63a78;border-radius:14px;padding:7px 4px;font-weight:800;font-size:13px}#spnShop .spT button.on{background:#ff3d7f;color:#fff;border-color:#ff3d7f}#spnShop .spG{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;padding:8px 10px 10px}#spnShop .spI{position:relative;width:auto;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px 7px;border-radius:14px;border:2px solid #ffd0e4;background:#fff;color:#4a1838;font-size:11.5px;font-weight:700;transition:transform .15s}#spnShop .spI:active{transform:scale(.94)}#spnShop .spI canvas{width:54px;height:66px}#spnShop .spI i{font-style:normal;font-size:11px;color:#b8860b;font-weight:800}#spnShop .spI.on{border-color:#2fbf71;background:#eafff2}#spnShop .spI.on:after{content:"✓ معك";position:absolute;top:3px;inset-inline-end:4px;font-size:9.5px;background:#2fbf71;color:#fff;border-radius:8px;padding:1px 5px}#spnShop .spF{display:flex;align-items:center;gap:8px;padding:8px 12px 12px;border-top:1px dashed #ffb3d1;font-size:12.5px;font-weight:700}#spnShop .spF button{width:auto;margin-inline-start:auto;padding:7px 12px;border-radius:12px;border:0;background:#7a2d5c;color:#fff;font-weight:800;font-size:12.5px}@keyframes spnUp{from{transform:translateY(60%)}}@keyframes spnFade{from{opacity:0}}';
     document.head.appendChild(st);
-    P = document.createElement('div'); P.id = 'spnShop'; P.innerHTML = '<div class="spC"><div class="spH"><canvas width="104" height="104"></canvas><div><b>محل بالونات سبيناغ</b><small>اختار بالونك ويطير وياك بكل المنتجع 🎈</small></div><span class="spCo"></span><button type="button" class="spX">✕</button></div><div class="spT"><button type="button" data-t="s" class="on">🎈 أشكال وألوان</button><button type="button" data-t="f">🏳️ أعلام الدول العربية</button></div><div class="spG"></div><div class="spF"></div></div>';
+    P = document.createElement('div'); P.id = 'spnShop'; P.innerHTML = '<div class="spC"><div class="spH"><canvas width="104" height="104"></canvas><div><b>محل بالونات سبيناغ</b><small>اختار بالونك ويطير وياك 🎈 — العملات من الصيد 🎣</small></div><span class="spCo"></span><button type="button" class="spX">✕</button></div><div class="spT"><button type="button" data-t="s" class="on">🎈 أشكال</button><button type="button" data-t="v">✨ مميزة</button><button type="button" data-t="f">🏳️ أعلام الدول العربية 🎁</button></div><div class="spG"></div><div class="spF"></div></div>';
     P.addEventListener('pointerdown', e => { if (e.target === P) rmSpnClose(); }); P.querySelector('.spX').onclick = rmSpnClose;
-    P.querySelectorAll('.spT button').forEach(b => b.onclick = () => { RM.spnTab = b.dataset.t; rmSpnShopRender(); try { sfx('click'); } catch (e) {} });
+    P.querySelectorAll('.spT button').forEach(b => b.onclick = () => { RM.spnTab = b.dataset.t; rmSpnShopRender(); if (b.dataset.t === 'v') rmSpnSay('البالونات المميزة تحتاج عملات، روح اصطاد سمك وبيعه وارجعلي 🎣✨', 220); if (b.dataset.t === 'f') rmSpnSay('بالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 220); try { sfx('click'); } catch (e) {} });
     $('rmBox').appendChild(P);
   }
   P.hidden = false; P.style.display = ''; const hc = P.querySelector('.spH canvas').getContext('2d'); hc.setTransform(2, 0, 0, 2, 0, 0); hc.clearRect(0, 0, 52, 52); rmSpnDraw(hc, 26, 100, 0.62, false);
-  rmSpnShopRender(); rmSpnSay('تفضل، كل البالونات كدامك 😄', 160);
+  rmSpnShopRender(); rmSpnSay('تفضل، كل البالونات كدامك 😄 وبالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 240);
 }
 function rmSpnClose() { const P = $('spnShop'); if (P) P.style.display = 'none'; }
 function rmSpnShopRender() {
   const P = $('spnShop'); if (!P || P.style.display === 'none') return; const tab = RM.spnTab || 's', adm = !!(auth && auth.admin) || RM.myAdm, mine = RM.me.bal || '';
-  P.querySelectorAll('.spT button').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); P.querySelector('.spCo').textContent = auth ? '🪙 ' + (auth.coins || 0) : 'ضيف';
+  P.querySelectorAll('.spT button').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); P.querySelector('.spCo').textContent = auth ? '🪙 ' + coinTxt() : 'ضيف';
   const G = P.querySelector('.spG'); G.innerHTML = '';
-  RM_BAL.filter(b => tab === 'f' ? b.f : !b.f).forEach(b => {
+  RM_BAL.filter(b => tab === 'f' ? b.f : tab === 'v' ? !b.f && b.p >= 30 : !b.f && b.p < 30).forEach(b => {
     const it = document.createElement('button'); it.type = 'button'; it.className = 'spI' + (mine === b.k ? ' on' : ''); const cv = document.createElement('canvas'); cv.width = 108; cv.height = 132; it.appendChild(cv);
-    const nm = document.createElement('span'); nm.textContent = b.n; it.appendChild(nm); const pr = document.createElement('i'); pr.textContent = adm ? 'مجاناً 👑' : '🪙 ' + b.p; it.appendChild(pr);
+    const nm = document.createElement('span'); nm.textContent = b.n; it.appendChild(nm); const pr = document.createElement('i'); pr.textContent = !b.p ? '🎁 مجاناً' : adm ? 'مجاناً 👑' : '🪙 ' + b.p; it.appendChild(pr);
     const g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); rmStr(g, 27, 40, 27, 64, 3); rmBal(g, 27, 26, b, 17);
     it.onclick = () => rmBalBuy(b); G.appendChild(it);
   });
@@ -8232,9 +8341,9 @@ function rmSpnShopRender() {
   if (mine) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '🪁 فلّت البالون'; b.onclick = () => { rmSend({ t: 'rm_bal', k: '' }); }; F.appendChild(b); }
 }
 function rmBalBuy(b) {
-  if (!auth) { showToast('🔐 سجّل حساب حتى تشتري بالون 🎈'); rmSpnSay('سجّل حساب أول وتعال أنطيك أحلى بالون 😉', 180); return; }
+  if (!auth && b.p) { showToast('🔐 سجّل حساب حتى تشتري بالون 🎈'); rmSpnSay('سجّل حساب أول وتعال أنطيك أحلى بالون 😉', 180); return; }
   if (RM.me.bal === b.k) { showToast('🎈 هذا البالون معك هسه'); return; }
-  const adm = !!auth.admin || RM.myAdm; if (!adm && (auth.coins || 0) < b.p) { showToast('🪙 عملاتك ما تكفي، تحتاج ' + b.p); rmSpnSay('عملاتك ما تكفي حبيبي، العب شوية وارجعلي 💪', 180); return; }
+  const adm = !!(auth && auth.admin) || RM.myAdm; if (!adm && b.p && (auth.coins || 0) < b.p) { showToast('🪙 عملاتك ما تكفي، تحتاج ' + b.p); rmSpnSay('عملاتك ما تكفي حبيبي، العب شوية وارجعلي 💪', 180); return; }
   if (RM.balT && performance.now() - RM.balT < 800) return; RM.balT = performance.now(); rmSend({ t: 'rm_bal', k: b.k });
 }
 function rmBalOk(d) {
@@ -8279,12 +8388,12 @@ var rmPrKey = '';
 function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
-  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '') + (rmNearFer() ? 'F' : '') + (rmNearCar() ? 'C' : '') + (rmNearPho() ? 'P' : '') + (rmInPool(m) ? 'W' : '') + (rmRideOf(m) ? 'R' + m.dance : '') + (rmNearShop() ? 'B' : '') + (rmInShop() ? 'b' + (rmNearSpn() ? 1 : 0) + (rmNearShopExit() ? 1 : 0) : '');
+  const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (RM.fish.bag.n || 0) + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '') + (rmNearFer() ? 'F' : '') + (rmNearCar() ? 'C' : '') + (rmNearPho() ? 'P' : '') + (rmInPool(m) ? 'W' : '') + (rmRideOf(m) ? 'R' + m.dance : '') + (rmNearShop() ? 'B' : '') + (rmInShop() ? 'b' + (rmNearSpn() ? 1 : 0) + (rmNearShopExit() ? 1 : 0) : '');
   if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (RM.holds[rmMe()]) mk('✋ فلت الإيد', () => rmSend({ t: 'rm_hold', on: 0 }));
   if (m.sit || (m.goal && m.jump)) { if (m.sit) { mk('🧍 قيام', () => rmStand()); if (m.seat && m.seat.seat && m.seat.seat.kind === 'stool') mk('🛎️ اطلب من جربوع', rmOrderMenu); } return; }   // كراسي البار الحمر: تطلب وجربوع يجيبه لمكانك
-  if (!near) { if (m.jump || m.goal) return; if (rmInShop()) { if (rmNearSpn()) mk('🎈 اشتري بالون من سبيناغ', rmSpnOpen); if (rmNearShopExit()) mk('🚪 اطلع من المحل', rmShopExit); return; } if (rmNearShop()) mk('🎈 ادخل محل البالونات', rmShopEnter); if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (rmRideOf(m)) { mk('🚪 انزل من اللعبة', () => { rmSetDance(0); rmPrompt(true); }); return; } if (rmNearFer()) mk('🎡 اركب دولاب الهوا', () => rmRideBoard('fer')); if (rmNearCar()) mk('🎠 اركب الدوّارة', () => rmRideBoard('car')); if (rmNearPho()) mk('📸 التقط صورة', rmPhotoTake); if (rmInPool(m)) mk('💦 رش مي', () => { for (let i = 0; i < 16; i++) RM.sparks.push({ x: m.x + m.dir * 10, y: m.y - 30, vx: m.dir * (1 + Math.random() * 2), vy: -1.5 - Math.random() * 1.5, t: 26, drop: 1 }); rmSend({ t: 'rm_react', e: '🐟' }); }); if (RM.fish.st === 'bite') mk('🎣 اسحب الآن!', rmFishPull); else if (RM.fish.st === 'wait') mk('⏹ وقف الصيد', rmFishStop); else if (m.y < 262) mk('🎣 صيد', rmFishStart);  return; }
+  if (!near) { if (m.jump || m.goal) return; if (rmInShop()) { if (rmNearSpn()) mk('🎈 اشتري بالون من سبيناغ', rmSpnOpen); if (rmNearShopExit()) mk('🚪 اطلع من المحل', rmShopExit); return; } if (rmNearShop()) mk('🎈 ادخل محل البالونات', rmShopEnter); if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (rmRideOf(m)) { mk('🚪 انزل من اللعبة', () => { rmSetDance(0); rmPrompt(true); }); return; } if (rmNearFer()) mk('🎡 اركب دولاب الهوا', () => rmRideBoard('fer')); if (rmNearCar()) mk('🎠 اركب الدوّارة', () => rmRideBoard('car')); if (rmNearPho()) mk('📸 التقط صورة', rmPhotoTake); if (rmInPool(m)) mk('💦 رش مي', () => { for (let i = 0; i < 16; i++) RM.sparks.push({ x: m.x + m.dir * 10, y: m.y - 30, vx: m.dir * (1 + Math.random() * 2), vy: -1.5 - Math.random() * 1.5, t: 26, drop: 1 }); rmSend({ t: 'rm_react', e: '🐟' }); }); const FS = RM.fish.st; if (FS === 'bite') mk('❗ اسحب الآن!', rmFishPull); else if (FS === 'wait' || FS === 'cast') mk('⏹ وقف الصيد', rmFishStop); else if (FS === 'idle' && m.y < 262) mk('🎣 ارمِ السنارة', rmFishStart); if (FS !== 'reel' && (m.y < 262 || FS !== 'idle')) mk('🧺 مخزن السمك ' + (RM.fish.bag.n || 0) + '/' + RM_BAGN, rmBagOpen);  return; }
   if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
@@ -8295,7 +8404,7 @@ function rmOnMsg(d) {
   if (T === 'rm_state') {
     RM.LT = d.lt || null; RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
     (d.members || []).forEach(x => { if (x.n === rmMe()) return; RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, bal: x.bal || '', hid: !!x.hid, dt: 0, ph: 0 }; });
-    if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; RM.camSnap = 1; } RM.me.bal = d.myBal || ''; RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
+    if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; RM.camSnap = 1; } RM.me.bal = d.myBal || ''; RM.fish.bag = d.myFish || { n: 0, k: {} }; if (!RM.fish.bag.k) RM.fish.bag.k = {}; RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
     RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; rmMuteSet(d.mutedMin ? Date.now() + d.mutedMin * 60000 : 0); RM.vipCnt = d.vipCnt || 0; RM.repCnt = d.repCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); rmRepBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true);
   } else if (T === 'rm_join') { if (d.m.n === rmMe()) return; if (!d.m.hid) rmJoinBanner(d.m.n); if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, bal: d.m.bal || '', dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; if (RM.pair && RM.pair.with === d.n) rmPairEnd(); rmRenderMem(); rmPrompt(true); }
@@ -8329,6 +8438,8 @@ function rmOnMsg(d) {
   else if (T === 'rm_hid') { if (d.n === rmMe()) RM.me.hid = !!d.on; else { const o = RM.others[d.n]; if (o) o.hid = !!d.on; } rmHidUpd(); rmRenderMem(); }
   else if (T === 'rm_bal') { const o = RM.others[d.n]; if (o) o.bal = d.k || ''; }
   else if (T === 'rm_bal_ok') rmBalOk(d);
+  else if (T === 'rm_fish_ok') rmFishOk(d);
+  else if (T === 'rm_fish_err') showToast('⛔ ' + (d.error || ''));
   else if (T === 'rm_bal_err') { showToast('⛔ ' + (d.error || '')); rmSpnSay(d.error || '', 160); }
   else if (T === 'rm_umb') { const o = RM.others[d.n]; if (o) o.umbOn = d.on !== 0; }
   else if (T === 'rm_kiss') { rmKissFx(d.from, d.to); }
