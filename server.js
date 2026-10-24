@@ -1798,11 +1798,12 @@ function rmOnMsg(ws, d) {
     if (ws.rm && ws.rm.id === r.id) rmLeave(ws); else rmLeave(ws);
     const distinct = new Set([...r.mem].map(w => w.key)); if (!distinct.has(ws.key) && distinct.size >= (r.cap || RM_CAP)) return send(ws, { t: 'rm_err', fatal: true, error: 'الغرفة ممتلئة (' + (r.cap || RM_CAP) + ' شخص)' });
     // رجوع بعد الخروج للتطبيقات: نشيل الاتصال القديم لنفس الحساب حتى ما تصير الشخصية مستنسخة، ونرجّعه لنفس مكانه
+    if (!ws.guest && me.rmBal && RM_BAL_P[me.rmBal]) { if (!Array.isArray(me.rmBals)) me.rmBals = []; if (!me.rmBals.includes(me.rmBal)) me.rmBals.push(me.rmBal); }
     const first = ![...r.mem].some(w => w.key === ws.key); let prev = null;
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
     ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0, bal: prev ? (prev.bal || '') : ((!ws.guest && me.rmBal) || '') }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myFish: ws.guest ? null : (me.fish || null), myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myBals: ws.guest ? [] : (Array.isArray(me.rmBals) ? me.rmBals : []), myFish: ws.guest ? null : (me.fish || null), myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1816,7 +1817,7 @@ function rmOnMsg(ws, d) {
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
     const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.x = Math.max(0, Math.min(2440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    h.x = Math.max(0, Math.min(3440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmBcV(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
@@ -1958,12 +1959,18 @@ function rmOnMsg(ws, d) {
     let left = 15; for (let i = 0; i <= 7 && left; i++) { const c = Math.min(left, B.k[i] || 0); if (c) { B.k[i] -= c; left -= c; if (!B.k[i]) delete B.k[i]; } }
     B.n -= 15; me.fish = B; me.coins = (me.coins || 0) + 2; if (me.admin && me.coins < 9999999) me.coins = 9999999; save();
     send(ws, { t: 'rm_fish_ok', bag: B, sold: 15, got: 2, coins: me.coins });
-  } else if (d.t === 'rm_bal') {   // بالونات محل سبيناغ
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bt || 0) < 700) return; h.bt = now; const k = String(d.k || '').slice(0, 12);
+  } else if (d.t === 'rm_bal_buy') {   // شراء بالون من محل سبيناغ (ينحفظ بأغراض اللاعب)
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bbt || 0) < 800) return; h.bbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_BAL_P[k]) return;
+    if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' });
+    const own = Array.isArray(me.rmBals) ? me.rmBals : (me.rmBals = []);
+    if (!own.includes(k) && !me.admin) { const p = RM_BAL_P[k]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
+    if (!own.includes(k)) own.push(k); save(); send(ws, { t: 'rm_bal_bought', k, owned: own, coins: me.coins || 0 });
+  } else if (d.t === 'rm_bal') {   // حمل / عدم حمل بالون
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bt || 0) < 500) return; h.bt = now; const k = String(d.k || '').slice(0, 12);
     if (k && !(k in RM_BAL_P)) return;
-    if (k && RM_BAL_P[k]) { if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' }); const p = me.admin ? 0 : RM_BAL_P[k]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
+    if (k && RM_BAL_P[k] && !me.admin && !(Array.isArray(me.rmBals) && me.rmBals.includes(k))) return send(ws, { t: 'rm_bal_err', error: 'لازم تشتري هذا البالون أول 🛒' });
     h.bal = k; if (!ws.guest) { me.rmBal = k; save(); }
-    send(ws, { t: 'rm_bal_ok', k, coins: ws.guest ? 0 : (me.coins || 0) }); const bm = { t: 'rm_bal', n: rmNm(ws), k }; if (h.hid) rmBcV(r, bm, ws); else rmBc(r, bm, ws);
+    send(ws, { t: 'rm_bal_ok', k }); const bm = { t: 'rm_bal', n: rmNm(ws), k }; if (h.hid) rmBcV(r, bm, ws); else rmBc(r, bm, ws);
   } else if (d.t === 'rm_umb') {   // شمسية المطر
     const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
