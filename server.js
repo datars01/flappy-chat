@@ -1739,7 +1739,7 @@ function avClean(a, adm) {
     o: (typeof a.o === 'string' && /^[fm]_[a-z]{3}[0-9]{1,2}$/.test(a.o) && a.o[0] === g) ? a.o : '' };
 }
 function avClean2(a, adm) { const v = avClean(a); if (!v) return v; if (!adm) { if (AV_ADMHS.includes(v.hs)) v.hs = 'short'; if (AV_ADMHC.includes(v.hc)) v.hc = 'brown'; if (v.ey > 13) v.ey = 0; v.wg = 0; v.cr = 0; if (v.o.slice(2, 5) === 'adm') v.o = ''; } return v; }
-function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
+function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, bal: (w.rm && w.rm.bal) || '', hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
   if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws), hp = ws.rm.hold || ws.rm.heldBy; ws.rm = null; if (!r) return;
   if (hp) { for (const w of r.mem) if (w.rm && rmNm(w) === hp) { w.rm.hold = w.rm.heldBy = null; } rmBc(r, { t: 'rm_hold', a: nm, b: hp, on: 0 }); }
@@ -1784,6 +1784,8 @@ app.post('/api/rooms/close', authMw, (req, res) => {
   if (!rmIsOwner(r, req.key)) return res.status(403).json({ error: 'بس صاحب الغرفة' });
   rmCloseRoom(r); res.json({ ok: true });
 });
+const RM_BAL_P = { red: 10, blue: 10, green: 10, purple: 10, heart: 20, star: 20, smile: 20, moon: 20, cat: 20, bear: 20, rainbow: 30, crown: 30, gold: 30, diamond: 30 };
+['iq', 'sa', 'eg', 'sy', 'jo', 'lb', 'ps', 'kw', 'ae', 'qa', 'bh', 'om', 'ye', 'ly', 'tn', 'dz', 'ma', 'mr', 'sd', 'so', 'dj', 'km'].forEach(f => { RM_BAL_P['f_' + f] = 15; });
 function rmOnMsg(ws, d) {
   const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'rm_join') {
@@ -1798,9 +1800,9 @@ function rmOnMsg(ws, d) {
     // رجوع بعد الخروج للتطبيقات: نشيل الاتصال القديم لنفس الحساب حتى ما تصير الشخصية مستنسخة، ونرجّعه لنفس مكانه
     const first = ![...r.mem].some(w => w.key === ws.key); let prev = null;
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
-    ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0 }; if (prev && prev.hid) ws.rm.hid = prev.hid;
+    ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0, bal: prev ? (prev.bal || '') : ((!ws.guest && me.rmBal) || '') }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1814,7 +1816,7 @@ function rmOnMsg(ws, d) {
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
     const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.x = Math.max(0, Math.min(1200, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    h.x = Math.max(0, Math.min(2440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmBcV(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
@@ -1946,6 +1948,12 @@ function rmOnMsg(ws, d) {
     const h = ws.rm; if (!h) return; const r = rmRooms.get(h.id); if (!r) return; if (!rmIsOwner(r, ws.key)) return send(ws, { t: 'rm_err', error: 'هذا الخيار للمشرفين فقط' });
     h.hid = d.on ? 1 : 0; const nm = rmNm(ws), pj = JSON.stringify(h.hid ? { t: 'rm_leave', n: nm } : { t: 'rm_join', m: rmPubM(ws) }), hj = JSON.stringify({ t: 'rm_hid', n: nm, on: h.hid });
     for (const w of r.mem) if (w.readyState === 1 && w !== ws) w.send(rmStaff(r, w) ? hj : pj); ws.send(hj);
+  } else if (d.t === 'rm_bal') {   // بالونات محل سبيناغ
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bt || 0) < 700) return; h.bt = now; const k = String(d.k || '').slice(0, 12);
+    if (k && !RM_BAL_P[k]) return;
+    if (k) { if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' }); const p = me.admin ? 0 : RM_BAL_P[k]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
+    h.bal = k; if (!ws.guest) { me.rmBal = k; save(); }
+    send(ws, { t: 'rm_bal_ok', k, coins: ws.guest ? 0 : (me.coins || 0) }); const bm = { t: 'rm_bal', n: rmNm(ws), k }; if (h.hid) rmBcV(r, bm, ws); else rmBc(r, bm, ws);
   } else if (d.t === 'rm_umb') {   // شمسية المطر
     const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
