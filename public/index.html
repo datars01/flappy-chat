@@ -7013,7 +7013,7 @@ function rmPlotDraw(c, P) {
   const bl = Math.floor(T / 30) % 2; c.fillStyle = bl ? '#ff3b30' : '#7a1c17'; c.beginPath(); c.arc(sx + sw - 10, sy - 4, 4, 0, 7); c.fill(); if (bl) { c.fillStyle = 'rgba(255,60,50,.3)'; c.beginPath(); c.arc(sx + sw - 10, sy - 4, 10, 0, 7); c.fill(); }
 }
 /* ---- لافتة قناة التلي (يسار محل سبيناغ) ---- */
-const RM_TG = { x: 1410, y: 562, url: 'https://t.me/flappychats' };
+const RM_TG = { x: 1361, y: 784, url: 'https://t.me/flappychats' };
 function rmTgDraw(c) {
   const x = RM_TG.x, Y = RM_TG.y, T = RM.T, w = 168, h = 112, sx = x - w / 2, sy = Y - 112 - h, pulse = 0.5 + 0.5 * Math.sin(T / 18);
   c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, Y + 2, 70, 7, 0, 0, 7); c.fill();
