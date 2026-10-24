@@ -8341,6 +8341,29 @@ function rmShopEnter() {
 }
 function rmShopExit() { const m = RM.me; if (m.jump) return; RM.tapMk = null; RM.hold = false; m.x = m.tx = RM_SHOP.x; m.y = m.ty = RM_SHOP.y + 24; m.dir = 1; RM.sent = ''; RM.camSnap = 1; rmShopBell(); rmSpnClose(); showToast(RM.me.bal ? '🎈 طلعت وبالونك وياك! كل المنتجع يشوفه' : '👋 طلعت من المحل'); rmPrompt(true); }
 
+/* ---- موسيقى حماسية داخل محل سبيناغ (تتولّد بالمتصفح، بدون ملفات) ---- */
+const RM_SM = { on: false, timer: 0, step: 0, next: 0, loop: 0, g: null, noise: null };
+const SM_BPM = 128, SM_ST = 60 / SM_BPM / 4, SM_CH = [[60, 64, 67], [59, 62, 67], [57, 60, 64], [57, 60, 65]], SM_BS = [36, 43, 45, 41];
+const SM_MEL = [72, 0, 76, 0, 79, 0, 76, 74, 72, 0, 74, 76, 0, 0, 72, 0, 74, 0, 79, 0, 83, 0, 79, 77, 74, 0, 76, 77, 0, 79, 0, 0, 76, 0, 81, 0, 84, 0, 81, 79, 76, 0, 79, 81, 0, 0, 76, 0, 77, 0, 81, 79, 77, 0, 76, 74, 72, 0, 74, 0, 76, 0, 79, 0];
+function smHz(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+function smNote(type, n, t, dur, vol, cut) { const o = actx.createOscillator(), g = actx.createGain(); let out = g; o.type = type; o.frequency.setValueAtTime(smHz(n), t); if (cut) { const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(cut, t); f.frequency.exponentialRampToValueAtTime(Math.max(200, cut * 0.35), t + dur); o.connect(f); f.connect(g); } else o.connect(g); g.connect(RM_SM.g); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.start(t); o.stop(t + dur + 0.02); return out; }
+function smNoise(t, dur, vol, hp) { if (!RM_SM.noise) { const b = actx.createBuffer(1, actx.sampleRate * 0.5, actx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; RM_SM.noise = b; } const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(); s.buffer = RM_SM.noise; f.type = 'highpass'; f.frequency.value = hp; s.connect(f); f.connect(g); g.connect(RM_SM.g); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.start(t); s.stop(t + dur + 0.02); }
+function smKick(t) { const o = actx.createOscillator(), g = actx.createGain(); o.connect(g); g.connect(RM_SM.g); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14); g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.start(t); o.stop(t + 0.25); }
+function smStep(i, t) {
+  const st = i % 16, bar = Math.floor(i / 16) % 4, ch = SM_CH[bar], lp = RM_SM.loop;
+  if (st % 4 === 0) smKick(t); if (st === 4 || st === 12) { smNoise(t, 0.16, 0.22, 1400); smNote('triangle', 50, t, 0.08, 0.12); } if (st % 2 === 1) smNoise(t, 0.04, st % 4 === 3 ? 0.09 : 0.05, 7000);
+  if ([0, 3, 6, 8, 11, 14].includes(st)) smNote('square', SM_BS[bar] + (st === 6 || st === 14 ? 12 : 0), t, SM_ST * 1.6, 0.09, 900);
+  if (st % 4 === 2) ch.forEach(n => smNote('sawtooth', n, t, SM_ST * 1.4, 0.03, 2600));
+  const m = SM_MEL[i % 64]; if (m) { smNote('square', m, t, SM_ST * 1.8, 0.045, 3200); smNote('triangle', m + 12, t, SM_ST * 1.2, 0.02); }
+  if (lp % 2 === 1 && st % 2 === 0) smNote('sine', ch[(st / 2) % 3] + 24, t, SM_ST * 1.1, 0.025);   // لمعات جرس بكل دورة ثانية
+}
+function smTick() { if (!RM_SM.on || !actx) return; if (document.hidden) { RM_SM.next = actx.currentTime + 0.08; return; } while (RM_SM.next < actx.currentTime + 0.18) { smStep(RM_SM.step, RM_SM.next); RM_SM.next += SM_ST; RM_SM.step++; if (RM_SM.step % 64 === 0) RM_SM.loop++; } }
+function rmShopMusic(on) {
+  if (on === RM_SM.on) return; RM_SM.on = on;
+  if (on) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { RM_SM.on = false; return; }
+    const g = actx.createGain(); g.gain.setValueAtTime(0.0001, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.75, actx.currentTime + 1.2); g.connect(actx.destination); RM_SM.g = g; RM_SM.step = 0; RM_SM.loop = 0; RM_SM.next = actx.currentTime + 0.08; clearInterval(RM_SM.timer); RM_SM.timer = setInterval(smTick, 40); }
+  else { clearInterval(RM_SM.timer); const g = RM_SM.g; RM_SM.g = null; if (g && actx) { try { g.gain.cancelScheduledValues(actx.currentTime); g.gain.setValueAtTime(g.gain.value || 0.5, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.6); setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 800); } catch (e) {} } }
+}
 /* ---- داخل المحل ---- */
 function rmShopBg(c) {
   const X0 = RM_SHI.vx0, X1 = RM_SHI.vx1, W = X1 - X0, T = RM.T;
@@ -8476,6 +8499,7 @@ function rmDraw() {
   if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
   $('rmBox').classList.toggle('rmTiny', bh < 250); RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = rmInShop() ? '#2a1530' : '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; rmWxStep(); try { rmPairTick(); rmHoldTick(); } catch (e) {} const m = RM.me, st = rmUpdMe(), SH = rmInShop();
+  rmShopMusic(SH && !RM.ambMute);
   const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / RMW, bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (!RM.z || RM.camSnap) RM.z = RM.zt;
   RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
   const B = SH ? [RM_SHI.vx0, RM_SHI.vx1, RM_SHI.vy0, RM_SHI.vy1] : [0, RMW, 0, RMH], BW = B[1] - B[0], BH = B[3] - B[2];
@@ -8495,7 +8519,7 @@ function rmDraw() {
   if (RM.T % 8 === 0) rmKissUpd();
 }
 function rmLoop() {
-  if (curPage !== 'rooms' || !RM.on) { RM.raf = 0; if (RM.on) rmLeaveRoom(true); return; }
+  if (curPage !== 'rooms' || !RM.on) { RM.raf = 0; rmShopMusic(false); if (RM.on) rmLeaveRoom(true); return; }
   try { rmDraw(); } catch (e) {} try { rmGameTick(); } catch (e) {} try { rmFishTick(); } catch (e) {} RM.raf = requestAnimationFrame(rmLoop);
 }
 function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return K; }
