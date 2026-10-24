@@ -1739,7 +1739,7 @@ function avClean(a, adm) {
     o: (typeof a.o === 'string' && /^[fm]_[a-z]{3}[0-9]{1,2}$/.test(a.o) && a.o[0] === g) ? a.o : '' };
 }
 function avClean2(a, adm) { const v = avClean(a); if (!v) return v; if (!adm) { if (AV_ADMHS.includes(v.hs)) v.hs = 'short'; if (AV_ADMHC.includes(v.hc)) v.hc = 'brown'; if (v.ey > 13) v.ey = 0; v.wg = 0; v.cr = 0; if (v.o.slice(2, 5) === 'adm') v.o = ''; } return v; }
-function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, bal: (w.rm && w.rm.bal) || '', pet: (w.rm && w.rm.pet) || '', hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
+function rmPubM(w) { const h = w.rm; return { n: rmNm(w), skin: w.guest ? 'classic' : skinOf(w.key), x: h.x, y: h.y, dir: h.dir, sit: h.sit, own: w.key === h.owner, g: w.guest ? 1 : 0, av: w.guest ? (w.av || null) : ((db.users[w.key] && db.users[w.key].av) || null), emo: (w.rm && w.rm.emo) || 0, umb: (w.rm && w.rm.umb === 0) ? 0 : 1, bal: (w.rm && w.rm.bal) || '', pet: (w.rm && w.rm.pet) || '', wear: (w.rm && w.rm.wear) || {}, hid: (w.rm && w.rm.hid) ? 1 : 0, adm: rmAdm(w), mod: !!(rmRooms.get(h.id) && rmRooms.get(h.id).mods.has(w.key)) }; }
 function rmLeave(ws) {
   if (!ws.rm) return; const r = rmRooms.get(ws.rm.id), nm = rmNm(ws), hp = ws.rm.hold || ws.rm.heldBy; ws.rm = null; if (!r) return;
   if (hp) { for (const w of r.mem) if (w.rm && rmNm(w) === hp) { w.rm.hold = w.rm.heldBy = null; } rmBc(r, { t: 'rm_hold', a: nm, b: hp, on: 0 }); }
@@ -1787,6 +1787,8 @@ app.post('/api/rooms/close', authMw, (req, res) => {
 const RM_BAL_P = { red: 10, blue: 10, green: 10, purple: 10, heart: 20, star: 20, smile: 20, moon: 20, cat: 20, bear: 20, rainbow: 30, crown: 30, gold: 30, diamond: 30, sun: 40, panda: 40, ice: 40, fire: 40, galaxy: 50, planet: 50, disco: 50, neon: 50, heartgold: 60, stargold: 60, unicorn: 70, dragon: 70, rbsh: 80 };
 ['iq', 'sa', 'eg', 'sy', 'jo', 'lb', 'ps', 'kw', 'ae', 'qa', 'bh', 'om', 'ye', 'ly', 'tn', 'dz', 'ma', 'mr', 'sd', 'so', 'dj', 'km'].forEach(f => { RM_BAL_P['f_' + f] = 0; });   // أعلام الدول العربية مجاناً
 const RM_PET_P = {}; ['cat_b', 'cat_w', 'dog_b', 'dog_w', 'cat_o', 'dog_g', 'bunny', 'bunny_g', 'ham', 'fox', 'panda', 'chick', 'duck', 'peng', 'parrot', 'turtle'].forEach(k => { RM_PET_P[k] = 40; });   // حيوانات محل غمازة
+const RM_WEAR_P = { h_cap: ['hat', 30], h_beanie: ['hat', 30], h_party: ['hat', 30], h_cowboy: ['hat', 40], h_flower: ['hat', 40], h_chef: ['hat', 40], h_witch: ['hat', 50], h_crown: ['hat', 60], e_sun: ['eye', 30], e_nerd: ['eye', 30], e_heart: ['eye', 40], e_star: ['eye', 40], b_cape: ['back', 50], b_bat: ['back', 50], b_bfly: ['back', 60], b_angel: ['back', 60] };   // أزياء محل ربشاتي
+const rmWearClean = w => { const o = {}; if (w && typeof w === 'object') ['hat', 'eye', 'back'].forEach(sl => { const k = w[sl]; if (k && RM_WEAR_P[k] && RM_WEAR_P[k][0] === sl) o[sl] = k; }); return o; };
 function rmOnMsg(ws, d) {
   const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'rm_join') {
@@ -1802,9 +1804,9 @@ function rmOnMsg(ws, d) {
     if (!ws.guest && me.rmBal && RM_BAL_P[me.rmBal]) { if (!Array.isArray(me.rmBals)) me.rmBals = []; if (!me.rmBals.includes(me.rmBal)) me.rmBals.push(me.rmBal); }
     const first = ![...r.mem].some(w => w.key === ws.key); let prev = null;
     if (!ws.guest) for (const w of [...r.mem]) if (w !== ws && w.key === ws.key) { if (!prev && w.rm) prev = w.rm; try { gmLeave(r, w); } catch (e) {} r.mem.delete(w); w.rm = null; }
-    ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0, bal: prev ? (prev.bal || '') : ((!ws.guest && me.rmBal) || ''), pet: prev ? (prev.pet || '') : ((!ws.guest && me.rmPet) || '') }; if (prev && prev.hid) ws.rm.hid = prev.hid;
+    ws.rm = { id: r.id, owner: r.owner, x: prev ? prev.x : 380 + Math.random() * 40, y: prev ? prev.y : 300 + Math.random() * 30, dir: prev ? prev.dir : 1, sit: false, t: 0, ct: 0, bal: prev ? (prev.bal || '') : ((!ws.guest && me.rmBal) || ''), pet: prev ? (prev.pet || '') : ((!ws.guest && me.rmPet) || ''), wear: prev ? rmWearClean(prev.wear) : (ws.guest ? {} : rmWearClean(me.rmWear)) }; if (prev && prev.hid) ws.rm.hid = prev.hid;
     const members = [...r.mem].filter(w => w.readyState === 1 && w.key !== ws.key && (!(w.rm && w.rm.hid) || rmStaff(r, ws))).map(rmPubM); r.mem.add(ws); { const st = rmStat(r, now); if (first) { st.joins++; st.hrs[new Date(now + BGD).getUTCHours()]++; } st.uniq.add(ws.key); const on = new Set([...r.mem].map(w => w.key)).size; if (on > st.peak) st.peak = on; }
-    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myBals: ws.guest ? [] : (Array.isArray(me.rmBals) ? me.rmBals : []), myPet: ws.rm.pet || '', myPets: ws.guest ? [] : (Array.isArray(me.rmPets) ? me.rmPets : []), myFish: ws.guest ? null : (me.fish || null), myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
+    send(ws, { t: 'rm_state', castles: (r.castles || []).filter(c => Date.now() - c.ts < 480e3).map(c => ({ id: c.id, x: c.x, y: c.y, by: c.by, age: Math.round((Date.now() - c.ts) / 1000) })), wx: wxNow(r), gs: Object.values(r.gms || {}).filter(g => g.ph !== 'idle' || g.p[0] || g.p[1]).map(g => gmPub(r, g)), music: r.music || null, id: r.id, name: r.name, owner: db.users[r.owner] ? db.users[r.owner].name : '؟', isOwner: owner, members, log: r.log.filter(x => !x.hid || rmStaff(r, ws)).slice(-40), isMod: !!r.mods.has(ws.key), mods: rmModNames(r), bans: owner ? [...r.bans].map(k => rmBanNm(r, k)) : undefined, me: { x: ws.rm.x, y: ws.rm.y }, myBal: ws.rm.bal || '', myBals: ws.guest ? [] : (Array.isArray(me.rmBals) ? me.rmBals : []), myPet: ws.rm.pet || '', myPets: ws.guest ? [] : (Array.isArray(me.rmPets) ? me.rmPets : []), myWear: ws.rm.wear || {}, myWears: ws.guest ? [] : (Array.isArray(me.rmWears) ? me.rmWears : []), myFish: ws.guest ? null : (me.fish || null), myAv: ws.guest ? (ws.av || null) : ((db.users[ws.key] && db.users[ws.key].av) || null), myAdm: rmAdm(ws), perm: !!r.perm, cap: r.cap || RM_CAP, holds: [...r.mem].filter(w => w.rm && w.rm.hold).map(w => [rmNm(w), w.rm.hold]), myTime: (!ws.guest && me) ? rmTimeOf(me) : null, lt: LUDO.tablePub(r.id), mutedMin: rmMuted(r, ws, now), vipCnt: rmAdm(ws) ? vipReqs().length : 0, repCnt: rmAdm(ws) ? (db.reports || []).length : 0 });
     if (first) rmBc(r, { t: 'rm_join', m: rmPubM(ws) }, ws);
     if (first && alOnce('rm:' + ws.key + '>' + r.id, 30e3)) alog('🏝️', rmNm(ws) + ' دخل غرفة «' + r.name + '» بالمنتجع');
     if (first && !ws.guest && me && !(ws.rm && ws.rm.hid)) { for (const fk of flist(me, 'friends')) { if (!db.users[fk] || [...r.mem].some(w => w.key === fk)) continue; pushTo(fk, { t: 'f_update', toast: '🏝️ انضم صديقك ' + me.name + ' إلى المنتجع' }); } }
@@ -1818,7 +1820,7 @@ function rmOnMsg(ws, d) {
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
     const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.x = Math.max(0, Math.min(4440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    h.x = Math.max(0, Math.min(7440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmBcV(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
@@ -1960,6 +1962,17 @@ function rmOnMsg(ws, d) {
     let left = 15; for (let i = 0; i <= 7 && left; i++) { const c = Math.min(left, B.k[i] || 0); if (c) { B.k[i] -= c; left -= c; if (!B.k[i]) delete B.k[i]; } }
     B.n -= 15; me.fish = B; me.coins = (me.coins || 0) + 2; if (me.admin && me.coins < 9999999) me.coins = 9999999; save();
     send(ws, { t: 'rm_fish_ok', bag: B, sold: 15, got: 2, coins: me.coins });
+  } else if (d.t === 'rm_wear_buy') {   // شراء قطعة أزياء من ربشاتي
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.wbt || 0) < 800) return; h.wbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_WEAR_P[k]) return;
+    if (ws.guest) return send(ws, { t: 'rm_wear_err', error: 'سجّل حساب حتى تشتري أزياء 👗' });
+    const own = Array.isArray(me.rmWears) ? me.rmWears : (me.rmWears = []);
+    if (!own.includes(k) && !me.admin) { const p = RM_WEAR_P[k][1]; if ((me.coins || 0) < p) return send(ws, { t: 'rm_wear_err', error: 'عملاتك ما تكفي 🪙 تحتاج ' + p }); me.coins = (me.coins || 0) - p; }
+    if (!own.includes(k)) own.push(k); save(); send(ws, { t: 'rm_wear_bought', k, owned: own, coins: me.coins || 0 });
+  } else if (d.t === 'rm_wear') {   // لبس / إلغاء لبس (قطعة وحدة لكل نوع: قبعة، نظارة، أجنحة)
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.wrt || 0) < 400) return; h.wrt = now; const k = String(d.k || '').slice(0, 12), it = RM_WEAR_P[k]; if (!it) return;
+    if (!me.admin && !(Array.isArray(me.rmWears) && me.rmWears.includes(k))) return send(ws, { t: 'rm_wear_err', error: 'لازم تشتري هذي القطعة أول 🛒' });
+    const W = rmWearClean(h.wear); if (d.on) W[it[0]] = k; else if (W[it[0]] === k) delete W[it[0]]; h.wear = W; if (!ws.guest) { me.rmWear = W; save(); }
+    send(ws, { t: 'rm_wear_ok', k, wear: W }); const wm = { t: 'rm_wear', n: rmNm(ws), wear: W }; if (h.hid) rmBcV(r, wm, ws); else rmBc(r, wm, ws);
   } else if (d.t === 'rm_pet_buy') {   // شراء حيوان من محل غمازة (40 عملة، ينحفظ بالأغراض)
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.pbt || 0) < 800) return; h.pbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_PET_P[k]) return;
     if (ws.guest) return send(ws, { t: 'rm_pet_err', error: 'سجّل حساب حتى تشتري حيوان 🐾' });
