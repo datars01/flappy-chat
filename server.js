@@ -1834,7 +1834,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_pos') {
     // ما نرمي أي تحديث: نحفظ آخر مكان دائماً، والبث يصير مجمّع كل 100ms (أخف بهواية وما يضيع آخر مكان)
     const h = ws.rm; if (!h) return; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return; if (d.b) ws.posB = 1;
-    const wasSit = h.sit; h.x = Math.max(0, Math.min(8440, x));   // 8000-8440 = داخل محل «روح للحقائب» h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    const wasSit = h.sit; h.x = Math.max(0, Math.min(8440, x)); /* 8000-8440 = داخل محل «روح للحقائب» */ h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && !wasSit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmPosQ(r, ws, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit });
