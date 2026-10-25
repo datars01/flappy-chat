@@ -1798,8 +1798,16 @@ app.post('/api/rooms/close', authMw, (req, res) => {
 const RM_BAL_P = { red: 10, blue: 10, green: 10, purple: 10, heart: 20, star: 20, smile: 20, moon: 20, cat: 20, bear: 20, rainbow: 30, crown: 30, gold: 30, diamond: 30, sun: 40, panda: 40, ice: 40, fire: 40, galaxy: 50, planet: 50, disco: 50, neon: 50, heartgold: 60, stargold: 60, unicorn: 70, dragon: 70, rbsh: 80 };
 ['iq', 'sa', 'eg', 'sy', 'jo', 'lb', 'ps', 'kw', 'ae', 'qa', 'bh', 'om', 'ye', 'ly', 'tn', 'dz', 'ma', 'mr', 'sd', 'so', 'dj', 'km'].forEach(f => { RM_BAL_P['f_' + f] = 0; });   // أعلام الدول العربية مجاناً
 const RM_PET_P = {}; ['cat_b', 'cat_w', 'dog_b', 'dog_w', 'cat_o', 'dog_g', 'bunny', 'bunny_g', 'ham', 'fox', 'panda', 'chick', 'duck', 'peng', 'parrot', 'turtle'].forEach(k => { RM_PET_P[k] = 40; });   // حيوانات محل غمازة
-const RM_WEAR_P = { h_cap: ['hat', 30], h_beanie: ['hat', 30], h_party: ['hat', 30], h_cowboy: ['hat', 40], h_flower: ['hat', 40], h_chef: ['hat', 40], h_witch: ['hat', 50], h_crown: ['hat', 60], e_sun: ['eye', 30], e_nerd: ['eye', 30], e_heart: ['eye', 40], e_star: ['eye', 40], b_cape: ['back', 50], b_bat: ['back', 50], b_bfly: ['back', 60], b_angel: ['back', 60], h_bunny: ['hat', 35], h_catears: ['hat', 35], h_devil: ['hat', 35], h_bow: ['hat', 35], h_phones: ['hat', 45], h_santa: ['hat', 45], h_grad: ['hat', 50], h_top: ['hat', 55], e_3d: ['eye', 35], e_rainbow: ['eye', 45], e_ski: ['eye', 45], e_mono: ['eye', 50], b_rcape: ['back', 60], b_jet: ['back', 65], b_fairy: ['back', 70], b_dragon: ['back', 70], n_bow: ['neck', 30], n_scarf: ['neck', 35], n_medal: ['neck', 45], n_heart: ['neck', 55], g_cherry: ['bag', 35], g_straw: ['bag', 35], g_heart: ['bag', 40], g_star: ['bag', 40], g_bow: ['bag', 45], g_bunny: ['bag', 45], g_cloud: ['bag', 45], g_pink: ['bag', 50], g_cat: ['bag', 50], g_bear: ['bag', 55], g_pearl: ['bag', 60], g_lux: ['bag', 80] };   // أزياء محل ربشاتي + حقائب محل «روح للحقائب» 👜
-const rmWearClean = w => { const o = {}; if (w && typeof w === 'object') ['hat', 'eye', 'back', 'neck', 'bag'].forEach(sl => { const k = w[sl]; if (k && RM_WEAR_P[k] && RM_WEAR_P[k][0] === sl) o[sl] = k; }); return o; };
+const RM_WEAR_P = { h_cap: ['hat', 30], h_beanie: ['hat', 30], h_party: ['hat', 30], h_cowboy: ['hat', 40], h_flower: ['hat', 40], h_chef: ['hat', 40], h_witch: ['hat', 50], h_crown: ['hat', 60], e_sun: ['eye', 30], e_nerd: ['eye', 30], e_heart: ['eye', 40], e_star: ['eye', 40], b_cape: ['back', 50], b_bat: ['back', 50], b_bfly: ['back', 60], b_angel: ['back', 60], h_bunny: ['hat', 35], h_catears: ['hat', 35], h_devil: ['hat', 35], h_bow: ['hat', 35], h_phones: ['hat', 45], h_santa: ['hat', 45], h_grad: ['hat', 50], h_top: ['hat', 55], e_3d: ['eye', 35], e_rainbow: ['eye', 45], e_ski: ['eye', 45], e_mono: ['eye', 50], b_rcape: ['back', 60], b_jet: ['back', 65], b_fairy: ['back', 70], b_dragon: ['back', 70], n_bow: ['neck', 30], n_scarf: ['neck', 35], n_medal: ['neck', 45], n_heart: ['neck', 55], g_cherry: ['bag', 35], g_straw: ['bag', 35], g_heart: ['bag', 40], g_star: ['bag', 40], g_bow: ['bag', 45], g_bunny: ['bag', 45], g_cloud: ['bag', 45], g_pink: ['bag', 50], g_cat: ['bag', 50], g_bear: ['bag', 55], g_pearl: ['bag', 60], g_lux: ['bag', 80], g_bfly: ['bag', 45], g_berry: ['bag', 40], g_moon: ['bag', 50], g_sunf: ['bag', 45], g_rainb: ['bag', 55], g_icecr: ['bag', 45], g_panda: ['bag', 55], g_diam: ['bag', 90], g_shell: ['bag', 50], g_donut: ['bag', 40], s_bride: ['sl', 60], s_holly: ['sl', 55], s_korea: ['sl', 50], s_smoky: ['sl', 55], s_sunset: ['sl', 50], s_ocean: ['sl', 60], s_royal: ['sl', 75], s_doll: ['sl', 50], f_gems: ['fa', 35], f_hearts: ['fa', 30], f_stars: ['fa', 30], f_freck: ['fa', 25], f_bfly: ['fa', 40], f_moon: ['fa', 35] };   // أزياء محل ربشاتي + حقائب محل «روح للحقائب» 👜
+const rmWearClean = w => { const o = {}; if (w && typeof w === 'object') ['hat', 'eye', 'back', 'neck', 'bag', 'sl', 'fa'].forEach(sl => { const k = w[sl]; if (k && RM_WEAR_P[k] && RM_WEAR_P[k][0] === sl) o[sl] = k; }); return o; };
+
+/* ===== فندق «بابيت» 🏨 — 30 غرفة: 101-110 لشخص (يومين)، 201-210 لشخصين (يومين)، 301-310 لـ3 أشخاص (أسبوع) ===== */
+const HT_T = { 1: { p: 25, d: 2, n: 1, i0: 0 }, 2: { p: 40, d: 2, n: 2, i0: 10 }, 3: { p: 90, d: 7, n: 3, i0: 20 } };
+function htDb() { if (!db.hotel || typeof db.hotel !== 'object') db.hotel = { r: {} }; if (!db.hotel.r) db.hotel.r = {}; return db.hotel; }
+const htNo = i => (Math.floor(i / 10) + 1) * 100 + (i % 10) + 1;
+function htUser(n) { const k = String(n || '').trim().toLowerCase(); const u = own(db.users, k) ? db.users[k] : null; return u ? u.name : null; }
+function htCanEnter(me, i) { if (!me) return false; if (me.admin) return true; if (!(i >= 0 && i < 30)) return false; const R = htDb().r[i]; return !!R && R.until > Date.now() && (R.by === me.name || (R.mates || []).includes(me.name)); }
+function htMemAll() { const out = []; try { for (const r of rmRooms.values()) for (const w of r.mem) out.push(w); } catch (e) {} return out; }
 const rmUsdOf = u => u && u.admin ? 9999999 : ((u && u.rmUsd) || 0);   // دولار المنتجع 💵
 function rmOnMsg(ws, d) {
   const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
@@ -1834,7 +1842,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_pos') {
     // ما نرمي أي تحديث: نحفظ آخر مكان دائماً، والبث يصير مجمّع كل 100ms (أخف بهواية وما يضيع آخر مكان)
     const h = ws.rm; if (!h) return; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return; if (d.b) ws.posB = 1;
-    const wasSit = h.sit; h.x = Math.max(0, Math.min(8440, x)); /* 8000-8440 = داخل محل «روح للحقائب» */ h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    const wasSit = h.sit; const nx = Math.max(-1400, Math.min(40000, x)); if (nx >= 10900 && !htCanEnter(me, Math.floor((nx - 10950) / 700))) return; h.x = nx; /* -1400..4760 المنتجع، 5000-8440 المحلات، 9000 صالون ملاذ، 10000 لوبي فندق بابيت، 11000+ غرف الفندق */ h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && !wasSit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmPosQ(r, ws, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit });
@@ -1871,7 +1879,7 @@ function rmOnMsg(ws, d) {
     const tw = [...r.mem].find(w => w !== ws && w.readyState === 1 && rmNm(w) === String(d.n || '')); if (!tw || (tw.rm && tw.rm.hid && !rmStaff(r, ws))) return send(ws, { t: 'rm_ok', msg: '⚠️ الشخص مو موجود' });
     h.trt = now; const m = { t: 'rm_treat', from: rmNm(ws), to: rmNm(tw), k: d.k }; if (h.hid || tw.rm.hid) { send(ws, m); send(tw, m); } else rmBc(r, m);
   } else if (d.t === 'rm_drink') {
-    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000 || !['coffee', 'tea', 'juice', 'water', 'pepsi'].includes(d.k)) return; h.dk = now; const m = { t: 'rm_drink', n: rmNm(ws), k: d.k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000 || !['coffee', 'tea', 'juice', 'water', 'pepsi', 'mango', 'pine', 'coco', 'melon', 'passion', 'berry'].includes(d.k)) return; h.dk = now; const m = { t: 'rm_drink', n: rmNm(ws), k: d.k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
   } else if (d.t === 'rm_stats_get') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmIsOwner(r, ws.key)) return; const s = rmStat(r, now), vis = new Set([...r.mem].filter(w => !(w.rm && w.rm.hid)).map(w => w.key)).size;
     send(ws, { t: 'rm_stats', st: { online: vis, uniq: s.uniq.size, joins: s.joins, peak: s.peak, msgs: s.msgs, games: s.games, hrs: s.hrs } });
@@ -1976,6 +1984,36 @@ function rmOnMsg(ws, d) {
     let left = 15; for (let i = 0; i <= 7 && left; i++) { const c = Math.min(left, B.k[i] || 0); if (c) { B.k[i] -= c; left -= c; if (!B.k[i]) delete B.k[i]; } }
     B.n -= 15; me.fish = B; me.rmUsd = (me.rmUsd || 0) + 2; save();   // بيع السمك = دولار المنتجع (مو عملات اللعبة)
     send(ws, { t: 'rm_fish_ok', bag: B, sold: 15, got: 2, usd: rmUsdOf(me) });
+  } else if (d.t === 'rm_juice') {   // كشك العصائر الاستوائية 🍹: كل عصير بدولار منتجع واحد
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000) return; const k = String(d.k || ''); if (!['mango', 'pine', 'coco', 'melon', 'passion', 'berry'].includes(k)) return;
+    if (!ws.guest && !me.admin) { if ((me.rmUsd || 0) < 1) return send(ws, { t: 'rm_juice_err', error: 'تحتاج دولار منتجع واحد 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - 1; save(); send(ws, { t: 'rm_usd', usd: rmUsdOf(me) }); }
+    h.dk = now; send(ws, { t: 'rm_juice_ok', k }); const m = { t: 'rm_drink', n: rmNm(ws), k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
+  } else if (d.t === 'rm_ht_get' || d.t === 'rm_ht_rent' || d.t === 'rm_ht_mate' || d.t === 'rm_ht_leave') {   // فندق «بابيت» 🏨: إيجار الغرف
+    const h = ws.rm; if (!h || now - (h.htt || 0) < 400) return; h.htt = now;
+    if (ws.guest) return send(ws, { t: 'rm_ht_err', error: 'سجّل حساب حتى تستأجر غرفة بالفندق 🏨' });
+    const H = htDb(), nm = me.name;
+    if (d.t === 'rm_ht_rent') {
+      const ty = Number(d.ty), T = HT_T[ty]; if (!T) return;
+      let idx = Object.keys(H.r).map(Number).find(i => H.r[i] && H.r[i].by === nm && H.r[i].until > now && H.r[i].t === ty);   // عنده غرفة من نفس النوع: نمدد الإيجار
+      if (idx === undefined) { if (Object.keys(H.r).some(i => H.r[i] && H.r[i].by === nm && H.r[i].until > now)) return send(ws, { t: 'rm_ht_err', error: 'عندك غرفة مأجرة هسه 🔑 — ادخلها أو انتظر يخلص إيجارها' }); for (let i = T.i0; i < T.i0 + 10; i++) if (!H.r[i] || H.r[i].until <= now) { idx = i; break; } }
+      if (idx === undefined) return send(ws, { t: 'rm_ht_err', error: 'كل غرف هذا النوع محجوزة هسه 😔 جرّب نوع ثاني' });
+      if (!me.admin) { if ((me.rmUsd || 0) < T.p) return send(ws, { t: 'rm_ht_err', error: 'دولاراتك ما تكفي 💵 الغرفة سعرها ' + T.p }); me.rmUsd = (me.rmUsd || 0) - T.p; }
+      const old = H.r[idx] && H.r[idx].by === nm && H.r[idx].until > now ? H.r[idx] : null;
+      const mates = (Array.isArray(d.mates) ? d.mates : []).map(x => htUser(x)).filter(x => x && x !== nm).filter((x, i, a) => a.indexOf(x) === i).slice(0, T.n - 1);
+      H.r[idx] = old ? Object.assign(old, { until: old.until + T.d * 864e5 }) : { t: ty, by: nm, mates, until: now + T.d * 864e5, at: now };
+      save(); alog('🏨', nm + ' استأجر غرفة ' + htNo(idx) + ' بفندق بابيت');
+      send(ws, { t: 'rm_usd', usd: rmUsdOf(me) }); send(ws, { t: 'rm_ht_ok', msg: old ? 'تمدد إيجار غرفتك ' + htNo(idx) + ' 🗓️' : 'استأجرت الغرفة ' + htNo(idx) + ' 🔑', i: idx });
+      for (const w of htMemAll()) { const u = !w.guest && db.users[w.key]; if (u && mates.includes(u.name)) send(w, { t: 'rm_ht_inv', by: nm, no: htNo(idx) }); }
+    } else if (d.t === 'rm_ht_mate') {
+      const i = Number(d.i), R = H.r[i]; if (!R || R.by !== nm || R.until <= now) return; const T = HT_T[R.t]; const who = htUser(d.name); R.mates = R.mates || [];
+      if (d.on) { if (!who) return send(ws, { t: 'rm_ht_err', error: 'ما لكيت حساب بهذا الاسم' }); if (who === nm || R.mates.includes(who)) return; if (R.mates.length >= T.n - 1) return send(ws, { t: 'rm_ht_err', error: 'الغرفة تكفي ' + T.n + (T.n > 1 ? ' أشخاص' : ' شخص') + ' بس' }); R.mates.push(who); for (const w of htMemAll()) { const u = !w.guest && db.users[w.key]; if (u && u.name === who) send(w, { t: 'rm_ht_inv', by: nm, no: htNo(i) }); } }
+      else R.mates = R.mates.filter(x => x !== d.name); save();
+    } else if (d.t === 'rm_ht_leave') {
+      const i = Number(d.i), R = H.r[i]; if (!R) return; if (R.by === nm) delete H.r[i]; else R.mates = (R.mates || []).filter(x => x !== nm); save();
+    }
+    const mine = Object.keys(H.r).map(Number).filter(i => H.r[i] && H.r[i].until > now && (H.r[i].by === nm || (H.r[i].mates || []).includes(nm))).map(i => ({ i, no: htNo(i), t: H.r[i].t, until: H.r[i].until, by: H.r[i].by, mates: H.r[i].mates || [] }));
+    const free = {}; Object.keys(HT_T).forEach(ty => { const T = HT_T[ty]; let n = 0; for (let i = T.i0; i < T.i0 + 10; i++) if (!H.r[i] || H.r[i].until <= now) n++; free[ty] = n; });
+    send(ws, { t: 'rm_ht', mine, free, now, usd: rmUsdOf(me), adm: !!me.admin });
   } else if (d.t === 'rm_wear_buy') {   // شراء قطعة أزياء من ربشاتي
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.wbt || 0) < 800) return; h.wbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_WEAR_P[k]) return;
     if (ws.guest) return send(ws, { t: 'rm_wear_err', error: 'سجّل حساب حتى تشتري أزياء 👗' });

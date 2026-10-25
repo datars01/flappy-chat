@@ -6579,7 +6579,7 @@ var AVT = (function () {
     const bear = O.bear; if (male && bear) { c.save(); c.fillStyle = typeof H[0] === 'string' ? H[0] : '#2a2430'; if (bear === 1 || bear === 2) { c.globalAlpha = bear === 2 ? .9 : .35; Q(c, [[-W + .2, -98], [-W + .6, -90, -8, -86.4, 0, -86.2], [8, -86.4, W - .6, -90, W - .2, -98], [12, -93], [8, -93.4], [5, -92.6], [0, -95], [-5, -92.6], [-8, -93.4], [-12, -93]]); c.fill(); } if (bear === 3) { E(c, 0, -87.4, 3.6, 2.8); c.fill(); } if (bear === 3 || bear === 4) { c.globalAlpha = .95; Q(c, [[-4.8, -92.2], [-2, -93.6], [0, -92.8], [2, -93.6], [4.8, -92.2], [2.4, -91], [0, -91.8], [-2.4, -91]]); c.fill(); } c.restore(); }
     const fz = EW[O.ew] / 15 * (male ? .94 : 1), mS = SHADOWS[O.mk[1]], ex = [5.8, 6.6, 7.6][O.esp];
     eye(c, -ex, -102, fz, 1, iris, O, male, male ? null : mS); eye(c, ex, -102, fz, -1, iris, O, male, male ? null : mS);
-    brows(c, O, H, ex, male); nose(c, O, SK); mouth(c, O); deco(c, O, SK, 0);
+    brows(c, O, H, ex, male); nose(c, O, SK); mouth(c, O); deco(c, O, SK, 0); if (window.AVT_SL && window.rmSalonFace) { try { rmSalonFace(c, O, ex, ES[O.es][1] * fz, ES[O.es][2] * fz, t || 0, male, KLW); } catch (e) {} }
     hairFront(c, S, H, O.g); deco(c, O, SK, 1);
     if (O.cr) crownAdm(c, O.cr, t);
     else if (OF && OF.crown) { Q(c, [[-9, -124], [-10.5, -135], [-5, -129.5], [0, -138], [5, -129.5], [10.5, -135], [9, -124]]); P(c, '#ffd24a', 1.2); E(c, 0, -128, 1.5, 1.5); P(c, '#e8284a', .7); [-5.6, 5.6].forEach(x => { E(c, x, -127.4, 1, 1); P(c, '#3a9aff', .6); }); }
@@ -6597,7 +6597,7 @@ var AVT = (function () {
 })();
 
 /* ================= نظام الغرف 🏝️ ================= */
-const RMW = 3300, RMH = 1440, RM_SAND = 1200, RM_WALK = 1224;   // المنتجع أعرض وأطول: رمل لين 1200، رصيف، وبعدين شارعين بيهن سيارات
+const RMX0 = -1400, RMW = 4760, RMH = 1440, RM_SAND = 1200, RM_WALK = 1224;   // المنتجع أعرض وأطول: رمل لين 1200، رصيف، وبعدين شارعين بيهن سيارات
 var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
 const RM_SEATS = [];
 (function () {
@@ -6737,17 +6737,17 @@ function rmBar(c, x, y) {
 function rmBoat(c, x, y) { c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 3, 44, 7, 0, 0, 7); c.fill(); c.fillStyle = '#b5532c'; c.beginPath(); c.moveTo(-40, -14); c.lineTo(40, -14); c.lineTo(28, 2); c.lineTo(-28, 2); c.closePath(); c.fill(); c.fillStyle = '#f4efe6'; c.fillRect(-40, -17, 80, 4); c.strokeStyle = '#6f4524'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -14); c.lineTo(0, -62); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(2, -60); c.lineTo(30, -22); c.lineTo(2, -22); c.closePath(); c.fill(); c.restore(); }
 function rmBg(c, t) {
   // سماء
-  let g = c.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, '#6cc7ff'); g.addColorStop(1, '#d6f3ff'); c.fillStyle = g; c.fillRect(0, 0, RMW, 100);
+  let g = c.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, '#6cc7ff'); g.addColorStop(1, '#d6f3ff'); c.fillStyle = g; c.fillRect(RM.v0, 0, RM.v1 - RM.v0, 100);
   if (RM.dn.el < 2664 || RM.dn.el >= 2796) { c.fillStyle = 'rgba(255,244,170,.35)'; c.beginPath(); c.arc(690, 44, 44, 0, 7); c.fill(); c.fillStyle = '#ffe066'; c.beginPath(); c.arc(690, 44, 24, 0, 7); c.fill(); }
   [[80, 30, 1], [330, 52, 0.8], [520, 24, 1.1]].forEach((cl, i) => { const x = ((cl[0] + t * 0.12 * (0.6 + i * 0.3)) % (RMW + 240)) - 120; c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.ellipse(x, cl[1], 34 * cl[2], 11 * cl[2], 0, 0, 7); c.ellipse(x + 20 * cl[2], cl[1] - 6, 24 * cl[2], 11 * cl[2], 0, 0, 7); c.ellipse(x - 20 * cl[2], cl[1] - 3, 20 * cl[2], 8 * cl[2], 0, 0, 7); c.fill(); });
   c.fillStyle = '#5f7fb0'; c.beginPath(); c.moveTo(0, 100); c.quadraticCurveTo(120, 78, 250, 100); c.fill(); c.fillStyle = '#6f8cc0'; c.beginPath(); c.moveTo(560, 100); c.quadraticCurveTo(650, 82, 780, 100); c.lineTo(780, 101); c.fill();
   // بحر
-  g = c.createLinearGradient(0, 98, 0, 205); g.addColorStop(0, '#2aa9dd'); g.addColorStop(1, '#5fd4e8'); c.fillStyle = g; c.fillRect(0, 98, RMW, 110);
-  c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.5; for (let r = 0; r < 5; r++) { c.beginPath(); for (let x = 0; x <= RMW; x += 12) { const y = 112 + r * 19 + Math.sin(x / 30 + t / 40 + r) * 2.2; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  g = c.createLinearGradient(0, 98, 0, 205); g.addColorStop(0, '#2aa9dd'); g.addColorStop(1, '#5fd4e8'); c.fillStyle = g; c.fillRect(RM.v0, 98, RM.v1 - RM.v0, 110);
+  c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.5; for (let r = 0; r < 5; r++) { c.beginPath(); for (let x = RM.g60; x <= RM.v1; x += 12) { const y = 112 + r * 19 + Math.sin(x / 30 + t / 40 + r) * 2.2; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
   // رمل
-  g = c.createLinearGradient(0, 196, 0, RMH); g.addColorStop(0, '#f6e2b0'); g.addColorStop(1, '#e6c488'); c.fillStyle = g; c.fillRect(0, 196, RMW, RM_SAND - 196);
-  c.fillStyle = 'rgba(120,200,215,.35)'; c.beginPath(); c.moveTo(0, 196); for (let x = 0; x <= RMW; x += 10) c.lineTo(x, 202 + Math.sin(x / 26 + t / 28) * 3.5); c.lineTo(RMW, 196); c.closePath(); c.fill();   // رمل مبلول
-  c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.moveTo(0, 196); for (let x = 0; x <= RMW; x += 10) c.lineTo(x, 196 + Math.sin(x / 22 + t / 24) * 3 + 3); for (let x = RMW; x >= 0; x -= 10) c.lineTo(x, 192 + Math.sin(x / 22 + t / 24) * 2.2); c.closePath(); c.fill();   // رغوة
+  g = c.createLinearGradient(0, 196, 0, RMH); g.addColorStop(0, '#f6e2b0'); g.addColorStop(1, '#e6c488'); c.fillStyle = g; c.fillRect(RM.v0, 196, RM.v1 - RM.v0, RM_SAND - 196);
+  c.fillStyle = 'rgba(120,200,215,.35)'; c.beginPath(); c.moveTo(RM.g60, 196); for (let x = RM.g60; x <= RM.v1; x += 10) c.lineTo(x, 202 + Math.sin(x / 26 + t / 28) * 3.5); c.lineTo(RM.v1, 196); c.closePath(); c.fill();   // رمل مبلول
+  c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.moveTo(RM.g60, 196); for (let x = RM.g60; x <= RM.v1; x += 10) c.lineTo(x, 196 + Math.sin(x / 22 + t / 24) * 3 + 3); for (let x = Math.ceil(RM.v1 / 10) * 10; x >= RM.g60; x -= 10) c.lineTo(x, 192 + Math.sin(x / 22 + t / 24) * 2.2); c.closePath(); c.fill();   // رغوة
   c.fillStyle = 'rgba(150,110,50,.16)'; for (let i = 0; i < 90; i++) { const x = (i * 97 + 31) % RMW, y = 215 + (i * 53 + 17) % (RM_SAND - 225); c.fillRect(x, y, 2, 1.4); }
   // أرصفة خشبية وبساط
   c.fillStyle = 'rgba(140,90,40,.55)'; c.fillRect(380, 98, 40, 112); c.fillStyle = 'rgba(0,0,0,.18)'; for (let y = 104; y < 210; y += 9) c.fillRect(380, y, 40, 1.5);   // رصيف داخل البحر
@@ -6786,22 +6786,22 @@ function rmCar(c, x, y, car, dir) {
 function rmRoads(c, t) {
   const Y0 = RM_SAND;
   // حافة الرمل والرصيف
-  c.fillStyle = '#d9b877'; c.fillRect(0, Y0 - 6, RMW, 6);
-  c.fillStyle = '#c9ccd3'; c.fillRect(0, Y0, RMW, 40); c.fillStyle = 'rgba(0,0,0,.08)'; for (let x = 0; x < RMW; x += 40) c.fillRect(x, Y0, 2, 40); c.fillRect(0, Y0 + 20, RMW, 1.5);
-  c.fillStyle = '#8f939c'; c.fillRect(0, Y0 + 38, RMW, 5);   // الرصيف (الحافة)
+  c.fillStyle = '#d9b877'; c.fillRect(RM.v0, Y0 - 6, RM.v1 - RM.v0, 6);
+  c.fillStyle = '#c9ccd3'; c.fillRect(RM.v0, Y0, RM.v1 - RM.v0, 40); c.fillStyle = 'rgba(0,0,0,.08)'; for (let x = RM.g60; x < RM.v1; x += 40) c.fillRect(x, Y0, 2, 40); c.fillRect(RM.v0, Y0 + 20, RM.v1 - RM.v0, 1.5);
+  c.fillStyle = '#8f939c'; c.fillRect(RM.v0, Y0 + 38, RM.v1 - RM.v0, 5);   // الرصيف (الحافة)
   // أعمدة إنارة ونخل على الرصيف
-  for (let x = 60; x < RMW; x += 240) { c.fillStyle = '#4a4f5a'; c.fillRect(x - 2, Y0 - 34, 4, 56); c.fillRect(x - 2, Y0 - 34, 16, 3); c.fillStyle = '#fff3b0'; c.beginPath(); c.arc(x + 14, Y0 - 29, 4, 0, 7); c.fill(); }
-  const road = (y) => { c.fillStyle = '#3b3f48'; c.fillRect(0, y, RMW, 80); c.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 60; i++) c.fillRect((i * 131 + 17) % RMW, y + (i * 37 % 78), 3, 1.5); c.fillStyle = '#f5f5f5'; for (let x = ((-t * 0) % 60); x < RMW; x += 60) c.fillRect(x, y + 38, 30, 4); };
+  for (let x = 60 + Math.floor((RM.v0 - 60) / 240) * 240; x < RM.v1; x += 240) { c.fillStyle = '#4a4f5a'; c.fillRect(x - 2, Y0 - 34, 4, 56); c.fillRect(x - 2, Y0 - 34, 16, 3); c.fillStyle = '#fff3b0'; c.beginPath(); c.arc(x + 14, Y0 - 29, 4, 0, 7); c.fill(); }
+  const road = (y) => { c.fillStyle = '#3b3f48'; c.fillRect(RM.v0, y, RM.v1 - RM.v0, 80); c.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 90; i++) c.fillRect(RMX0 + (i * 131 + 17) % (RMW - RMX0), y + (i * 37 % 78), 3, 1.5); c.fillStyle = '#f5f5f5'; for (let x = RM.g60; x < RM.v1; x += 60) c.fillRect(x, y + 38, 30, 4); };
   road(Y0 + 43);
-  c.fillStyle = '#ffd166'; c.fillRect(0, Y0 + 123, RMW, 3); c.fillStyle = '#5aa04a'; c.fillRect(0, Y0 + 126, RMW, 12); c.fillStyle = '#ffd166'; c.fillRect(0, Y0 + 138, RMW, 3);   // الجزرة الوسطية
-  for (let x = 30; x < RMW; x += 90) { c.fillStyle = '#3d8a35'; c.beginPath(); c.arc(x, Y0 + 132, 7, 0, 7); c.fill(); }
+  c.fillStyle = '#ffd166'; c.fillRect(RM.v0, Y0 + 123, RM.v1 - RM.v0, 3); c.fillStyle = '#5aa04a'; c.fillRect(RM.v0, Y0 + 126, RM.v1 - RM.v0, 12); c.fillStyle = '#ffd166'; c.fillRect(RM.v0, Y0 + 138, RM.v1 - RM.v0, 3);   // الجزرة الوسطية
+  for (let x = 30 + Math.floor((RM.v0 - 30) / 90) * 90; x < RM.v1; x += 90) { c.fillStyle = '#3d8a35'; c.beginPath(); c.arc(x, Y0 + 132, 7, 0, 7); c.fill(); }
   road(Y0 + 141);
-  c.fillStyle = '#8f939c'; c.fillRect(0, Y0 + 221, RMW, 5); c.fillStyle = '#c9ccd3'; c.fillRect(0, Y0 + 226, RMW, RMH - Y0 - 226);
+  c.fillStyle = '#8f939c'; c.fillRect(RM.v0, Y0 + 221, RM.v1 - RM.v0, 5); c.fillStyle = '#c9ccd3'; c.fillRect(RM.v0, Y0 + 226, RM.v1 - RM.v0, RMH - Y0 - 226);
   // ممر مشاة
   [Y0 + 47, Y0 + 145].forEach(ry => { for (let i = 0; i < 6; i++) { c.fillStyle = 'rgba(255,255,255,.85)'; c.fillRect(560, ry + 2 + i * 12.5, 80, 7); } });
   // السيارات: الشارع الأول لليمين والثاني لليسار
-  const span = RMW + 300;
-  RM_CARS.forEach(car => { const d = car.l ? -1 : 1, raw = (car.o + t * car.v) % span, x = car.l ? RMW + 150 - raw : raw - 150, y = car.l ? Y0 + 205 : Y0 + 107; rmCar(c, x, y, car, d); });
+  const span = RMW - RMX0 + 300;
+  RM_CARS.forEach(car => { const d = car.l ? -1 : 1, raw = (car.o + t * car.v) % span, x = car.l ? RMW + 150 - raw : raw - 150 + RMX0, y = car.l ? Y0 + 205 : Y0 + 107; rmCar(c, x, y, car, d); });
 }
 const RM_IDB = { x: 884, y: 268 };   // مكان لوحة الأفكار
 const RM_IDC = ['#ffe27a', '#ffb3c7', '#b8e8ff', '#c8f5b0', '#e2c6ff', '#ffd0a0', '#a8f0e0', '#ffc8f0', '#d8e0ff', '#fff0b0', '#c0ffd8', '#ffcfcf'];
@@ -7003,24 +7003,24 @@ function rmDecor() {
   return L;
 }
 /* ---- شارع المشاة الترابي + الإضاءة + أراضي المشاريع القادمة (يمين المنتجع) ---- */
-const RM_PATH = { x0: 1215, y0: 588, y1: 630, vx: 1262 };   // الشارع الأفقي، ومنه درب نازل للرصيف
+const RM_PATH = { x0: 1215, x1: 3430, y0: 588, y1: 630, vx: 1262 };   // الشارع الأفقي، ومنه درب نازل للرصيف
 const RM_LAMPS = [1270, 1420, 1560, 1740, 1850, 2110, 2290, 2470, 2620, 2900, 3240].map(x => [x, 634]);   // أضوية على طول الشارع
-const RM_PLOTS = [{ x: 3070, t: 'قريباً', s: 'مبنى جديد بالطريق ✨' }];
+const RM_PLOTS = [];   // الأرض صارت «صالون ملاذ» 💇‍♀️
 function rmPathGround(c) {
   const P = RM_PATH, T = RM.T, Y0 = RM_SAND;
   const dirt = (draw) => { c.save(); draw(); c.restore(); };
   // الدرب العمودي النازل للرصيف
   dirt(() => { c.fillStyle = '#d6b07a'; c.beginPath(); c.moveTo(P.vx - 26, P.y1 - 4); for (let y = P.y1; y <= Y0 - 6; y += 30) c.lineTo(P.vx - 24 + Math.sin(y / 70) * 10, y); c.lineTo(P.vx + 24 + Math.sin((Y0 - 6) / 70) * 10, Y0 - 6); for (let y = Y0 - 6; y >= P.y1; y -= 30) c.lineTo(P.vx + 24 + Math.sin(y / 70) * 10, y); c.closePath(); c.fill(); });
   // الشارع الأفقي بحواف ناعمة
-  c.fillStyle = 'rgba(150,110,60,.25)'; c.beginPath(); c.moveTo(P.x0 - 10, P.y0 - 3); for (let x = P.x0; x <= RMW; x += 20) c.lineTo(x, P.y0 - 4 + Math.sin(x / 37) * 1.6); for (let x = RMW; x >= P.x0; x -= 20) c.lineTo(x, P.y1 + 4 + Math.sin(x / 41) * 1.6); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(150,110,60,.25)'; c.beginPath(); c.moveTo(P.x0 - 10, P.y0 - 3); for (let x = P.x0; x <= RM_PATH.x1; x += 20) c.lineTo(x, P.y0 - 4 + Math.sin(x / 37) * 1.6); for (let x = RM_PATH.x1; x >= P.x0; x -= 20) c.lineTo(x, P.y1 + 4 + Math.sin(x / 41) * 1.6); c.closePath(); c.fill();
   const g = c.createLinearGradient(0, P.y0, 0, P.y1); g.addColorStop(0, '#dcb984'); g.addColorStop(0.5, '#d2ab72'); g.addColorStop(1, '#c79e64'); c.fillStyle = g;
-  c.beginPath(); c.moveTo(P.x0 + 14, P.y0); for (let x = P.x0 + 14; x <= RMW; x += 20) c.lineTo(x, P.y0 + Math.sin(x / 37) * 1.6); for (let x = RMW; x >= P.x0; x -= 20) c.lineTo(x, P.y1 + Math.sin(x / 41) * 1.6); c.quadraticCurveTo(P.x0 - 12, (P.y0 + P.y1) / 2, P.x0 + 14, P.y0); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(P.x0 + 14, P.y0); for (let x = P.x0 + 14; x <= RM_PATH.x1; x += 20) c.lineTo(x, P.y0 + Math.sin(x / 37) * 1.6); for (let x = RM_PATH.x1; x >= P.x0; x -= 20) c.lineTo(x, P.y1 + Math.sin(x / 41) * 1.6); c.quadraticCurveTo(P.x0 - 12, (P.y0 + P.y1) / 2, P.x0 + 14, P.y0); c.closePath(); c.fill();
   // حصو صغير وآثار خطوات
-  for (let i = 0; i < 160; i++) { const x = P.x0 + 10 + (i * 137) % (RMW - P.x0 - 20), y = P.y0 + 4 + (i * 53) % (P.y1 - P.y0 - 8); c.fillStyle = i % 3 ? 'rgba(120,85,45,.35)' : 'rgba(255,240,210,.5)'; c.beginPath(); c.ellipse(x, y, 1.6 + (i % 2), 1.1, 0, 0, 7); c.fill(); }
+  for (let i = 0; i < 160; i++) { const x = P.x0 + 10 + (i * 137) % (RM_PATH.x1 - P.x0 - 20), y = P.y0 + 4 + (i * 53) % (P.y1 - P.y0 - 8); c.fillStyle = i % 3 ? 'rgba(120,85,45,.35)' : 'rgba(255,240,210,.5)'; c.beginPath(); c.ellipse(x, y, 1.6 + (i % 2), 1.1, 0, 0, 7); c.fill(); }
   for (let i = 0; i < 40; i++) { const vy = P.y1 + 14 + (i * 89) % (Y0 - P.y1 - 30), vx = P.vx - 16 + Math.sin(vy / 70) * 10 + (i * 31) % 32; c.fillStyle = 'rgba(120,85,45,.3)'; c.beginPath(); c.ellipse(vx, vy, 1.6, 1.1, 0, 0, 7); c.fill(); }
-  c.fillStyle = 'rgba(140,100,55,.22)'; for (let x = P.x0 + 40; x < RMW - 20; x += 46) { const y = P.y0 + 12 + ((x / 46) % 2) * 12; c.beginPath(); c.ellipse(x, y, 3.2, 5, 1.4, 0, 7); c.fill(); }
+  c.fillStyle = 'rgba(140,100,55,.22)'; for (let x = P.x0 + 40; x < RM_PATH.x1 - 20; x += 46) { const y = P.y0 + 12 + ((x / 46) % 2) * 12; c.beginPath(); c.ellipse(x, y, 3.2, 5, 1.4, 0, 7); c.fill(); }
   // عشب خفيف على الحواف
-  c.strokeStyle = '#7fb24a'; c.lineWidth = 1.3; for (let x = P.x0 + 20; x < RMW; x += 26) { [P.y0 - 2, P.y1 + 3].forEach((y, k) => { const sw = Math.sin(T / 40 + x) * 1.2; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 2 + sw, y - 6); c.moveTo(x + 2, y); c.lineTo(x + 3 + sw, y - 7); c.stroke(); }); }
+  c.strokeStyle = '#7fb24a'; c.lineWidth = 1.3; for (let x = P.x0 + 20; x < RM_PATH.x1; x += 26) { [P.y0 - 2, P.y1 + 3].forEach((y, k) => { const sw = Math.sin(T / 40 + x) * 1.2; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 2 + sw, y - 6); c.moveTo(x + 2, y); c.lineTo(x + 3 + sw, y - 7); c.stroke(); }); }
 }
 function rmLampDraw(c, L) {
   const x = L[0], y = L[1], T = RM.T, d = RM.dn ? RM.dn.d : 0, on = d > 0.18 || RM.rainI > 0.4, fl = 0.92 + 0.08 * Math.sin(T / 5 + x);
@@ -7086,8 +7086,8 @@ function rmTgHit(x, y) { if (rmInShop()) return false; const sx = RM_TG.x - 84, 
 const RM_PSHOP = { x: 2020, y: 560 };
 const RM_PHI = { x0: 6000, x1: 6440, dx: 6220, vx0: 5985, vx1: 6455, vy0: 120, vy1: 632 };
 const RM_GMZ = { x: 6352, y: 396, say: null, wave: 0, idleT: 0, near: false };
-function rmShopId(o) { const x = (o || RM.me).x; return x >= 7900 ? 4 : x >= 6900 ? 3 : x >= 5900 ? 2 : x >= 4900 ? 1 : 0; }
-function rmShi(o) { const i = rmShopId(o); return i === 4 ? RM_BHI : i === 3 ? RM_FHI : i === 2 ? RM_PHI : RM_SHI; }
+function rmShopId(o) { const x = (o || RM.me).x; return x >= 10900 ? 7 : x >= 9900 ? 6 : x >= 8900 ? 5 : x >= 7900 ? 4 : x >= 6900 ? 3 : x >= 5900 ? 2 : x >= 4900 ? 1 : 0; }
+function rmShi(o) { const i = rmShopId(o); if (i >= 5 && typeof rmXShi === 'function') return rmXShi(i, o); return i === 4 ? RM_BHI : i === 3 ? RM_FHI : i === 2 ? RM_PHI : RM_SHI; }
 // الحيوانات: كلها صغيرة (أصغر من القطة روح) وسعرها 40
 const RM_PETS = [
   { k: 'cat_b', n: 'بزونة سودة', t: 'cat', c: '#2b2b33', a: '#3e3e4a', e: '#ffd23f' }, { k: 'cat_w', n: 'بزونة بيضة', t: 'cat', c: '#f7f7fa', a: '#ffd6e2', e: '#4aa8ff' },
@@ -7380,7 +7380,7 @@ const RM_WEAR = [
 ];
 RM_WEAR.push({ k: 'g_cherry', n: 'حقيبة الكرز', s: 'bag', p: 35 }, { k: 'g_straw', n: 'سلة قش بوردة', s: 'bag', p: 35 }, { k: 'g_heart', n: 'حقيبة القلب', s: 'bag', p: 40 }, { k: 'g_star', n: 'حقيبة النجمة', s: 'bag', p: 40 }, { k: 'g_bow', n: 'حقيبة الفيونكة', s: 'bag', p: 45 }, { k: 'g_bunny', n: 'حقيبة الأرنب', s: 'bag', p: 45 }, { k: 'g_cloud', n: 'حقيبة الغيمة', s: 'bag', p: 45 }, { k: 'g_pink', n: 'شنطة وردية', s: 'bag', p: 50 }, { k: 'g_cat', n: 'حقيبة البزونة', s: 'bag', p: 50 }, { k: 'g_bear', n: 'حقيبة الدبدوب', s: 'bag', p: 55 }, { k: 'g_pearl', n: 'حقيبة اللؤلؤ', s: 'bag', p: 60 }, { k: 'g_lux', n: 'الحقيبة الذهبية', s: 'bag', p: 80 });   // حقائب محل «روح للحقائب» 👜
 const RM_WEARD = {}; RM_WEAR.forEach(w => { RM_WEARD[w.k] = w; });
-const RM_WSLOT = { hat: '👒 قبعات', eye: '🕶️ نظارات', back: '🦋 أجنحة', neck: '🧣 إكسسوارات', bag: '👜 حقائب' };
+const RM_WSLOT = { hat: '👒 قبعات', eye: '🕶️ نظارات', back: '🦋 أجنحة', neck: '🧣 إكسسوارات', bag: '👜 حقائب', sl: '💄 مكياج الصالون', fa: '💎 زينة الوجه' };
 
 /* ---- رسم الأزياء على الشخصية: الراس فوق القدم بـ ~72، العيون ~57 ---- */
 function rmWearItem(c, k, x, y, T) {
@@ -7555,7 +7555,7 @@ function rmWearOn(k) { const W = RM.me.wear || {}, w = RM_WEARD[k]; return !!w &
 function rmWearCard(w, selKey, onSel) {
   const own = rmWearOwned(w.k), on = rmWearOn(w.k), it = document.createElement('div'); it.className = 'spI' + (on ? ' on' : '') + (own ? ' own' : '') + (selKey === w.k ? ' sel' : ''); it.setAttribute('role', 'button');
   const cv = document.createElement('canvas'); cv.width = 108; cv.height = 132; it.appendChild(cv); const g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0);
-  if (w.s === 'back' || w.s === 'neck') { const ww = {}; ww[w.s] = w.k; if (w.s === 'neck') { g.save(); g.translate(27, 112); g.scale(1.75, 1.75); rmManq(g, 0, 0, 1, ww); g.restore(); } else rmManq(g, 27, 64, 0.95, ww); } else { g.save(); g.translate(27, w.s === 'hat' ? 44 : 40); g.scale(1.9, 1.9); g.fillStyle = '#f7e9d8'; g.strokeStyle = 'rgba(80,50,90,.35)'; g.lineWidth = 0.6; g.beginPath(); g.ellipse(0, -59 + 59, 6.6, 7.6, 0, 0, 7); g.fill(); g.stroke(); rmWearItem(g, w.k, 0, 59, RM.T); g.restore(); }
+  if (w.s === 'bag') { g.save(); g.translate(27, 36); g.scale(2.3, 2.3); rmBagItem(g, w.k, -13, 30, RM.T); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') rmSalonCard(g, w.k); else if (w.s === 'back' || w.s === 'neck') { const ww = {}; ww[w.s] = w.k; if (w.s === 'neck') { g.save(); g.translate(27, 112); g.scale(1.75, 1.75); rmManq(g, 0, 0, 1, ww); g.restore(); } else rmManq(g, 27, 64, 0.95, ww); } else { g.save(); g.translate(27, w.s === 'hat' ? 44 : 40); g.scale(1.9, 1.9); g.fillStyle = '#f7e9d8'; g.strokeStyle = 'rgba(80,50,90,.35)'; g.lineWidth = 0.6; g.beginPath(); g.ellipse(0, -59 + 59, 6.6, 7.6, 0, 0, 7); g.fill(); g.stroke(); rmWearItem(g, w.k, 0, 59, RM.T); g.restore(); }
   const nm = document.createElement('span'); nm.textContent = w.n; it.appendChild(nm); const pr = document.createElement('i'); pr.textContent = on ? '✨ لابسه هسه' : own ? '🎒 مملوك' : rmBalAdm() ? 'مجاناً 👑' : '💵 ' + w.p; it.appendChild(pr);
   if (selKey === w.k) { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'spBtn' + (own ? (on ? ' drop' : ' hold') : ''); bt.textContent = own ? (on ? '🚫 إلغاء اللبس' : '👕 لبس') : '🛒 شراء'; bt.onclick = e => { e.stopPropagation(); rmWearAct(w); }; it.appendChild(bt); }
   it.onclick = () => { onSel(selKey === w.k ? '' : w.k); try { sfx('click'); } catch (e) {} }; return it;
@@ -7573,17 +7573,17 @@ function rmRbsRender() {
   const F = P.querySelector('.spF'); F.innerHTML = ''; const tx = document.createElement('span'); tx.textContent = rmWearSum(); F.appendChild(tx);
   const ib = document.createElement('button'); ib.type = 'button'; ib.textContent = '🎒 أغراضي'; ib.onclick = () => { rmRbsClose(); RM.invTab = 'w'; rmInvOpen(); }; F.appendChild(ib);
 }
-function rmWearSum() { const W = RM.me.wear || {}, l = ['hat', 'eye', 'neck', 'back', 'bag'].filter(s => W[s] && RM_WEARD[W[s]]).map(s => RM_WEARD[W[s]].n); return l.length ? '✨ لابس: ' + l.join(' + ') : '👆 دوس على أي قطعة'; }
+function rmWearSum() { const W = RM.me.wear || {}, l = ['hat', 'eye', 'neck', 'back', 'bag', 'sl', 'fa'].filter(s => W[s] && RM_WEARD[W[s]]).map(s => RM_WEARD[W[s]].n); return l.length ? '✨ لابس: ' + l.join(' + ') : '👆 دوس على أي قطعة'; }
 function rmWearAct(w) {
   if (rmWearOwned(w.k)) { if (RM.wearT && performance.now() - RM.wearT < 500) return; RM.wearT = performance.now(); rmSend({ t: 'rm_wear', k: w.k, on: rmWearOn(w.k) ? 0 : 1 }); return; }
   if (!auth) { showToast('🔐 سجّل حساب حتى تشتري أزياء 👗'); rmRbsSay('سجّل حساب أول وتعال نكشخك 😉', 180); return; }
-  if (rmUsd() < w.p) { showToast('💵 دولاراتك ما تكفي، تحتاج ' + w.p); if (w.s === 'bag') rmRuhSay('دولاراتج ما تكفي حبيبتي، روحي اصطادي سمك وبيعيه وارجعيلي 🎣💖', 200); else rmRbsSay('دولاراتك ما تكفي، روح اصطاد سمك وبيعه وارجعلي 🎣', 200); return; }
+  if (rmUsd() < w.p) { showToast('💵 دولاراتك ما تكفي، تحتاج ' + w.p); if (w.s === 'bag') rmRuhSay('دولاراتج ما تكفي حبيبتي، روحي اصطادي سمك وبيعيه وارجعيلي 🎣💖', 200); else if (w.s === 'sl' || w.s === 'fa') { try { rmMlzSay('دولاراتج ما تكفي حبيبتي، اصطادي سمك وبيعيه وتعالي 🎣💅', 200); } catch (e) {} } else rmRbsSay('دولاراتك ما تكفي، روح اصطاد سمك وبيعه وارجعلي 🎣', 200); return; }
   rmWearDlg(w, 'buy');
 }
 function rmWearDlg(w, mode) {
-  const S = $(RM.wearPanel === 'ruhShop' ? 'ruhShop' : 'rbsShop'); if (!S) return; let D = S.querySelector('.spDlg'); if (D) D.remove(); D = document.createElement('div'); D.className = 'spDlg';
+  const S = $(RM.wearPanel === 'ruhShop' || RM.wearPanel === 'salonShop' ? RM.wearPanel : 'rbsShop'); if (!S) return; let D = S.querySelector('.spDlg'); if (D) D.remove(); D = document.createElement('div'); D.className = 'spDlg';
   D.innerHTML = '<div class="spDB"><canvas width="152" height="184"></canvas><b></b><p></p><div class="row"><button type="button" class="y"></button><button type="button" class="no"></button></div></div>';
-  const dc = D.querySelector('canvas'); dc.style.cssText = 'width:76px;height:92px;display:block;margin:0 auto'; const g = dc.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); const wear = {}; wear[w.s] = w.k; rmManq(g, 38, 88, 1.15, wear);
+  const dc = D.querySelector('canvas'); dc.style.cssText = 'width:76px;height:92px;display:block;margin:0 auto'; const g = dc.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); const wear = {}; wear[w.s] = w.k; if (w.s === 'bag') { g.save(); g.translate(38, 50); g.scale(2.6, 2.6); rmBagItem(g, w.k, -13, 30, RM.T); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') { g.save(); g.scale(1.4, 1.4); rmSalonCard(g, w.k); g.restore(); } else rmManq(g, 38, 88, 1.15, wear);
   const Y = D.querySelector('.y'), N = D.querySelector('.no');
   if (mode === 'buy') { D.querySelector('b').textContent = 'تأكيد الشراء'; D.querySelector('p').textContent = 'تشتري «' + w.n + '» بـ 🪙 ' + w.p + '؟ رصيدك 💵 ' + usdTxt(); Y.textContent = '✅ تأكيد الشراء'; N.textContent = '✖ إلغاء'; Y.onclick = () => { if (RM.wbuyT && performance.now() - RM.wbuyT < 1000) return; RM.wbuyT = performance.now(); Y.disabled = true; Y.textContent = '⏳ لحظة...'; rmSend({ t: 'rm_wear_buy', k: w.k }); }; N.onclick = () => D.remove(); }
   else { D.querySelector('b').textContent = '🎉 صار «' + w.n + '» إلك!'; D.querySelector('p').textContent = 'انحفظ بأغراضك 🎒 تلبسه هسه؟'; Y.textContent = '👕 لبس'; N.textContent = '🎒 لا، خليه بأغراضي'; Y.onclick = () => { D.remove(); rmSend({ t: 'rm_wear', k: w.k, on: 1 }); }; N.onclick = () => { D.remove(); showToast('🎒 القطعة بأغراضك، تلكاها بزر «أغراضي»'); }; }
@@ -7591,10 +7591,10 @@ function rmWearDlg(w, mode) {
 }
 function rmWearBought(d) {
   RM.myWears = d.owned || RM.myWears || []; if (typeof d.usd === 'number') rmUsdSet(d.usd); try { loadMe(); } catch (e) {} RM.rbsSel = d.k; RM.ruhSel = d.k; rmRbsRender(); rmRuhRender(); rmInvRender();
-  const w = RM_WEARD[d.k]; if (!w) return; if (w.s === 'bag') { RM_RUH.wave = 80; rmRuhSay('مبروك عليج «' + w.n + '»! تخبل عليج 💖👜', 200); } else { RM_RBS.wave = 80; rmRbsSay('مبروك عليك «' + w.n + '»! انلبس بكل حب ❤️', 200); } try { if (!RM.ambMute) [[784, 0], [988, 0.1], [1175, 0.2], [1568, 0.3]].forEach(q => blip('sine', q[0], q[0] * 1.2, 0.18, 0.06, q[1])); } catch (e) {} rmWearDlg(w, 'after');
+  const w = RM_WEARD[d.k]; if (!w) return; try { rmSalonRender(); } catch (e) {} if (w.s === 'sl' || w.s === 'fa') { try { rmMlzSay('مبروك حبيبتي! «' + w.n + '» صار إلج، تطلعين قمر 💖', 200); } catch (e) {} } else if (w.s === 'bag') { RM_RUH.wave = 80; rmRuhSay('مبروك عليج «' + w.n + '»! تخبل عليج 💖👜', 200); } else { RM_RBS.wave = 80; rmRbsSay('مبروك عليك «' + w.n + '»! انلبس بكل حب ❤️', 200); } try { if (!RM.ambMute) [[784, 0], [988, 0.1], [1175, 0.2], [1568, 0.3]].forEach(q => blip('sine', q[0], q[0] * 1.2, 0.18, 0.06, q[1])); } catch (e) {} rmWearDlg(w, 'after');
 }
 function rmWearOk(d) {
-  const prev = Object.assign({}, RM.me.wear || {}); RM.me.wear = d.wear || {}; rmRbsRender(); rmRuhRender(); rmInvRender(); const k = d.k, w = RM_WEARD[k];
+  const prev = Object.assign({}, RM.me.wear || {}); RM.me.wear = d.wear || {}; rmRbsRender(); rmRuhRender(); try { rmSalonRender(); } catch (e) {} rmInvRender(); const k = d.k, w = RM_WEARD[k];
   if (w && RM.me.wear[w.s] === k) { showToast('✨ لبست «' + w.n + '» — الكل يشوفك'); try { if (!RM.ambMute) blip('sine', 880, 1500, 0.22, 0.05); } catch (e) {} for (let i = 0; i < 14; i++) RM.sparks.push({ x: RM.me.x + (Math.random() - .5) * 30, y: RM.me.y - 40 - Math.random() * 40, vx: (Math.random() - .5) * 2, vy: -0.5 - Math.random(), t: 30 }); }
   else if (w && prev[w.s] === k) { showToast('🎒 «' + w.n + '» رجع لأغراضك'); try { if (!RM.ambMute) blip('sine', 900, 600, 0.2, 0.04); } catch (e) {} }
 }
@@ -8459,12 +8459,12 @@ function rmTpOpen() {
   rmTpCss(); let P = $('rmTp'); if (P) P.remove(); P = document.createElement('div'); P.id = 'rmTp'; P.addEventListener('pointerdown', e => { if (e.target === P) P.remove(); });
   const box = document.createElement('div'); box.className = 'tpBox'; box.innerHTML = '<div class="tpH"><b>📍 انتقل لأي مكان</b><button type="button" class="tpX">✕</button></div><small>دوس على الخريطة وتنتقل هناك فوراً</small>';
   box.querySelector('.tpX').onclick = () => P.remove();
-  const W = Math.max(260, Math.min(560, (RM.bw || 360) - 44)), s = W / RMW, H = Math.round((RM_WALK + 60) * s), cv = document.createElement('canvas'), dp = 2; cv.width = W * dp; cv.height = H * dp; cv.style.width = W + 'px'; cv.style.height = H + 'px'; box.appendChild(cv);
-  const g = cv.getContext('2d'); g.setTransform(s * dp, 0, 0, s * dp, 0, 0); const sv = { cx: RM.cx, cy: RM.cy };
-  try { rmBg(g, RM.T); } catch (e) {} try { rmPathGround(g); } catch (e) {} try { RM_DECOR.slice().sort((a, b) => a.y - b.y).forEach(d => { try { d.f(g); } catch (e) {} }); } catch (e) {} RM.cx = sv.cx; RM.cy = sv.cy;
+  const W = Math.max(260, Math.min(560, (RM.bw || 360) - 44)), s = W / (RMW - RMX0), H = Math.round((RM_WALK + 60) * s), cv = document.createElement('canvas'), dp = 2; cv.width = W * dp; cv.height = H * dp; cv.style.width = W + 'px'; cv.style.height = H + 'px'; box.appendChild(cv);
+  const g = cv.getContext('2d'); g.setTransform(s * dp, 0, 0, s * dp, -RMX0 * s * dp, 0); const sv = { cx: RM.cx, cy: RM.cy, v0: RM.v0, v1: RM.v1, g60: RM.g60 }; RM.v0 = RMX0; RM.v1 = RMW; RM.g60 = Math.floor(RMX0 / 60) * 60;
+  try { rmBg(g, RM.T); } catch (e) {} try { rmPathGround(g); } catch (e) {} try { rmXGround(g); } catch (e) {} try { RM_DECOR.slice().sort((a, b) => a.y - b.y).forEach(d => { try { d.f(g); } catch (e) {} }); } catch (e) {} RM.cx = sv.cx; RM.cy = sv.cy; RM.v0 = sv.v0; RM.v1 = sv.v1; RM.g60 = sv.g60;
   const u = 1 / s / dp * 2, dot = (x, y, col, nm) => { g.fillStyle = col; g.strokeStyle = '#fff'; g.lineWidth = 1.5 * u; g.beginPath(); g.arc(x, y - 20, 3.6 * u, 0, 7); g.fill(); g.stroke(); if (nm) { g.font = 'bold ' + (7.5 * u) + 'px Cairo, Arial'; g.textAlign = 'center'; g.lineWidth = 3 * u; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(nm, x, y - 20 - 7 * u); g.fillStyle = '#fff'; g.fillText(nm, x, y - 20 - 7 * u); } };
   Object.values(RM.others).forEach(o => { if (o.hid || rmShopId(o)) return; dot(o.x, o.y, '#38bdf8', o.name); }); if (!rmInShop()) dot(RM.me.x, RM.me.y, '#ff3b6b', 'إنت');
-  cv.onclick = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * RMW, y = (e.clientY - r.top) / r.height * (RM_WALK + 60); P.remove(); rmTpTo(Math.max(24, Math.min(RMW - 24, x)), Math.max(212, Math.min(RM_WALK, y))); };
+  cv.onclick = e => { const r = cv.getBoundingClientRect(), x = RMX0 + (e.clientX - r.left) / r.width * (RMW - RMX0), y = (e.clientY - r.top) / r.height * (RM_WALK + 60); P.remove(); rmTpTo(Math.max(RMX0 + 24, Math.min(RMW - 24, x)), Math.max(212, Math.min(RM_WALK, y))); };
   const row = document.createElement('div'); row.className = 'tpRow';
   const go = (lbl, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = lbl; b.onclick = () => { P.remove(); fn(); }; row.appendChild(b); };
   go('🎈 داخل البالونات', () => rmTpTo(RM_SHI.dx, 560)); go('🐾 داخل غمازة', () => rmTpTo(RM_PHI.dx, 560)); go('👗 داخل ربشاتي', () => rmTpTo(RM_FHI.dx, 560)); go('👜 داخل روح', () => rmTpTo(RM_BHI.dx, 560));
@@ -8649,19 +8649,19 @@ function rmDayCalc() {
 }
 RM.dn = { d: 0, wm: 0, q: 0.15, el: 0 }; RM.stars = Array.from({ length: 120 }, () => [Math.random() * RMW, Math.random() * 185, 0.6 + Math.random() * 1.4, Math.random() * 6]); RM.ff = Array.from({ length: 16 }, () => ({ x: 60 + Math.random() * 680, y: 250 + Math.random() * 330, ph: Math.random() * 6, sp: 0.3 + Math.random() * 0.5 }));
 function rmGlow(c, x, y, r, a, col) { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
-RM.nm = document.createElement('canvas'); RM.nm.width = RMW / 2; RM.nm.height = RMH / 2;
+RM.nm = document.createElement('canvas'); RM.nm.width = 2; RM.nm.height = 2;
 function rmNight(c) {
   const D = RM.dn, d = D.d, wm = D.wm; if (d < 0.01 && wm < 0.02) return; const T = RM.T, calm = 1 - Math.max(RM.rainI, RM.snowI * 0.6);
-  if (wm > 0.02) { c.save(); const g = c.createLinearGradient(0, 90, 0, 420); g.addColorStop(0, 'rgba(255,110,40,' + 0.34 * wm + ')'); g.addColorStop(1, 'rgba(255,170,90,0)'); c.fillStyle = g; c.fillRect(0, 0, RMW, 420); c.fillStyle = 'rgba(255,150,60,' + 0.07 * wm + ')'; c.fillRect(0, 0, RMW, RMH); c.restore(); }
+  if (wm > 0.02) { c.save(); const g = c.createLinearGradient(0, 90, 0, 420); g.addColorStop(0, 'rgba(255,110,40,' + 0.34 * wm + ')'); g.addColorStop(1, 'rgba(255,170,90,0)'); c.fillStyle = g; c.fillRect(RM.v0, 0, RM.v1 - RM.v0, 420); c.fillStyle = 'rgba(255,150,60,' + 0.07 * wm + ')'; c.fillRect(RM.v0, RM.vy0, RM.v1 - RM.v0, RM.vy1 - RM.vy0); c.restore(); }
   if (d < 0.01) return;
-  const m = RM.nm.getContext('2d'), fl = 0.93 + 0.07 * Math.sin(T / 4) + 0.03 * Math.sin(T / 1.7); m.setTransform(0.5, 0, 0, 0.5, 0, 0); m.globalCompositeOperation = 'source-over'; m.clearRect(0, 0, RMW, RMH);
-  m.fillStyle = 'rgba(6,9,42,' + (0.8 * d) + ')'; m.fillRect(0, 0, RMW, RMH); const sg = m.createLinearGradient(0, 0, 0, 230); sg.addColorStop(0, 'rgba(2,3,26,' + 0.55 * d + ')'); sg.addColorStop(1, 'rgba(2,3,26,0)'); m.fillStyle = sg; m.fillRect(0, 0, RMW, 230);
+  const m = RM.nm.getContext('2d'), fl = 0.93 + 0.07 * Math.sin(T / 4) + 0.03 * Math.sin(T / 1.7); const NX = RM.v0, NY = Math.max(0, RM.vy0), NW = RM.v1 - NX, NH = Math.min(RMH, RM.vy1) - NY, nw = Math.max(2, Math.ceil(NW / 2)), nh = Math.max(2, Math.ceil(NH / 2)); if (RM.nm.width !== nw || RM.nm.height !== nh) { RM.nm.width = nw; RM.nm.height = nh; } m.setTransform(0.5, 0, 0, 0.5, -NX * 0.5, -NY * 0.5); m.globalCompositeOperation = 'source-over'; m.clearRect(NX, NY, NW, NH);
+  m.fillStyle = 'rgba(6,9,42,' + (0.8 * d) + ')'; m.fillRect(NX, NY, NW, NH); const sg = m.createLinearGradient(0, 0, 0, 230); sg.addColorStop(0, 'rgba(2,3,26,' + 0.55 * d + ')'); sg.addColorStop(1, 'rgba(2,3,26,0)'); m.fillStyle = sg; m.fillRect(NX, 0, NW, 230);
   m.globalCompositeOperation = 'destination-out';
   const hole = (x, y, r, a) => { const g = m.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(0.55, 'rgba(0,0,0,' + a * 0.6 + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); m.fillStyle = g; m.beginPath(); m.arc(x, y, r, 0, 7); m.fill(); };
-  hole(RM_FIRE.x, RM_FIRE.y - 6, 230 * fl, 1); GM_TB.forEach(t => hole(t.x, t.y - 10, 78, 0.8)); hole(1012, 425, 90, 0.85); hole(RM_NPC.x, RM_NPC.y - 10, 60, 0.6); RM_LAMPS.forEach(L => hole(L[0], L[1] - 30, 105, 0.9)); hole(RM_SHOP.x, RM_SHOP.y - 70, 175, 0.8); hole(RM_PSHOP.x, RM_PSHOP.y - 70, 175, 0.8); [RM_SHOP.x, RM_PSHOP.x, RM_FSHOP.x, RM_BSHOP.x].forEach(sx => { hole(sx - 70, 341, 95, 0.9); hole(sx + 70, 341, 95, 0.9); }); hole(RM_FSHOP.x, RM_FSHOP.y - 70, 175, 0.8); hole(RM_BSHOP.x, RM_BSHOP.y - 70, 175, 0.8); hole(RM_TG.x, RM_TG.y - 170, 110, 0.75);   // محل روح للحقائب يضوي بالليل مثل الباقين
-  c.drawImage(RM.nm, 0, 0, RMW, RMH);
+  hole(RM_FIRE.x, RM_FIRE.y - 6, 230 * fl, 1); GM_TB.forEach(t => hole(t.x, t.y - 10, 78, 0.8)); hole(1012, 425, 90, 0.85); hole(RM_NPC.x, RM_NPC.y - 10, 60, 0.6); RM_LAMPS.forEach(L => hole(L[0], L[1] - 30, 105, 0.9)); hole(RM_SHOP.x, RM_SHOP.y - 70, 175, 0.8); hole(RM_PSHOP.x, RM_PSHOP.y - 70, 175, 0.8); [RM_SHOP.x, RM_PSHOP.x, RM_FSHOP.x, RM_BSHOP.x].forEach(sx => { hole(sx - 70, 341, 95, 0.9); hole(sx + 70, 341, 95, 0.9); }); hole(RM_FSHOP.x, RM_FSHOP.y - 70, 175, 0.8); hole(RM_BSHOP.x, RM_BSHOP.y - 70, 175, 0.8); hole(RM_TG.x, RM_TG.y - 170, 110, 0.75); try { rmXHoles(hole, fl); } catch (e) {}   // محل روح للحقائب يضوي بالليل مثل الباقين
+  c.drawImage(RM.nm, NX, NY, nw * 2, nh * 2);
   c.save(); c.globalCompositeOperation = 'lighter';
-  rmGlow(c, RM_FIRE.x, RM_FIRE.y - 8, 210 * fl, 0.34 * d, '255,140,40'); rmGlow(c, RM_FIRE.x, RM_FIRE.y - 14, 80 * fl, 0.4 * d, '255,205,110'); GM_TB.forEach(t => rmGlow(c, t.x, t.y - 20, 70, 0.22 * d, '255,200,110')); rmGlow(c, 1012, 415, 80, 0.26 * d, '210,150,255'); RM_LAMPS.forEach(L => rmGlow(c, L[0], L[1] - 66, 46 * fl, 0.4 * d, '255,210,130')); rmGlow(c, RM_SHOP.x, RM_SHOP.y - 150, 90, 0.22 * d, '255,120,190');
+  rmGlow(c, RM_FIRE.x, RM_FIRE.y - 8, 210 * fl, 0.34 * d, '255,140,40'); rmGlow(c, RM_FIRE.x, RM_FIRE.y - 14, 80 * fl, 0.4 * d, '255,205,110'); GM_TB.forEach(t => rmGlow(c, t.x, t.y - 20, 70, 0.22 * d, '255,200,110')); rmGlow(c, 1012, 415, 80, 0.26 * d, '210,150,255'); RM_LAMPS.forEach(L => rmGlow(c, L[0], L[1] - 66, 46 * fl, 0.4 * d, '255,210,130')); rmGlow(c, RM_SHOP.x, RM_SHOP.y - 150, 90, 0.22 * d, '255,120,190'); try { rmXGlow(c, d, fl); } catch (e) {}
   if (d > 0.3) { const sa = Math.min(1, (d - 0.3) / 0.5) * calm; c.fillStyle = '#fff'; RM.stars.forEach(s => { c.globalAlpha = sa * (0.45 + 0.55 * Math.sin(T / 25 + s[3])); c.beginPath(); c.arc(s[0], s[1], s[2], 0, 7); c.fill(); }); c.globalAlpha = sa; c.globalCompositeOperation = 'source-over'; c.fillStyle = '#f6f3d6'; c.beginPath(); c.arc(690, 62, 20, 0, 7); c.fill(); c.fillStyle = 'rgba(8,12,48,1)'; c.beginPath(); c.arc(699, 56, 17, 0, 7); c.fill(); c.globalAlpha = 1; c.globalCompositeOperation = 'lighter'; }
   if (calm > 0.3) RM.ff.forEach(f => { f.ph += 0.02 * f.sp; const x = f.x + Math.sin(f.ph * 1.3) * 22, y = f.y + Math.cos(f.ph) * 14, al = (0.5 + 0.5 * Math.sin(f.ph * 4)) * d * calm; rmGlow(c, x, y, 7, 0.9 * al, '230,255,110'); });
   c.restore();
@@ -8885,7 +8885,7 @@ const RM_BAL = [
 ];
 const RM_BALD = {}; RM_BAL.forEach(b => { RM_BALD[b.k] = b; }); const RM_FLAGS = RM_BAL.filter(b => b.f);
 function rmInShop(o) { return (o || RM.me).x >= 4900; }
-function rmWalkLim() { return rmInShop() ? [rmShi().x0 + 24, rmShi().x1 - 24, 422, 604] : [24, RMW - 24, 212, RM_WALK]; }
+function rmWalkLim() { return rmInShop() ? [rmShi().x0 + 24, rmShi().x1 - 24, 422, 604] : [RMX0 + 24, RMW - 24, 212, RM_WALK]; }
 
 /* ---- رسم الأعلام داخل البالون ---- */
 function rmStar(c, x, y, r, col, n, rot) { n = n || 5; c.fillStyle = col; c.beginPath(); for (let i = 0; i < n * 2; i++) { const a = (rot || -Math.PI / 2) + i * Math.PI / n, rr = i % 2 ? r * 0.45 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fill(); }
@@ -9165,7 +9165,7 @@ function smStep(i, t) {
   const m = MEL[i % 64]; if (m) { smNote('square', m, t, STP * 1.8, 0.045, 3200); smNote('triangle', m + 12, t, STP * 1.2, 0.02); }
   if (lp % 2 === 1 && st % 2 === 0) smNote('sine', ch[(st / 2) % 3] + 24, t, STP * 1.1, 0.025);   // لمعات جرس بكل دورة ثانية
 }
-function smTick() { if (!RM_SM.on || !actx) return; if (document.hidden) { RM_SM.next = actx.currentTime + 0.08; return; } const tr = RM_SM.track; while (RM_SM.next < actx.currentTime + 0.18) { if (tr === 4) smStep4(RM_SM.step, RM_SM.next); else if (tr === 3) smStep3(RM_SM.step, RM_SM.next); else if (tr === 2) smStep2(RM_SM.step, RM_SM.next); else smStep(RM_SM.step, RM_SM.next); RM_SM.next += tr === 2 ? SM2_ST : tr === 3 ? SML_ST : tr === 4 ? SMG_ST : SM_ST; RM_SM.step++; if (RM_SM.step % (tr === 1 ? 64 : 32) === 0) RM_SM.loop++; } }
+function smTick() { if (!RM_SM.on || !actx) return; if (document.hidden) { RM_SM.next = actx.currentTime + 0.08; return; } const tr = RM_SM.track; while (RM_SM.next < actx.currentTime + 0.18) { if (tr === 4) smStep4(RM_SM.step, RM_SM.next); else if (tr === 3) smStep3(RM_SM.step, RM_SM.next); else if (tr === 2) smStep2(RM_SM.step, RM_SM.next); else if (tr === 6 && typeof smStep6 === 'function') smStep6(RM_SM.step, RM_SM.next); else smStep(RM_SM.step, RM_SM.next); RM_SM.next += tr === 6 ? 0.25 : tr === 2 ? SM2_ST : tr === 3 ? SML_ST : tr === 4 ? SMG_ST : SM_ST; RM_SM.step++; if (RM_SM.step % (tr === 1 ? 64 : 32) === 0) RM_SM.loop++; } }
 function rmShopMusic(on, track) {
   track = track || 1; if (on && RM_SM.on && RM_SM.track !== track) rmShopMusic(false); if (on === RM_SM.on) return; RM_SM.on = on; if (on) RM_SM.track = track;
   if (on) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { RM_SM.on = false; return; }
@@ -9350,19 +9350,19 @@ function rmDraw() {
   if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
   { const tn = bh < 250; if (RM.tinyC !== tn) { RM.tinyC = tn; $('rmBox').classList.toggle('rmTiny', tn); } } RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = rmInShop() ? '#2a1530' : '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; rmWxStep(); try { rmPairTick(); rmHoldTick(); } catch (e) {} const m = RM.me, st = rmUpdMe(), SH = rmInShop(), SID = rmShopId();
-  rmShopMusic(SH && !RM.ambMute, SID);
-  const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / RMW, bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (!RM.z || RM.camSnap) RM.z = RM.zt;
+  rmShopMusic(SH && !RM.ambMute, SID === 5 ? 4 : SID >= 6 ? 6 : SID);
+  const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / (RMW - RMX0), bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (!RM.z || RM.camSnap) RM.z = RM.zt;
   RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
-  const B = SH ? [rmShi().vx0, rmShi().vx1, rmShi().vy0, rmShi().vy1] : [0, RMW, 0, RMH], BW = B[1] - B[0], BH = B[3] - B[2];
+  const B = SH ? [rmShi().vx0, rmShi().vx1, rmShi().vy0, rmShi().vy1] : [RMX0, RMW, 0, RMH], BW = B[1] - B[0], BH = B[3] - B[2];
   const tx = vw >= BW ? B[0] - (vw - BW) / 2 : Math.max(B[0], Math.min(B[1] - vw, m.x - vw / 2)), ty = vh >= BH ? B[2] - (vh - BH) / 2 : Math.max(B[2], Math.min(B[3] - vh, m.y - 20 - vh / 2));
-  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (RM.zoomAll || RM.camSnap) { RM.cx = tx; RM.cy = ty; RM.camSnap = 0; }
+  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (RM.zoomAll || RM.camSnap) { RM.cx = tx; RM.cy = ty; RM.camSnap = 0; } RM.v0 = Math.max(RMX0, Math.floor(RM.cx) - 30); RM.v1 = Math.min(RMW, Math.ceil(RM.cx + vw) + 30); RM.g60 = Math.floor(RM.v0 / 60) * 60; RM.vy0 = RM.cy - 20; RM.vy1 = RM.cy + vh + 20;
   c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
-  if (SH) { if (SID === 4) rmBagBg(c); else if (SID === 3) rmFashBg(c); else if (SID === 2) rmPetBg(c); else rmShopBg(c); rmTapDraw(c); } else { rmBg(c, RM.T); rmPathGround(c); rmSunSky(c); rmSeaLife(c, RM.T); rmRainbow(c); rmTapDraw(c); }
-  const list = SH ? (SID === 4 ? rmBagList() : SID === 3 ? rmFashList() : SID === 2 ? rmPetShopList() : rmShopList()) : RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => rmShopId(o) === SID && list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
-  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]); try { rmPetList(list, SID); } catch (e) {} if (!SH) { list.push([RM_NPC.y, rmDrawNpc]); rmAmbList(list); }
+  if (SH) { if (SID >= 5) rmXBg(c, SID); else if (SID === 4) rmBagBg(c); else if (SID === 3) rmFashBg(c); else if (SID === 2) rmPetBg(c); else rmShopBg(c); rmTapDraw(c); } else { rmBg(c, RM.T); rmPathGround(c); try { rmXGround(c); } catch (e) {} rmSunSky(c); rmSeaLife(c, RM.T); rmRainbow(c); rmTapDraw(c); }
+  const list = SH ? (SID >= 5 ? rmXList(SID) : SID === 4 ? rmBagList() : SID === 3 ? rmFashList() : SID === 2 ? rmPetShopList() : rmShopList()) : RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => rmShopId(o) === SID && list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
+  const mySort = (m.sit || (m.jump && m.jump.kind === 'sit')) && m.seat ? m.seat.ey + 0.5 : m.y; list.push([mySort, cc => rmDrawMe(cc, st)]); try { rmPetList(list, SID); } catch (e) {} if (!SH) { list.push([RM_NPC.y, rmDrawNpc]); rmAmbList(list); try { rmXOutList(list); } catch (e) {} }
   list.sort((a, b) => a[0] - b[0]).forEach(it => it[1](c)); rmClaspDraw(c); rmKissDraw(c);
   RM.sparks = RM.sparks.filter(p => p.t > 0); RM.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.t--; if (p.puff) { p.vy *= 0.98; c.fillStyle = p.smoke ? 'rgba(70,64,60,.75)' : 'rgba(255,255,255,.85)'; c.globalAlpha = Math.min(0.7, p.t / 60); c.beginPath(); c.arc(p.x, p.y, 1.5 + (50 - p.t) * 0.07, 0, 7); c.fill(); } else if (p.drop) { p.vy += 0.08; c.fillStyle = 'rgba(170,215,255,.95)'; c.globalAlpha = Math.min(1, p.t / 10); c.beginPath(); c.arc(p.x, p.y, 1.3, 0, 7); c.fill(); } else if (p.dust) { p.vy += 0.02; c.fillStyle = 'rgba(255,255,255,.8)'; c.globalAlpha = Math.min(1, p.t / 14); c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 7); c.fill(); } else { c.fillStyle = '#ffd166'; c.globalAlpha = Math.min(1, p.t / 20); c.beginPath(); c.arc(p.x, p.y, 1.4, 0, 7); c.fill(); } c.globalAlpha = 1; });
-  if (SH) { if (SID === 4) rmBagFg(c); else if (SID === 3) rmFashFg(c); else if (SID === 2) rmPetFg(c); else rmShopFg(c); } else { rmCanopies(c); rmFireRoof(c); rmNight(c); try { rmSignNight(c); } catch (e) {} rmBirds(c); rmFwDraw(c); } rmStepDraw(c); rmFxDraw(c); rmReactDraw(c); rmBubFlush(c); c.restore(); if (!SH) rmWxDraw(c, bw, bh);
+  if (SH) { if (SID >= 5) rmXFg(c, SID); else if (SID === 4) rmBagFg(c); else if (SID === 3) rmFashFg(c); else if (SID === 2) rmPetFg(c); else rmShopFg(c); } else { rmCanopies(c); rmFireRoof(c); rmNight(c); try { rmSignNight(c); } catch (e) {} rmBirds(c); rmFwDraw(c); } rmStepDraw(c); rmFxDraw(c); rmReactDraw(c); rmBubFlush(c); c.restore(); if (!SH) rmWxDraw(c, bw, bh);
   if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = bw / 2 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, bw / 2 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
   const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
   { const pn = performance.now(), el = pn - (RM.sentP || 0); if ((k !== RM.sent && el >= 100) || el >= 2500) { if (rmSend({ t: 'rm_pos', b: 1, x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; RM.sentP = pn; } } }   // كل 100ms وقت الحركة + تذكير كل 2.5 ثانية حتى ما يضيع مكانك عند الباقين
@@ -9387,11 +9387,11 @@ function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
   const spots = near ? RM_SPOTS.filter(s => s.seat === near) : []; key = (m.sit ? 'S' : m.goal ? 'G' : '') + (near ? near.i : '-') + spots.map(s => rmBusy(s) ? 1 : 0).join('') + RM.fish.st + (RM.fish.bag.n || 0) + (m.y < 262 ? 's' : 'l') + (rmNearNpc() ? 'N' : '') + (m.drink && performance.now() < m.drink.until ? 'D' : '') + (RM.holds[rmMe()] ? 'H' : '') + (rmNearIdeas() ? 'I' : '') + (rmNearVip() ? 'V' : '') + (rmNearFer() ? 'F' : '') + (rmNearCar() ? 'C' : '') + (rmNearPho() ? 'P' : '') + (rmInPool(m) ? 'W' : '') + (rmRideOf(m) ? 'R' + m.dance : '') + (rmNearShop() ? 'B' : '') + (rmNearGmzShop() ? 'Pz' : '') + (rmNearFashShop() ? 'Fz' : '') + (rmNearRbs() ? 'r' : '') + (rmNearFashExit() ? 'x' : '') + 's' + rmShopId() + (rmNearGmz() ? 1 : 0) + (rmNearGmzExit() ? 1 : 0) + (rmInShop() ? 'b' + (rmNearSpn() ? 1 : 0) + (rmNearShopExit() ? 1 : 0) : '');
-  if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
+  try { key += rmXKey(); } catch (e) {} if (!force && key === rmPrKey) return; rmPrKey = key; P.innerHTML = '';
   const mk = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'hOvB'; b.textContent = t; b.onclick = fn; P.appendChild(b); };
   if (RM.holds[rmMe()]) mk('✋ فلت الإيد', () => rmSend({ t: 'rm_hold', on: 0 }));
   if (m.sit || (m.goal && m.jump)) { if (m.sit) { mk('🧍 قيام', () => rmStand()); if (m.seat && m.seat.seat && m.seat.seat.kind === 'stool') mk('🛎️ اطلب من جربوع', rmOrderMenu); } return; }   // كراسي البار الحمر: تطلب وجربوع يجيبه لمكانك
-  if (!near) { if (m.jump || m.goal) return; if (rmInShop()) { if (rmNearRuh()) mk('👜 اشتري حقيبة من روح', rmRuhOpen); if (rmNearBagExit()) mk('🚪 اطلع من المحل', rmBagExit); if (rmNearRbs()) mk('👗 اشتري أزياء من ربشاتي', rmRbsOpen); if (rmNearFashExit()) mk('🚪 اطلع من المحل', rmFashExit); if (rmNearGmz()) mk('🐾 اشتري حيوان من غمازة', rmGmzOpen); if (rmNearGmzExit()) mk('🚪 اطلع من المحل', rmGmzExit); if (rmNearSpn()) mk('🎈 اشتري بالون من سبيناغ', rmSpnOpen); if (rmNearShopExit()) mk('🚪 اطلع من المحل', rmShopExit); return; } if (rmNearShop()) mk('🎈 ادخل محل البالونات', rmShopEnter); if (rmNearGmzShop()) mk('🐾 ادخل محل غمازة', rmGmzEnter); if (rmNearFashShop()) mk('👗 ادخل محل ربشاتي', rmFashEnter); if (rmNearBagShop()) mk('👜 ادخل محل روح للحقائب', rmBagEnter); if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (rmRideOf(m)) { mk('🚪 انزل من اللعبة', () => { rmSetDance(0); rmPrompt(true); }); return; } if (rmNearFer()) mk('🎡 اركب دولاب الهوا', () => rmRideBoard('fer')); if (rmNearCar()) mk('🎠 اركب الدوّارة', () => rmRideBoard('car')); if (rmNearPho()) mk('📸 التقط صورة', rmPhotoTake); if (rmInPool(m)) mk('💦 رش مي', () => { for (let i = 0; i < 16; i++) RM.sparks.push({ x: m.x + m.dir * 10, y: m.y - 30, vx: m.dir * (1 + Math.random() * 2), vy: -1.5 - Math.random() * 1.5, t: 26, drop: 1 }); rmSend({ t: 'rm_react', e: '🐟' }); }); const FS = RM.fish.st; if (FS === 'bite') mk('❗ اسحب الآن!', rmFishPull); else if (FS === 'wait' || FS === 'cast') mk('⏹ وقف الصيد', rmFishStop); else if (FS === 'idle' && m.y < 262) mk('🎣 ارمِ السنارة', rmFishStart); if (FS !== 'reel' && (m.y < 262 || FS !== 'idle')) mk('🧺 مخزن السمك ' + (RM.fish.bag.n || 0) + '/' + RM_BAGN, rmBagOpen);  return; }
+  if (!near) { if (m.jump || m.goal) return; try { if (rmXPrompt(mk)) return; } catch (e) {} if (rmInShop()) { if (rmNearRuh()) mk('👜 اشتري حقيبة من روح', rmRuhOpen); if (rmNearBagExit()) mk('🚪 اطلع من المحل', rmBagExit); if (rmNearRbs()) mk('👗 اشتري أزياء من ربشاتي', rmRbsOpen); if (rmNearFashExit()) mk('🚪 اطلع من المحل', rmFashExit); if (rmNearGmz()) mk('🐾 اشتري حيوان من غمازة', rmGmzOpen); if (rmNearGmzExit()) mk('🚪 اطلع من المحل', rmGmzExit); if (rmNearSpn()) mk('🎈 اشتري بالون من سبيناغ', rmSpnOpen); if (rmNearShopExit()) mk('🚪 اطلع من المحل', rmShopExit); return; } if (rmNearShop()) mk('🎈 ادخل محل البالونات', rmShopEnter); if (rmNearGmzShop()) mk('🐾 ادخل محل غمازة', rmGmzEnter); if (rmNearFashShop()) mk('👗 ادخل محل ربشاتي', rmFashEnter); if (rmNearBagShop()) mk('👜 ادخل محل روح للحقائب', rmBagEnter); if (rmNearNpc()) mk('🛎️ اطلب من جربوع', rmOrderMenu); if (rmNearIdeas()) mk('💡 لوحة الأفكار', rmIdeasOpen); if (rmNearVip()) mk('⭐ العضوية المميزة', rmVipOpen); if (rmRideOf(m)) { mk('🚪 انزل من اللعبة', () => { rmSetDance(0); rmPrompt(true); }); return; } if (rmNearFer()) mk('🎡 اركب دولاب الهوا', () => rmRideBoard('fer')); if (rmNearCar()) mk('🎠 اركب الدوّارة', () => rmRideBoard('car')); if (rmNearPho()) mk('📸 التقط صورة', rmPhotoTake); if (rmInPool(m)) mk('💦 رش مي', () => { for (let i = 0; i < 16; i++) RM.sparks.push({ x: m.x + m.dir * 10, y: m.y - 30, vx: m.dir * (1 + Math.random() * 2), vy: -1.5 - Math.random() * 1.5, t: 26, drop: 1 }); rmSend({ t: 'rm_react', e: '🐟' }); }); const FS = RM.fish.st; if (FS === 'bite') mk('❗ اسحب الآن!', rmFishPull); else if (FS === 'wait' || FS === 'cast') mk('⏹ وقف الصيد', rmFishStop); else if (FS === 'idle' && m.y < 262) mk('🎣 ارمِ السنارة', rmFishStart); if (FS !== 'reel' && (m.y < 262 || FS !== 'idle')) mk('🧺 مخزن السمك ' + (RM.fish.bag.n || 0) + '/' + RM_BAGN, rmBagOpen);  return; }
   if (spots.length === 1) mk(rmBusy(spots[0]) ? '⛔ مشغول' : '🪑 اجلس', () => rmSitAt(spots[0]));
   else spots.forEach((s, i) => mk(rmBusy(s) ? (i ? '⛔ اليمين مشغول' : '⛔ اليسار مشغول') : (i ? 'اجلس يمين ➡️' : '⬅️ اجلس يسار'), () => rmSitAt(s)));
 }
@@ -9444,7 +9444,7 @@ function rmOnMsg(d) {
   else if (T === 'rm_wear_ok') rmWearOk(d);
   else if (T === 'rm_usd') { rmUsdSet(d.usd, d.got); if (d.daily) setTimeout(() => { if (!RM.on) return; showToast('💵 +1 دولار المنتجع هدية دخولك اليوم!'); rmNpcSay('جبتلك دولار المنتجع اليومي 💵 تكدر تشتري بيه من المحلات', 260); try { if (!RM.ambMute) [[988, 0], [1319, 0.08], [1568, 0.16]].forEach(q => blip('square', q[0], q[0], 0.09, 0.04, q[1])); } catch (e) {} }, 2600); }
   else if (T === 'rm_wear_bought') rmWearBought(d);
-  else if (T === 'rm_wear_err') { showToast('⛔ ' + (d.error || '')); if (RM.wearPanel === 'ruhShop') rmRuhSay(d.error || '', 160); else rmRbsSay(d.error || '', 160); document.querySelectorAll('#rbsShop .spDlg, #ruhShop .spDlg').forEach(D => D.remove()); }
+  else if (T === 'rm_wear_err') { showToast('⛔ ' + (d.error || '')); if (RM.wearPanel === 'ruhShop') rmRuhSay(d.error || '', 160); else if (RM.wearPanel === 'salonShop') { try { rmMlzSay(d.error || '', 160); } catch (e) {} } else rmRbsSay(d.error || '', 160); document.querySelectorAll('#rbsShop .spDlg, #ruhShop .spDlg, #salonShop .spDlg').forEach(D => D.remove()); }
   else if (T === 'rm_pet_bought') rmPetBought(d);
   else if (T === 'rm_pet_err') { showToast('⛔ ' + (d.error || '')); rmGmzSay(d.error || '', 160); const D = document.querySelector('#gmzShop .spDlg'); if (D) D.remove(); }
   else if (T === 'rm_fish_ok') rmFishOk(d);
@@ -9467,6 +9467,7 @@ function rmOnMsg(d) {
   else if (T === 'rm_slog') { RM.slog = d.list || []; rmSlogRender(); }
   else if (T === 'rm_slog_add') { (RM.slog = RM.slog || []).push(d.e); rmSlogRender(); }
   else if (T === 'rm_err') { showToast('⚠️ ' + d.error); if (d.fatal && RM.on) { RM.on = false; rmShowLobby(); } }
+  else { try { rmXMsg(T, d); } catch (e) {} }
 }
 
 /* ---------- شخصية المنتجع: المحرر + المتجر + الرقصات ---------- */
@@ -9738,7 +9739,7 @@ function rmSetFull(on, auto, soft) {
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (RM.tpMode && RM.myAdm) { rmTpTo(x, y, true); return; } if (rmLudoBtnHit(x, y)) { rmLudoGo(); return; } if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmTgHit(x, y)) return; if (rmGmzHit(x, y)) return; if (rmBagHit(x, y)) return; if (rmFashHit(x, y)) return; if (rmShopHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (RM.tpMode && RM.myAdm) { rmTpTo(x, y, true); return; } try { if (rmXHit(x, y)) return; } catch (er) {} if (rmLudoBtnHit(x, y)) { rmLudoGo(); return; } if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmTgHit(x, y)) return; if (rmGmzHit(x, y)) return; if (rmBagHit(x, y)) return; if (rmFashHit(x, y)) return; if (rmShopHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
   cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); rmTapMark(x, y); } });
   const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
@@ -9885,5 +9886,6 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/run.js?v=6"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=2"></script>
+<script src="/resort2.js?v=1"></script>
 </body>
 </html>
