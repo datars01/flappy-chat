@@ -2027,6 +2027,9 @@ function rmOnMsg(ws, d) {
     let txt = String(d.txt || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 500); if (!txt) return; if (!rmStaff(r, ws)) txt = profMask(txt);
     { const sp = spamBlock(ws.key, txt); if (sp) return send(ws, { t: 'rm_err', error: spamErr(sp) }); }
     rmStat(r, now).msgs++; const m = { n: me.name, txt, ts: now, adm: rmAdm(ws) }; if (h.hid) m.hid = 1; r.log.push(m); while (r.log.length > 80) r.log.shift(); if (h.hid) rmBcV(r, { t: 'rm_chat', m }, ws), send(ws, { t: 'rm_chat', m }); else rmBc(r, { t: 'rm_chat', m });
+  } else if (d.t === 'rm_clr') {   // المشرفين (بابي وبابيتو) يحذفون شات المنتجع بالكامل لهاي الغرفة
+    const h = ws.rm, r = h && rmRooms.get(h.id); if (!r) return; if (!rmAdm(ws)) return send(ws, { t: 'rm_err', error: 'بس المشرفين يكدرون يحذفون الشات 👑' });
+    r.log = []; try { rmPersist(); } catch (e) {} rmBc(r, { t: 'rm_clr', by: me.name }); try { alog('🧹', me.name + ' حذف شات غرفة «' + r.name + '»'); } catch (e) {}
   } else if (d.t === 'rm_leave') rmLeave(ws);
   else if (d.t === 'rm_kick' || d.t === 'rm_mute' || d.t === 'rm_ban' || d.t === 'rm_unban' || d.t === 'rm_warn' || d.t === 'rm_mod' || d.t === 'rm_unmod') {
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || !rmCanMod(r, ws.key)) return send(ws, { t: 'rm_err', error: 'بس صاحب الغرفة أو المميزين يكدرون يسوون هذا' });

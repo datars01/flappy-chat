@@ -1,6 +1,6 @@
 /* بابيتو شات — عمل بدون إنترنت: نخزّن الصفحة والخطوط، والـ API والشات يبقون أونلاين فقط */
 const CACHE = 'babito-v2';
-const SHELL = ['/', '/index.html', '/manifest.json', '/lang.js?v=8'];
+const SHELL = ['/', '/index.html', '/manifest.json', '/lang.js?v=9'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });

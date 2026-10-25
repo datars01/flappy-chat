@@ -40,6 +40,11 @@ function ludoSfx(k) {
       case 'err': B('square', 210, 150, 0.16, 0.04); break;
       case 'emo': B('sine', 500, 950, 0.09, 0.06); break;
       case 'win': [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3], [1319, 0.42]].forEach(q => B('sine', q[0], q[0], 0.25, 0.08, q[1])); break;
+      case 'eaten': B('sine', 900, 140, 0.55, 0.08); B('triangle', 300, 80, 0.4, 0.05, 0.15); break;
+      case 'tick': B('square', 1250, 1250, 0.04, 0.05); break;
+      case 'tick2': B('square', 1500, 1500, 0.06, 0.07); break;
+      case 'medal': [659, 880, 1175].forEach((f, i) => B('triangle', f, f, 0.25, 0.07, i * 0.09)); break;
+      case 'buy': [880, 1175, 1568, 2093].forEach((f, i) => B('sine', f, f, 0.18, 0.06, i * 0.06)); break;
       case 'lose': [[392, 0], [349, 0.18], [294, 0.36], [247, 0.54]].forEach(q => B('triangle', q[0], q[0], 0.25, 0.06, q[1])); break;
       default: B('sine', 600, 600, 0.05, 0.04);
     }
@@ -102,7 +107,16 @@ function ludoMsg(d) {
   if (d.t === 'ludo_chat') return ludoChatAdd(d.m, true);
   if (d.t === 'ludo_allready') { ludoSfx('allready'); showToast(d.host ? '✅ الكل جاهز! دوس «ابدأ اللعبة» 👑' : '✅ الكل جاهز — بانتظار الهوست يشغّل اللعبة'); try { navigator.vibrate && navigator.vibrate([50, 40, 50]); } catch (e) {} return; }
   if (d.t === 'ludo_join') { ludoSfx('join'); showToast('👋 دخل ' + d.n + ' الطاولة' + (d.cnt >= 2 ? ' — اضغط «استعداد» ✅' : '')); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} return; }
-  if (d.t === 'ludo_state') { const old = LUDOG.s; LUDOG.s = d.s; ludoOnState(old, d.s); }
+  if (d.t === 'ludo_shop') { LUDOG.shop = d; if (d.bought) ludoSfx('buy'); ludoShopRender(); return; }
+  if (d.t === 'ludo_state') {
+    if (d.s) { LUDOG.dl = performance.now() + (d.s.t || 0); LUDOG.tMax = d.s.tMax || 15000; }
+    /* رجعت بعد انقطاع النت: نرجّعك لنفس اللعبة ونفس مكانك */
+    if (d.s && d.s.ph === 'play' && !LUDOG.s) {
+      if (d.s.tbl && !ludoRm() && typeof RM !== 'undefined' && RM.on) { ludoRmOpen(); showToast('📶 رجعت لطاولة غوكو!'); }
+      else if (!d.s.tbl && !ludoRm() && typeof curPage !== 'undefined' && curPage !== 'ludo') { try { openPage('ludo'); } catch (e) {} showToast('📶 رجعت للعبة غوكو من نفس مكانك!'); }
+    }
+    const old = LUDOG.s; LUDOG.s = d.s; ludoOnState(old, d.s);
+  }
   else if (d.t === 'ludo_list') ludoRenderList(d.list);
   else if (d.t === 'ludo_err') { ludoSfx('err'); showToast('⚠️ ' + d.error); }
 }
@@ -113,9 +127,11 @@ function ludoOnState(old, s) {
     else if (s.last.k === 'sixes') { ludoSfx('sixes'); showToast('🎲 ثلاث ستات ورا بعض، ضاع الدور!'); }
     else if (s.last.k === 'move') {   /* المؤثرات تنتظر لين تنتهي قفزات الخرزة خانة خانة */
       const L = s.last, prev = (old && old.seats[L.s] && old.seats[L.s].tk[L.tk]), steps = (prev === undefined || prev < 0 || L.pos < 0) ? 1 : Math.max(1, L.pos - prev), wait = Math.min(1800, steps * 150 + (L.cap ? 60 : 0));
+      if (L.caps && L.caps.length) setTimeout(() => { try { ludoSfx('eaten'); L.caps.forEach(c => { const q = ludoCell(c[0], c[2], c[1]); ludoPop(q[0], q[1], c[0] === s.my ? '😵 انأكلت!' : '😵 انأكل!', LUDO_COL[c[0]].c); }); if (L.caps.some(c => c[0] === s.my)) { try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} } } catch (e) {} }, wait + 60);
+      if (L.fin) setTimeout(() => { try { ludoSfx('medal'); const p = s.seats[L.s]; showToast(['', '🥇', '🥈', '🥉'][L.fin] + ' ' + (p ? p.n : '') + ' خلّص أحجاره!'); } catch (e) {} }, wait + 200);
       setTimeout(() => { try { ludoSfx(L.cap ? 'cap' : L.home ? 'home' : 'move'); const q = ludoCell(L.s, L.pos, L.tk); ludoBurst(q[0], q[1], L.cap ? 'cap' : L.home ? 'home' : 'dust', LUDO_COL[L.s].c); if (L.cap) LUDOG.shake = performance.now() + 380; } catch (e) {} }, wait); }
   }
-  if (s && s.ph === 'over' && (!old || old.ph !== 'over')) { ludoSfx(s.win && s.win.s === s.my ? 'win' : 'lose'); LUDOG.winT = performance.now(); ludoConfetti(); }
+  if (s && s.ph === 'over' && (!old || old.ph !== 'over')) { ludoSfx(ludoIWon(s) ? 'win' : 'lose'); LUDOG.winT = performance.now(); ludoConfetti(); }
   if (s && s.ph === 'play' && old && old.ph === 'lobby') { LUDOG.cd = performance.now() + 3000; LUDOG.cdN = 0; ludoSfx('start'); setTimeout(() => { try { ludoUpdate(); const z = LUDOG.s; if (z && z.ph === 'play' && z.turn === z.my) { ludoSfx('turn'); ludoTurnBanner(); } } catch (e) {} }, 3100); }
   if (s && s.ph === 'play' && s.turn === s.my && (!old || old.turn !== s.turn || old.ph !== 'play') && !((LUDOG.cd || 0) > performance.now())) { ludoSfx('turn'); try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {} const rl = Math.max(0, (LUDOG.rolling || 0) - performance.now()); setTimeout(() => ludoTurnBanner(), rl ? rl + 900 : 0); }
   if (s && old && s.ph === 'lobby' && old.ph === 'lobby') {   /* أصوات الغرفة: استعداد / دخول / طلوع */
@@ -133,7 +149,7 @@ function ludoRender() {
   R.innerHTML = '';
   if (!s) { if (ludoRm()) { R.appendChild(lel('div', 'ludoWait', '⏳ جاري الجلوس على الطاولة...')); return; } R.appendChild(ludoMenuEl()); ludoSend({ t: 'ludo_list' }); return; }
   if (s.ph === 'lobby') { R.appendChild(ludoLobbyEl(s)); return; }
-  R.appendChild(ludoGameEl()); ludoUpdate(); ludoLoop();
+  R.appendChild(ludoGameEl()); ludoUpdate(); ludoLoop(); if (s.ph === 'over') ludoPodium(s);
 }
 function ludoMenuEl() {
   const w = lel('div', 'ludoMenu');
@@ -143,29 +159,32 @@ function ludoMenuEl() {
   const jr = lel('div', 'ludoJoin'); const inp = lel('input'); inp.placeholder = 'رمز الطاولة (4 أرقام)'; inp.maxLength = 4; inp.inputMode = 'numeric';
   const jb = lel('button', 'ludoBtn', '🔑 ادخل'); jb.onclick = () => { if (inp.value.trim().length !== 4) { showToast('اكتب رمز من 4 أرقام'); return; } ludoSend({ t: 'ludo_join', code: inp.value.trim() }); }; jr.append(inp, jb);
   const lst = lel('div', 'ludoList'); lst.id = 'ludoList'; lst.appendChild(lel('small', '', '...'));
-  w.append(hero, q, cr, jr, lel('div', 'ludoSec', '🌐 طاولات مفتوحة'), lst); return w;
+  w.append(hero, q, cr, jr, ludoCpuEl(), lel('div', 'ludoSec', '🌐 طاولات مفتوحة'), lst, ludoThemeEl(), ludoShopEl()); ludoSend({ t: 'ludo_shop' }); return w;
 }
 function ludoRenderList(list) {
   const Lb = document.getElementById('ludoList'); if (!Lb) return; Lb.innerHTML = '';
   if (!list.length) { Lb.appendChild(lel('small', '', 'ماكو طاولات مفتوحة هسه — دوس «لعب سريع» وتنفتح طاولة جديدة')); return; }
-  list.forEach(x => { const b = lel('button', 'ludoRow', '🎲 طاولة ' + x.host + ' • ' + x.n + '/4'); b.onclick = () => ludoSend({ t: 'ludo_quick' }); Lb.appendChild(b); });
+  list.forEach(x => { const b = lel('button', 'ludoRow', '🎲 طاولة ' + x.host + ' • ' + x.n + '/4 • ' + (LUDO_MODES[x.mode] || LUDO_MODES.classic).s); b.onclick = () => ludoSend({ t: 'ludo_quick' }); Lb.appendChild(b); });
 }
 function ludoLobbyEl(s) {
   const w = lel('div', 'ludoMenu'); const me = s.seats[s.my];
   const n = s.seats.filter(Boolean).length, rd = s.seats.filter(p => p && p.rdy).length, host = s.seats.find(p => p && p.host), iAmHost = !!(me && me.host);
-  w.appendChild(lel('h3', 'ludoH', '🎲 غرفة الانتظار (' + n + '/4)'));
+  w.appendChild(lel('h3', 'ludoH', '🎲 غرفة الانتظار (' + n + '/4)')); w.appendChild(ludoModeEl(s, iAmHost));
   if (s.priv) { const cb = lel('div', 'ludoCode'); cb.innerHTML = 'رمز الطاولة: <b>' + s.code + '</b> — دزه لأصدقائك'; w.appendChild(cb); }
   const g = lel('div', 'ludoSeats');
   s.seats.forEach((p, i) => {
-    const C = LUDO_COL[i], c = lel('div', 'ludoSeat' + (p ? '' : ' empty') + (p && p.me ? ' me' : '') + (p && p.rdy ? ' rdy' : '')); c.style.setProperty('--c', C.c); c.style.setProperty('--d', C.d);
-    const dot = lel('span', 'ludoDot'); c.appendChild(dot);
-    if (p) { c.appendChild(lel('b', '', (p.host ? '👑 ' : '') + p.n)); c.appendChild(lel('small', 'ludoSt' + (p.rdy ? ' ok' : ''), (p.rdy ? '✅ جاهز' : '⏳ ما جاهز') + (p.host ? ' • الهوست' : ''))); }
-    else { c.appendChild(lel('b', '', 'مقعد فارغ')); c.appendChild(lel('small', '', C.n)); if (me && !ludoRm()) { const sb = lel('button', 'ludoSit', '🪑 اجلس هنا'); sb.onclick = () => ludoSend({ t: 'ludo_seat', s: i }); c.appendChild(sb); } }
+    const C = LUDO_COL[i], c = lel('div', 'ludoSeat' + (p ? '' : ' empty') + (p && p.me ? ' me' : '') + (p && p.rdy ? ' rdy' : '') + (p && p.bot ? ' bot' : '')); c.style.setProperty('--c', C.c); c.style.setProperty('--d', C.d);
+    if (s.mode === 'team') c.appendChild(lel('span', 'ludoTeamTag t' + (i % 2), i % 2 ? '🟢🔵 فريق 2' : '🔴🟡 فريق 1'));
+    const dot = lel('span', 'ludoDot', p && p.bot ? '🤖' : ''); c.appendChild(dot);
+    if (p) { c.appendChild(lel('b', '', (p.host ? '👑 ' : '') + p.n)); c.appendChild(lel('small', 'ludoSt' + (p.rdy ? ' ok' : ''), p.bot ? '🤖 كمبيوتر • جاهز دائماً' : (p.rdy ? '✅ جاهز' : '⏳ ما جاهز') + (p.host ? ' • الهوست' : '')));
+      if (p.bot && iAmHost) { const xb = lel('button', 'ludoSit ghost', '✖ شيل الكمبيوتر'); xb.onclick = () => ludoSend({ t: 'ludo_unbot', s: i }); c.appendChild(xb); }
+      if (p.bot && me && !ludoRm()) { const sb = lel('button', 'ludoSit', '🪑 اجلس محله'); sb.onclick = () => ludoSend({ t: 'ludo_seat', s: i }); c.appendChild(sb); } }
+    else { c.appendChild(lel('b', '', 'مقعد فارغ')); c.appendChild(lel('small', '', C.n)); if (me && !ludoRm()) { const sb = lel('button', 'ludoSit', '🪑 اجلس هنا'); sb.onclick = () => ludoSend({ t: 'ludo_seat', s: i }); c.appendChild(sb); } if (iAmHost) { const bb = lel('button', 'ludoSit bot', '🤖 ضيف كمبيوتر'); bb.onclick = () => ludoSend({ t: 'ludo_bot', s: i }); c.appendChild(bb); } }
     g.appendChild(c);
   });
   w.appendChild(g);
   if (me) {
-    if (n < 2) { const st = lel('button', 'ludoBtn big', '⏳ بانتظار لاعب ثاني...'); st.disabled = true; w.appendChild(st); }
+    if (n < 2) { const st = lel('button', 'ludoBtn big', '⏳ بانتظار لاعب ثاني...'); st.disabled = true; w.appendChild(st); if (iAmHost) { const bb = lel('button', 'ludoBtn', '🤖 ماكو أحد؟ العب ويا الكمبيوتر'); bb.onclick = () => ludoSend({ t: 'ludo_bot' }); w.appendChild(bb); } }
     else {
       w.appendChild(lel('div', 'ludoReady' + (s.allRdy ? ' all' : ''), s.allRdy ? '✅ الكل جاهز!' : '✅ جاهزين ' + rd + ' من ' + n));
       const st = lel('button', 'ludoBtn big' + (me.rdy ? ' ghost' : ' pulse'), me.rdy ? '✔️ أنت جاهز — اضغط للتراجع' : '✅ استعداد'); st.onclick = () => ludoSend({ t: 'ludo_ready' }); w.appendChild(st);
@@ -186,18 +205,20 @@ function ludoGameEl() {
   cv.addEventListener('pointerdown', ludoClick);
   const bar = lel('div', 'ludoBar'); const dice = ludoDiceEl(); dice.onclick = () => { const s = LUDOG.s; if (s && s.ph === 'play' && s.turn === s.my && !s.rolled && !((LUDOG.cd || 0) > performance.now())) ludoSend({ t: 'ludo_roll' }); };
   const msg = lel('div', 'ludoMsg'); msg.id = 'ludoMsg'; const dn = lel('div', 'ludoDNum'); dn.id = 'ludoDNum'; bar.append(dice, dn, msg, ludoMicEl());
+  const tm = lel('div', 'ludoTmr'); tm.id = 'ludoTmr'; tm.innerHTML = '<i></i><b></b>';
   const lv = lel('button', 'ludoBtn ghost small', '🚪 طلوع'); lv.onclick = () => { if (confirm('تطلع من اللعبة؟')) ludoSend({ t: 'ludo_leave' }); };
-  w.append(top, stage, bar, ludoEmoBar()); if (!ludoRm()) w.appendChild(lv); return w;
+  w.append(top, tm, stage, bar, ludoEmoBar()); if (!ludoRm()) w.appendChild(lv); return w;
 }
 function ludoUpdate() {
   const s = LUDOG.s; if (!s || s.ph === 'lobby') return;
   const top = document.getElementById('ludoTop'), msg = document.getElementById('ludoMsg'), dice = document.getElementById('ludoDice'); if (!top || !msg || !dice) return;
-  top.innerHTML = ''; s.seats.forEach((p, i) => { if (!p) return; const C = LUDO_COL[i], c = lel('span', 'ludoChip' + (s.ph === 'play' && s.turn === i ? ' on' : '') + (p.left ? ' off' : '')); c.dataset.seat = i; c.style.setProperty('--c', C.c); c.textContent = (p.me ? '⭐ ' : '') + p.n + (p.left ? ' (طلع)' : '') + ' ' + p.tk.filter(x => x === 56).length + '/4'; top.appendChild(c); });
+  top.innerHTML = ''; s.seats.forEach((p, i) => { if (!p) return; const C = LUDO_COL[i], c = lel('span', 'ludoChip' + (s.ph === 'play' && s.turn === i ? ' on' : '') + (p.left ? ' off' : '') + (p.off ? ' net' : '')); c.dataset.seat = i; c.style.setProperty('--c', C.c); c.textContent = (p.rank ? ['', '🥇', '🥈', '🥉', '4️⃣'][p.rank] + ' ' : '') + (p.me ? '⭐ ' : '') + (s.mode === 'team' ? (i % 2 ? '🟢' : '🔴') : '') + p.n + (p.off ? ' 📶' : '') + (p.left ? ' (طلع)' : '') + ' ' + p.tk.filter(x => x === 56).length + '/' + (s.nt || p.tk.length); top.appendChild(c); });
+  if (s.mode && s.mode !== 'classic') top.appendChild(lel('span', 'ludoChip mode', (LUDO_MODES[s.mode] || {}).s || ''));
   const mine = s.my, myTurn = s.ph === 'play' && s.turn === mine;
   dice.disabled = !(myTurn && !s.rolled) || (LUDOG.cd || 0) > performance.now(); dice.classList.toggle('go', myTurn && !s.rolled);
-  if (s.ph === 'over') { const w = s.seats[s.win.s]; msg.textContent = '🏆 فاز ' + (w ? w.n : '؟') + (s.win.why ? ' (' + s.win.why + ')' : '') + ' — ترجعون للانتظار بعد لحظات'; }
-  else if (myTurn) msg.textContent = s.rolled ? (s.movable.length ? '👆 دوس على حجر مضيء حتى تحركه' : 'ماكو حركة متاحة...') : '🎲 دورك! دوس النرد';
-  else { const t = s.seats[s.turn]; msg.textContent = '⏳ دور ' + (t ? t.n : '؟') + ' (' + (LUDO_COL[s.turn] || {}).n + ')'; }
+  if (s.ph === 'over') { msg.textContent = '🏆 ' + ludoWinTitle(s) + ' — ترجعون للانتظار بعد لحظات'; }
+  else if (myTurn) msg.textContent = s.rolled ? (s.movable.length ? '👆 دوس على حجر مضيء — شوف وين راح يوصل' : 'ماكو حركة متاحة...') : '🎲 دورك! دوس النرد';
+  else { const t = s.seats[s.turn]; msg.textContent = (t && t.bot ? '🤖 الكمبيوتر يفكّر: ' : t && t.off ? '📶 ' : '⏳ دور ') + (t ? t.n : '؟') + ' (' + (LUDO_COL[s.turn] || {}).n + ')'; }
 }
 function ludoLoop() {
   cancelAnimationFrame(LUDOG.raf);
@@ -207,24 +228,24 @@ function ludoLoop() {
 /* ---------- لوحة احترافية: إطار خشب بتعريق + رخام + خانات بارزة + أعشاش غائرة (تنرسم مرة وحدة وتنخزّن) ---------- */
 function ludoRR(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 function ludoBoardCache(G) {
-  const key = G.sz + '_' + G.dpr; if (LUDOG.bgKey === key && LUDOG.bg) return LUDOG.bg;
+  const TH = ludoThemeP(), key = G.sz + '_' + G.dpr + '_' + ludoTheme(); if (LUDOG.bgKey === key && LUDOG.bg) return LUDOG.bg;
   const sz = G.sz, dpr = G.dpr, pad = G.pad, u = G.u, bgc = document.createElement('canvas'); bgc.width = Math.round(sz * dpr); bgc.height = Math.round(sz * dpr);
   const c = bgc.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // عشوائي ثابت (حتى ما تتغيّر العروق كل مرة)
   /* الإطار الخشبي */
-  const wg = c.createLinearGradient(0, 0, sz, sz); wg.addColorStop(0, '#9a6232'); wg.addColorStop(0.3, '#b87a42'); wg.addColorStop(0.6, '#8a5428'); wg.addColorStop(1, '#6a3d1a');
+  const wg = c.createLinearGradient(0, 0, sz, sz); wg.addColorStop(0, TH.fr[0]); wg.addColorStop(0.3, TH.fr[1]); wg.addColorStop(0.6, TH.fr[2]); wg.addColorStop(1, TH.fr[3]);
   c.fillStyle = wg; ludoRR(c, 0, 0, sz, sz, sz * 0.045); c.fill();
-  c.save(); ludoRR(c, 0, 0, sz, sz, sz * 0.045); c.clip(); for (let i = 0; i < 46; i++) { const y = rnd() * sz; c.strokeStyle = 'rgba(' + (rnd() < 0.5 ? '60,30,10' : '255,210,150') + ',' + (0.05 + rnd() * 0.09) + ')'; c.lineWidth = 0.6 + rnd() * 1.6; c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(sz * 0.3, y + (rnd() - 0.5) * 14, sz * 0.65, y + (rnd() - 0.5) * 14, sz, y + (rnd() - 0.5) * 8); c.stroke(); } c.restore();
+  c.save(); ludoRR(c, 0, 0, sz, sz, sz * 0.045); c.clip(); for (let i = 0; i < 46; i++) { const y = rnd() * sz; c.strokeStyle = 'rgba(' + (rnd() < 0.5 ? TH.gr[0] : TH.gr[1]) + ',' + (0.05 + rnd() * 0.09) + ')'; c.lineWidth = 0.6 + rnd() * 1.6; c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(sz * 0.3, y + (rnd() - 0.5) * 14, sz * 0.65, y + (rnd() - 0.5) * 14, sz, y + (rnd() - 0.5) * 8); c.stroke(); } if (TH.stars) for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(255,255,255,' + (0.3 + rnd() * 0.6) + ')'; c.beginPath(); c.arc(rnd() * sz, rnd() * sz, 0.5 + rnd() * 1.3, 0, 7); c.fill(); } c.restore();
   c.strokeStyle = 'rgba(255,230,180,.6)'; c.lineWidth = 2; ludoRR(c, 1.5, 1.5, sz - 3, sz - 3, sz * 0.045); c.stroke(); c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 2; ludoRR(c, 3.5, 3.5, sz - 7, sz - 7, sz * 0.04); c.stroke();
   /* الإطار الذهبي حول اللوحة + ظل للداخل */
-  c.save(); c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = 10; c.fillStyle = '#e9c46a'; ludoRR(c, pad - 3, pad - 3, sz - 2 * pad + 6, sz - 2 * pad + 6, 8); c.fill(); c.restore();
-  const gg = c.createLinearGradient(0, pad, 0, sz - pad); gg.addColorStop(0, '#fff2b8'); gg.addColorStop(0.5, '#d9a93a'); gg.addColorStop(1, '#a47a1e'); c.fillStyle = gg; ludoRR(c, pad - 3, pad - 3, sz - 2 * pad + 6, sz - 2 * pad + 6, 8); c.fill();
+  c.save(); c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = 10; c.fillStyle = TH.rim[1]; ludoRR(c, pad - 3, pad - 3, sz - 2 * pad + 6, sz - 2 * pad + 6, 8); c.fill(); c.restore();
+  const gg = c.createLinearGradient(0, pad, 0, sz - pad); gg.addColorStop(0, TH.rim[0]); gg.addColorStop(0.5, TH.rim[1]); gg.addColorStop(1, TH.rim[2]); c.fillStyle = gg; ludoRR(c, pad - 3, pad - 3, sz - 2 * pad + 6, sz - 2 * pad + 6, 8); c.fill();
   /* أرضية رخام */
-  c.save(); c.translate(pad, pad); const bs = u * 15; const mg = c.createLinearGradient(0, 0, bs, bs); mg.addColorStop(0, '#fffdf6'); mg.addColorStop(0.5, '#f4ecd9'); mg.addColorStop(1, '#e9dfc6');
+  c.save(); c.translate(pad, pad); const bs = u * 15; const mg = c.createLinearGradient(0, 0, bs, bs); mg.addColorStop(0, TH.fl[0]); mg.addColorStop(0.5, TH.fl[1]); mg.addColorStop(1, TH.fl[2]);
   c.fillStyle = mg; ludoRR(c, 0, 0, bs, bs, 5); c.fill(); c.save(); ludoRR(c, 0, 0, bs, bs, 5); c.clip();
-  for (let i = 0; i < 9; i++) { c.strokeStyle = 'rgba(150,130,100,' + (0.05 + rnd() * 0.06) + ')'; c.lineWidth = 0.6 + rnd() * 1.1; c.beginPath(); let x = rnd() * bs, y = rnd() * bs; c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rnd() - 0.3) * bs * 0.3; y += (rnd() - 0.3) * bs * 0.3; c.quadraticCurveTo(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 30, x, y); } c.stroke(); } c.restore();
+  for (let i = 0; i < 9; i++) { c.strokeStyle = 'rgba(' + TH.vein + ',' + (0.05 + rnd() * 0.06) + ')'; c.lineWidth = 0.6 + rnd() * 1.1; c.beginPath(); let x = rnd() * bs, y = rnd() * bs; c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rnd() - 0.3) * bs * 0.3; y += (rnd() - 0.3) * bs * 0.3; c.quadraticCurveTo(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 30, x, y); } c.stroke(); } c.restore();
   const tile = (x, y, top, bot, ln) => { const w = u - u * 0.1, px = x * u + u * 0.05, py = y * u + u * 0.05; c.save(); c.shadowColor = 'rgba(0,0,0,.28)'; c.shadowBlur = u * 0.12; c.shadowOffsetY = u * 0.05; const g = c.createLinearGradient(px, py, px, py + w); g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; ludoRR(c, px, py, w, w, u * 0.15); c.fill(); c.restore();
-    c.strokeStyle = ln || 'rgba(0,0,0,.2)'; c.lineWidth = 1; ludoRR(c, px, py, w, w, u * 0.15); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(px + u * 0.18, py + 1.6); c.lineTo(px + w - u * 0.18, py + 1.6); c.stroke(); };
+    c.strokeStyle = ln || TH.ln; c.lineWidth = 1; ludoRR(c, px, py, w, w, u * 0.15); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(px + u * 0.18, py + 1.6); c.lineTo(px + w - u * 0.18, py + 1.6); c.stroke(); };
   /* البيوت الأربعة: لوح ملوّن + لوح فاتح + 4 أعشاش غائرة */
   LUDO_BASE.forEach((b, i) => { const C = LUDO_COL[i], x = b[0] * u, y = b[1] * u, w = 6 * u;
     c.save(); c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = u * 0.25; c.shadowOffsetY = u * 0.08; const g = c.createLinearGradient(x, y, x + w, y + w); g.addColorStop(0, ludoMix(C.c, 255, 0.28)); g.addColorStop(0.5, C.c); g.addColorStop(1, C.d); c.fillStyle = g; ludoRR(c, x + u * 0.06, y + u * 0.06, w - u * 0.12, w - u * 0.12, u * 0.4); c.fill(); c.restore();
@@ -234,7 +255,7 @@ function ludoBoardCache(G) {
       const sg = c.createRadialGradient(cx + R * 0.2, cy + R * 0.25, R * 0.1, cx, cy, R); sg.addColorStop(0, ludoMix(C.d, 0, 0.1)); sg.addColorStop(0.7, ludoMix(C.c, 0, 0.1)); sg.addColorStop(1, ludoMix(C.l, 0, 0.1)); c.fillStyle = sg; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.38)'; c.lineWidth = 1.6; c.beginPath(); c.arc(cx, cy, R, Math.PI * 0.95, Math.PI * 1.9); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6; c.beginPath(); c.arc(cx, cy, R, Math.PI * 0.05, Math.PI * 0.9); c.stroke(); }); });
   /* المسار */
-  LUDO_TRACK.forEach(q => tile(q[0], q[1], '#ffffff', '#ece4d0'));
+  LUDO_TRACK.forEach(q => tile(q[0], q[1], TH.tl[0], TH.tl[1]));
   LUDO_START.forEach((a, i) => { const q = LUDO_TRACK[a], C = LUDO_COL[i]; tile(q[0], q[1], ludoMix(C.c, 255, 0.3), C.d, 'rgba(0,0,0,.3)'); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.8; c.beginPath(); c.arc((q[0] + 0.5) * u, (q[1] + 0.5) * u, u * 0.26, 0, 7); c.stroke(); });
   const DIR = [[1, 0], [0, 1], [-1, 0], [0, -1]];
   LUDO_LANE.forEach((ln, i) => { const C = LUDO_COL[i], d = DIR[i]; ln.forEach(q => { tile(q[0], q[1], ludoMix(C.c, 255, 0.4), ludoMix(C.c, 0, 0.12), 'rgba(0,0,0,.28)'); const cx = (q[0] + 0.5) * u, cy = (q[1] + 0.5) * u, a = u * 0.2; c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.moveTo(cx + d[0] * a * 1.2, cy + d[1] * a * 1.2); c.lineTo(cx - d[0] * a - d[1] * a, cy - d[1] * a + d[0] * a); c.lineTo(cx - d[0] * a + d[1] * a, cy - d[1] * a - d[0] * a); c.closePath(); c.fill(); }); });
@@ -276,12 +297,13 @@ function ludoFx(c, u) {
 function ludoMix(h, w, a) { const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return 'rgb(' + Math.round(r + (w - r) * a) + ',' + Math.round(g + (w - g) * a) + ',' + Math.round(b + (w - b) * a) + ')'; }
 function ludoStar(c, x, y, R, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r : R; c.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } c.closePath(); }
 function ludoPawn(c, x, gy, r, seat, t, o) {   /* (x, gy) = نقطة التماس مع اللوحة؛ الخرزة ترتفع للأعلى */
-  const C = LUDO_COL[seat], i = o.idx, lw = Math.max(1, r * 0.07);
+  const C = LUDO_COL[seat], i = o.idx, lw = Math.max(1, r * 0.07), SK = o.sk || '', TR = SK === 'p_gold' ? { c: '#ffd84a', d: '#9a6c06' } : C;
   const br = 1 + Math.sin(t / 520 + i * 1.7) * 0.022 + (o.excited ? Math.sin(t / 130 + i) * 0.03 : 0);   // تنفّس
   const sx = (o.sx || 1), sy = (o.sy || 1) * br;
   c.save(); c.translate(x, gy); c.rotate(o.tilt || 0); c.scale(sx, sy); c.lineJoin = 'round'; c.lineCap = 'round';
   /* القاعدة (قرص) */
-  const bg = c.createLinearGradient(-r, 0, r, 0); bg.addColorStop(0, ludoMix(C.d, 0, 0.35)); bg.addColorStop(0.35, C.c); bg.addColorStop(0.55, ludoMix(C.c, 255, 0.45)); bg.addColorStop(1, ludoMix(C.d, 0, 0.3));
+  const bg = c.createLinearGradient(-r, 0, r, 0); bg.addColorStop(0, ludoMix(TR.d, 0, 0.35)); bg.addColorStop(0.35, TR.c); bg.addColorStop(0.55, ludoMix(TR.c, 255, 0.45)); bg.addColorStop(1, ludoMix(TR.d, 0, 0.3));
+  if (SK === 'p_neon') { c.shadowColor = C.c; c.shadowBlur = r * 0.9; }
   c.fillStyle = bg; c.beginPath(); c.ellipse(0, -r * 0.14, r * 1.0, r * 0.3, 0, 0, 7); c.fill();
   c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = lw * 0.8; c.beginPath(); c.ellipse(0, -r * 0.2, r * 0.97, r * 0.26, 0, Math.PI * 1.05, Math.PI * 1.75); c.stroke();
   /* الجسم: جرس مقعّر بتدرّج أفقي (يعطي حجم) */
@@ -290,10 +312,11 @@ function ludoPawn(c, x, gy, r, seat, t, o) {   /* (x, gy) = نقطة التما�
   c.fillStyle = 'rgba(255,255,255,.4)'; c.beginPath(); c.ellipse(-r * 0.3, -r * 0.62, r * 0.07, r * 0.36, 0.18, 0, 7); c.fill();   // لمعة طولية
   c.fillStyle = 'rgba(0,0,0,.16)'; c.beginPath(); c.ellipse(r * 0.46, -r * 0.5, r * 0.08, r * 0.3, -0.16, 0, 7); c.fill();           // ظل جانبي
   /* طوق الرقبة */
-  const cg = c.createLinearGradient(-r * 0.5, 0, r * 0.5, 0); cg.addColorStop(0, ludoMix(C.d, 0, 0.2)); cg.addColorStop(0.45, ludoMix(C.c, 255, 0.65)); cg.addColorStop(1, ludoMix(C.d, 0, 0.3));
+  const cg = c.createLinearGradient(-r * 0.5, 0, r * 0.5, 0); cg.addColorStop(0, ludoMix(TR.d, 0, 0.2)); cg.addColorStop(0.45, ludoMix(TR.c, 255, 0.65)); cg.addColorStop(1, ludoMix(TR.d, 0, 0.3));
   c.fillStyle = cg; c.beginPath(); c.ellipse(0, -r * 1.14, r * 0.44, r * 0.13, 0, 0, 7); c.fill();
   /* الراس: كرة لامعة */
   const hy = -r * 1.66 + (o.bob || 0) * r, hr = r * 0.68;
+  if (SK === 'p_cat') [-1, 1].forEach(sg => { c.fillStyle = ludoMix(C.d, 0, 0.1); c.beginPath(); c.moveTo(sg * hr * 0.25, hy - hr * 0.8); c.lineTo(sg * hr * 0.85, hy - hr * 1.35); c.lineTo(sg * hr * 0.9, hy - hr * 0.35); c.closePath(); c.fill(); c.fillStyle = '#ffb3c8'; c.beginPath(); c.moveTo(sg * hr * 0.42, hy - hr * 0.78); c.lineTo(sg * hr * 0.78, hy - hr * 1.1); c.lineTo(sg * hr * 0.8, hy - hr * 0.52); c.closePath(); c.fill(); });
   const hg = c.createRadialGradient(-hr * 0.38, hy - hr * 0.42, hr * 0.06, -hr * 0.05, hy, hr * 1.08);
   hg.addColorStop(0, ludoMix(C.c, 255, 0.78)); hg.addColorStop(0.3, ludoMix(C.c, 255, 0.18)); hg.addColorStop(0.72, C.c); hg.addColorStop(1, ludoMix(C.d, 0, 0.35));
   c.fillStyle = hg; c.beginPath(); c.arc(0, hy, hr, 0, 7); c.fill();
@@ -336,6 +359,12 @@ function ludoPawn(c, x, gy, r, seat, t, o) {   /* (x, gy) = نقطة التما�
   /* لمعة زجاجية على الراس */
   c.fillStyle = 'rgba(255,255,255,.82)'; c.beginPath(); c.ellipse(-hr * 0.42, hy - hr * 0.55, hr * 0.2, hr * 0.11, -0.7, 0, 7); c.fill();
   c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(-hr * 0.12, hy - hr * 0.74, hr * 0.06, 0, 7); c.fill();
+  /* السكنات 🛍️ */
+  c.shadowBlur = 0;
+  if (SK === 'p_shades' && !o.sleep) { c.fillStyle = '#111'; [-1, 1].forEach(sg => { ludoRR(c, sg * ex - er * 1.05, ey - er * 0.75, er * 2.1, er * 1.5, er * 0.5); c.fill(); }); c.fillRect(-ex + er * 0.9, ey - er * 0.45, (ex - er * 0.9) * 2, er * 0.28); c.fillStyle = 'rgba(255,255,255,.55)'; [-1, 1].forEach(sg => { c.beginPath(); c.ellipse(sg * ex - er * 0.4, ey - er * 0.3, er * 0.32, er * 0.14, -0.4, 0, 7); c.fill(); }); }
+  if (SK === 'p_crown') { const cy0 = hy - hr * 0.82, w = hr * 0.95; const g = c.createLinearGradient(0, cy0 - hr * 0.6, 0, cy0 + hr * 0.1); g.addColorStop(0, '#fff3a8'); g.addColorStop(1, '#d39a0c'); c.fillStyle = g; c.beginPath(); c.moveTo(-w, cy0); c.lineTo(-w, cy0 - hr * 0.45); c.lineTo(-w * 0.5, cy0 - hr * 0.18); c.lineTo(0, cy0 - hr * 0.62); c.lineTo(w * 0.5, cy0 - hr * 0.18); c.lineTo(w, cy0 - hr * 0.45); c.lineTo(w, cy0); c.closePath(); c.fill(); c.strokeStyle = '#8a5a00'; c.lineWidth = lw * 0.7; c.stroke(); c.fillStyle = '#ff3b6b'; c.beginPath(); c.arc(0, cy0 - hr * 0.16, hr * 0.12, 0, 7); c.fill(); }
+  if (SK === 'p_neon') { c.save(); c.shadowColor = C.c; c.shadowBlur = r * 0.8; c.strokeStyle = ludoMix(C.c, 255, 0.6); c.lineWidth = lw * 1.4; c.globalAlpha = 0.6 + 0.4 * Math.sin(t / 200 + i); c.beginPath(); c.arc(0, hy, hr * 1.06, 0, 7); c.stroke(); c.restore(); }
+  if (SK === 'p_gold') { for (let k = 0; k < 3; k++) { const a = t / 400 + k * 2.1, tw = 0.5 + 0.5 * Math.sin(t / 180 + k * 2); c.fillStyle = 'rgba(255,240,150,' + tw + ')'; ludoStar(c, Math.cos(a) * hr * 1.25, hy - hr * 0.2 + Math.sin(a) * hr * 0.9, hr * 0.17 * tw + 1, hr * 0.06); c.fill(); } }
   /* مؤثرات الحالة */
   if (o.scared) { c.fillStyle = 'rgba(120,210,255,.9)'; c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = lw * 0.6; const sy2 = hy - hr * 0.5 + ((t / 7) % 18) * 0.01 * r; c.beginPath(); c.moveTo(hr * 1.0, sy2 - hr * 0.3); c.quadraticCurveTo(hr * 1.25, sy2 + hr * 0.1, hr * 1.0, sy2 + hr * 0.2); c.quadraticCurveTo(hr * 0.75, sy2 + hr * 0.1, hr * 1.0, sy2 - hr * 0.3); c.fill(); c.stroke(); }
   if (o.dizzy) { for (let k = 0; k < 3; k++) { const a = t / 260 + k * 2.09; c.fillStyle = '#ffd23a'; ludoStar(c, Math.cos(a) * hr * 1.0, hy - hr * 1.12 + Math.sin(a) * hr * 0.22, hr * 0.2, hr * 0.09); c.fill(); } }
@@ -353,6 +382,7 @@ function ludoDiceEl() {
 function ludoDiceUpdate(t, s) {
   const b = document.getElementById('ludoDice'), cube = document.getElementById('ludoCube'); if (!b || !cube) return;
   const rolling = t < LUDOG.rolling;
+  { const rs = LUDOG.last && LUDOG.last.k === 'roll' && (t < LUDOG.rolling + 3000 || s.rolled) ? LUDOG.last.s : s.turn, dk = ((s.seats[rs] || {}).dk) || ''; if (b.dataset.dk !== dk) { if (b.dataset.dk) b.classList.remove('dk-' + b.dataset.dk); b.dataset.dk = dk; if (dk) b.classList.add('dk-' + dk); } }
   if (rolling && !LUDOG.dRoll) { LUDOG.dRoll = true; cube.classList.add('rolling'); b.classList.add('rolling'); b.classList.remove('land'); }
   else if (!rolling && LUDOG.dRoll) { LUDOG.dRoll = false; cube.classList.remove('rolling'); b.classList.remove('rolling'); b.classList.add('land'); setTimeout(() => b.classList.remove('land'), 450); }
   const dn = document.getElementById('ludoDNum'); if (dn) { const v2 = rolling ? 0 : (s.rolled ? s.dice : 0); if (dn.dataset.v !== String(v2)) { dn.dataset.v = v2; dn.textContent = v2 || ''; dn.classList.toggle('on', !!v2); dn.classList.toggle('six', v2 === 6); } }
@@ -365,10 +395,16 @@ function ludoDraw() {
   c.save(); c.translate(pad, pad);
   /* وهج النجوم (حيّة) */
   LUDO_SAFE.forEach(a => { if (LUDO_START.includes(a)) return; const q = LUDO_TRACK[a], cx = (q[0] + 0.5) * u, cy = (q[1] + 0.52) * u, g = c.createRadialGradient(cx, cy, 0, cx, cy, u * 0.7); g.addColorStop(0, 'rgba(255,225,110,' + (0.28 + 0.2 * Math.sin(t / 500 + a)) + ')'); g.addColorStop(1, 'rgba(255,225,110,0)'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, u * 0.7, 0, 7); c.fill(); });
+  /* خانات آمنة واضحة: نجمة تلمع + بريق يدور + درع صغير 🛡️ */
+  LUDO_SAFE.forEach(a => { const q = LUDO_TRACK[a], cx = (q[0] + 0.5) * u, cy = (q[1] + 0.52) * u; for (let k = 0; k < 4; k++) { const an = t / 700 + k * 1.571 + a; c.fillStyle = 'rgba(255,255,255,' + (0.55 + 0.4 * Math.sin(t / 300 + k)) + ')'; c.beginPath(); c.arc(cx + Math.cos(an) * u * 0.44, cy + Math.sin(an) * u * 0.44, u * 0.05, 0, 7); c.fill(); } if (!LUDO_START.includes(a)) { const sh = 0.5 + 0.5 * Math.sin(t / 380 + a); c.save(); c.globalAlpha = 0.35 + 0.5 * sh; c.translate(cx, cy); c.scale(1 + sh * 0.12, 1 + sh * 0.12); c.fillStyle = 'rgba(255,255,255,.9)'; ludoStar(c, 0, 0, u * 0.17, u * 0.07); c.fill(); c.restore(); } });
   /* وهج بيت صاحب الدور */
   if (s.ph === 'play' && s.turn >= 0) { const C = LUDO_COL[s.turn], b = LUDO_BASE[s.turn]; c.save(); c.shadowColor = C.c; c.shadowBlur = 16 + 8 * Math.sin(t / 220); c.strokeStyle = '#fff'; c.globalAlpha = 0.75 + 0.2 * Math.sin(t / 220); c.lineWidth = 3; ludoRR(c, b[0] * u + 3, b[1] * u + 3, 6 * u - 6, 6 * u - 6, u * 0.4); c.stroke(); c.restore(); }
   /* الأحجار */
   const spots = ludoTokenSpots(s), me = s.my, mv = new Set(t < LUDOG.rolling ? [] : (s.movable || []));
+  /* إظهار الحركات الممكنة: نقاط الطريق خانة خانة + علامة بالخانة اللي راح توصلها (💥 أكل • 🏠 بيت • ⭐ آمنة) */
+  if (s.ph === 'play' && s.turn === me && s.rolled && mv.size) { const P = s.seats[me]; spots.forEach(o => { if (o.seat !== me || !mv.has(o.k)) return; const from = o.pos, to = from < 0 ? 0 : from + s.dice, C = LUDO_COL[me];
+    for (let pp = (from < 0 ? 0 : from + 1); pp < to; pp++) { const q = ludoCell(me, pp, o.k), ph = (t / 90 - pp * 2) % 12; c.fillStyle = C.c; c.globalAlpha = 0.35 + (ph > 0 && ph < 3 ? 0.5 : 0); c.beginPath(); c.arc(q[0] * u, q[1] * u, u * 0.12, 0, 7); c.fill(); c.globalAlpha = 1; }
+    const q = ludoCell(me, to, o.k), lab = ludoTargetTag(s, me, to); if (lab) { c.save(); c.font = (u * 0.62) + 'px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.translate(q[0] * u, q[1] * u - u * 0.78 - Math.abs(Math.sin(t / 220)) * u * 0.15); c.fillStyle = 'rgba(255,255,255,.92)'; c.beginPath(); c.arc(0, 0, u * 0.42, 0, 7); c.fill(); c.strokeStyle = C.c; c.lineWidth = 2; c.stroke(); c.fillText(lab, 0, u * 0.03); c.restore(); } }); }
   /* أهداف الحركة المتاحة (حلقات نابضة) */
   if (s.ph === 'play' && s.turn === me && s.rolled && mv.size) { spots.forEach(o => { if (o.seat !== me || !mv.has(o.k)) return; const tp = o.pos < 0 ? 0 : o.pos + s.dice; const q = ludoCell(me, tp, o.k), C = LUDO_COL[me]; const pr = 0.3 + 0.08 * Math.sin(t / 160); c.strokeStyle = C.c; c.globalAlpha = 0.9; c.lineWidth = 2.6; c.setLineDash([u * 0.16, u * 0.12]); c.lineDashOffset = -t / 60; c.beginPath(); c.arc(q[0] * u, q[1] * u, u * pr * 1.3, 0, 7); c.stroke(); c.setLineDash([]); c.globalAlpha = 0.25 + 0.15 * Math.sin(t / 160); c.fillStyle = C.c; c.beginPath(); c.arc(q[0] * u, q[1] * u, u * pr, 0, 7); c.fill(); c.globalAlpha = 1; }); }
   /* خوف: خرزة على خانة غير آمنة وخصم وراها بـ 1..6 خانات */
@@ -382,8 +418,8 @@ function ludoDraw() {
       d.pos = o.pos;
     }
     let lift = 0, tilt = 0;
-    if (!d.seg && d.q.length) { const n = d.q.shift(); d.seg = { fx: d.x, fy: d.y, tx: n.x, ty: n.y, t0: t, dur: n.fly ? 700 : Math.max(95, 200 - d.q.length * 14), fly: !!n.fly }; }
-    if (d.seg) { const sg = d.seg, p = Math.min(1, (t - sg.t0) / sg.dur), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; d.x = sg.fx + (sg.tx - sg.fx) * (sg.fly ? e : p); d.y = sg.fy + (sg.ty - sg.fy) * (sg.fly ? e : p); lift = Math.sin(Math.PI * p) * (sg.fly ? 1.5 : 0.62); tilt = (sg.tx - sg.fx) * 0.12 * Math.sin(Math.PI * p);
+    if (!d.seg && d.q.length) { const n = d.q.shift(); d.seg = { fx: d.x, fy: d.y, tx: n.x, ty: n.y, t0: t, dur: n.fly ? 1000 : Math.max(95, 200 - d.q.length * 14), fly: !!n.fly }; }
+    if (d.seg) { const sg = d.seg, p = Math.min(1, (t - sg.t0) / sg.dur), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; d.x = sg.fx + (sg.tx - sg.fx) * (sg.fly ? e : p); d.y = sg.fy + (sg.ty - sg.fy) * (sg.fly ? e : p); lift = Math.sin(Math.PI * p) * (sg.fly ? 2.4 : 0.62); tilt = sg.fly ? p * Math.PI * 4 : (sg.tx - sg.fx) * 0.12 * Math.sin(Math.PI * p);
       if (p >= 1) { d.x = sg.tx; d.y = sg.ty; d.land = t; if (!sg.fly) { ludoSfx('step'); } d.seg = null; } }
     else { d.x += (o.tx - d.x) * 0.25; d.y += (o.ty - d.y) * 0.25; }
     const C = LUDO_COL[o.seat], canMove = o.seat === me && mv.has(o.k), moving = !!d.seg || d.q.length > 0, r = u * (o.cnt > 1 && o.pos >= 0 ? 0.33 : 0.45);
@@ -392,18 +428,19 @@ function ludoDraw() {
     c.fillStyle = 'rgba(0,0,0,' + Math.max(0.08, 0.34 - (lift + bob) * 0.22) + ')'; c.beginPath(); c.ellipse(px, gy + r * 0.02, r * (1.0 - (lift + bob) * 0.28), r * 0.34 * (1 - (lift + bob) * 0.2), 0, 0, 7); c.fill();
     if (canMove) { const g = c.createRadialGradient(px, gy, 0, px, gy, r * 1.7); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(0.5, C.c + '66'); g.addColorStop(1, C.c + '00'); c.fillStyle = g; c.beginPath(); c.ellipse(px, gy, r * 1.7, r * 0.7, 0, 0, 7); c.fill(); }
     const look = [Math.max(-1, Math.min(1, (7.5 - d.x) / 6)), Math.max(-1, Math.min(1, (7.5 - d.y) / 6))], won = !!(s.ph === 'over' && s.win && s.win.s === o.seat), dizzy = d.hit > t, scared = !dizzy && !moving && danger(o);
-    o.px = px; o.py = py - r * 1.1; o.r = r; o.draw = () => ludoPawn(c, px, py, r * 1.05, o.seat, t, { idx: o.seat * 4 + o.k, look, sx: 1 + sq * 0.6, sy: 1 - sq, tilt, bob: won ? Math.sin(t / 120) * 0.12 : 0, sleep: o.pos < 0 && !canMove && !dizzy && s.ph === 'play', happy: (o.pos === 56 || won || (lift > 0.2 && !scared)) && !dizzy, excited: canMove, scared, dizzy }); });
+    const dim = s.ph === 'play' && s.turn === me && s.rolled && mv.size && o.seat === me && !canMove;
+    o.px = px; o.py = py - r * 1.1; o.r = r; o.draw = () => { if (dim) c.globalAlpha = 0.5; ludoPawn(c, px, py, r * 1.05, o.seat, t, { sk: (s.seats[o.seat] || {}).sk || '', idx: o.seat * 4 + o.k, look, sx: 1 + sq * 0.6, sy: 1 - sq, tilt, bob: won ? Math.sin(t / 120) * 0.12 : 0, sleep: o.pos < 0 && !canMove && !dizzy && s.ph === 'play', happy: (o.pos === 56 || won || (lift > 0.2 && !scared)) && !dizzy, excited: canMove, scared, dizzy }); c.globalAlpha = 1; }; });
   spots.sort((a, b) => (a.py || 0) - (b.py || 0)); spots.forEach(o => o.draw && o.draw());
-  LUDOG.spots = spots; ludoFx(c, u);
+  LUDOG.spots = spots; ludoFx(c, u); ludoBubDraw(c, u, t); ludoPopDraw(c, u, t);
   c.restore();
   /* العد التنازلي 3-2-1 قبل بداية اللعبة */
   if ((LUDOG.cd || 0) > t) { const left = LUDOG.cd - t, n = Math.max(1, Math.ceil(left / 1000)), fr = (left % 1000) / 1000; if (LUDOG.cdN !== n) { LUDOG.cdN = n; ludoSfx('cd'); } c.fillStyle = 'rgba(10,6,30,.6)'; c.fillRect(0, 0, G.sz, G.sz); c.save(); c.translate(G.sz / 2, G.sz / 2); const sc = 0.7 + 0.5 * fr; c.scale(sc, sc); c.globalAlpha = Math.min(1, fr * 3); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 ' + (u * 6) + 'px Cairo, system-ui, sans-serif'; c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.6)'; c.fillStyle = ['#ffd23a', '#ff9f1c', '#ff5a8a'][Math.max(0, Math.min(2, 3 - n))]; c.strokeText(n, 0, 0); c.fillText(n, 0, 0); c.restore(); c.save(); c.textAlign = 'center'; c.font = 'bold ' + (u * 1) + 'px Cairo, system-ui, sans-serif'; c.fillStyle = '#fff'; c.fillText('🎲 جاهزين؟', G.sz / 2, G.sz * 0.2); c.restore(); } else if (LUDOG.cdN) { LUDOG.cdN = 0; ludoSfx('cdgo'); }
-  if (s.ph === 'over' && s.win) { const w = s.seats[s.win.s], C = LUDO_COL[s.win.s], k = Math.min(1, (t - (LUDOG.winT || t)) / 500); c.fillStyle = 'rgba(10,6,30,' + (0.55 * k) + ')'; c.fillRect(0, 0, G.sz, G.sz); c.save(); c.translate(G.sz / 2, G.sz / 2); c.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = (u * 3.2) + 'px system-ui'; c.fillText('🏆', 0, -u * 1.6 + Math.sin(t / 200) * 4); c.font = 'bold ' + (u * 1.15) + 'px Cairo, system-ui, sans-serif'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.7)'; c.fillStyle = C.c; const tx = 'فاز ' + (w ? w.n : '؟') + '!'; c.strokeText(tx, 0, u * 1.2); c.fillText(tx, 0, u * 1.2); c.restore(); }
+  if (s.ph === 'over' && s.win) { const k = Math.min(1, (t - (LUDOG.winT || t)) / 500); c.fillStyle = 'rgba(10,6,30,' + (0.45 * k) + ')'; c.fillRect(0, 0, G.sz, G.sz); }
   c.restore();
-  ludoDiceUpdate(t, s);
+  ludoDiceUpdate(t, s); ludoTimerUpdate(t, s);
 }
 function ludoClick(e) {
-  const s = LUDOG.s; if (performance.now() < LUDOG.rolling || (LUDOG.cd || 0) > performance.now()) return; if (!s || s.ph !== 'play' || s.turn !== s.my || !s.rolled || !LUDOG.spots || !(s.movable || []).length) return;
+  const s = LUDOG.s; if (s && s.ph === 'over') return; if (performance.now() < LUDOG.rolling || (LUDOG.cd || 0) > performance.now()) return; if (!s || s.ph !== 'play' || s.turn !== s.my || !s.rolled || !LUDOG.spots || !(s.movable || []).length) return;
   /* الإحداثيات بوحدات CSS (الرسم يستخدم setTransform بنسبة الشاشة، فلا نقسم على dpr) + نطرح هامش الإطار */
   const r = LUDOG.cv.getBoundingClientRect(), k = (LUDOG.sz || r.width) / (r.width || 1), pad = Math.round((LUDOG.sz || r.width) * 0.04), x = (e.clientX - r.left) * k - pad, y = (e.clientY - r.top) * k - pad; let best = null, bd = 1e9;
   LUDOG.spots.forEach(o => { if (o.seat !== s.my || !s.movable.includes(o.k)) return; const dd = Math.hypot((o.px || 0) - x, (o.py || 0) - y); if (dd < bd) { bd = dd; best = o; } });
@@ -524,7 +561,7 @@ function ludoChatBadge() { const b = document.getElementById('ludoChatB'); if (b
 function ludoChatAdd(m, live) {
   if (!m || !m.id) return; LUDOG.chatSeen = LUDOG.chatSeen || new Set(); if (LUDOG.chatSeen.has(m.id)) return; LUDOG.chatSeen.add(m.id);
   const L = document.getElementById('ludoChatL'), s = LUDOG.s; if (!L || !s) return; L.querySelectorAll('.lcEmpty').forEach(x => x.remove());
-  const C = LUDO_COL[m.s] || LUDO_COL[0], mine = m.s === s.my, b = lel('div', 'lcm' + (mine ? ' mine' : '') + (live ? ' new' : '')); b.style.setProperty('--c', C.c); b.style.setProperty('--d', C.d);
+  const C = LUDO_COL[m.s] || LUDO_COL[0], mine = m.s === s.my, b = lel('div', 'lcm' + (mine ? ' mine' : '') + (m.sys ? ' sys' : '') + (live ? ' new' : '')); b.style.setProperty('--c', C.c); b.style.setProperty('--d', C.d);
   const nm = lel('div', 'lcN', (m.adm ? '👑 ' : '') + m.n); b.appendChild(nm);
   if (m.vo) { const v = lel('button', 'lcVo'); v.type = 'button'; v.innerHTML = '<span class="lcPl">▶️</span><span class="lcWv"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><small>0:' + String(m.dur || 1).padStart(2, '0') + '</small>'; v.onclick = () => ludoPlayVoice(m.vo, v); b.appendChild(v); }
   else { const only = /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|‍|️|\s)+$/u.test(m.tx) && m.tx.length <= 12; b.appendChild(lel('div', 'lcT' + (only ? ' big' : ''), m.tx)); }
@@ -539,7 +576,7 @@ function ludoChatAdd(m, live) {
 }
 function ludoSpeak(m) { const st = ludoStageEl(); if (!st) return; const C = LUDO_COL[m.s] || LUDO_COL[0], el = lel('div', 'ludoSpk', '🔊 ' + m.n + ' يحجي...'); el.style.setProperty('--c', C.c); st.appendChild(el); setTimeout(() => el.remove(), Math.min(20, m.dur || 2) * 1000 + 600); }
 function ludoCss2() {
-  if (document.getElementById('ludoCss2')) return; const st = document.createElement('style'); st.id = 'ludoCss2';
+  ludoCss3(); if (document.getElementById('ludoCss2')) return; const st = document.createElement('style'); st.id = 'ludoCss2';
   st.textContent = `.ludoStage{position:relative;width:100%}
 .ludoDNum{min-width:0;width:0;height:52px;border-radius:16px;display:grid;place-items:center;font:900 30px Cairo,system-ui,sans-serif;color:#fff;background:linear-gradient(145deg,#8b5cf6,#5b2bd6);border:2px solid #fff;box-shadow:0 6px 16px rgba(90,40,200,.5);opacity:0;transform:scale(.3);transition:transform .35s cubic-bezier(.2,1.8,.4,1),opacity .2s,width .3s;overflow:hidden}.ludoDNum.on{width:52px;opacity:1;transform:scale(1)}.ludoDNum.six{background:linear-gradient(145deg,#ffb020,#ff4d6d);animation:ludoPulse .9s ease-in-out infinite}
 .ludoRoll{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;animation:lrBg 1.7s ease forwards}
@@ -589,3 +626,136 @@ function ludoCss2() {
 .lcPeek{pointer-events:auto;position:absolute;right:84px;bottom:calc(26px + env(safe-area-inset-bottom));max-width:60vw;background:#fff;color:#22152f;border-inline-start:5px solid var(--c);border-radius:16px 16px 4px 16px;padding:8px 12px;font-weight:700;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lcIn .4s cubic-bezier(.2,1.6,.4,1)}`;
   document.head.appendChild(st);
 }
+
+/* ===================== إضافات v9: مؤقت الدور، كمبيوتر 🤖، فرق 2 ضد 2، وضع سريع، منصة الفوز، سكنات، ثيمات الطاولة، رجوع بعد الانقطاع ===================== */
+const LUDO_MODES = { classic: { n: 'عادي', s: '🎲 عادي', d: '4 قطع لكل لاعب' }, quick: { n: 'سريع', s: '⚡ سريع', d: 'قطعتين بس — تخلص بنص الوقت' }, team: { n: 'فرق', s: '🤝 فرق 2 ضد 2', d: '🔴🟡 ضد 🟢🔵 — الشريك كبالك والفوز مشترك' } };
+const LUDO_THEMES = {
+  wood: { n: '🪵 خشب', fr: ['#9a6232', '#b87a42', '#8a5428', '#6a3d1a'], gr: ['60,30,10', '255,210,150'], rim: ['#fff2b8', '#d9a93a', '#a47a1e'], fl: ['#fffdf6', '#f4ecd9', '#e9dfc6'], vein: '150,130,100', tl: ['#ffffff', '#ece4d0'], ln: 'rgba(0,0,0,.2)', bg: 'radial-gradient(ellipse at top,#2a1a52,#0a0814)' },
+  gold: { n: '🥇 ذهبي', fr: ['#fff1b0', '#e0b23c', '#b9851a', '#7a5208'], gr: ['120,80,0', '255,250,210'], rim: ['#ffffff', '#f3d77a', '#c9971f'], fl: ['#fffaf0', '#fbefd2', '#f1dfb0'], vein: '200,150,40', tl: ['#fffdf5', '#f6e8c4'], ln: 'rgba(150,100,0,.3)', bg: 'radial-gradient(ellipse at top,#5a3d08,#1a1003)' },
+  night: { n: '🌙 ليلي', fr: ['#2a2f6b', '#1d2152', '#151840', '#0b0d26'], gr: ['0,0,0', '140,170,255'], rim: ['#c7d2ff', '#6d7cff', '#3b45b8'], fl: ['#2a2f5e', '#1f2349', '#161a38'], vein: '140,160,255', tl: ['#454c92', '#2f3570'], ln: 'rgba(160,180,255,.4)', stars: 1, bg: 'radial-gradient(ellipse at top,#141a4a,#03040f)' }
+};
+const LUDO_SKINS = {
+  p_crown: { n: 'تاج ملكي', e: '👑' }, p_cat: { n: 'أذان قطة', e: '🐱' }, p_shades: { n: 'نظارة كول', e: '😎' }, p_neon: { n: 'نيون مضيء', e: '✨' }, p_gold: { n: 'ذهبي فاخر', e: '🥇' },
+  d_red: { n: 'نرد أحمر', e: '❤️' }, d_wood: { n: 'نرد خشبي', e: '🪵' }, d_candy: { n: 'نرد حلاوة', e: '🍬' }, d_night: { n: 'نرد ليلي', e: '🌙' }, d_gold: { n: 'نرد ذهبي', e: '🥇' }
+};
+function ludoTheme() { try { const v = localStorage.getItem('ludoTheme'); if (LUDO_THEMES[v]) return v; } catch (e) {} return 'wood'; }
+function ludoThemeP() { return LUDO_THEMES[ludoTheme()]; }
+function ludoThemeSet(v) { try { localStorage.setItem('ludoTheme', v); } catch (e) {} LUDOG.bgKey = ''; ludoBgApply(); ludoSfx('click'); document.querySelectorAll('.ludoThm button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+function ludoBgApply() { try { const b = document.querySelector('#pg-ludo .pgBody'); if (b) b.style.background = ludoThemeP().bg; } catch (e) {} }
+function ludoThemeEl() {
+  const w = lel('div', 'ludoBox'); w.appendChild(lel('div', 'ludoSec', '🎨 ثيم الطاولة')); const r = lel('div', 'ludoThm'); const cur = ludoTheme();
+  Object.keys(LUDO_THEMES).forEach(k => { const b = lel('button', 'th-' + k + (k === cur ? ' on' : ''), LUDO_THEMES[k].n); b.type = 'button'; b.dataset.v = k; b.onclick = () => ludoThemeSet(k); r.appendChild(b); });
+  w.appendChild(r); w.appendChild(lel('small', 'ludoNote', 'الثيم إلك إنت بس — تكدر تغيّره وقت ما تريد')); setTimeout(ludoBgApply, 0); return w;
+}
+function ludoCpuEl() {
+  const w = lel('div', 'ludoBox cpu'); LUDOG.cpu = LUDOG.cpu || { m: 'classic', n: 1 };
+  w.appendChild(lel('div', 'ludoSec', '🤖 العب ويا الكمبيوتر')); const draw = () => {
+    w.querySelectorAll('.ludoChoose,.ludoNote,.ludoBtn').forEach(x => x.remove()); const C = LUDOG.cpu;
+    const m = lel('div', 'ludoChoose'); Object.keys(LUDO_MODES).forEach(k => { const b = lel('button', k === C.m ? 'on' : '', LUDO_MODES[k].s); b.type = 'button'; b.onclick = () => { C.m = k; if (k === 'team') C.n = 3; ludoSfx('click'); draw(); }; m.appendChild(b); }); w.appendChild(m);
+    if (C.m !== 'team') { const n = lel('div', 'ludoChoose'); [1, 2, 3].forEach(k => { const b = lel('button', k === C.n ? 'on' : '', '🤖'.repeat(k) + ' ' + k); b.type = 'button'; b.onclick = () => { C.n = k; ludoSfx('click'); draw(); }; n.appendChild(b); }); w.appendChild(n); }
+    w.appendChild(lel('small', 'ludoNote', LUDO_MODES[C.m].d + (C.m === 'team' ? ' • شريكك والخصمين كمبيوتر' : '')));
+    const go = lel('button', 'ludoBtn go', '▶️ يلا نلعب'); go.onclick = () => ludoSend({ t: 'ludo_cpu', m: C.m, n: C.n }); w.appendChild(go);
+  }; draw(); return w;
+}
+function ludoModeEl(s, iAmHost) {
+  const w = lel('div', 'ludoBox'); w.appendChild(lel('div', 'ludoSec', '🎮 وضع اللعب' + (iAmHost ? '' : ' (يختاره الهوست 👑)')));
+  const m = lel('div', 'ludoChoose'); Object.keys(LUDO_MODES).forEach(k => { const b = lel('button', k === (s.mode || 'classic') ? 'on' : '', LUDO_MODES[k].s); b.type = 'button'; b.disabled = !iAmHost; b.onclick = () => ludoSend({ t: 'ludo_mode', m: k }); m.appendChild(b); });
+  w.append(m, lel('small', 'ludoNote', LUDO_MODES[s.mode || 'classic'].d + (s.mode === 'team' && s.seats.filter(Boolean).length < 4 ? ' — يحتاج 4 لاعبين، كمّل بكمبيوتر 🤖' : ''))); return w;
+}
+function ludoShopEl() { const w = lel('div', 'ludoBox shop'); w.id = 'ludoShop'; w.appendChild(lel('div', 'ludoSec', '🛍️ سكنات غوكو')); w.appendChild(lel('small', 'ludoNote', '...')); setTimeout(ludoShopRender, 0); return w; }
+function ludoShopRender() {
+  const w = document.getElementById('ludoShop'), d = LUDOG.shop; if (!w || !d) return; w.innerHTML = '';
+  w.appendChild(lel('div', 'ludoSec', '🛍️ سكنات غوكو • 🪙 ' + (d.adm ? '∞' : d.coins)));
+  [['p', '♟️ سكنات القطع'], ['d', '🎲 سكنات النرد']].forEach(([kd, ttl]) => {
+    w.appendChild(lel('small', 'ludoSub', ttl)); const g = lel('div', 'ludoSkins');
+    const none = lel('button', 'ludoSkin' + (!d.sel[kd] ? ' sel' : '')); none.type = 'button'; none.append(lel('span', 'e', kd === 'p' ? '♟️' : '🎲'), lel('b', '', 'العادي'), lel('small', '', !d.sel[kd] ? '✅ لابسه' : 'البسه')); none.onclick = () => ludoSend({ t: 'ludo_sel', kind: kd, k: '' }); g.appendChild(none);
+    Object.keys(d.price).filter(k => k[0] === kd).sort((a, b) => d.price[a] - d.price[b]).forEach(k => {
+      const own = d.own.includes(k), on = d.sel[kd] === k, S = LUDO_SKINS[k] || { n: k, e: '✨' }, b = lel('button', 'ludoSkin' + (own ? ' own' : '') + (on ? ' sel' : '') + ' sk-' + k); b.type = 'button';
+      b.append(lel('span', 'e', S.e), lel('b', '', S.n), lel('small', '', on ? '✅ لابسه' : own ? 'البسه' : '🪙 ' + d.price[k]));
+      b.onclick = () => { if (on) return; if (own) return ludoSend({ t: 'ludo_sel', kind: kd, k }); if (!d.adm && d.coins < d.price[k]) { ludoSfx('err'); return showToast('🪙 عملاتك ما تكفي، تحتاج ' + d.price[k]); } if (confirm('تشتري «' + S.n + '» بـ ' + d.price[k] + ' عملة؟')) ludoSend({ t: 'ludo_buy', k }); };
+      g.appendChild(b);
+    }); w.appendChild(g);
+  });
+  w.appendChild(lel('small', 'ludoNote', 'كل اللاعبين يشوفون سكناتك بالطاولة 😎'));
+}
+/* ---------- مؤقت الدور (15 ثانية) ---------- */
+function ludoTimerUpdate(t, s) {
+  const E = document.getElementById('ludoTmr'); if (!E) return; const on = s.ph === 'play' && !((LUDOG.cd || 0) > t);
+  E.classList.toggle('on', on); if (!on) return;
+  const rem = Math.max(0, (LUDOG.dl || 0) - t), mx = Math.max(1000, LUDOG.tMax || 15000), pr = Math.min(1, rem / mx), sec = Math.ceil(rem / 1000), mine = s.turn === s.my, P = s.seats[s.turn] || {}, C = LUDO_COL[s.turn] || LUDO_COL[0];
+  E.style.setProperty('--c', C.c); E.style.setProperty('--p', (pr * 100).toFixed(1) + '%'); E.classList.toggle('low', sec <= 5 && mine && !P.bot);
+  const tx = P.bot ? '🤖 يفكّر...' : P.off ? '📶 ننتظره يرجع' : (mine ? '⏱️ باقيلك ' : '⏱️ ') + sec + ' ث' + (mine && sec <= 5 ? ' — بسرعة وإلا تنلعب عنك!' : '');
+  const b = E.querySelector('b'); if (b.textContent !== tx) b.textContent = tx;
+  const ch = document.querySelector('.ludoChip.on'); if (ch) ch.style.setProperty('--p', (pr * 100).toFixed(1) + '%');
+  if (mine && !P.bot && sec <= 5 && sec >= 1 && LUDOG.tickN !== sec) { LUDOG.tickN = sec; ludoSfx(sec <= 2 ? 'tick2' : 'tick'); } if (sec > 5) LUDOG.tickN = 0;
+}
+/* ---------- علامة الخانة اللي راح توصلها ---------- */
+function ludoTargetTag(s, me, to) {
+  if (to === 56) return '🏠'; if (to > 50) return '';
+  const a = (LUDO_START[me] + to) % 52; if (LUDO_SAFE.includes(a)) return '⭐';
+  const eat = s.seats.some((q, i) => q && i !== me && !(s.mode === 'team' && i % 2 === me % 2) && q.tk.some(qp => qp >= 0 && qp <= 50 && (LUDO_START[i] + qp) % 52 === a));
+  return eat ? '💥' : '';
+}
+/* ---------- إيموجي سريع فوق صورة اللاعب (بيته باللوحة) ---------- */
+LUDOG.bub = {};
+function ludoBubDraw(c, u, t) {
+  Object.keys(LUDOG.bub).forEach(k => { const B = LUDOG.bub[k], age = t - B.t0; if (age > 2400) { delete LUDOG.bub[k]; return; } const b = LUDO_BASE[k], cx = (b[0] + 3) * u, cy = (b[1] + 3) * u - Math.min(1, age / 300) * u * 0.6, sc = age < 250 ? age / 250 * 1.25 : age < 400 ? 1.25 - (age - 250) / 150 * 0.25 : 1, al = age > 1900 ? 1 - (age - 1900) / 500 : 1;
+    c.save(); c.globalAlpha = al; c.translate(cx, cy); c.scale(sc, sc); c.fillStyle = '#fff'; c.strokeStyle = LUDO_COL[k].c; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, u * 1.25, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.moveTo(-u * 0.3, u * 1.15); c.lineTo(0, u * 1.65); c.lineTo(u * 0.3, u * 1.15); c.fill(); c.font = (u * 1.5) + 'px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(B.e, 0, u * 0.08); c.restore(); });
+}
+/* ---------- نص يطلع من فوق (انأكل!) ---------- */
+LUDOG.pops = [];
+function ludoPop(x, y, tx, col) { LUDOG.pops.push({ x, y, tx, col, t0: performance.now() }); }
+function ludoPopDraw(c, u, t) {
+  LUDOG.pops = LUDOG.pops.filter(P => t - P.t0 < 1600); LUDOG.pops.forEach(P => { const a = (t - P.t0) / 1600; c.save(); c.globalAlpha = 1 - a * a; c.translate(P.x * u, P.y * u - a * u * 2.2); c.rotate(Math.sin(a * 20) * 0.08 * (1 - a)); const sc = a < 0.15 ? a / 0.15 * 1.3 : 1.3 - Math.min(0.3, (a - 0.15) * 2); c.scale(sc, sc); c.font = '900 ' + (u * 0.85) + 'px Cairo, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.75)'; c.strokeText(P.tx, 0, 0); c.fillStyle = '#fff'; c.fillText(P.tx, 0, 0); c.restore(); });
+}
+/* ---------- منصة الفوز: الأول والثاني والثالث ---------- */
+function ludoIWon(s) { if (!s || !s.win) return false; if (s.mode === 'team') return s.my >= 0 && s.my % 2 === s.win.team; return s.win.s === s.my; }
+function ludoWinTitle(s) { const W = s.win || {}; if (s.mode === 'team') { const a = s.seats[W.team], b = s.seats[W.team + 2]; return 'فاز فريق ' + (W.team ? '🟢🔵' : '🔴🟡') + ' (' + [a, b].filter(Boolean).map(x => x.n).join(' و ') + ')'; } const w = s.seats[W.s]; return 'فاز ' + (w ? w.n : '؟'); }
+function ludoPodium(s) {
+  const st = ludoStageEl(); if (!st || !s.win) return; st.querySelectorAll('.ludoPod').forEach(x => x.remove());
+  const W = s.win, rw = W.rw || {}, el = lel('div', 'ludoPod' + (ludoIWon(s) ? ' won' : ''));
+  el.appendChild(lel('div', 'lpTtl', '🏆 ' + ludoWinTitle(s) + '!'));
+  const ranks = (W.ranks || []).slice(), steps = lel('div', 'lpSteps');
+  const place = (r, cls) => { if (!r) return; const p = s.seats[r.s], C = LUDO_COL[r.s], col = lel('div', 'lpCol ' + cls); col.style.setProperty('--c', C.c); col.style.setProperty('--d', C.d);
+    col.append(lel('div', 'lpMed', ['', '🥇', '🥈', '🥉'][r.r] || ''), lel('div', 'lpPawn'), lel('b', '', (p ? p.n : '؟') + (r.s === s.my ? ' (إنت)' : '')), lel('small', 'lpRw', rw[r.s] || ''), lel('div', 'lpStep', String(r.r))); steps.appendChild(col); };
+  if (s.mode === 'team') { const win = ranks.filter(r => r.s % 2 === W.team), lose = ranks.filter(r => r.s % 2 !== W.team); win.forEach(r => place({ s: r.s, r: 1 }, 'p1')); lose.forEach(r => place({ s: r.s, r: 2 }, 'p2')); }
+  else { place(ranks[1], 'p2'); place(ranks[0], 'p1'); place(ranks[2], 'p3'); }
+  el.appendChild(steps);
+  if (s.mode !== 'team' && ranks[3]) { const p = s.seats[ranks[3].s]; el.appendChild(lel('small', 'lpRest', '4️⃣ ' + (p ? p.n : ''))); }
+  if (W.vsBot) el.appendChild(lel('small', 'lpRest', '🤖 لعبة ويا الكمبيوتر: جائزة صغيرة (10 مرات باليوم)'));
+  el.appendChild(lel('small', 'lpRest', ludoRm() ? '💵 الجوائز بالمنتجع: دولار المنتجع' : '🪙 الجوائز: عملات'));
+  for (let i = 0; i < 14; i++) { const cf = lel('i', 'lpCf'); cf.style.setProperty('--x', (Math.random() * 100) + '%'); cf.style.setProperty('--dl', (Math.random() * 1.5) + 's'); cf.style.background = ['#ffd23a', '#ef3b3b', '#2fbf5b', '#2f7bff', '#ff6bd5'][i % 5]; el.appendChild(cf); }
+  st.appendChild(el);
+}
+/* ---------- رجوع بعد انقطاع النت ---------- */
+window.ludoReconnect = () => { try { if (typeof auth !== 'undefined' && auth) ludoSend({ t: 'ludo_get' }); } catch (e) {} };
+const _ludoEmoFloat = ludoEmoFloat;
+ludoEmoFloat = function (seat, e) { try { if (seat >= 0 && LUDOG.cv && document.getElementById('ludoCv')) LUDOG.bub[seat] = { e, t0: performance.now() }; } catch (er) {} return _ludoEmoFloat(seat, e); };
+function ludoCss3() {
+  if (document.getElementById('ludoCss3')) return; const st = document.createElement('style'); st.id = 'ludoCss3';
+  st.textContent = `.ludoBox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}.ludoBox.cpu{border-color:rgba(120,220,255,.55);background:linear-gradient(135deg,rgba(40,120,200,.22),rgba(120,60,220,.18))}
+.ludoChoose{display:flex;gap:6px;flex-wrap:wrap}.ludoChoose button{flex:1 1 30%;padding:9px 6px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;font-weight:800;font-family:inherit;font-size:13px}.ludoChoose button.on{background:linear-gradient(135deg,#ff8a2a,#e53b6a);border-color:#fff;box-shadow:0 0 12px rgba(255,120,80,.6)}.ludoChoose button:disabled{opacity:.75}
+.ludoThm{display:flex;gap:6px}.ludoThm button{flex:1;padding:10px 4px;border-radius:12px;border:2px solid rgba(255,255,255,.35);color:#fff;font-weight:800;font-family:inherit}.ludoThm .th-wood{background:linear-gradient(135deg,#b87a42,#6a3d1a)}.ludoThm .th-gold{background:linear-gradient(135deg,#f3d77a,#b9851a);color:#3a2600}.ludoThm .th-night{background:linear-gradient(135deg,#3b45b8,#0b0d26)}.ludoThm button.on{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 14px rgba(255,255,255,.5);transform:scale(1.04)}
+.ludoSub{font-weight:800;opacity:.9}.ludoSkins{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.ludoSkin{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:14px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;font-family:inherit}.ludoSkin .e{font-size:26px}.ludoSkin b{font-size:12px}.ludoSkin small{font-size:11px;font-weight:800;color:#ffd166}.ludoSkin.own small{color:#7dffb5}.ludoSkin.sel{border-color:#3ee08a;background:rgba(40,160,90,.25);box-shadow:0 0 12px rgba(62,224,138,.45)}
+.ludoSeat{position:relative}.ludoSeat.bot{background:rgba(120,200,255,.12)}.ludoDot{display:grid;place-items:center;font-size:18px}.ludoSit.bot{background:linear-gradient(135deg,#38bdf8,#6366f1)}.ludoSit.ghost{background:rgba(255,255,255,.15)}
+.ludoTeamTag{position:absolute;top:4px;inset-inline-start:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(0,0,0,.35)}
+.ludoChip.on{background:conic-gradient(var(--c) var(--p,100%),rgba(255,255,255,.12) 0)}.ludoChip.net{opacity:.7;border-style:dashed}.ludoChip.mode{border-color:#fff;background:rgba(255,255,255,.15)}
+.ludoTmr{position:relative;height:26px;border-radius:13px;overflow:hidden;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);display:none}.ludoTmr.on{display:block}.ludoTmr i{position:absolute;inset:0;width:var(--p,100%);background:linear-gradient(90deg,var(--c),#fff8);transition:width .25s linear}.ludoTmr b{position:relative;display:block;text-align:center;font-size:13px;line-height:24px;text-shadow:0 1px 3px rgba(0,0,0,.7)}.ludoTmr.low{animation:ludoPulse .5s ease-in-out infinite;border-color:#ff4d6d}.ludoTmr.low i{background:linear-gradient(90deg,#ff2d55,#ff9f1c)}
+.ludoDice.dk-d_red .ludoFace{background:linear-gradient(145deg,#ff8a8a,#e0243f);border-color:#ffc2c2}.ludoDice.dk-d_red .ludoFace i{background:#fff}
+.ludoDice.dk-d_wood .ludoFace{background:repeating-linear-gradient(100deg,#c48a4f 0 6px,#b07436 6px 10px,#d39a5c 10px 14px);border-color:#7a4a1c}.ludoDice.dk-d_wood .ludoFace i{background:#3b1f08}
+.ludoDice.dk-d_candy .ludoFace{background:linear-gradient(145deg,#ffd1ec,#ff7ac6);border-color:#fff}.ludoDice.dk-d_candy .ludoFace i{background:radial-gradient(circle at 35% 30%,#fff,#7c3aed)}
+.ludoDice.dk-d_night .ludoFace{background:linear-gradient(145deg,#1e2459,#070a24);border-color:#6d7cff;box-shadow:inset 0 0 14px rgba(109,124,255,.6)}.ludoDice.dk-d_night .ludoFace i{background:#a5f3ff;box-shadow:0 0 6px #6ee7ff}
+.ludoDice.dk-d_gold .ludoFace{background:linear-gradient(145deg,#fff5c0,#f2c94c 50%,#b8860b);border-color:#fff3b0}.ludoDice.dk-d_gold .ludoFace i{background:radial-gradient(circle at 35% 30%,#6b3d00,#2a1600)}
+.ludoPod{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(255,210,90,.25),rgba(10,6,30,.82) 60%);animation:lpIn .6s ease}@keyframes lpIn{from{opacity:0;transform:scale(.85)}}
+.lpTtl{font:900 clamp(18px,5.4vw,26px) Cairo,system-ui,sans-serif;color:#ffd84a;text-shadow:0 2px 0 #8a5a00,0 0 18px rgba(255,200,60,.7);text-align:center;padding:0 10px;animation:ludoBob 1.6s ease-in-out infinite}
+.lpSteps{display:flex;align-items:flex-end;gap:8px;justify-content:center;width:100%;padding:0 10px}.lpCol{flex:0 1 31%;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;animation:lpUp .7s cubic-bezier(.2,1.5,.4,1) both}.lpCol.p1{animation-delay:.5s}.lpCol.p2{animation-delay:.25s}.lpCol.p3{animation-delay:0s}@keyframes lpUp{from{transform:translateY(80px);opacity:0}}
+.lpCol b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lpMed{font-size:34px}.lpCol.p1 .lpMed{font-size:46px;animation:ludoBob 1.2s ease-in-out infinite}
+.lpPawn{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff 0,#fff 8%,var(--c) 42%,var(--d));box-shadow:0 4px 10px rgba(0,0,0,.5)}.lpCol.p1 .lpPawn{width:44px;height:44px}
+.lpStep{width:100%;display:grid;place-items:center;font:900 26px Cairo,system-ui;color:#fff;border-radius:10px 10px 0 0;background:linear-gradient(180deg,var(--c),var(--d));border:2px solid rgba(255,255,255,.6);border-bottom:0}.lpCol.p1 .lpStep{height:96px}.lpCol.p2 .lpStep{height:68px}.lpCol.p3 .lpStep{height:48px}
+.lpRw{color:#7dffb5;font-weight:900;min-height:15px}.lpRest{opacity:.85;font-size:12px;text-align:center;padding:0 10px}
+.lpCf{position:absolute;top:-12px;left:var(--x);width:9px;height:14px;border-radius:2px;animation:lpCf 2.6s linear var(--dl) infinite}@keyframes lpCf{to{transform:translateY(120vw) rotate(720deg)}}
+.lcm.sys{align-self:center;max-width:92%;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;text-align:center;padding:5px 12px}.lcm.sys .lcN,.lcm.sys .lcTm{display:none}.lcm.sys .lcT{font-size:13px;font-weight:800}`;
+  document.head.appendChild(st);
+}
+/* ---------- ترجمة إنكليزي لنصوص الإضافات ---------- */
+try { Object.assign(window.__EN || {}, { '🤖 العب ويا الكمبيوتر': '🤖 Play vs computer', '▶️ يلا نلعب': '▶️ Let\'s play', '🎨 ثيم الطاولة': '🎨 Board theme', '🪵 خشب': '🪵 Wood', '🥇 ذهبي': '🥇 Gold', '🌙 ليلي': '🌙 Night', '🛍️ سكنات غوكو': '🛍️ Goku skins', '♟️ سكنات القطع': '♟️ Piece skins', '🎲 سكنات النرد': '🎲 Dice skins', 'العادي': 'Default', '✅ لابسه': '✅ Equipped', 'البسه': 'Equip', '🎮 وضع اللعب': '🎮 Game mode', '🎲 عادي': '🎲 Classic', '⚡ سريع': '⚡ Quick', '🤝 فرق 2 ضد 2': '🤝 Teams 2v2', '🤖 ضيف كمبيوتر': '🤖 Add computer', '✖ شيل الكمبيوتر': '✖ Remove computer', '🪑 اجلس محله': '🪑 Take this seat', 'تاج ملكي': 'Royal crown', 'أذان قطة': 'Cat ears', 'نظارة كول': 'Cool shades', 'نيون مضيء': 'Neon glow', 'ذهبي فاخر': 'Luxury gold', 'نرد أحمر': 'Red dice', 'نرد خشبي': 'Wooden dice', 'نرد حلاوة': 'Candy dice', 'نرد ليلي': 'Night dice', 'نرد ذهبي': 'Gold dice' }); } catch (e) {}
