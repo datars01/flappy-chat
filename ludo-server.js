@@ -6,7 +6,7 @@
 'use strict';
 module.exports = function ludoInit(ctx) {
   const { db, save, send, crypto, alog } = ctx; const onTable = ctx.onTable || (() => {});   // onTable: يبلّغ المنتجع بحالة طاولة الغوكو
-  const SEATS = 4, MIN_P = 2, CD_MS = 3000, TURN_MS = 15000, BOT_MS = 1100, OFF_MS = 2600, GRACE_MS = 60000, OVER_MS = 15000;
+  const SEATS = 4, MIN_P = 2, CD_MS = 3000, TURN_MS = 15000, BOT_MS = 800, OFF_MS = 2200, GRACE_MS = 60000, OVER_MS = 15000;
   const TRACK = 52, LANE_END = 56;                       // مواقع الحجر: -1 قاعدة، 0..50 مسار، 51..55 ممر البيت، 56 وصل
   const START = [0, 13, 26, 39];                         // خانة بداية كل لون على المسار
   const SAFE = new Set([0, 13, 26, 39, 8, 21, 34, 47]);  // خانات البداية + النجوم (ما ينأكل فيها حجر)
@@ -145,11 +145,11 @@ module.exports = function ludoInit(ctx) {
   function roll(l, seat, byAuto) {
     l.dice = 1 + rnd(6); l.rolled = true; l.lastEv = { k: 'roll', s: seat, d: l.dice, id: (l.evId = (l.evId || 0) + 1) };
     if (l.dice === 6) l.sixes++; else l.sixes = 0;
-    if (l.sixes >= 3) { l.lastEv.k = 'sixes'; nextTurn(l, false); l.t += 1200; return bc(l); }          // ثلاث ستات ورا بعض: يضيع الدور
+    if (l.sixes >= 3) { l.lastEv.k = 'sixes'; nextTurn(l, false); l.t += 800; return bc(l); }          // ثلاث ستات ورا بعض: يضيع الدور
     l.movable = movables(l, l.dice);
-    if (!l.movable.length) { l.t = now() + 1900; l.pass = true; return bc(l); }              // ماكو حركة: يمر الدور بعد لحظة
+    if (!l.movable.length) { l.t = now() + 1300; l.pass = true; return bc(l); }              // ماكو حركة: يمر الدور بعد لحظة
     const p = l.seats[seat];
-    if (byAuto || isAuto(p)) { l.auto = true; l.t = now() + (l.movable.length === 1 ? 1500 : 1800); }
+    if (byAuto || isAuto(p)) { l.auto = true; l.t = now() + (l.movable.length === 1 ? 1000 : 1200); }
     else if (l.t - now() < 6000) setTimer(l, 6000);              // المؤقت ما يرجع من الصفر، بس نضمن 6 ثواني للحركة
     bc(l);
   }

@@ -123,17 +123,17 @@ function ludoMsg(d) {
 function ludoOnState(old, s) {
   if (s && s.last && s.last.id !== LUDOG.lastEv) {
     LUDOG.lastEv = s.last.id; LUDOG.last = s.last;
-    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 1000; LUDOG.dice = s.last.d; ludoSfx('roll'); const dv = s.last.d; const rs = s.last.s; setTimeout(() => { ludoSfx(dv === 6 ? 'six' : 'land'); ludoRollPop(dv, rs); }, 980); }
+    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 700; LUDOG.dice = s.last.d; ludoSfx('roll'); const dv = s.last.d; const rs = s.last.s; setTimeout(() => { ludoSfx(dv === 6 ? 'six' : 'land'); ludoRollPop(dv, rs); }, 680); }
     else if (s.last.k === 'sixes') { ludoSfx('sixes'); showToast('🎲 ثلاث ستات ورا بعض، ضاع الدور!'); }
     else if (s.last.k === 'move') {   /* المؤثرات تنتظر لين تنتهي قفزات الخرزة خانة خانة */
-      const L = s.last, prev = (old && old.seats[L.s] && old.seats[L.s].tk[L.tk]), steps = (prev === undefined || prev < 0 || L.pos < 0) ? 1 : Math.max(1, L.pos - prev), wait = Math.min(1800, steps * 150 + (L.cap ? 60 : 0));
+      const L = s.last, prev = (old && old.seats[L.s] && old.seats[L.s].tk[L.tk]), steps = (prev === undefined || prev < 0 || L.pos < 0) ? 1 : Math.max(1, L.pos - prev), wait = Math.min(900, steps * 78 + (L.cap ? 40 : 0));
       if (L.caps && L.caps.length) setTimeout(() => { try { ludoSfx('eaten'); L.caps.forEach(c => { const q = ludoCell(c[0], c[2], c[1]); ludoPop(q[0], q[1], c[0] === s.my ? '😵 انأكلت!' : '😵 انأكل!', LUDO_COL[c[0]].c); }); if (L.caps.some(c => c[0] === s.my)) { try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch (e) {} } } catch (e) {} }, wait + 60);
       if (L.fin) setTimeout(() => { try { ludoSfx('medal'); const p = s.seats[L.s]; showToast(['', '🥇', '🥈', '🥉'][L.fin] + ' ' + (p ? p.n : '') + ' خلّص أحجاره!'); } catch (e) {} }, wait + 200);
       setTimeout(() => { try { ludoSfx(L.cap ? 'cap' : L.home ? 'home' : 'move'); const q = ludoCell(L.s, L.pos, L.tk); ludoBurst(q[0], q[1], L.cap ? 'cap' : L.home ? 'home' : 'dust', LUDO_COL[L.s].c); if (L.cap) LUDOG.shake = performance.now() + 380; } catch (e) {} }, wait); }
   }
   if (s && s.ph === 'over' && (!old || old.ph !== 'over')) { ludoSfx(ludoIWon(s) ? 'win' : 'lose'); LUDOG.winT = performance.now(); ludoConfetti(); }
   if (s && s.ph === 'play' && old && old.ph === 'lobby') { LUDOG.cd = performance.now() + 3000; LUDOG.cdN = 0; ludoSfx('start'); setTimeout(() => { try { ludoUpdate(); const z = LUDOG.s; if (z && z.ph === 'play' && z.turn === z.my) { ludoSfx('turn'); ludoTurnBanner(); } } catch (e) {} }, 3100); }
-  if (s && s.ph === 'play' && s.turn === s.my && (!old || old.turn !== s.turn || old.ph !== 'play') && !((LUDOG.cd || 0) > performance.now())) { ludoSfx('turn'); try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {} const rl = Math.max(0, (LUDOG.rolling || 0) - performance.now()); setTimeout(() => ludoTurnBanner(), rl ? rl + 900 : 0); }
+  if (s && s.ph === 'play' && s.turn === s.my && (!old || old.turn !== s.turn || old.ph !== 'play') && !((LUDOG.cd || 0) > performance.now())) { ludoSfx('turn'); try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {} const rl = Math.max(0, (LUDOG.rolling || 0) - performance.now()); setTimeout(() => ludoTurnBanner(), rl ? rl + 500 : 0); }
   if (s && old && s.ph === 'lobby' && old.ph === 'lobby') {   /* أصوات الغرفة: استعداد / دخول / طلوع */
     const rd = x => x.seats.filter(p => p && p.rdy).length, nn = x => x.seats.filter(Boolean).length;
     if (rd(s) > rd(old)) ludoSfx('ready'); else if (rd(s) < rd(old) && nn(s) >= nn(old)) ludoSfx('unready');
@@ -271,7 +271,7 @@ function ludoBoardCache(G) {
   LUDOG.bg = bgc; LUDOG.bgKey = key; return bgc;
 }
 function ludoGeom() {
-  const cv = LUDOG.cv; const sz = Math.min(cv.parentNode.clientWidth, window.innerHeight * 0.62, 520) || 320; const dpr = window.devicePixelRatio || 1;
+  const cv = LUDOG.cv; const sz = Math.min(cv.parentNode.clientWidth, window.innerHeight * 0.62, 520) || 320; const dpr = window.fxDpr ? fxDpr(2) : Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(sz * dpr)) { cv.width = Math.round(sz * dpr); cv.height = Math.round(sz * dpr); cv.style.width = sz + 'px'; cv.style.height = sz + 'px'; }
   const pad = Math.round(sz * 0.04); LUDOG.sz = sz; return { sz, dpr, pad, u: (sz - 2 * pad) / 15 };
 }
@@ -418,10 +418,10 @@ function ludoDraw() {
       d.pos = o.pos;
     }
     let lift = 0, tilt = 0;
-    if (!d.seg && d.q.length) { const n = d.q.shift(); d.seg = { fx: d.x, fy: d.y, tx: n.x, ty: n.y, t0: t, dur: n.fly ? 1000 : Math.max(95, 200 - d.q.length * 14), fly: !!n.fly }; }
+    if (!d.seg && d.q.length) { const n = d.q.shift(); d.seg = { fx: d.x, fy: d.y, tx: n.x, ty: n.y, t0: t, dur: n.fly ? 620 : Math.max(55, 110 - d.q.length * 9), fly: !!n.fly }; }
     if (d.seg) { const sg = d.seg, p = Math.min(1, (t - sg.t0) / sg.dur), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; d.x = sg.fx + (sg.tx - sg.fx) * (sg.fly ? e : p); d.y = sg.fy + (sg.ty - sg.fy) * (sg.fly ? e : p); lift = Math.sin(Math.PI * p) * (sg.fly ? 2.4 : 0.62); tilt = sg.fly ? p * Math.PI * 4 : (sg.tx - sg.fx) * 0.12 * Math.sin(Math.PI * p);
       if (p >= 1) { d.x = sg.tx; d.y = sg.ty; d.land = t; if (!sg.fly) { ludoSfx('step'); } d.seg = null; } }
-    else { d.x += (o.tx - d.x) * 0.25; d.y += (o.ty - d.y) * 0.25; }
+    else { d.x += (o.tx - d.x) * 0.4; d.y += (o.ty - d.y) * 0.4; }
     const C = LUDO_COL[o.seat], canMove = o.seat === me && mv.has(o.k), moving = !!d.seg || d.q.length > 0, r = u * (o.cnt > 1 && o.pos >= 0 ? 0.33 : 0.45);
     const bob = canMove ? Math.abs(Math.sin(t / 190)) * 0.22 : 0, la = t - d.land, sq = la < 190 ? Math.sin(Math.PI * la / 190) * 0.16 : 0;
     const px = d.x * u, gy = d.y * u + r * 0.55, py = gy - (lift + bob) * u;
@@ -486,14 +486,14 @@ function ludoRollPop(v, seat) {   /* رقم كبير متحرك بنص اللو�
   const el = lel('div', 'ludoRoll' + (v === 6 ? ' six' : '')); el.style.setProperty('--c', C.c); el.style.setProperty('--d', C.d);
   const ring = lel('div', 'lrRing'), num = lel('div', 'lrNum', String(v)), em = lel('div', 'lrEm', LUDO_DEMO[v]), tx = lel('div', 'lrTx', mine ? 'طلعلك ' + LUDO_DTXT[v] : 'طلع لـ ' + (p ? p.n : '؟') + ' ' + LUDO_DTXT[v]);
   el.append(ring, num, em, tx); if (v === 6) for (let i = 0; i < 10; i++) { const sp = lel('i', 'lrSpark', i % 2 ? '✨' : '⭐'); sp.style.setProperty('--a', (i * 36) + 'deg'); el.appendChild(sp); }
-  st.appendChild(el); setTimeout(() => el.remove(), 1700);
+  st.appendChild(el); setTimeout(() => el.remove(), 1150);
 }
 function ludoTurnBanner() {   /* «دورك!» كبيرة بالشاشة */
   const st = ludoStageEl(), s = LUDOG.s; if (!st || !s || s.ph !== 'play' || s.turn !== s.my) return; st.querySelectorAll('.ludoTurn').forEach(x => x.remove());
   const C = LUDO_COL[s.my]; const el = lel('div', 'ludoTurn'); el.style.setProperty('--c', C.c); el.style.setProperty('--d', C.d);
   el.append(lel('div', 'ltEm', '🎯'), lel('div', 'ltTx', 'دورك!'), lel('div', 'ltSub', '🎲 دوس النرد'));
   for (let i = 0; i < 12; i++) { const c = lel('i', 'ltCf'); c.style.setProperty('--a', (i * 30) + 'deg'); c.style.background = ['#fff', C.c, '#ffd23a'][i % 3]; el.appendChild(c); }
-  st.appendChild(el); setTimeout(() => el.remove(), 2000);
+  st.appendChild(el); setTimeout(() => el.remove(), 1400);
 }
 /* ---------- المايك: اضغط مطوّل واحجي، ارفع إصبعك يندز للطاولة ---------- */
 function ludoMicEl() {
@@ -579,21 +579,21 @@ function ludoCss2() {
   ludoCss3(); if (document.getElementById('ludoCss2')) return; const st = document.createElement('style'); st.id = 'ludoCss2';
   st.textContent = `.ludoStage{position:relative;width:100%}
 .ludoDNum{min-width:0;width:0;height:52px;border-radius:16px;display:grid;place-items:center;font:900 30px Cairo,system-ui,sans-serif;color:#fff;background:linear-gradient(145deg,#8b5cf6,#5b2bd6);border:2px solid #fff;box-shadow:0 6px 16px rgba(90,40,200,.5);opacity:0;transform:scale(.3);transition:transform .35s cubic-bezier(.2,1.8,.4,1),opacity .2s,width .3s;overflow:hidden}.ludoDNum.on{width:52px;opacity:1;transform:scale(1)}.ludoDNum.six{background:linear-gradient(145deg,#ffb020,#ff4d6d);animation:ludoPulse .9s ease-in-out infinite}
-.ludoRoll{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;animation:lrBg 1.7s ease forwards}
+.ludoRoll{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;animation:lrBg 1.15s ease forwards}
 @keyframes lrBg{0%{background:rgba(10,6,30,0)}15%,75%{background:rgba(10,6,30,.38)}100%{background:rgba(10,6,30,0)}}
-.lrNum{font:900 clamp(90px,34vw,170px)/1 Cairo,system-ui,sans-serif;color:#fff;-webkit-text-stroke:5px var(--d);text-shadow:0 0 0 var(--c),0 8px 0 var(--d),0 0 40px var(--c);animation:lrPop 1.7s cubic-bezier(.2,1.6,.4,1) forwards}
-.lrEm{font-size:46px;margin-top:-6px;animation:lrEm 1.7s ease forwards}.lrTx{margin-top:6px;padding:6px 16px;border-radius:999px;background:var(--c);border:2px solid #fff;color:#fff;font-weight:900;font-size:17px;box-shadow:0 6px 18px rgba(0,0,0,.4);animation:lrEm 1.7s ease forwards}
+.lrNum{font:900 clamp(90px,34vw,170px)/1 Cairo,system-ui,sans-serif;color:#fff;-webkit-text-stroke:5px var(--d);text-shadow:0 0 0 var(--c),0 8px 0 var(--d),0 0 40px var(--c);animation:lrPop 1.15s cubic-bezier(.2,1.6,.4,1) forwards}
+.lrEm{font-size:46px;margin-top:-6px;animation:lrEm 1.15s ease forwards}.lrTx{margin-top:6px;padding:6px 16px;border-radius:999px;background:var(--c);border:2px solid #fff;color:#fff;font-weight:900;font-size:17px;box-shadow:0 6px 18px rgba(0,0,0,.4);animation:lrEm 1.15s ease forwards}
 .lrRing{position:absolute;left:50%;top:46%;width:60px;height:60px;margin:-30px;border-radius:50%;border:6px solid var(--c);animation:lrRing 1s ease-out forwards}
 .lrSpark{position:absolute;left:50%;top:45%;font-style:normal;font-size:24px;animation:lrSp 1.2s ease-out forwards}
 @keyframes lrPop{0%{transform:scale(.1) rotate(-25deg);opacity:0}25%{transform:scale(1.25) rotate(6deg);opacity:1}40%{transform:scale(1) rotate(0)}80%{transform:scale(1);opacity:1}100%{transform:scale(.6) translateY(-40px);opacity:0}}
 @keyframes lrEm{0%,15%{transform:translateY(20px) scale(.5);opacity:0}35%{transform:none;opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
 @keyframes lrRing{0%{transform:scale(.3);opacity:1}100%{transform:scale(6);opacity:0}}
 @keyframes lrSp{0%{transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.3);opacity:0}30%{opacity:1}100%{transform:translate(-50%,-50%) rotate(var(--a)) translateY(-150px) scale(1.2);opacity:0}}
-.ludoRoll.six .lrNum{animation:lrPop 1.7s cubic-bezier(.2,1.6,.4,1) forwards,lrShk .12s 6 .4s}@keyframes lrShk{50%{translate:4px 0}}
-.ludoTurn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;border-radius:14px;animation:ltBg 2s ease forwards}
+.ludoRoll.six .lrNum{animation:lrPop 1.15s cubic-bezier(.2,1.6,.4,1) forwards,lrShk .12s 6 .4s}@keyframes lrShk{50%{translate:4px 0}}
+.ludoTurn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;border-radius:14px;animation:ltBg 1.4s ease forwards}
 @keyframes ltBg{0%{box-shadow:inset 0 0 0 0 var(--c);background:transparent}15%{box-shadow:inset 0 0 0 10px var(--c),inset 0 0 80px var(--c);background:rgba(10,6,30,.45)}80%{box-shadow:inset 0 0 0 6px var(--c),inset 0 0 50px var(--c);background:rgba(10,6,30,.35)}100%{box-shadow:inset 0 0 0 0 var(--c);background:transparent}}
-.ltEm{font-size:64px;animation:ltIn 2s cubic-bezier(.2,1.7,.4,1) forwards}.ltTx{font:900 clamp(64px,22vw,110px)/1.1 Cairo,system-ui,sans-serif;color:#fff;paint-order:stroke fill;-webkit-text-stroke:0;text-shadow:0 3px 0 var(--d),0 6px 0 var(--d),0 0 18px var(--c),0 0 40px var(--c),0 0 70px var(--c);animation:ltIn 2s cubic-bezier(.2,1.7,.4,1) .08s both}
-.ltSub{margin-top:8px;padding:6px 18px;border-radius:999px;background:#fff;color:var(--d);font-weight:900;font-size:18px;animation:ltIn 2s ease .18s both}
+.ltEm{font-size:64px;animation:ltIn 1.4s cubic-bezier(.2,1.7,.4,1) forwards}.ltTx{font:900 clamp(64px,22vw,110px)/1.1 Cairo,system-ui,sans-serif;color:#fff;paint-order:stroke fill;-webkit-text-stroke:0;text-shadow:0 3px 0 var(--d),0 6px 0 var(--d),0 0 18px var(--c),0 0 40px var(--c),0 0 70px var(--c);animation:ltIn 2s cubic-bezier(.2,1.7,.4,1) .08s both}
+.ltSub{margin-top:8px;padding:6px 18px;border-radius:999px;background:#fff;color:var(--d);font-weight:900;font-size:18px;animation:ltIn 1.4s ease .12s both}
 .ltCf{position:absolute;left:50%;top:50%;width:12px;height:12px;border-radius:3px;animation:ltCf 1.4s ease-out .1s forwards;opacity:0}
 @keyframes ltIn{0%{transform:scale(.2);opacity:0}22%{transform:scale(1.2);opacity:1}35%{transform:scale(1)}82%{transform:scale(1);opacity:1}100%{transform:scale(1.4);opacity:0}}
 @keyframes ltCf{0%{transform:rotate(var(--a)) translateY(0);opacity:1}100%{transform:rotate(var(--a)) translateY(-46vw) rotate(360deg);opacity:0}}

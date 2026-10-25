@@ -166,7 +166,7 @@ function susLoop() {
 }
 function susTick() {
   const s = SUSG.s, me = susMe(), M = SUSG.map, cv = document.getElementById('susCv'); if (!cv || !me) return; const t = SUSG.t;
-  const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1); if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const W = cv.clientWidth, H = cv.clientHeight, dpr = window.fxDpr ? fxDpr(2) : Math.min(2, window.devicePixelRatio || 1); if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   // حركتي
   if (!SUSG.my) { const sp = s.pos || M.spawn; SUSG.my = { x: sp[0], y: sp[1], dir: 1 }; }

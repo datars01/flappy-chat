@@ -2,6 +2,32 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<script>
+/* ⚡ الوضع الخفيف: للأجهزة الضعيفة — يطفي الحركات الزخرفية والظلال الثقيلة ويقلل دقة الرسم. تلقائي (يقيس سرعة الجهاز) أو يدوي من الإعدادات */
+(function () {
+  var pref = null; try { pref = localStorage.getItem('babito_lowfx'); } catch (e) {}
+  var hc = navigator.hardwareConcurrency || 8, dm = navigator.deviceMemory || 8;
+  window.LOWFX = pref === '1' || (pref !== '0' && (hc <= 2 || dm <= 2));
+  window.fxDpr = function (max) { var r = window.devicePixelRatio || 1; return Math.min(window.LOWFX ? 1.25 : (max || 2), r); };
+  window.setLowFx = function (on, save) { window.LOWFX = !!on; document.documentElement.classList.toggle('lowfx', !!on); if (save) { try { localStorage.setItem('babito_lowfx', on ? '1' : '0'); } catch (e) {} } try { window.dispatchEvent(new Event('lowfx')); } catch (e) {} };
+  document.documentElement.classList.toggle('lowfx', window.LOWFX);
+  /* الظل الضبابي (shadowBlur) أثقل شي بالرسم على الموبايل: بالوضع الخفيف نطفيه */
+  try { var P = CanvasRenderingContext2D.prototype, d = Object.getOwnPropertyDescriptor(P, 'shadowBlur'); if (d && d.set) Object.defineProperty(P, 'shadowBlur', { configurable: true, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, window.LOWFX ? 0 : v); } }); } catch (e) {}
+  /* قياس تلقائي: إذا الجهاز يرسم أقل من 40 صورة بالثانية لمدة 5 ثواني نشغّل الخفيف */
+  if (pref === null && !window.LOWFX) {
+    var fr = [], lt = 0, slow = 0, stop = Date.now() + 90000;
+    var tick = function (t) { if (lt && !document.hidden) { fr.push(t - lt); if (fr.length > 60) fr.shift(); } lt = t;
+      if (fr.length >= 60) { var a = fr.reduce(function (x, y) { return x + y; }, 0) / fr.length; if (a > 25) slow++; else slow = Math.max(0, slow - 2); if (slow > 300) { window.setLowFx(true); try { if (window.showToast) showToast('⚡ شغلتلك الوضع الخفيف حتى تصير اللعبة أسلس — تكدر تطفيه من الإعدادات'); } catch (e) {} return; } }
+      if (Date.now() < stop && !window.LOWFX) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+})();
+</script>
+<style>
+html.lowfx *, html.lowfx *::before, html.lowfx *::after { animation-iteration-count: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; filter: none !important; transition-duration: .12s !important; }
+html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
+</style>
+
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1558,6 +1584,7 @@
     <div class="bgS">صوت الرسالة</div>
     <button id="bgSound" class="act" type="button"></button>
     <button id="sfxBtn" class="act" type="button"></button>
+    <button id="lowFxBtn" class="act" type="button"></button>
     <button id="babRec" class="act" type="button">🎙️ سجّل صوتك يقول "بابيتو"</button>
     <div class="row2"><button id="babTest" class="act" type="button">▶️ جرّب الصوت</button><button id="babReset" class="act" type="button">↩️ الافتراضي</button></div>
     <div class="help" id="babNote"></div>
@@ -2883,9 +2910,10 @@ function loop(t) {
   fxUpdate(raw);
   ctx.save();
   if (FX.shake > 0) { ctx.fillStyle = '#0b1520'; ctx.fillRect(0, 0, W, H); ctx.translate((Math.random() - .5) * FX.shake * 2, (Math.random() - .5) * FX.shake * 2); }
-  if (gameMode === 'duo') { duoUpdate(raw); drawDuo(); }
-  else { soloUpdate(raw); drawSolo(); }
-  ctx.restore(); fxDraw();
+  const covered = curPage && !document.hidden && (() => { const P = document.getElementById('pg-' + curPage); return !!(P && P.classList.contains('open')); })();   // صفحة كاملة مغطية اللعبة: نحدّث بس وما نرسم (يخفف اللاك)
+  if (gameMode === 'duo') { duoUpdate(raw); if (!covered) drawDuo(); }
+  else { soloUpdate(raw); if (!covered) drawSolo(); }
+  ctx.restore(); if (!covered) fxDraw();
   requestAnimationFrame(loop);
 }
 reset(); requestAnimationFrame(loop);
@@ -3682,7 +3710,10 @@ function buildBgGrid() {
     g.appendChild(b);
   });
 }
-function sfxLabel() { $('sfxBtn').textContent = sfxOn ? '🎮 أصوات اللعبة (قفز/موت): شغّالة' : '🎮 أصوات اللعبة (قفز/موت): مطفية'; }
+function lowFxLabel() { const b = $('lowFxBtn'); if (b) b.textContent = window.LOWFX ? '⚡ الوضع الخفيف (للأجهزة الضعيفة): شغّال' : '⚡ الوضع الخفيف (للأجهزة الضعيفة): مطفي'; }
+window.addEventListener('lowfx', () => { try { lowFxLabel(); } catch (e) {} });
+function sfxLabel() { try { lowFxLabel(); } catch (e) {} $('sfxBtn').textContent = sfxOn ? '🎮 أصوات اللعبة (قفز/موت): شغّالة' : '🎮 أصوات اللعبة (قفز/موت): مطفية'; }
+if ($('lowFxBtn')) $('lowFxBtn').onclick = () => { setLowFx(!window.LOWFX, true); lowFxLabel(); showToast(window.LOWFX ? '⚡ الوضع الخفيف شغّال: حركات أقل وسرعة أكثر' : '✨ رجعت كل الحركات والمؤثرات'); };
 $('sfxBtn').onclick = () => { sfxOn = !sfxOn; try { localStorage.setItem('flappySfx', sfxOn ? '1' : '0'); } catch (e) {} sfxLabel(); sfx('flap'); };
 function soundLabel() { sfxLabel(); $('bgSound').textContent = soundOn ? '🔔 صوت الرسائل: شغّال' : '🔕 صوت الرسائل: مطفي'; }
 function syncControls() {
@@ -5648,7 +5679,7 @@ function hHilite(c, S) {
 function hDraw() {
   const cv = $('houseCv'); if (!cv) return; const c = cv.getContext('2d');
   // الكاميرا: المنظر يملّي الشاشة تلقائياً (موبايل أو آيباد) ويتبع الشخصية
-  const dpr = Math.min(2.5, window.devicePixelRatio || 1), cw = Math.max(60, cv.clientWidth || 320), ch = Math.max(60, cv.clientHeight || 250), PW = Math.round(cw * dpr), PH = Math.round(ch * dpr);
+  const dpr = fxDpr(2), cw = Math.max(60, cv.clientWidth || 320), ch = Math.max(60, cv.clientHeight || 250), PW = Math.round(cw * dpr), PH = Math.round(ch * dpr);
   if (cv.width !== PW || cv.height !== PH) { cv.width = PW; cv.height = PH; }
   const WB = hWorldBox(), WWd = WB[2] - WB[0], WHt = WB[3] - WB[1];
   const kk = Math.min(Math.max(ch / WHt, cw / WWd), cw / (hView === 'inside' ? HMINW : 250)); hVW = cw / kk; hVH = ch / kk;
@@ -5747,7 +5778,7 @@ renderHome();
   const cv = $('spConf'), c = cv.getContext('2d'), num = $('spNum');
   let parts = [], raf = 0, done = false, timers = [];
   const cols = ['#ff4d6d', '#ffd166', '#3ddc84', '#3da5ff', '#a855f7', '#ff9f1c', '#ffffff'];
-  function fit() { const r = window.devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; c.setTransform(r, 0, 0, r, 0, 0); }
+  function fit() { const r = fxDpr(2); cv.width = innerWidth * r; cv.height = innerHeight * r; c.setTransform(r, 0, 0, r, 0, 0); }
   fit();
   function burst(n) {
     const cx = innerWidth / 2, cy = innerHeight * 0.42;
@@ -8594,7 +8625,7 @@ function rmNight(c) {
   m.fillStyle = 'rgba(6,9,42,' + (0.8 * d) + ')'; m.fillRect(0, 0, RMW, RMH); const sg = m.createLinearGradient(0, 0, 0, 230); sg.addColorStop(0, 'rgba(2,3,26,' + 0.55 * d + ')'); sg.addColorStop(1, 'rgba(2,3,26,0)'); m.fillStyle = sg; m.fillRect(0, 0, RMW, 230);
   m.globalCompositeOperation = 'destination-out';
   const hole = (x, y, r, a) => { const g = m.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(0.55, 'rgba(0,0,0,' + a * 0.6 + ')'); g.addColorStop(1, 'rgba(0,0,0,0)'); m.fillStyle = g; m.beginPath(); m.arc(x, y, r, 0, 7); m.fill(); };
-  hole(RM_FIRE.x, RM_FIRE.y - 6, 230 * fl, 1); GM_TB.forEach(t => hole(t.x, t.y - 10, 78, 0.8)); hole(1012, 425, 90, 0.85); hole(RM_NPC.x, RM_NPC.y - 10, 60, 0.6); RM_LAMPS.forEach(L => hole(L[0], L[1] - 30, 105, 0.9)); hole(RM_SHOP.x, RM_SHOP.y - 70, 175, 0.8); hole(RM_PSHOP.x, RM_PSHOP.y - 70, 175, 0.8); [RM_SHOP.x, RM_PSHOP.x, RM_FSHOP.x].forEach(sx => { hole(sx - 70, 341, 95, 0.9); hole(sx + 70, 341, 95, 0.9); }); hole(RM_FSHOP.x, RM_FSHOP.y - 70, 175, 0.8); hole(RM_TG.x, RM_TG.y - 170, 110, 0.75);
+  hole(RM_FIRE.x, RM_FIRE.y - 6, 230 * fl, 1); GM_TB.forEach(t => hole(t.x, t.y - 10, 78, 0.8)); hole(1012, 425, 90, 0.85); hole(RM_NPC.x, RM_NPC.y - 10, 60, 0.6); RM_LAMPS.forEach(L => hole(L[0], L[1] - 30, 105, 0.9)); hole(RM_SHOP.x, RM_SHOP.y - 70, 175, 0.8); hole(RM_PSHOP.x, RM_PSHOP.y - 70, 175, 0.8); [RM_SHOP.x, RM_PSHOP.x, RM_FSHOP.x, RM_BSHOP.x].forEach(sx => { hole(sx - 70, 341, 95, 0.9); hole(sx + 70, 341, 95, 0.9); }); hole(RM_FSHOP.x, RM_FSHOP.y - 70, 175, 0.8); hole(RM_BSHOP.x, RM_BSHOP.y - 70, 175, 0.8);   // محل روح للحقائب يضوي بالليل مثل الباقين hole(RM_TG.x, RM_TG.y - 170, 110, 0.75);
   c.drawImage(RM.nm, 0, 0, RMW, RMH);
   c.save(); c.globalCompositeOperation = 'lighter';
   rmGlow(c, RM_FIRE.x, RM_FIRE.y - 8, 210 * fl, 0.34 * d, '255,140,40'); rmGlow(c, RM_FIRE.x, RM_FIRE.y - 14, 80 * fl, 0.4 * d, '255,205,110'); GM_TB.forEach(t => rmGlow(c, t.x, t.y - 20, 70, 0.22 * d, '255,200,110')); rmGlow(c, 1012, 415, 80, 0.26 * d, '210,150,255'); RM_LAMPS.forEach(L => rmGlow(c, L[0], L[1] - 66, 46 * fl, 0.4 * d, '255,210,130')); rmGlow(c, RM_SHOP.x, RM_SHOP.y - 150, 90, 0.22 * d, '255,120,190');
@@ -9255,14 +9286,14 @@ function rmInvRender() {
 RM.signFx = [];
 function rmSignNight(c) {
   const d = RM.dn ? RM.dn.d : 0, k = Math.max(0, Math.min(1, (d - 0.25) / 0.35)); if (k <= 0.01) { RM.signFx.length = 0; return; } const T = RM.T;
-  [{ x: RM_SHOP.x - 128, y: 316, w: 256, h: 50, e: ['🎈', '💖', '✨', '🎉'], hue: 330 }, { x: RM_PSHOP.x - 132, y: 314, w: 264, h: 52, e: ['🐾', '💚', '🐱', '🐶', '✨'], hue: 170 }, { x: RM_FSHOP.x - 136, y: 314, w: 272, h: 52, e: ['👗', '✨', '👑', '🎀', '💜'], hue: 275 }].forEach((S, si) => {
+  [{ x: RM_SHOP.x - 128, y: 316, w: 256, h: 50, e: ['🎈', '💖', '✨', '🎉'], hue: 330 }, { x: RM_PSHOP.x - 132, y: 314, w: 264, h: 52, e: ['🐾', '💚', '🐱', '🐶', '✨'], hue: 170 }, { x: RM_FSHOP.x - 136, y: 314, w: 272, h: 52, e: ['👗', '✨', '👑', '🎀', '💜'], hue: 275 }, { x: RM_BSHOP.x - 140, y: 310, w: 280, h: 56, e: ['👜', '💖', '🎀', '🌸', '✨'], hue: 330 }].forEach((S, si) => {
     c.save(); c.globalCompositeOperation = 'lighter';
     const g = c.createRadialGradient(S.x + S.w / 2, S.y + S.h / 2, 10, S.x + S.w / 2, S.y + S.h / 2, S.w * 0.75); g.addColorStop(0, 'hsla(' + S.hue + ',100%,65%,' + 0.28 * k + ')'); g.addColorStop(1, 'hsla(' + S.hue + ',100%,65%,0)'); c.fillStyle = g; c.fillRect(S.x - S.w * 0.4, S.y - S.w * 0.4, S.w * 1.8, S.h + S.w * 0.8);
     const per = 2 * (S.w + S.h), n = 46; for (let i = 0; i < n; i++) { let dd = i / n * per, px, py; if (dd < S.w) { px = S.x + dd; py = S.y; } else if ((dd -= S.w) < S.h) { px = S.x + S.w; py = S.y + dd; } else if ((dd -= S.h) < S.w) { px = S.x + S.w - dd; py = S.y + S.h; } else { dd -= S.w; px = S.x; py = S.y + S.h - dd; }
       const ph = (i - T / 3) / 6, on = 0.35 + 0.65 * Math.max(0, Math.sin(ph * Math.PI)), hue = (i * 360 / n + T * 2 + si * 90) % 360;
       c.fillStyle = 'hsla(' + hue + ',100%,62%,' + 0.35 * on * k + ')'; c.beginPath(); c.arc(px, py, 7, 0, 7); c.fill(); c.fillStyle = 'hsla(' + hue + ',100%,80%,' + on * k + ')'; c.beginPath(); c.arc(px, py, 2.6, 0, 7); c.fill(); }
     c.restore();
-    if (T % 22 === si * 11 && RM.signFx.length < 24) RM.signFx.push({ x: S.x + 10 + Math.random() * (S.w - 20), y: S.y - 4, vy: -0.45 - Math.random() * 0.35, vx: (Math.random() - .5) * 0.4, t: 0, life: 90, e: S.e[Math.floor(Math.random() * S.e.length)] });
+    if (T % 44 === si * 11 && RM.signFx.length < 24) RM.signFx.push({ x: S.x + 10 + Math.random() * (S.w - 20), y: S.y - 4, vy: -0.45 - Math.random() * 0.35, vx: (Math.random() - .5) * 0.4, t: 0, life: 90, e: S.e[Math.floor(Math.random() * S.e.length)] });
     [[S.x - 10, S.y - 8], [S.x + S.w + 10, S.y + 8], [S.x + S.w * 0.5, S.y - 16], [S.x + 18, S.y + S.h + 12], [S.x + S.w - 20, S.y + S.h + 10]].forEach((q, j) => { const tw = Math.max(0, Math.sin(T / 13 + j * 1.7 + si)); if (tw < 0.1) return; c.globalAlpha = tw * k; rmStar(c, q[0], q[1], 2 + tw * 4, '#fff8c4', 4, 0); c.globalAlpha = 1; });
   });
   c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '13px sans-serif';
@@ -9282,7 +9313,7 @@ function rmUsdSet(v, gain) { const old = RM.usd || 0; RM.usd = Math.max(0, v | 0
 function rmDraw() {
   const cv = $('rmCv'); if (!cv) return; const c = cv.getContext('2d');
   // الكانفاس يتبع حجم الصندوق الفعلي (يتوافق مع اي جهاز: طولي/عرضي/مع الكيبورد)
-  const bb = $('rmBox').getBoundingClientRect(), bw = Math.max(200, Math.round(bb.width)), bh = Math.max(110, Math.round(bb.height)), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const bb = $('rmBox').getBoundingClientRect(), bw = Math.max(200, Math.round(bb.width)), bh = Math.max(110, Math.round(bb.height)), dpr = fxDpr(2) || Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
   $('rmBox').classList.toggle('rmTiny', bh < 250); RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = rmInShop() ? '#2a1530' : '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; rmWxStep(); try { rmPairTick(); rmHoldTick(); } catch (e) {} const m = RM.me, st = rmUpdMe(), SH = rmInShop(), SID = rmShopId();
@@ -9816,9 +9847,9 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 /* يبلّغ السيرفر بالفعاليات داخل اللعبة (للوحة المشرفين) */
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
-<script src="/sus.js?v=5"></script>
-<script src="/run.js?v=5"></script>
-<script src="/ludo.js?v=9"></script>
+<script src="/sus.js?v=6"></script>
+<script src="/run.js?v=6"></script>
+<script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=2"></script>
 </body>
 </html>

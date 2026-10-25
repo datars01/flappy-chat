@@ -543,7 +543,7 @@
   /* ---------- الحلقة ---------- */
   function loop(ts) {
     R.raf = 0; if (window.curPage !== 'run') { musTick(); return; }
-    const cv = R.cv; if (!cv) return; const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cv = R.cv; if (!cv) return; const W = cv.clientWidth, H = cv.clientHeight, dpr = window.fxDpr ? fxDpr(2) : Math.min(2, window.devicePixelRatio || 1);
     if (W && H && (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr))) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     R.W = W; R.H = H; const dt = Math.min(0.05, Math.max(0, (ts - (R.last || ts)) / 1000)); R.last = ts;
     if (document.hidden && R.ph === 'play' && !R.pause) togglePause();
