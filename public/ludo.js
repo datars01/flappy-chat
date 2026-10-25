@@ -77,7 +77,7 @@ setInterval(() => { try { ludoMusicTick(); } catch (e) {} }, 250);
 document.addEventListener('pointerdown', e => { try { const b = e.target.closest && e.target.closest('#pg-ludo button, #rmLudo button'); if (b && !b.closest('#ludoDice') && !b.disabled) ludoSfx('click'); } catch (er) {} }, true);
 /* مكان الحجر (بوحدات الخلية) حسب المقعد والموقع */
 function ludoCell(seat, pos, k) {
-  if (pos < 0) { const b = LUDO_BASE[seat]; return [b[0] + (k % 2 ? 4 : 2) + 0.5, b[1] + (k > 1 ? 4 : 2) + 0.5]; }
+  if (pos < 0) { const b = LUDO_BASE[seat]; return [b[0] + (k % 2 ? 4 : 2), b[1] + (k > 1 ? 4 : 2)]; }   /* بالسنتر: اللوح الفاتح من b+1 لين b+5 ومركزه b+3 */
   if (pos <= 50) { const c = LUDO_TRACK[(LUDO_START[seat] + pos) % 52]; return [c[0] + 0.5, c[1] + 0.5]; }
   const c = LUDO_LANE[seat][Math.min(5, pos - 51)]; return [c[0] + 0.5, c[1] + 0.5];
 }
@@ -85,7 +85,7 @@ function ludoOpen() {
   if (!auth) { showToast('✍️ سجّل حساب حتى تلعب غوكو'); closePage(); setTimeout(() => openPage('account'), 200); return; }
   ludoCss(); ludoSend({ t: 'ludo_get' }); ludoRender();
 }
-function ludoClose() { cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; }
+function ludoClose() { cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; ludoChatKill(); }
 function ludoEmoBar() {
   const b = lel('div', 'ludoEmo'); ['😂', '❤️', '👏', '🔥', '😎', '😡', '😭', '🎉'].forEach(e => { const x = lel('button', '', e); x.type = 'button'; x.onclick = () => { ludoSend({ t: 'ludo_emo', e }); }; b.appendChild(x); }); return b;
 }
@@ -96,9 +96,10 @@ function ludoEmoFloat(seat, e) {
   ludoSfx('emo');
 }
 function ludoRmOpen() { LUDOG.mode = 'rm'; LUDOG.s = null; LUDOG.disp = {}; LUDOG.fx = []; ludoCss(); const o = document.getElementById('rmLudo'); if (o) o.hidden = false; const x = document.getElementById('rmLdX'); if (x) x.onclick = () => { try { rmStand(); } catch (e) {} }; ludoRender(); }
-function ludoRmClose() { LUDOG.mode = 'page'; cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; LUDOG.s = null; LUDOG.cv = null; const o = document.getElementById('rmLudo'); if (o) o.hidden = true; const b = document.getElementById('rmLdBody'); if (b) b.innerHTML = ''; }
+function ludoRmClose() { ludoChatKill(); LUDOG.mode = 'page'; cancelAnimationFrame(LUDOG.raf); LUDOG.raf = 0; LUDOG.s = null; LUDOG.cv = null; const o = document.getElementById('rmLudo'); if (o) o.hidden = true; const b = document.getElementById('rmLdBody'); if (b) b.innerHTML = ''; }
 function ludoMsg(d) {
   if (d.t === 'ludo_emo') return ludoEmoFloat(d.s, d.e);
+  if (d.t === 'ludo_chat') return ludoChatAdd(d.m, true);
   if (d.t === 'ludo_allready') { ludoSfx('allready'); showToast(d.host ? '✅ الكل جاهز! دوس «ابدأ اللعبة» 👑' : '✅ الكل جاهز — بانتظار الهوست يشغّل اللعبة'); try { navigator.vibrate && navigator.vibrate([50, 40, 50]); } catch (e) {} return; }
   if (d.t === 'ludo_join') { ludoSfx('join'); showToast('👋 دخل ' + d.n + ' الطاولة' + (d.cnt >= 2 ? ' — اضغط «استعداد» ✅' : '')); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} return; }
   if (d.t === 'ludo_state') { const old = LUDOG.s; LUDOG.s = d.s; ludoOnState(old, d.s); }
@@ -108,15 +109,15 @@ function ludoMsg(d) {
 function ludoOnState(old, s) {
   if (s && s.last && s.last.id !== LUDOG.lastEv) {
     LUDOG.lastEv = s.last.id; LUDOG.last = s.last;
-    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 1000; LUDOG.dice = s.last.d; ludoSfx('roll'); const dv = s.last.d; setTimeout(() => ludoSfx(dv === 6 ? 'six' : 'land'), 980); }
+    if (s.last.k === 'roll') { LUDOG.rolling = performance.now() + 1000; LUDOG.dice = s.last.d; ludoSfx('roll'); const dv = s.last.d; const rs = s.last.s; setTimeout(() => { ludoSfx(dv === 6 ? 'six' : 'land'); ludoRollPop(dv, rs); }, 980); }
     else if (s.last.k === 'sixes') { ludoSfx('sixes'); showToast('🎲 ثلاث ستات ورا بعض، ضاع الدور!'); }
     else if (s.last.k === 'move') {   /* المؤثرات تنتظر لين تنتهي قفزات الخرزة خانة خانة */
       const L = s.last, prev = (old && old.seats[L.s] && old.seats[L.s].tk[L.tk]), steps = (prev === undefined || prev < 0 || L.pos < 0) ? 1 : Math.max(1, L.pos - prev), wait = Math.min(1800, steps * 150 + (L.cap ? 60 : 0));
       setTimeout(() => { try { ludoSfx(L.cap ? 'cap' : L.home ? 'home' : 'move'); const q = ludoCell(L.s, L.pos, L.tk); ludoBurst(q[0], q[1], L.cap ? 'cap' : L.home ? 'home' : 'dust', LUDO_COL[L.s].c); if (L.cap) LUDOG.shake = performance.now() + 380; } catch (e) {} }, wait); }
   }
   if (s && s.ph === 'over' && (!old || old.ph !== 'over')) { ludoSfx(s.win && s.win.s === s.my ? 'win' : 'lose'); LUDOG.winT = performance.now(); ludoConfetti(); }
-  if (s && s.ph === 'play' && old && old.ph === 'lobby') { LUDOG.cd = performance.now() + 3000; LUDOG.cdN = 0; ludoSfx('start'); setTimeout(() => { try { ludoUpdate(); } catch (e) {} }, 3100); }
-  if (s && s.ph === 'play' && s.turn === s.my && (!old || old.turn !== s.turn || old.ph !== 'play') && !((LUDOG.cd || 0) > performance.now())) { ludoSfx('turn'); try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} }
+  if (s && s.ph === 'play' && old && old.ph === 'lobby') { LUDOG.cd = performance.now() + 3000; LUDOG.cdN = 0; ludoSfx('start'); setTimeout(() => { try { ludoUpdate(); const z = LUDOG.s; if (z && z.ph === 'play' && z.turn === z.my) { ludoSfx('turn'); ludoTurnBanner(); } } catch (e) {} }, 3100); }
+  if (s && s.ph === 'play' && s.turn === s.my && (!old || old.turn !== s.turn || old.ph !== 'play') && !((LUDOG.cd || 0) > performance.now())) { ludoSfx('turn'); try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {} const rl = Math.max(0, (LUDOG.rolling || 0) - performance.now()); setTimeout(() => ludoTurnBanner(), rl ? rl + 900 : 0); }
   if (s && old && s.ph === 'lobby' && old.ph === 'lobby') {   /* أصوات الغرفة: استعداد / دخول / طلوع */
     const rd = x => x.seats.filter(p => p && p.rdy).length, nn = x => x.seats.filter(Boolean).length;
     if (rd(s) > rd(old)) ludoSfx('ready'); else if (rd(s) < rd(old) && nn(s) >= nn(old)) ludoSfx('unready');
@@ -128,7 +129,7 @@ function ludoOnState(old, s) {
 function ludoRoot() { return document.getElementById(LUDOG.mode === 'rm' ? 'rmLdBody' : 'ludoBody'); }
 const ludoRm = () => LUDOG.mode === 'rm';
 function ludoRender() {
-  const R = ludoRoot(); if (!R) return; const s = LUDOG.s; R.dataset.ph = s ? s.ph : '';
+  const R = ludoRoot(); if (!R) return; const s = LUDOG.s; R.dataset.ph = s ? s.ph : ''; try { ludoChatEnsure(); } catch (e) {}
   R.innerHTML = '';
   if (!s) { if (ludoRm()) { R.appendChild(lel('div', 'ludoWait', '⏳ جاري الجلوس على الطاولة...')); return; } R.appendChild(ludoMenuEl()); ludoSend({ t: 'ludo_list' }); return; }
   if (s.ph === 'lobby') { R.appendChild(ludoLobbyEl(s)); return; }
@@ -180,12 +181,13 @@ function ludoLobbyEl(s) {
 function ludoGameEl() {
   const w = lel('div', 'ludoGame'); w.id = 'ludoGame';
   const top = lel('div', 'ludoTop'); top.id = 'ludoTop';
-  const cv = lel('canvas', 'ludoCv'); cv.id = 'ludoCv'; LUDOG.cv = cv; LUDOG.disp = {};
+  const stage = lel('div', 'ludoStage'); stage.id = 'ludoStage';
+  const cv = lel('canvas', 'ludoCv'); cv.id = 'ludoCv'; LUDOG.cv = cv; LUDOG.disp = {}; stage.appendChild(cv);
   cv.addEventListener('pointerdown', ludoClick);
   const bar = lel('div', 'ludoBar'); const dice = ludoDiceEl(); dice.onclick = () => { const s = LUDOG.s; if (s && s.ph === 'play' && s.turn === s.my && !s.rolled && !((LUDOG.cd || 0) > performance.now())) ludoSend({ t: 'ludo_roll' }); };
-  const msg = lel('div', 'ludoMsg'); msg.id = 'ludoMsg'; bar.append(dice, msg);
+  const msg = lel('div', 'ludoMsg'); msg.id = 'ludoMsg'; const dn = lel('div', 'ludoDNum'); dn.id = 'ludoDNum'; bar.append(dice, dn, msg, ludoMicEl());
   const lv = lel('button', 'ludoBtn ghost small', '🚪 طلوع'); lv.onclick = () => { if (confirm('تطلع من اللعبة؟')) ludoSend({ t: 'ludo_leave' }); };
-  w.append(top, cv, bar, ludoEmoBar()); if (!ludoRm()) w.appendChild(lv); return w;
+  w.append(top, stage, bar, ludoEmoBar()); if (!ludoRm()) w.appendChild(lv); return w;
 }
 function ludoUpdate() {
   const s = LUDOG.s; if (!s || s.ph === 'lobby') return;
@@ -228,7 +230,7 @@ function ludoBoardCache(G) {
     c.save(); c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = u * 0.25; c.shadowOffsetY = u * 0.08; const g = c.createLinearGradient(x, y, x + w, y + w); g.addColorStop(0, ludoMix(C.c, 255, 0.28)); g.addColorStop(0.5, C.c); g.addColorStop(1, C.d); c.fillStyle = g; ludoRR(c, x + u * 0.06, y + u * 0.06, w - u * 0.12, w - u * 0.12, u * 0.4); c.fill(); c.restore();
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.5; ludoRR(c, x + u * 0.12, y + u * 0.12, w - u * 0.24, w - u * 0.24, u * 0.36); c.stroke();
     const ig = c.createLinearGradient(x, y, x + w, y + w); ig.addColorStop(0, ludoMix(C.l, 255, 0.5)); ig.addColorStop(1, C.l); c.fillStyle = ig; ludoRR(c, x + u, y + u, 4 * u, 4 * u, u * 0.55); c.fill(); c.strokeStyle = 'rgba(0,0,0,.22)'; c.lineWidth = 2; ludoRR(c, x + u, y + u, 4 * u, 4 * u, u * 0.55); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1; ludoRR(c, x + u + 2, y + u + 2, 4 * u - 4, 4 * u - 4, u * 0.5); c.stroke();
-    [[2, 2], [4, 2], [2, 4], [4, 4]].forEach(q => { const cx = (b[0] + q[0] + 0.5) * u, cy = (b[1] + q[1] + 0.5) * u, R = u * 0.5;
+    [[2, 2], [4, 2], [2, 4], [4, 4]].forEach(q => { const cx = (b[0] + q[0]) * u, cy = (b[1] + q[1]) * u, R = u * 0.5;
       const sg = c.createRadialGradient(cx + R * 0.2, cy + R * 0.25, R * 0.1, cx, cy, R); sg.addColorStop(0, ludoMix(C.d, 0, 0.1)); sg.addColorStop(0.7, ludoMix(C.c, 0, 0.1)); sg.addColorStop(1, ludoMix(C.l, 0, 0.1)); c.fillStyle = sg; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.38)'; c.lineWidth = 1.6; c.beginPath(); c.arc(cx, cy, R, Math.PI * 0.95, Math.PI * 1.9); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6; c.beginPath(); c.arc(cx, cy, R, Math.PI * 0.05, Math.PI * 0.9); c.stroke(); }); });
   /* المسار */
@@ -346,14 +348,15 @@ const LUDO_FACE = { 1: 'rotateY(0deg)', 2: 'rotateY(-90deg)', 3: 'rotateX(-90deg
 function ludoDiceEl() {
   const b = lel('button', 'ludoDice'); b.id = 'ludoDice'; b.type = 'button'; const cube = lel('div', 'ludoCube'); cube.id = 'ludoCube';
   for (let n = 1; n <= 6; n++) { const f = lel('div', 'ludoFace f' + n); for (let i = 0; i < 9; i++) f.appendChild(LUDO_PIPS[n].includes(i) ? lel('i', n === 1 ? 'r' : '') : lel('b')); cube.appendChild(f); }
-  b.append(lel('span', 'ludoDsh'), cube); cube.style.transform = 'rotateX(-22deg) rotateY(28deg) ' + LUDO_FACE[5]; return b;
+  b.append(lel('span', 'ludoDsh'), cube); cube.style.transform = 'rotateX(-10deg) rotateY(12deg) ' + LUDO_FACE[5]; return b;
 }
 function ludoDiceUpdate(t, s) {
   const b = document.getElementById('ludoDice'), cube = document.getElementById('ludoCube'); if (!b || !cube) return;
   const rolling = t < LUDOG.rolling;
   if (rolling && !LUDOG.dRoll) { LUDOG.dRoll = true; cube.classList.add('rolling'); b.classList.add('rolling'); b.classList.remove('land'); }
   else if (!rolling && LUDOG.dRoll) { LUDOG.dRoll = false; cube.classList.remove('rolling'); b.classList.remove('rolling'); b.classList.add('land'); setTimeout(() => b.classList.remove('land'), 450); }
-  if (!rolling) { const v = s.dice || LUDOG.dice || 5; if (LUDOG.dShown !== v) { LUDOG.dShown = v; cube.style.transform = 'rotateX(-22deg) rotateY(28deg) ' + LUDO_FACE[v]; } }
+  const dn = document.getElementById('ludoDNum'); if (dn) { const v2 = rolling ? 0 : (s.rolled ? s.dice : 0); if (dn.dataset.v !== String(v2)) { dn.dataset.v = v2; dn.textContent = v2 || ''; dn.classList.toggle('on', !!v2); dn.classList.toggle('six', v2 === 6); } }
+  if (!rolling) { const v = s.dice || LUDOG.dice || 5; if (LUDOG.dShown !== v) { LUDOG.dShown = v; cube.style.transform = 'rotateX(-10deg) rotateY(12deg) ' + LUDO_FACE[v]; } }
 }
 function ludoDraw() {
   const s = LUDOG.s, cv = LUDOG.cv; if (!s || !cv) return; const G = ludoGeom(), c = cv.getContext('2d'), u = G.u, pad = G.pad; const t = performance.now();
@@ -408,7 +411,7 @@ function ludoClick(e) {
   if (s.movable.length === 1) { ludoSfx('tap'); ludoSend({ t: 'ludo_move', k: s.movable[0] }); }   // خيار وحيد: أي لمسة على اللوحة تحرّكه
 }
 function ludoCss() {
-  if (document.getElementById('ludoCss')) return; const st = document.createElement('style'); st.id = 'ludoCss';
+  ludoCss2(); if (document.getElementById('ludoCss')) return; const st = document.createElement('style'); st.id = 'ludoCss';
   st.textContent = `#pg-ludo .pgBody{max-width:none;padding:10px;gap:0;overflow:auto;background:radial-gradient(ellipse at top,#2a1a52,#0a0814)}
 .ludoMenu,.ludoGame{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:10px;color:#fff;padding-bottom:60px}
 .ludoHero{text-align:center;background:radial-gradient(circle at 80% 10%,rgba(255,210,90,.28),transparent 50%),radial-gradient(circle at 10% 100%,rgba(255,70,140,.3),transparent 55%),rgba(255,255,255,.07);border:1px solid rgba(255,210,122,.5);border-radius:18px;padding:12px;animation:ludoHeroG 2.4s ease-in-out infinite}@keyframes ludoHeroG{50%{box-shadow:0 0 22px rgba(255,170,60,.5)}}.ludoHero h2{margin:2px 0}.ludoHero p{margin:4px 0 0;font-size:13px;opacity:.85}.ludoHeroDots{font-size:15px;letter-spacing:4px;margin:2px 0}.ludoHeroEm{font-size:46px;animation:ludoBob 1.6s ease-in-out infinite}
@@ -433,5 +436,156 @@ function ludoCss() {
 .ludoEmo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.ludoEmo button{font-size:22px;width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);padding:0;transition:transform .12s}.ludoEmo button:active{transform:scale(1.3)}
 .ludoFloat{position:absolute;font-size:30px;pointer-events:none;animation:ludoUp 2s ease-out forwards;z-index:5}@keyframes ludoUp{0%{transform:translate(-50%,0) scale(.4);opacity:0}15%{opacity:1;transform:translate(-50%,-10px) scale(1.2)}100%{transform:translate(-50%,-110px) scale(1);opacity:0}}
 .ludoDice.pop{animation:ludoPop .35s}@keyframes ludoPop{50%{transform:scale(1.35) rotate(8deg)}}`;
+  document.head.appendChild(st);
+}
+
+/* ===================== إضافات: رقم النرد بالشاشة، «دورك!»، مايك (اضغط مطوّل واحجي)، شات الطاولة ===================== */
+const LUDO_DEMO = { 1: '😅', 2: '🙂', 3: '😎', 4: '💪', 5: '🤩', 6: '🔥' };
+const LUDO_DTXT = { 1: 'واحد', 2: 'اثنين', 3: 'ثلاثة', 4: 'أربعة', 5: 'خمسة', 6: 'ستة!' };
+function ludoStageEl() { return document.getElementById('ludoStage'); }
+function ludoRollPop(v, seat) {   /* رقم كبير متحرك بنص اللوحة: شكد طلع وإلمن */
+  const st = ludoStageEl(), s = LUDOG.s; if (!st || !s || !v) return; st.querySelectorAll('.ludoRoll').forEach(x => x.remove());
+  const C = LUDO_COL[seat] || LUDO_COL[0], p = s.seats[seat], mine = seat === s.my;
+  const el = lel('div', 'ludoRoll' + (v === 6 ? ' six' : '')); el.style.setProperty('--c', C.c); el.style.setProperty('--d', C.d);
+  const ring = lel('div', 'lrRing'), num = lel('div', 'lrNum', String(v)), em = lel('div', 'lrEm', LUDO_DEMO[v]), tx = lel('div', 'lrTx', mine ? 'طلعلك ' + LUDO_DTXT[v] : 'طلع لـ ' + (p ? p.n : '؟') + ' ' + LUDO_DTXT[v]);
+  el.append(ring, num, em, tx); if (v === 6) for (let i = 0; i < 10; i++) { const sp = lel('i', 'lrSpark', i % 2 ? '✨' : '⭐'); sp.style.setProperty('--a', (i * 36) + 'deg'); el.appendChild(sp); }
+  st.appendChild(el); setTimeout(() => el.remove(), 1700);
+}
+function ludoTurnBanner() {   /* «دورك!» كبيرة بالشاشة */
+  const st = ludoStageEl(), s = LUDOG.s; if (!st || !s || s.ph !== 'play' || s.turn !== s.my) return; st.querySelectorAll('.ludoTurn').forEach(x => x.remove());
+  const C = LUDO_COL[s.my]; const el = lel('div', 'ludoTurn'); el.style.setProperty('--c', C.c); el.style.setProperty('--d', C.d);
+  el.append(lel('div', 'ltEm', '🎯'), lel('div', 'ltTx', 'دورك!'), lel('div', 'ltSub', '🎲 دوس النرد'));
+  for (let i = 0; i < 12; i++) { const c = lel('i', 'ltCf'); c.style.setProperty('--a', (i * 30) + 'deg'); c.style.background = ['#fff', C.c, '#ffd23a'][i % 3]; el.appendChild(c); }
+  st.appendChild(el); setTimeout(() => el.remove(), 2000);
+}
+/* ---------- المايك: اضغط مطوّل واحجي، ارفع إصبعك يندز للطاولة ---------- */
+function ludoMicEl() {
+  const b = lel('button', 'ludoMic'); b.type = 'button'; b.id = 'ludoMic'; b.append(lel('span', 'lmIc', '🎙️'), lel('small', '', 'اضغط مطوّل'));
+  const down = e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (er) {} ludoRecStart(); };
+  const up = e => { e && e.preventDefault(); const r = b.getBoundingClientRect(), far = e && (e.clientX < r.left - 60 || e.clientX > r.right + 60 || e.clientY < r.top - 60 || e.clientY > r.bottom + 60); if (far) showToast('🗑️ انلغى التسجيل'); ludoRecStop(!far); };
+  b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', () => ludoRecStop(false));
+  b.addEventListener('contextmenu', e => e.preventDefault()); return b;
+}
+async function ludoRecStart() {
+  if (LUDOG.rec) return; if (!LUDOG.s) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { showToast('⚠️ متصفحك ما يدعم المايك'); return; }
+  const r = LUDOG.rec = { down: true, chunks: [], t0: 0 };
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { LUDOG.rec = null; showToast('⚠️ لازم تسمح للعبة تستخدم المايك'); return; }
+  if (!r.down || LUDOG.rec !== r) { stream.getTracks().forEach(t => t.stop()); if (LUDOG.rec === r) LUDOG.rec = null; showToast('🎙️ ظل ضاغط على المايك وانت تحجي'); return; }
+  const mime = (typeof pickMime === 'function' ? pickMime() : '') || ''; let mr;
+  try { mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); } catch (e) { stream.getTracks().forEach(t => t.stop()); LUDOG.rec = null; showToast('⚠️ ما قدرت أشغّل المايك'); return; }
+  r.mr = mr; r.stream = stream; r.mime = mime; r.t0 = Date.now(); mr.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+  mr.onstop = () => { clearInterval(r.timer); stream.getTracks().forEach(t => t.stop()); ludoRecUi(false); if (LUDOG.rec === r) LUDOG.rec = null; const dur = (Date.now() - r.t0) / 1000; if (!r.send) return; if (dur < 0.7) { showToast('🎙️ اضغط مطوّل واحجي'); return; } ludoVoiceUp(new Blob(r.chunks, { type: (mr.mimeType || mime || 'audio/webm').split(';')[0] }), Math.min(20, dur)); };
+  mr.start(); ludoRecUi(true); try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
+  r.timer = setInterval(() => { const sec = (Date.now() - r.t0) / 1000, t = document.getElementById('ludoRecT'); if (t) t.textContent = '0:' + String(Math.floor(sec)).padStart(2, '0'); if (sec >= 20) ludoRecStop(true); }, 200);
+}
+function ludoRecStop(send) { const r = LUDOG.rec; if (!r) return; r.down = false; r.send = send; if (r.mr && r.mr.state !== 'inactive') { try { r.mr.stop(); } catch (e) {} } }
+function ludoRecUi(on) {
+  const b = document.getElementById('ludoMic'); if (b) b.classList.toggle('on', on);
+  document.querySelectorAll('.ludoRecPill').forEach(x => x.remove()); if (!on) return;
+  const st = ludoStageEl() || ludoRoot(); if (!st) return; const p = lel('div', 'ludoRecPill'); p.innerHTML = '<span class="lrDot"></span> تحجي... <b id="ludoRecT">0:00</b><small>ارفع إصبعك حتى يندز • اسحب بعيد وارفع للإلغاء</small>'; st.appendChild(p);
+}
+async function ludoVoiceUp(blob, dur) {
+  if (blob.size > 6 * 1024 * 1024) return showToast('⚠️ التسجيل كبير');
+  try { const r = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': blob.type, Authorization: 'Bearer ' + auth.token }, body: blob }); let j = null; try { j = await r.json(); } catch (e) {} if (!r.ok) throw new Error((j && j.error) || 'فشل رفع الصوت'); ludoSend({ t: 'ludo_voice', url: j.url, dur }); ludoSfx('click'); }
+  catch (e) { showToast('⚠️ ' + e.message); }
+}
+function ludoPlayVoice(url, btn) {
+  try { if (LUDOG.au) { LUDOG.au.pause(); document.querySelectorAll('.lcVo.play').forEach(x => x.classList.remove('play')); } const a = new Audio(url); LUDOG.au = a; if (btn) btn.classList.add('play'); a.onended = a.onpause = () => { if (btn) btn.classList.remove('play'); }; return a.play().catch(() => { if (btn) btn.classList.remove('play'); }); } catch (e) {}
+}
+/* ---------- شات الطاولة: سهم ينفتح وينسد + خلفية متحركة ---------- */
+function ludoChatKill() { const w = document.getElementById('ludoChatW'); if (w) w.remove(); LUDOG.chatTid = null; LUDOG.chatOpen = false; }
+function ludoChatEnsure() {
+  const s = LUDOG.s, R = ludoRoot(); let w = document.getElementById('ludoChatW');
+  if (!s || !R) { if (w) w.remove(); LUDOG.chatTid = null; return; }
+  const host = R.parentNode; if (w && w.parentNode !== host) host.appendChild(w);
+  if (!w) { w = ludoChatEl(); host.appendChild(w); }
+  if (LUDOG.chatTid !== s.id) { LUDOG.chatTid = s.id; LUDOG.chatSeen = new Set(); LUDOG.unread = 0; const L = document.getElementById('ludoChatL'); if (L) L.innerHTML = ''; ludoChatEmpty(); (s.ch || []).forEach(m => ludoChatAdd(m, false)); ludoChatBadge(); }
+}
+function ludoChatEmpty() { const L = document.getElementById('ludoChatL'); if (L && !L.children.length) L.appendChild(lel('div', 'lcEmpty', '👋 سلّم على اللاعبين! اكتب أو اضغط المايك مطوّل واحجي')); }
+function ludoChatEl() {
+  const w = lel('div', 'ludoChatW'); w.id = 'ludoChatW';
+  const tg = lel('button', 'ludoChatTg'); tg.type = 'button'; tg.innerHTML = '<span>💬</span><b class="lcArr">▲</b><i class="lcBadge" id="ludoChatB"></i>';
+  const pn = lel('div', 'ludoChatP'); pn.id = 'ludoChatP';
+  const bg = lel('div', 'lcBg'); ['💬', '🎲', '❤️', '⭐', '😂', '🔥', '✨', '🎉'].forEach((e, i) => { const f = lel('i', '', e); f.style.left = (6 + i * 12) + '%'; f.style.animationDelay = (-i * 1.7) + 's'; f.style.animationDuration = (9 + (i % 3) * 3) + 's'; bg.appendChild(f); });
+  const hd = lel('div', 'lcHd'); const cl = lel('button', 'lcX', '▼'); cl.type = 'button'; hd.append(lel('b', '', '💬 شات الطاولة'), cl);
+  const L = lel('div', 'ludoChatL'); L.id = 'ludoChatL';
+  const em = lel('div', 'lcEmo'); const inp = lel('input'); inp.id = 'ludoChatI'; inp.maxLength = 200; inp.placeholder = 'اكتب رسالة حلوة... ✍️'; inp.enterKeyHint = 'send';
+  ['😂', '❤️', '🔥', '👏', '😎', '😍', '🤣', '😭', '😡', '🙏', '👋', '🎉', '💪', '🤝'].forEach(e => { const b = lel('button', '', e); b.type = 'button'; b.onclick = () => { inp.value = (inp.value + e).slice(0, 200); inp.focus(); }; em.appendChild(b); });
+  const row = lel('div', 'lcRow'); const sb = lel('button', 'lcSend', '➤'); sb.type = 'button';
+  const go = () => { const v = inp.value.trim(); if (!v) return; ludoSend({ t: 'ludo_chat', text: v }); inp.value = ''; inp.focus(); };
+  sb.onclick = go; inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+  const mic = ludoMicEl(); mic.classList.add('inChat'); row.append(mic, inp, sb);
+  pn.append(bg, hd, L, em, row); w.append(pn, tg);
+  const set = open => { LUDOG.chatOpen = open; w.classList.toggle('open', open); tg.querySelector('.lcArr').textContent = open ? '▼' : '▲'; if (open) { LUDOG.unread = 0; ludoChatBadge(); w.querySelectorAll('.lcPeek').forEach(x => x.remove()); setTimeout(() => { L.scrollTop = L.scrollHeight; }, 60); } else inp.blur(); };
+  tg.onclick = () => { ludoSfx('click'); set(!LUDOG.chatOpen); }; cl.onclick = () => set(false); set(!!LUDOG.chatOpen); return w;
+}
+function ludoChatBadge() { const b = document.getElementById('ludoChatB'); if (b) { b.textContent = LUDOG.unread > 9 ? '9+' : (LUDOG.unread || ''); b.classList.toggle('on', LUDOG.unread > 0); } }
+function ludoChatAdd(m, live) {
+  if (!m || !m.id) return; LUDOG.chatSeen = LUDOG.chatSeen || new Set(); if (LUDOG.chatSeen.has(m.id)) return; LUDOG.chatSeen.add(m.id);
+  const L = document.getElementById('ludoChatL'), s = LUDOG.s; if (!L || !s) return; L.querySelectorAll('.lcEmpty').forEach(x => x.remove());
+  const C = LUDO_COL[m.s] || LUDO_COL[0], mine = m.s === s.my, b = lel('div', 'lcm' + (mine ? ' mine' : '') + (live ? ' new' : '')); b.style.setProperty('--c', C.c); b.style.setProperty('--d', C.d);
+  const nm = lel('div', 'lcN', (m.adm ? '👑 ' : '') + m.n); b.appendChild(nm);
+  if (m.vo) { const v = lel('button', 'lcVo'); v.type = 'button'; v.innerHTML = '<span class="lcPl">▶️</span><span class="lcWv"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><small>0:' + String(m.dur || 1).padStart(2, '0') + '</small>'; v.onclick = () => ludoPlayVoice(m.vo, v); b.appendChild(v); }
+  else { const only = /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|‍|️|\s)+$/u.test(m.tx) && m.tx.length <= 12; b.appendChild(lel('div', 'lcT' + (only ? ' big' : ''), m.tx)); }
+  const d = new Date(m.at || Date.now()); b.appendChild(lel('small', 'lcTm', String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')));
+  L.appendChild(b); while (L.children.length > 60) L.firstChild.remove(); L.scrollTop = L.scrollHeight;
+  if (!live) return;
+  if (!mine) { ludoSfx('click'); if (m.vo) { const vb = b.querySelector('.lcVo'); ludoPlayVoice(m.vo, vb); ludoSpeak(m); } }
+  if (!LUDOG.chatOpen && !mine) {
+    LUDOG.unread = (LUDOG.unread || 0) + 1; ludoChatBadge(); const w = document.getElementById('ludoChatW');
+    if (w) { w.querySelectorAll('.lcPeek').forEach(x => x.remove()); const pk = lel('div', 'lcPeek', (m.adm ? '👑 ' : '') + m.n + ': ' + (m.vo ? '🎙️ رسالة صوتية' : m.tx)); pk.style.setProperty('--c', C.c); pk.onclick = () => w.querySelector('.ludoChatTg').click(); w.appendChild(pk); setTimeout(() => pk.remove(), 3500); }
+  }
+}
+function ludoSpeak(m) { const st = ludoStageEl(); if (!st) return; const C = LUDO_COL[m.s] || LUDO_COL[0], el = lel('div', 'ludoSpk', '🔊 ' + m.n + ' يحجي...'); el.style.setProperty('--c', C.c); st.appendChild(el); setTimeout(() => el.remove(), Math.min(20, m.dur || 2) * 1000 + 600); }
+function ludoCss2() {
+  if (document.getElementById('ludoCss2')) return; const st = document.createElement('style'); st.id = 'ludoCss2';
+  st.textContent = `.ludoStage{position:relative;width:100%}
+.ludoDNum{min-width:0;width:0;height:52px;border-radius:16px;display:grid;place-items:center;font:900 30px Cairo,system-ui,sans-serif;color:#fff;background:linear-gradient(145deg,#8b5cf6,#5b2bd6);border:2px solid #fff;box-shadow:0 6px 16px rgba(90,40,200,.5);opacity:0;transform:scale(.3);transition:transform .35s cubic-bezier(.2,1.8,.4,1),opacity .2s,width .3s;overflow:hidden}.ludoDNum.on{width:52px;opacity:1;transform:scale(1)}.ludoDNum.six{background:linear-gradient(145deg,#ffb020,#ff4d6d);animation:ludoPulse .9s ease-in-out infinite}
+.ludoRoll{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;animation:lrBg 1.7s ease forwards}
+@keyframes lrBg{0%{background:rgba(10,6,30,0)}15%,75%{background:rgba(10,6,30,.38)}100%{background:rgba(10,6,30,0)}}
+.lrNum{font:900 clamp(90px,34vw,170px)/1 Cairo,system-ui,sans-serif;color:#fff;-webkit-text-stroke:5px var(--d);text-shadow:0 0 0 var(--c),0 8px 0 var(--d),0 0 40px var(--c);animation:lrPop 1.7s cubic-bezier(.2,1.6,.4,1) forwards}
+.lrEm{font-size:46px;margin-top:-6px;animation:lrEm 1.7s ease forwards}.lrTx{margin-top:6px;padding:6px 16px;border-radius:999px;background:var(--c);border:2px solid #fff;color:#fff;font-weight:900;font-size:17px;box-shadow:0 6px 18px rgba(0,0,0,.4);animation:lrEm 1.7s ease forwards}
+.lrRing{position:absolute;left:50%;top:46%;width:60px;height:60px;margin:-30px;border-radius:50%;border:6px solid var(--c);animation:lrRing 1s ease-out forwards}
+.lrSpark{position:absolute;left:50%;top:45%;font-style:normal;font-size:24px;animation:lrSp 1.2s ease-out forwards}
+@keyframes lrPop{0%{transform:scale(.1) rotate(-25deg);opacity:0}25%{transform:scale(1.25) rotate(6deg);opacity:1}40%{transform:scale(1) rotate(0)}80%{transform:scale(1);opacity:1}100%{transform:scale(.6) translateY(-40px);opacity:0}}
+@keyframes lrEm{0%,15%{transform:translateY(20px) scale(.5);opacity:0}35%{transform:none;opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+@keyframes lrRing{0%{transform:scale(.3);opacity:1}100%{transform:scale(6);opacity:0}}
+@keyframes lrSp{0%{transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.3);opacity:0}30%{opacity:1}100%{transform:translate(-50%,-50%) rotate(var(--a)) translateY(-150px) scale(1.2);opacity:0}}
+.ludoRoll.six .lrNum{animation:lrPop 1.7s cubic-bezier(.2,1.6,.4,1) forwards,lrShk .12s 6 .4s}@keyframes lrShk{50%{translate:4px 0}}
+.ludoTurn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;border-radius:14px;animation:ltBg 2s ease forwards}
+@keyframes ltBg{0%{box-shadow:inset 0 0 0 0 var(--c);background:transparent}15%{box-shadow:inset 0 0 0 10px var(--c),inset 0 0 80px var(--c);background:rgba(10,6,30,.45)}80%{box-shadow:inset 0 0 0 6px var(--c),inset 0 0 50px var(--c);background:rgba(10,6,30,.35)}100%{box-shadow:inset 0 0 0 0 var(--c);background:transparent}}
+.ltEm{font-size:64px;animation:ltIn 2s cubic-bezier(.2,1.7,.4,1) forwards}.ltTx{font:900 clamp(64px,22vw,110px)/1.1 Cairo,system-ui,sans-serif;color:#fff;paint-order:stroke fill;-webkit-text-stroke:0;text-shadow:0 3px 0 var(--d),0 6px 0 var(--d),0 0 18px var(--c),0 0 40px var(--c),0 0 70px var(--c);animation:ltIn 2s cubic-bezier(.2,1.7,.4,1) .08s both}
+.ltSub{margin-top:8px;padding:6px 18px;border-radius:999px;background:#fff;color:var(--d);font-weight:900;font-size:18px;animation:ltIn 2s ease .18s both}
+.ltCf{position:absolute;left:50%;top:50%;width:12px;height:12px;border-radius:3px;animation:ltCf 1.4s ease-out .1s forwards;opacity:0}
+@keyframes ltIn{0%{transform:scale(.2);opacity:0}22%{transform:scale(1.2);opacity:1}35%{transform:scale(1)}82%{transform:scale(1);opacity:1}100%{transform:scale(1.4);opacity:0}}
+@keyframes ltCf{0%{transform:rotate(var(--a)) translateY(0);opacity:1}100%{transform:rotate(var(--a)) translateY(-46vw) rotate(360deg);opacity:0}}
+.ludoMic{display:flex;flex-direction:column;align-items:center;gap:1px;width:62px;height:62px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 35% 30%,#ff8fb1,#e5336b 60%,#a3164a);color:#fff;padding:0;justify-content:center;box-shadow:0 6px 18px rgba(229,51,107,.5);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:inherit;transition:transform .15s}.ludoMic .lmIc{font-size:24px;line-height:1}.ludoMic small{font-size:8px;font-weight:800;opacity:.9}
+.ludoMic.on{transform:scale(1.25);animation:lmOn 1s ease-in-out infinite}@keyframes lmOn{0%,100%{box-shadow:0 0 0 0 rgba(255,60,110,.7)}50%{box-shadow:0 0 0 16px rgba(255,60,110,0)}}
+.ludoMic.inChat{width:44px;height:44px;flex:0 0 44px;border-width:2px}.ludoMic.inChat small{display:none}.ludoMic.inChat .lmIc{font-size:20px}
+.ludoRecPill{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:9;background:rgba(20,8,30,.88);border:2px solid #ff4d7d;color:#fff;border-radius:16px;padding:8px 14px;font-weight:800;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;text-align:center;max-width:90%;animation:lrEm .3s ease}.ludoRecPill small{width:100%;font-weight:600;opacity:.75;font-size:11px}
+.lrDot{width:12px;height:12px;border-radius:50%;background:#ff2d55;animation:lrDot 1s infinite}@keyframes lrDot{50%{opacity:.2}}
+.ludoSpk{position:absolute;right:8px;top:8px;z-index:8;padding:6px 12px;border-radius:999px;background:var(--c);color:#fff;font-weight:800;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:ludoPulse 1s ease-in-out infinite}
+.ludoChatW{position:fixed;inset:0;pointer-events:none;z-index:9400;direction:rtl}
+.ludoChatTg{pointer-events:auto;position:absolute;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));width:62px;height:62px;border-radius:50%;border:3px solid #fff;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font-size:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:0 8px 24px rgba(124,58,237,.6);padding:0;animation:lcTg 2.4s ease-in-out infinite;transition:transform .2s}.ludoChatTg .lcArr{font-size:12px;margin-top:2px;transition:transform .3s}
+@keyframes lcTg{50%{transform:translateY(-4px)}}
+.lcBadge{position:absolute;top:-4px;left:-4px;min-width:22px;height:22px;border-radius:11px;background:#ff2d55;border:2px solid #fff;font:900 12px/18px system-ui;font-style:normal;text-align:center;padding:0 4px;transform:scale(0);transition:transform .25s cubic-bezier(.2,1.8,.4,1)}.lcBadge.on{transform:scale(1)}
+.ludoChatP{pointer-events:auto;position:absolute;left:10px;right:10px;bottom:calc(90px + env(safe-area-inset-bottom));height:min(58vh,480px);max-width:520px;margin:0 auto;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;border:2px solid rgba(255,255,255,.35);box-shadow:0 18px 50px rgba(0,0,0,.6);background:linear-gradient(135deg,#2b1055,#7a1f6b,#1e3a8a,#5b1a8a);background-size:400% 400%;animation:lcBgM 14s ease infinite;transform:translateY(calc(100% + 120px)) scale(.9);opacity:0;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .3s}
+.ludoChatW.open .ludoChatP{transform:none;opacity:1}.ludoChatW:not(.open) .ludoChatP{pointer-events:none}
+@keyframes lcBgM{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.lcBg{position:absolute;inset:0;pointer-events:none;overflow:hidden}.lcBg i{position:absolute;bottom:-40px;font-style:normal;font-size:26px;opacity:.16;animation:lcFl 10s linear infinite}@keyframes lcFl{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(-620px) rotate(40deg)}}
+.lcBg::before{content:'';position:absolute;inset:-50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.14),transparent 30%),radial-gradient(circle at 70% 70%,rgba(255,120,200,.18),transparent 35%);animation:lcSpin 18s linear infinite}@keyframes lcSpin{to{transform:rotate(360deg)}}
+.lcHd{position:relative;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,.25);color:#fff;font-size:16px;backdrop-filter:blur(6px)}.lcX{background:rgba(255,255,255,.18);border:0;color:#fff;width:34px;height:34px;border-radius:50%;font-size:14px}
+.ludoChatL{position:relative;flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.lcEmpty{margin:auto;color:#fff;opacity:.8;text-align:center;font-weight:700;padding:20px}
+.lcm{max-width:80%;align-self:flex-start;background:rgba(255,255,255,.95);color:#22152f;border-radius:18px 18px 18px 6px;padding:7px 12px 4px;border-inline-start:5px solid var(--c);box-shadow:0 4px 12px rgba(0,0,0,.25)}.lcm.mine{align-self:flex-end;background:linear-gradient(135deg,var(--c),var(--d));color:#fff;border:0;border-radius:18px 18px 6px 18px}
+.lcm.new{animation:lcIn .45s cubic-bezier(.2,1.6,.4,1)}@keyframes lcIn{0%{transform:scale(.3) translateY(20px);opacity:0}100%{transform:none;opacity:1}}
+.lcN{font-weight:900;font-size:12px;color:var(--d)}.lcm.mine .lcN{color:#fff;opacity:.9}.lcT{font-size:16px;font-weight:600;word-break:break-word;line-height:1.5}.lcT.big{font-size:38px;line-height:1.2;animation:lcEmoJ 1s ease}@keyframes lcEmoJ{30%{transform:scale(1.4) rotate(-8deg)}60%{transform:scale(.9) rotate(5deg)}}
+.lcTm{display:block;text-align:end;font-size:10px;opacity:.55}
+.lcVo{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.08);border:0;border-radius:14px;padding:6px 10px;color:inherit;font-family:inherit}.lcm.mine .lcVo{background:rgba(255,255,255,.2)}.lcPl{font-size:18px}.lcWv{display:flex;gap:3px;align-items:center;height:22px}.lcWv i{width:4px;height:40%;border-radius:2px;background:currentColor;opacity:.7}.lcWv i:nth-child(2n){height:80%}.lcWv i:nth-child(3n){height:60%}.lcVo.play .lcWv i{animation:lcWv .6s ease-in-out infinite}.lcVo.play .lcWv i:nth-child(2n){animation-delay:.15s}.lcVo.play .lcWv i:nth-child(3n){animation-delay:.3s}@keyframes lcWv{50%{height:100%}}
+.lcEmo{position:relative;display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:rgba(0,0,0,.18);scrollbar-width:none}.lcEmo button{flex:0 0 auto;font-size:22px;background:rgba(255,255,255,.14);border:0;border-radius:12px;width:40px;height:38px;padding:0;transition:transform .12s}.lcEmo button:active{transform:scale(1.35)}
+.lcRow{position:relative;display:flex;gap:6px;align-items:center;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom) * .3);background:rgba(0,0,0,.28)}.lcRow input{flex:1;min-width:0;height:44px;border-radius:22px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.95);padding:0 14px;font-size:16px;font-family:inherit;color:#22152f}
+.lcSend{width:44px;height:44px;flex:0 0 44px;border-radius:50%;border:0;background:linear-gradient(135deg,#22c55e,#0ea5e9);color:#fff;font-size:20px;transform:scaleX(-1);box-shadow:0 4px 12px rgba(0,0,0,.3)}.lcSend:active{transform:scaleX(-1) scale(.9)}
+.lcPeek{pointer-events:auto;position:absolute;right:84px;bottom:calc(26px + env(safe-area-inset-bottom));max-width:60vw;background:#fff;color:#22152f;border-inline-start:5px solid var(--c);border-radius:16px 16px 4px 16px;padding:8px 12px;font-weight:700;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lcIn .4s cubic-bezier(.2,1.6,.4,1)}`;
   document.head.appendChild(st);
 }

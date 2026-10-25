@@ -27,7 +27,7 @@ module.exports = function ludoInit(ctx) {
     return {
       id: l.id, code: l.priv ? l.code : '', priv: !!l.priv, host: l.host, ph: l.ph, t: l.t ? Math.max(0, l.t - now()) : 0,
       seats: l.seats.map((p, i) => p ? { n: p.name, left: !!p.left, host: p.key === l.host, me: i === mine, tk: p.tk, rank: p.rank || 0, rdy: !!p.rdy } : null),
-      allRdy: allReady(l), turn: l.turn, dice: l.dice, rolled: l.rolled, movable: l.ph === 'play' && l.turn === mine ? l.movable : [], win: l.win, last: l.lastEv || null, my: mine
+      ch: (l.chat || []).slice(-40), allRdy: allReady(l), turn: l.turn, dice: l.dice, rolled: l.rolled, movable: l.ph === 'play' && l.turn === mine ? l.movable : [], win: l.win, last: l.lastEv || null, my: mine
     };
   }
   function tablePub(l) { return l ? { ph: l.ph, turn: l.turn, dice: l.dice, win: l.win ? l.win.s : -1, seats: l.seats.map(p => p ? { n: p.name, left: !!p.left, tk: p.tk } : null) } : null; }
@@ -148,6 +148,8 @@ module.exports = function ludoInit(ctx) {
       }
       case 'ludo_leave': return l ? (removeP(l, ws), send(ws, { t: 'ludo_state', s: null })) : send(ws, { t: 'ludo_state', s: null });
       case 'ludo_emo': return emo(ws, String(d.e || ''));
+      case 'ludo_chat': return chat(ws, d);
+      case 'ludo_voice': return voice(ws, d);
       case 'ludo_get': return send(ws, { t: 'ludo_state', s: l ? pub(l, ws) : null });
     }
     if (!l) return;
@@ -190,5 +192,27 @@ module.exports = function ludoInit(ctx) {
   function leaveTable(ws) { const l = lobbyOf(ws); if (l && l.table) { removeP(l, ws); send(ws, { t: 'ludo_state', s: null }); } }
   const EMO = ['😂', '❤️', '👏', '🔥', '😎', '😡', '😭', '🎉'];
   function emo(ws, e) { const l = lobbyOf(ws); if (!l || !EMO.includes(e)) return; const t = now(); if (t - (ws.ludoEmoT || 0) < 1200) return; ws.ludoEmoT = t; const i = seatOf(l, ws); l.seats.forEach(p => { if (p && p.ws && !p.left) send(p.ws, { t: 'ludo_emo', s: i, e }); }); }
+  /* شات الطاولة + مايك (اضغط مطوّل واحجي): الصوت ينرفع على /api/upload والسيرفر يوزّع الرابط على الطاولة */
+  const ADMINS = ['بابي', 'بابيتو'];
+  function chatPush(l, m) { l.chat = l.chat || []; l.chat.push(m); if (l.chat.length > 60) l.chat.splice(0, l.chat.length - 60); l.seats.forEach(p => { if (p && p.ws && !p.left) send(p.ws, { t: 'ludo_chat', m }); }); }
+  function chat(ws, d) {
+    const l = lobbyOf(ws); if (!l) return; const i = seatOf(l, ws); if (i < 0) return;
+    const txt = String(d.text || '').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+    const t = now(), nm = nameOf(ws), adm = ADMINS.includes(nm);
+    if (!adm) {
+      if ((ws.ludoBlock || 0) > t) return send(ws, { t: 'ludo_err', error: 'انتظر ' + Math.ceil((ws.ludoBlock - t) / 1000) + ' ثانية، كررت نفس الكلام هواية 🙏' });
+      if (t - (ws.ludoChatT || 0) < 600) return; ws.ludoChatT = t;
+      if (ws.ludoLastTx === txt) ws.ludoRep = (ws.ludoRep || 1) + 1; else { ws.ludoLastTx = txt; ws.ludoRep = 1; }
+      if (ws.ludoRep > 3) { ws.ludoBlock = t + 20000; ws.ludoRep = 0; return send(ws, { t: 'ludo_err', error: 'تكرار! انحظرت من الشات 20 ثانية ⛔' }); }
+    }
+    chatPush(l, { id: crypto.randomBytes(4).toString('hex'), s: i, n: nm, tx: txt, at: t, adm });
+  }
+  function voice(ws, d) {
+    const l = lobbyOf(ws); if (!l) return; const i = seatOf(l, ws); if (i < 0) return;
+    const url = String(d.url || ''), dur = Math.max(1, Math.min(30, Math.round(+d.dur || 1)));
+    if (!/^\/uploads\/[a-f0-9]{24}\.(weba|m4a|ogg|mp3)$/.test(url)) return;
+    const t = now(); if (t - (ws.ludoVoT || 0) < 1500) return; ws.ludoVoT = t;
+    chatPush(l, { id: crypto.randomBytes(4).toString('hex'), s: i, n: nameOf(ws), vo: url, dur, at: t, adm: ADMINS.includes(nameOf(ws)) });
+  }
   return { onMsg, leave: ws => { const l = lobbyOf(ws); if (l) removeP(l, ws); }, sitTable, leaveTable, tablePub: rmId => tablePub(L.get('rm:' + rmId)), emo };
 };
