@@ -7225,7 +7225,7 @@ function rmNearGmzShop() { const m = RM.me; return !rmInShop() && m.y >= RM_PSHO
 function rmNearGmz() { const m = RM.me; return rmShopId() === 2 && m.y < 470 && Math.abs(m.x - RM_GMZ.x) < 95; }
 function rmNearGmzExit() { const m = RM.me; return rmShopId() === 2 && m.y > 572 && Math.abs(m.x - RM_PHI.dx) < 60; }
 function rmGmzEnter() {
-  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
+  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()] && !RM.holdLead[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
   m.x = m.tx = RM_PHI.dx; m.y = m.ty = 592; m.dir = 1; RM.sent = ''; RM.camSnap = 1; try { if (!RM.ambMute) { blip('sine', 1318, 1318, 0.3, 0.06); blip('sine', 988, 988, 0.4, 0.06, 0.14); rmMeow(0.15, 1.2, 0.5); } } catch (e) {}
   showToast('🐾 دخلت محل غمازة للحيوانات'); setTimeout(() => { if (rmShopId() === 2) { RM_GMZ.wave = 90; rmGmzSay('هلا بيك ' + rmMe() + '! نورتنا 💚 تعال يم الكاونتر واختار حيوانك الصغير'); } }, 450); rmPrompt(true);
 }
@@ -7462,7 +7462,7 @@ function rmNearRbs() { const m = RM.me; return rmShopId() === 3 && m.y < 470 && 
 function rmNearFashExit() { const m = RM.me; return rmShopId() === 3 && m.y > 572 && Math.abs(m.x - RM_FHI.dx) < 60; }
 function rmRbsSay(t, dur) { RM_RBS.say = { txt: t, t: dur || 260, t0: dur || 260 }; }
 function rmFashEnter() {
-  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
+  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()] && !RM.holdLead[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
   m.x = m.tx = RM_FHI.dx; m.y = m.ty = 592; m.dir = 1; RM.sent = ''; RM.camSnap = 1; try { if (!RM.ambMute) { blip('sine', 1568, 1568, 0.3, 0.06); blip('sine', 1175, 1175, 0.4, 0.06, 0.14); blip('triangle', 1760, 1760, 0.4, 0.03, 0.28); } } catch (e) {}
   showToast('👗 دخلت محل ربشاتي للأزياء'); setTimeout(() => { if (rmShopId() === 3) { RM_RBS.wave = 90; rmRbsSay('أهلاً ' + rmMe() + '! ' + 'هذا المحل سواه سجو بكل حب ❤️ فاشتري ملابسك بكل حب 💕'); } }, 450); rmPrompt(true);
 }
@@ -8181,7 +8181,11 @@ function rmHoldSide(name, x, dir) { const p = rmHoldOf(name); if (!p) return 0; 
 function rmHoldGlue(o) { const p = RM.holds[o.name]; if (!p || RM.holdLead[o.name]) return; const lp = rmPosOf(p); if (!lp || Math.hypot(lp[0] - o.x, lp[1] - o.y) > 140) return; const s = o.x >= lp[0] ? 1 : -1; o.tx = lp[0] + s * RM_HOLD_GAP; o.ty = lp[1]; o.dir = rmDirOf(p); }
 function rmHoldTick() {
   const me = rmMe(), p = rmHoldOf(me); if (!p || RM.holdLead[me]) return; const po = rmPosOf(p); if (!po) return; const m = RM.me; if (m.sit) { rmStand(); return; } if (m.jump) return;
-  const s = m.x >= po[0] ? 1 : -1, tx = Math.max(24, Math.min(RMW - 24, po[0] + s * RM_HOLD_GAP)), ty = po[1], d = Math.hypot(m.x - tx, m.y - ty);
+  if (rmShopId({ x: po[0] }) !== rmShopId()) {   // صاحبك دخل/طلع من محل وهو ماسك إيدك: تنتقل وياه
+    const was = rmInShop(); m.x = m.tx = po[0] - RM_HOLD_GAP; m.y = m.ty = po[1]; RM.sent = ''; RM.sentP = 0; RM.camSnap = 1; RM.tapMk = null; RM.hold = false;
+    try { if (!RM.ambMute) blip('sine', 988, 1318, 0.25, 0.05); } catch (e) {} showToast(rmInShop() ? '🤝 دخلت المحل ويا ' + p : (was ? '🤝 طلعت من المحل ويا ' + p : '🤝 انتقلت ويا ' + p)); rmPrompt(true);
+  }
+  const WL = rmWalkLim(), s = m.x >= po[0] ? 1 : -1, tx = Math.max(WL[0], Math.min(WL[1], po[0] + s * RM_HOLD_GAP)), ty = po[1], d = Math.hypot(m.x - tx, m.y - ty);
   m.tx = tx; m.ty = ty; m.goal = false; m.seat = null;
   if (d < 90) { m.x += (tx - m.x) * 0.45; m.y += (ty - m.y) * 0.45; }   // يلحقه فوراً ويبقون لاصقين، مو بس يمشي وراه
   m.dir = rmDirOf(p);
@@ -8871,7 +8875,7 @@ function rmNearSpn() { const m = RM.me; return rmShopId() === 1 && m.y < 470 && 
 function rmNearShopExit() { const m = RM.me; return rmShopId() === 1 && m.y > 572 && Math.abs(m.x - RM_SHI.dx) < 60; }
 function rmShopBell() { try { if (!RM.ambMute) { blip('sine', 1568, 1568, 0.3, 0.06); blip('sine', 1318, 1318, 0.4, 0.06, 0.14); blip('triangle', 1046, 1046, 0.5, 0.04, 0.28); } } catch (e) {} }
 function rmShopEnter() {
-  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
+  const m = RM.me; if (m.sit || m.jump) return; if (RM.holds[rmMe()] && !RM.holdLead[rmMe()]) rmSend({ t: 'rm_hold', on: 0 }); if (m.dance) rmSetDance(0); RM.tapMk = null; RM.hold = false;
   m.x = m.tx = RM_SHI.dx; m.y = m.ty = 592; m.dir = 1; RM.sent = ''; RM.camSnap = 1; rmShopBell(); for (let i = 0; i < 14; i++) RM.sparks.push({ x: m.x + (Math.random() - .5) * 30, y: m.y - 40, vx: (Math.random() - .5) * 2, vy: -1 - Math.random(), t: 30 });
   const n = Object.values(RM.others).filter(o => rmInShop(o)).length; showToast('🎈 دخلت محل بالونات سبيناغ' + (n ? ' — جوا ' + n + ' شخص' : ''));
   setTimeout(() => { if (rmInShop()) { RM_SPN.wave = 90; rmSpnSay('هلا وغلا ' + rmMe() + '! نوّرت محلي 🎈 تعال يم الكاونتر واختار بالونك'); } }, 450); rmPrompt(true);
@@ -9119,7 +9123,7 @@ function rmDraw() {
   if (SH) { if (SID === 3) rmFashFg(c); else if (SID === 2) rmPetFg(c); else rmShopFg(c); } else { rmCanopies(c); rmFireRoof(c); rmNight(c); try { rmSignNight(c); } catch (e) {} rmBirds(c); rmFwDraw(c); } rmStepDraw(c); rmFxDraw(c); rmReactDraw(c); rmBubFlush(c); c.restore(); if (!SH) rmWxDraw(c, bw, bh);
   if (RM.ban && RM.ban.t > 0) { const B = RM.ban; B.t--; const al = Math.max(0, Math.min(1, B.t / 25, (B.max - B.t) / 14)); c.save(); c.globalAlpha = al; c.font = 'bold 19px Cairo, system-ui, Arial'; c.textAlign = 'center'; const tw = c.measureText(B.txt).width + 74, bx = bw / 2 - tw / 2, by = 56 + (1 - al) * -10; const g = c.createLinearGradient(bx, 0, bx + tw, 0); if (B.kind === 2) { g.addColorStop(0, '#2d5fd0'); g.addColorStop(0.5, '#6aa5ff'); g.addColorStop(1, '#2d5fd0'); } else { g.addColorStop(0, '#b66a00'); g.addColorStop(0.5, '#ffc83d'); g.addColorStop(1, '#b66a00'); } c.fillStyle = g; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, tw, 40, 20); else c.rect(bx, by, tw, 40); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); c.fillStyle = B.kind === 2 ? '#fff' : '#3a2200'; c.fillText(B.txt, bw / 2 + 18, by + 27); drawCrown(c, bx + 30, by + 30, B.kind, 1.5); c.restore(); }
   const k = Math.round(m.x) + '|' + Math.round(m.y) + '|' + m.dir + '|' + (m.sit ? 1 : 0);
-  if (k !== RM.sent && RM.T - RM.sentT >= 5) { if (rmSend({ t: 'rm_pos', x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; } }
+  { const pn = performance.now(), el = pn - (RM.sentP || 0); if ((k !== RM.sent && el >= 100) || el >= 2500) { if (rmSend({ t: 'rm_pos', b: 1, x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, dir: m.dir, sit: !!(m.sit && Math.hypot(m.tx - m.x, m.ty - m.y) < 2) })) { RM.sent = k; RM.sentT = RM.T; RM.sentP = pn; } } }   // كل 100ms وقت الحركة + تذكير كل 2.5 ثانية حتى ما يضيع مكانك عند الباقين
   if (RM.T % 20 === 0) rmPrompt(false);
   if (RM.T % 8 === 0) rmKissUpd();
 }
@@ -9130,6 +9134,12 @@ function rmLoop() {
 function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return K; }
 /* ---------- أزرار الجلوس القريبة ---------- */
 var rmPrKey = '';
+// تحديث مكان لاعب ثاني: إذا دخل/طلع من محل أو انتقل بعيد ينقل فوراً (قبل كان يبقى عالق بمكانه القديم ويختفي)
+function rmPosIn(d) {
+  const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; }
+  const jump = rmShopId({ x: d.x }) !== rmShopId(o) || Math.hypot(d.x - o.x, d.y - o.y) > 320;
+  o.tx = d.x; o.ty = d.y; if (jump) { o.x = o.lx = d.x; o.y = o.ly = d.y; } o.dir = d.dir || 1; o.sit = !!d.sit; if (RM.me.goal) rmSeatCheck();
+}
 function rmPrompt(force) {
   const P = $('rmPrompt'); if (!P) return; const m = RM.me; let key = '';
   let near = null; if (!m.sit && !m.jump && !m.goal) { let best = 52; RM_SEATS.forEach(sd => { const d = Math.hypot(sd.x - m.x, (sd.y - m.y) * 1.1); if (d < best) { best = d; near = sd; } }); }
@@ -9153,7 +9163,8 @@ function rmOnMsg(d) {
     RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; rmMuteSet(d.mutedMin ? Date.now() + d.mutedMin * 60000 : 0); RM.vipCnt = d.vipCnt || 0; RM.repCnt = d.repCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); rmRepBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true); if (!RM.petAnn) { RM.petAnn = 1; setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '📢 وفّرنا محل للحيوانات! محل غمازة يمين المنتجع 🐶🐱 كل حيوان صغير بـ 40 دولار 💵، والدولارات من الصيد 🎣', by: 'جربوع' }); rmNpcSay('عندي خبر حلو! وفّرنا محل للحيوانات، روحوا لمحل غمازة 🐾', 320); }, 5500); setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '👗 جديد! محل ربشاتي للأزياء انفتح يمين المنتجع: قبعات، نظارات وأجنحة تلبسها والكل يشوفها ✨', by: 'جربوع' }); }, 16000); }
   } else if (T === 'rm_join') { if (d.m.n === rmMe()) return; if (!d.m.hid) rmJoinBanner(d.m.n); if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, bal: d.m.bal || '', pet: d.m.pet || '', wear: d.m.wear || {}, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; if (RM.pair && RM.pair.with === d.n) rmPairEnd(); rmRenderMem(); rmPrompt(true); }
-  else if (T === 'rm_pos') { const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; } o.tx = d.x; o.ty = d.y; o.dir = d.dir || 1; o.sit = !!d.sit; rmSeatCheck(); rmPrompt(false); }
+  else if (T === 'rm_pos') rmPosIn(d);
+  else if (T === 'rm_posb') { (d.a || []).forEach(rmPosIn); }
   else if (T === 'rm_seatbusy') { const m = RM.me; if (m.sit || m.goal) { showToast('⛔ سبقك أحد على هذا المقعد'); m.goal = false; if (m.sit) rmStand(); else { m.seat = null; m.tx = m.x; m.ty = m.y; } rmPrompt(true); } }
   else if (T === 'rm_wx') { rmWxSync(d); if (d.mode === 'fw') rmFwStart(30);  showToast(({ rain: '🌧️ المشرف استدعى المطر', day: '☀️ المشرف جعل الوقت نهار', night: '🌙 المشرف جعل الوقت ليل', fw: '🎆 المشرف أطلق ألعاب نارية', snow: '❄️ المشرف استدعى الثلج', fast: '⏩ المشرف سرّع الوقت', slow: '⏹ توقف التسريع', reset: '↩️ رجع الوقت للوضع الافتراضي' })[d.mode] || ''); }
   else if (T === 'rm_castles') rmCastleSet(d.list);

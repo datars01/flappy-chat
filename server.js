@@ -1725,6 +1725,17 @@ const WX_CYC = 3600;   // دورة ساعة: كل 30 دقيقة مطر أو ثل
 function wxNow(r, now) { const c = r.wxc || (r.wxc = { base: 0, ref: Date.now(), spd: 1 }); now = now || Date.now(); return { el: ((c.base + (now - c.ref) / 1000 * c.spd) % WX_CYC + WX_CYC) % WX_CYC, spd: c.spd }; }
 const rmStaff = (r, w) => !!(rmAdm(w) || (r && r.mods && r.mods.has(w.key)));
 function rmBcV(r, msg, sender) { const str = JSON.stringify(msg), hid = sender && sender.rm && sender.rm.hid; for (const w of r.mem) if (w !== sender && w.readyState === 1 && (!hid || rmStaff(r, w))) w.send(str); }
+function rmPosQ(r, ws, msg) { (r.pq || (r.pq = new Map())).set(ws, msg); if (!r.pqT) r.pqT = setTimeout(() => rmPosFlush(r), 100); }
+function rmPosFlush(r) {
+  r.pqT = 0; const q = r.pq; if (!q || !q.size) return; r.pq = new Map();
+  const ent = [...q].filter(([s]) => r.mem.has(s)); if (!ent.length) return;
+  for (const w of r.mem) {
+    if (w.readyState !== 1) continue; const staff = rmStaff(r, w), a = [];
+    for (const [s, m] of ent) if (s !== w && (!(s.rm && s.rm.hid) || staff)) a.push(m);
+    if (!a.length) continue;
+    try { if (w.posB) w.send(JSON.stringify({ t: 'rm_posb', a })); else for (const m of a) w.send(JSON.stringify(m)); } catch (e) {}
+  }
+}
 function rmBc(r, msg, except) { const str = JSON.stringify(msg); for (const w of r.mem) if (w !== except && w.readyState === 1) w.send(str); }
 
 /* ===== شخصيات المنتجع (انمي): تنظيف ما يرسله اللاعب ===== */
@@ -1821,11 +1832,12 @@ function rmOnMsg(ws, d) {
     }
     r.lastActive = now;
   } else if (d.t === 'rm_pos') {
-    const h = ws.rm; if (!h || (now - h.t < 90 && !!d.sit === !!h.sit)) return; h.t = now; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    h.x = Math.max(0, Math.min(7440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    // ما نرمي أي تحديث: نحفظ آخر مكان دائماً، والبث يصير مجمّع كل 100ms (أخف بهواية وما يضيع آخر مكان)
+    const h = ws.rm; if (!h) return; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return; if (d.b) ws.posB = 1;
+    const wasSit = h.sit; h.x = Math.max(0, Math.min(7440, x)); h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
-    if (h.sit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
-    if (r) rmBcV(r, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit }, ws);
+    if (h.sit && !wasSit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
+    if (r) rmPosQ(r, ws, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit });
   } else if (d.t === 'rm_av') {   // حفظ شكل الشخصية (حساب: يتحفظ دائماً، ضيف: للجلسة فقط)
     const h = ws.rm; if (!h || now - (h.avt || 0) < 800) return; h.avt = now; const av = avClean2(d.av, rmAdm(ws)); if (!av) return;
     if (ws.guest) ws.av = av; else { db.users[ws.key].av = av; save(); }
