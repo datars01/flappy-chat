@@ -98,7 +98,7 @@ async function protRestore() {   // عند التشغيل: ندمج الرسائ
 
 /* ===== التقييمات وعدد الزوار: تخزين خاص ودائم (ما ينمسح بالديبلوي أو الريستارت أو لو انمسح db) ===== */
 // كل جهاز إله تقييم واحد (يكدر يغيّره)، وكل جهاز يندز مرة وحدة بعدد الزوار. نحفظها بمكان مستقل + نسخة احتياطية ودمج بدون حذف.
-let stats = { ratings: {}, devs: {}, since: Date.now() };
+let stats = { ratings: {}, devs: {}, swan: {}, since: Date.now() };   // swan = لايكات «بجعة الحب الأبدي» (ما تنحذف أبداً)
 const STATS_FILE = path.join(PROT_DIR, 'stats.json');
 let statsSig = '', statsBakAt = 0, statsTimer = null;
 async function statsRead() {
@@ -114,6 +114,7 @@ function statsMerge(list) {   // union: ما نحذف أي تقييم أو زا�
   list.forEach(o => { if (!o || typeof o !== 'object') return;
     for (const [k, v] of Object.entries(o.ratings || {})) { const c = stats.ratings[k]; if (!c || (v.ts || 0) > (c.ts || 0)) stats.ratings[k] = v; }
     for (const [k, v] of Object.entries(o.devs || {})) { const c = stats.devs[k]; stats.devs[k] = c ? { f: Math.min(c.f || v.f, v.f || c.f), l: Math.max(c.l || 0, v.l || 0), n: Math.max(c.n || 0, v.n || 0), u: v.u || c.u } : v; }
+    for (const [k, v] of Object.entries(o.swan || {})) { if (!stats.swan) stats.swan = {}; if (!stats.swan[k]) stats.swan[k] = v; }
     if (o.since && o.since < stats.since) stats.since = o.since;
   });
 }
@@ -1779,6 +1780,7 @@ const rmSorted = () => [...rmRooms.values()].sort((a, b) => (b.perm ? 1 : 0) - (
 app.get('/api/rooms', authMw, (req, res) => { res.json({ rooms: rmSorted().map(rmPub), max: RM_MAX, mine: ([...rmRooms.values()].find(r => !r.perm && r.owner === req.key) || {}).id || '' }); });
 app.get('/api/rooms/public', (req, res) => { res.json({ rooms: rmSorted().filter(r => r.perm).map(rmPub), max: RM_MAX, mine: '' }); });
 app.post('/api/rooms/create', authMw, (req, res) => {
+  if (!((db.users[req.key] || {}).admin)) return res.status(403).json({ error: 'إنشاء الغرف ملغي — المنتجع الرئيسي «بابي» مفتوح للكل 🏝️' });
   if (limited('rmc:' + req.key, 6, 600e3)) return res.status(429).json({ error: 'محاولات كثيرة، جرب بعد شوي' });
   const name = String((req.body && req.body.name) || '').trim().replace(/\s+/g, ' ').slice(0, 24);
   if (name.length < 2 || !/^[\p{L}\p{N}_.\- ]+$/u.test(name)) return res.status(400).json({ error: 'اسم الغرفة 2-24 حرف (حروف وأرقام ومسافة فقط)' });
@@ -1842,7 +1844,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_pos') {
     // ما نرمي أي تحديث: نحفظ آخر مكان دائماً، والبث يصير مجمّع كل 100ms (أخف بهواية وما يضيع آخر مكان)
     const h = ws.rm; if (!h) return; const x = Number(d.x), y = Number(d.y); if (!Number.isFinite(x) || !Number.isFinite(y)) return; if (d.b) ws.posB = 1;
-    const wasSit = h.sit; const nx = Math.max(-1400, Math.min(40000, x)); if (nx >= 10900 && !htCanEnter(me, Math.floor((nx - 10950) / 700))) return; h.x = nx; /* -1400..4760 المنتجع، 5000-8440 المحلات، 9000 صالون ملاذ، 10000 لوبي فندق بابيت، 11000+ غرف الفندق */ h.y = Math.max(0, Math.min(1224, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
+    const wasSit = h.sit; const nx = Math.max(-1400, Math.min(80000, x)); if (nx >= 50900 && nx < 74000 && !htCanEnter(me, Math.floor((nx - 50950) / 700))) return; h.x = nx; /* -1400..7800 المنتجع (والمطار يمين، وحديقة الأمل تحت الشارع)، 45000-48440 المحلات، 49000 صالون ملاذ، 50000 لوبي فندق بابيت، 51000+ غرف الفندق، 75000 المنتجع الجديد */ h.y = Math.max(0, Math.min(2540, y)); h.dir = d.dir < 0 ? -1 : 1; h.sit = !!d.sit;
     const r = rmRooms.get(h.id);
     if (h.sit && !wasSit && r) { for (const w of r.mem) { if (w !== ws && w.rm && w.rm.sit && Math.hypot(w.rm.x - h.x, w.rm.y - h.y) < 9) { h.sit = false; try { ws.send(JSON.stringify({ t: 'rm_seatbusy' })); } catch (e) {} break; } } }
     if (r) rmPosQ(r, ws, { t: 'rm_pos', n: me.name, x: h.x, y: h.y, dir: h.dir, sit: h.sit });
@@ -1984,6 +1986,27 @@ function rmOnMsg(ws, d) {
     let left = 15; for (let i = 0; i <= 7 && left; i++) { const c = Math.min(left, B.k[i] || 0); if (c) { B.k[i] -= c; left -= c; if (!B.k[i]) delete B.k[i]; } }
     B.n -= 15; me.fish = B; me.rmUsd = (me.rmUsd || 0) + 2; save();   // بيع السمك = دولار المنتجع (مو عملات اللعبة)
     send(ws, { t: 'rm_fish_ok', bag: B, sold: 15, got: 2, usd: rmUsdOf(me) });
+  } else if (d.t === 'rm_swan_get' || d.t === 'rm_swan_like') {   // بجعة الحب الأبدي 🦢❤️: لايك وحد لكل حساب، محفوظ للأبد
+    const h = ws.rm; if (!h || now - (h.swt || 0) < 500) return; h.swt = now; if (!stats.swan) stats.swan = {};
+    const nm = ws.guest ? '' : (me && me.name) || '';
+    if (d.t === 'rm_swan_like') {
+      if (!nm) return send(ws, { t: 'rm_swan_err', error: 'سجّل حساب حتى تحط لايك لبجعة الحب الأبدي 💖' });
+      if (!stats.swan[nm]) { stats.swan[nm] = now; statsSave(); const n = Object.keys(stats.swan).length, m = { t: 'rm_swan', n, by: nm }; for (const r of rmRooms.values()) for (const w of r.mem) if (w !== ws && w.readyState === 1) { try { w.send(JSON.stringify(m)); } catch (e) {} } return send(ws, { t: 'rm_swan', n, me: 1, ok: 1 }); }
+    }
+    send(ws, { t: 'rm_swan', n: Object.keys(stats.swan).length, me: nm && stats.swan[nm] ? 1 : 0 });
+  } else if (d.t === 'rm_ap_get' || d.t === 'rm_ap_buy' || d.t === 'rm_ap_fly') {   // مطار بابيت ✈️: تذكرة بـ 5 دولار منتجع، تنطيها للقبطان وتطير
+    const h = ws.rm; if (!h || now - (h.apt || 0) < 400) return; h.apt = now; const AP_PRICE = 5;
+    if (ws.guest || !me) return send(ws, d.t === 'rm_ap_get' ? { t: 'rm_ap', tk: 0, price: AP_PRICE } : { t: 'rm_ap_err', error: 'سجّل حساب حتى تحجز تذكرة طيارة ✈️' });
+    if (d.t === 'rm_ap_buy') {
+      if ((me.apTk || 0) > 0) return send(ws, { t: 'rm_ap_err', error: 'عندك تذكرة من قبل 🎫 — روح سلّمها للقبطان' });
+      if (!me.admin) { if ((me.rmUsd || 0) < AP_PRICE) return send(ws, { t: 'rm_ap_err', error: 'التذكرة بـ ' + AP_PRICE + ' دولار منتجع 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - AP_PRICE; }
+      me.apTk = 1; save(); return send(ws, { t: 'rm_ap', tk: 1, price: AP_PRICE, usd: rmUsdOf(me), bought: 1 });
+    }
+    if (d.t === 'rm_ap_fly') {
+      if ((me.apTk || 0) < 1 && !me.admin) return send(ws, { t: 'rm_ap_err', error: 'تحتاج تذكرة من مركز حجز التذاكر 🎫' });
+      me.apTk = 0; me.apFlights = (me.apFlights || 0) + 1; save(); return send(ws, { t: 'rm_ap_go', tk: 0 });
+    }
+    send(ws, { t: 'rm_ap', tk: (me.apTk || 0) > 0 ? 1 : 0, price: AP_PRICE, usd: rmUsdOf(me) });
   } else if (d.t === 'rm_juice') {   // كشك العصائر الاستوائية 🍹: كل عصير بدولار منتجع واحد
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000) return; const k = String(d.k || ''); if (!['mango', 'pine', 'coco', 'melon', 'passion', 'berry'].includes(k)) return;
     if (!ws.guest && !me.admin) { if ((me.rmUsd || 0) < 1) return send(ws, { t: 'rm_juice_err', error: 'تحتاج دولار منتجع واحد 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - 1; save(); send(ws, { t: 'rm_usd', usd: rmUsdOf(me) }); }

@@ -522,6 +522,10 @@ html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
   .rlNew { flex: 2; background: linear-gradient(135deg, #8e3bff, #c04dff); box-shadow: 0 6px 16px rgba(142,59,255,.45); } .rlHelp { flex: 1; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.4) !important; }
   .rlTabs { display: flex; gap: 6px; margin: 12px 0 4px; padding: 4px; border-radius: 14px; background: var(--card2); border: 1px solid var(--line); } .rlTabs button { flex: 1; border: 0; border-radius: 10px; padding: 8px 4px; font-size: 13px; font-weight: 800; background: none; color: var(--muted); }
   .rlTabs button.on { background: linear-gradient(135deg, #1fbf7a, #2ee48d); color: #073b24; box-shadow: 0 3px 10px rgba(46,228,141,.35); }
+  #rmNew, #rmForm, .rlSecH, #rmTabs, #rmLobby .rlStats { display: none !important; }
+  #rmLobby .rlMain { padding: 40px 18px 22px; min-height: 340px; border-width: 4px; box-shadow: 0 14px 40px rgba(192,77,255,.45), 0 0 0 6px rgba(255,209,102,.18); }
+  #rmLobby .rlMain .rmCrown { font-size: 92px; } #rmLobby .rlMain .rmNm { font-size: 38px; margin-top: 10px; } #rmLobby .rlMain .rmSub { font-size: 18px; padding: 7px 18px; } #rmLobby .rlMain .rmHint { font-size: 15px; margin-top: 12px; }
+  #rmLobby .rlMain .rmGoBig { font-size: 21px !important; padding: 16px 20px !important; margin-top: 18px; }
   #rmMainSlot { margin-bottom: 12px; } #rmMainSlot:empty { display: none; }
   .rlSecH { display: flex; align-items: center; gap: 10px; margin: 14px 0 2px; } .rlSecT { flex: 1; font-weight: 900; font-size: 16px; } .rlSecT small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); }
   .rlNewBig { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; width: 100%; margin: 10px 0 6px; border: 2px solid rgba(255,255,255,.55) !important; border-radius: 22px; padding: 16px 16px; color: #fff; text-align: right; cursor: pointer; background: linear-gradient(120deg, #7b2ff7, #c04dff, #ff4fa3, #ff9a3c, #7b2ff7); background-size: 300% 100%; animation: rnBg 6s linear infinite, rnPulse 1.8s ease-in-out infinite; box-shadow: 0 8px 26px rgba(192,77,255,.55), 0 0 0 0 rgba(255,79,163,.6); }
@@ -1402,7 +1406,7 @@ html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
 <div class="page" id="pg-rooms"><div class="pgHead"><button class="pgBack" type="button">→ رجوع</button><span class="pgTtl">🏝️ المنتجع</span></div><div class="pgBody">
   <div class="card" id="rmLobby">
     <div id="rmMainSlot"></div>
-    <div class="rlSecH"><div class="rlSecT">🏖️ غرف الأعضاء<small>غرف سوّاها اللاعبين — ادخل وحدة أو سوّي غرفتك</small></div></div>
+    <div class="rlSecH" hidden><div class="rlSecT">🏖️ غرف الأعضاء<small>غرف سوّاها اللاعبين — ادخل وحدة أو سوّي غرفتك</small></div></div>
     <button id="rmNew" class="rlNewBig" type="button" hidden></button>
     <div id="rmForm" class="rmForm" hidden>
       <div class="rlFH">🏗️ سوّي غرفتك<small>كل عضو يكدر يسوي غرفة وحدة</small></div>
@@ -1411,14 +1415,14 @@ html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
       <div class="rmFB"><button id="rmCreate" type="button">🏝️ أنشئ الغرفة</button><button id="rmCancel" class="ghost" type="button">إلغاء</button></div>
       <div id="rmMsg" class="rmMsg"></div>
     </div>
-    <div class="rlTabs" id="rmTabs"><button type="button" data-f="all" class="on">الكل</button><button type="button" data-f="open">🌐 مفتوحة</button><button type="button" data-f="lock">🔒 بالرمز</button></div>
+    <div class="rlTabs" id="rmTabs" hidden><button type="button" data-f="all" class="on">الكل</button><button type="button" data-f="open">🌐 مفتوحة</button><button type="button" data-f="lock">🔒 بالرمز</button></div>
     <div id="rmList"></div>
     <div class="rlHero rlHeroLow"><div class="rlWaves"><i></i><i></i><i></i></div><span class="rlSun"></span>
-      <div class="rlTop"><div class="rlLogo">🏝️</div><div class="rlTx"><h2>المنتجع</h2><small>اختار غرفة وادخل الشاطئ ويه الناس</small></div></div>
+      <div class="rlTop"><div class="rlLogo">🏝️</div><div class="rlTx"><h2>المنتجع</h2><small>منتجع بابي الرئيسي — ادخل الشاطئ ويه كل الناس</small></div></div>
       <div class="rlStats"><div class="rlSt"><b id="rmCount">0/15</b><small>🏝️ غرف</small></div><div class="rlSt"><b id="rmOnline">0</b><small>👥 موجودين</small></div><div class="rlSt"><b id="rmOpenN">0</b><small>🌐 مفتوحة</small></div></div>
       <div class="rlBtns"><button id="rmHelpL" class="rlHelp" type="button">📖 دليل المنتجع</button></div>
     </div>
-    <div class="rlInfo"><span>👥 15 شخص بكل غرفة</span><span>🏝️ لحد 15 غرفة</span><span>⏳ الغرفة الفاضية يوم كامل تنحذف</span><span>🛡️ صاحب الغرفة يطرد ويحظر ويحذّر</span></div>
+    <div class="rlInfo"><span>🏝️ منتجع واحد يجمع كل الناس</span><span>🟢 مفتوح للضيوف</span><span>👑 بإدارة بابي وبابيتو</span></div>
   </div>
   <div class="card" id="rmRoom" hidden>
     <div class="lbHead"><span id="rmTtl">🏝️</span><span id="rmCnt">👥</span></div>
@@ -6597,7 +6601,7 @@ var AVT = (function () {
 })();
 
 /* ================= نظام الغرف 🏝️ ================= */
-const RMX0 = -1400, RMW = 4760, RMH = 1440, RM_SAND = 1200, RM_WALK = 1224;   // المنتجع أعرض وأطول: رمل لين 1200، رصيف، وبعدين شارعين بيهن سيارات
+const RMX0 = -1400, RMW = 7800, RMH = 2600, RM_SAND = 1200, RM_WALK = 2540;   // المنتجع أعرض وأطول: رمل لين 1200، رصيف، وبعدين شارعين بيهن سيارات
 var RM = { on: false, id: '', code: '', name: '', owner: '', isOwner: false, me: { x: 400, y: 330, tx: 400, ty: 330, dir: 1, sit: false, goal: false, seat: null, jump: null, sk: 0, bn: 0, after: null }, others: {}, bubs: {}, log: [], bans: [], T: 0, raf: 0, cx: 0, cy: 0, z: 2, zt: 2, sent: '', sentT: 0, full: false, autoFull: false, menu: '', warnFor: '', hold: false, list: [], lt: 0 };
 const RM_SEATS = [];
 (function () {
@@ -7084,9 +7088,9 @@ function rmTgOpen() { try { if (!RM.ambMute) blip('sine', 880, 1320, 0.15, 0.05)
 function rmTgHit(x, y) { if (rmInShop()) return false; const sx = RM_TG.x - 84, sy = RM_TG.y - 224; if (x < sx + 8 || x > sx + 160 || y < sy + 73 || y > sy + 107) return false; rmTgOpen(); return true; }   // فقط الزر الأبيض يفتح التلي
 /* ================= محل غمازة للحيوانات (المحل رقم 3) ================= */
 const RM_PSHOP = { x: 2020, y: 560 };
-const RM_PHI = { x0: 6000, x1: 6440, dx: 6220, vx0: 5985, vx1: 6455, vy0: 120, vy1: 632 };
-const RM_GMZ = { x: 6352, y: 396, say: null, wave: 0, idleT: 0, near: false };
-function rmShopId(o) { const x = (o || RM.me).x; return x >= 10900 ? 7 : x >= 9900 ? 6 : x >= 8900 ? 5 : x >= 7900 ? 4 : x >= 6900 ? 3 : x >= 5900 ? 2 : x >= 4900 ? 1 : 0; }
+const RM_PHI = { x0: 46000, x1: 46440, dx: 46220, vx0: 45985, vx1: 46455, vy0: 120, vy1: 632 };
+const RM_GMZ = { x: 46352, y: 396, say: null, wave: 0, idleT: 0, near: false };
+function rmShopId(o) { const x = (o || RM.me).x; return x >= 50900 ? 7 : x >= 49900 ? 6 : x >= 48900 ? 5 : x >= 47900 ? 4 : x >= 46900 ? 3 : x >= 45900 ? 2 : x >= 44900 ? 1 : 0; }
 function rmShi(o) { const i = rmShopId(o); if (i >= 5 && typeof rmXShi === 'function') return rmXShi(i, o); return i === 4 ? RM_BHI : i === 3 ? RM_FHI : i === 2 ? RM_PHI : RM_SHI; }
 // الحيوانات: كلها صغيرة (أصغر من القطة روح) وسعرها 40
 const RM_PETS = [
@@ -7279,31 +7283,31 @@ function rmPetBg(c) {
   c.fillStyle = '#fff'; c.fillRect(X0, 300, W, 42); c.strokeStyle = '#bfe9e1'; c.lineWidth = 1.5; for (let x = X0 + 8; x < X1 - 30; x += 46) c.strokeRect(x, 306, 38, 30); c.fillStyle = '#26a69a'; c.fillRect(X0, 340, W, 4);
   g = c.createLinearGradient(0, 344, 0, 632); g.addColorStop(0, '#e9d3b4'); g.addColorStop(1, '#d1b48c'); c.fillStyle = g; c.fillRect(X0, 344, W, 288);
   c.strokeStyle = 'rgba(120,90,50,.18)'; c.lineWidth = 1; for (let x = X0; x < X1; x += 36) for (let y = 344; y < 632; y += 36) c.strokeRect(x, y, 36, 36);
-  c.fillStyle = '#7fe3d6'; c.beginPath(); c.ellipse(6190, 505, 120, 50, 0, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.setLineDash([8, 6]); c.beginPath(); c.ellipse(6190, 505, 108, 42, 0, 0, 7); c.stroke(); c.setLineDash([]); c.font = '22px sans-serif'; c.globalAlpha = 0.35; c.fillText('🐾', 6190, 505); c.globalAlpha = 1;
-  [6060, 6220, 6380].forEach(lx => { c.fillStyle = '#145049'; c.fillRect(lx - 1, 132, 2, 18); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 154, 6, 0, 7); c.fill(); g = c.createRadialGradient(lx, 154, 4, lx, 154, 120); g.addColorStop(0, 'rgba(255,240,180,.35)'); g.addColorStop(1, 'rgba(255,240,180,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 154, 120, 0, 7); c.fill(); });
-  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 30px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#2ec4b6'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('🐾 غمازة 🐾', 6220, 178); c.restore();
+  c.fillStyle = '#7fe3d6'; c.beginPath(); c.ellipse(46190, 505, 120, 50, 0, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.setLineDash([8, 6]); c.beginPath(); c.ellipse(46190, 505, 108, 42, 0, 0, 7); c.stroke(); c.setLineDash([]); c.font = '22px sans-serif'; c.globalAlpha = 0.35; c.fillText('🐾', 46190, 505); c.globalAlpha = 1;
+  [46060, 46220, 46380].forEach(lx => { c.fillStyle = '#145049'; c.fillRect(lx - 1, 132, 2, 18); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 154, 6, 0, 7); c.fill(); g = c.createRadialGradient(lx, 154, 4, lx, 154, 120); g.addColorStop(0, 'rgba(255,240,180,.35)'); g.addColorStop(1, 'rgba(255,240,180,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 154, 120, 0, 7); c.fill(); });
+  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 30px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#2ec4b6'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('🐾 غمازة 🐾', 46220, 178); c.restore();
   // رفوف عرض الحيوانات (كل حيوان على وسادته)
-  c.fillStyle = '#8a5a34'; c.beginPath(); c.roundRect ? c.roundRect(6012, 196, 176, 104, 8) : c.rect(6012, 196, 176, 104); c.fill(); c.fillStyle = '#f4fffc'; c.beginPath(); c.roundRect ? c.roundRect(6017, 201, 166, 94, 6) : c.rect(6017, 201, 166, 94); c.fill();
-  c.fillStyle = '#1d6f66'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('تبنّى صديقك الصغير 💚', 6100, 210);
-  RM_PETS.forEach((P, i) => { const col = i % 8, row = Math.floor(i / 8), px = 6029 + col * 20.5, py = 250 + row * 40; c.fillStyle = '#c9a27a'; c.fillRect(6019, py + 1, 162, 2); c.fillStyle = ['#ff9ec7', '#7fe3d6', '#ffd23f', '#c9a5ff'][i % 4]; c.beginPath(); c.ellipse(px, py, 8, 2.4, 0, 0, 7); c.fill(); rmPetDraw(c, px, py, P, i % 2 ? -1 : 1, 0, false, 0.95); });
+  c.fillStyle = '#8a5a34'; c.beginPath(); c.roundRect ? c.roundRect(46012, 196, 176, 104, 8) : c.rect(46012, 196, 176, 104); c.fill(); c.fillStyle = '#f4fffc'; c.beginPath(); c.roundRect ? c.roundRect(46017, 201, 166, 94, 6) : c.rect(46017, 201, 166, 94); c.fill();
+  c.fillStyle = '#1d6f66'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('تبنّى صديقك الصغير 💚', 46100, 210);
+  RM_PETS.forEach((P, i) => { const col = i % 8, row = Math.floor(i / 8), px = 46029 + col * 20.5, py = 250 + row * 40; c.fillStyle = '#c9a27a'; c.fillRect(46019, py + 1, 162, 2); c.fillStyle = ['#ff9ec7', '#7fe3d6', '#ffd23f', '#c9a5ff'][i % 4]; c.beginPath(); c.ellipse(px, py, 8, 2.4, 0, 0, 7); c.fill(); rmPetDraw(c, px, py, P, i % 2 ? -1 : 1, 0, false, 0.95); });
   // شجرة قطط + حوض سمك
-  c.fillStyle = '#c9a07a'; c.fillRect(6206, 230, 6, 110); c.fillStyle = '#ff9ec7'; c.beginPath(); c.ellipse(6209, 230, 20, 6, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(6209, 285, 16, 5, 0, 0, 7); c.fill(); rmPetDraw(c, 6205, 229, RM_PETD.cat_b, 1, 0, false, 1.1);
-  c.fillStyle = 'rgba(110,200,255,.55)'; c.fillRect(6236, 250, 40, 30); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(6236, 250, 40, 30); c.fillStyle = '#8a5a34'; c.fillRect(6232, 280, 48, 6); c.font = '9px sans-serif'; c.fillText('🐠', 6248 + Math.sin(T / 20) * 8, 262); c.fillText('🐟', 6262 - Math.sin(T / 26) * 8, 272); for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(6244 + i * 10, 276 - ((T / 2 + i * 12) % 24), 1.2, 0, 7); c.fill(); }
+  c.fillStyle = '#c9a07a'; c.fillRect(46206, 230, 6, 110); c.fillStyle = '#ff9ec7'; c.beginPath(); c.ellipse(46209, 230, 20, 6, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(46209, 285, 16, 5, 0, 0, 7); c.fill(); rmPetDraw(c, 46205, 229, RM_PETD.cat_b, 1, 0, false, 1.1);
+  c.fillStyle = 'rgba(110,200,255,.55)'; c.fillRect(46236, 250, 40, 30); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(46236, 250, 40, 30); c.fillStyle = '#8a5a34'; c.fillRect(46232, 280, 48, 6); c.font = '9px sans-serif'; c.fillText('🐠', 46248 + Math.sin(T / 20) * 8, 262); c.fillText('🐟', 46262 - Math.sin(T / 26) * 8, 272); for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(46244 + i * 10, 276 - ((T / 2 + i * 12) % 24), 1.2, 0, 7); c.fill(); }
   // غمازة ورا الكاونتر
   const near = rmNearGmz(); if (near && !RM_GMZ.near) { RM_GMZ.wave = 70; if (!RM_GMZ.say || RM_GMZ.say.t <= 0) rmGmzSay('دوس «اشتري حيوان» وشوف كل أصدقائي الصغار 🐶🐱', 220); } RM_GMZ.near = near;
   if (near && (!RM_GMZ.say || RM_GMZ.say.t <= 0) && ++RM_GMZ.idleT > 520) { RM_GMZ.idleT = 0; rmGmzSay(['كل حيوان بـ 40 دولار 💵 بس 🐾', 'الدولارات تجي من الصيد، بيع 15 سمكة وخذ دولارين 💵 🎣', 'البزونة السودة كلش حبابة 🐈‍⬛', 'حيوانك يمشي وراك بكل المنتجع 💚'][Math.floor(Math.random() * 4)]); }
   if (RM_GMZ.wave > 0) RM_GMZ.wave--; rmGmzDraw(c, RM_GMZ.x, RM_GMZ.y, 1, RM_GMZ.wave > 0);
-  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#4fd1c5'); g.addColorStop(1, '#26a69a'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(6284, 368, 148, 46, 6) : c.rect(6284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(6280, 362, 156, 9); c.strokeStyle = '#1d6f66'; c.lineWidth = 1.5; c.strokeRect(6280, 362, 156, 9);
-  c.font = '12px sans-serif'; for (let i = 0; i < 5; i++) { c.globalAlpha = 0.6; c.fillText('🐾', 6300 + i * 29, 392); } c.globalAlpha = 1;
-  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(6394, 344, 30, 20, 3) : c.rect(6394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(6398, 347, 22, 6);
-  rmPetDraw(c, 6300, 361, RM_PETD.ham, 1, 0, false, 1.2);
+  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#4fd1c5'); g.addColorStop(1, '#26a69a'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(46284, 368, 148, 46, 6) : c.rect(46284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(46280, 362, 156, 9); c.strokeStyle = '#1d6f66'; c.lineWidth = 1.5; c.strokeRect(46280, 362, 156, 9);
+  c.font = '12px sans-serif'; for (let i = 0; i < 5; i++) { c.globalAlpha = 0.6; c.fillText('🐾', 46300 + i * 29, 392); } c.globalAlpha = 1;
+  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(46394, 344, 30, 20, 3) : c.rect(46394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(46398, 347, 22, 6);
+  rmPetDraw(c, 46300, 361, RM_PETD.ham, 1, 0, false, 1.2);
   rmTagDraw(c, RM_GMZ.x, RM_GMZ.y - 112, 'غمازة 🐾 صاحبة المحل', 'rgba(38,166,154,.95)');
 }
 function rmPetShopList() {
   const T = RM.T; return [
-    [470, c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(6080, 478, 30, 7, 0, 0, 7); c.fill(); c.fillStyle = '#ff9ec7'; c.beginPath(); c.ellipse(6080, 470, 28, 9, 0, 0, 7); c.fill(); c.fillStyle = '#ffd0e4'; c.beginPath(); c.ellipse(6080, 467, 20, 5, 0, 0, 7); c.fill(); rmPetDraw(c, 6072 + Math.sin(T / 60) * 3, 468, RM_PETD.bunny_g, 1, 0, false, 1.2); rmPetDraw(c, 6092, 469, RM_PETD.panda, -1, 0, false, 1.1); rmTagDraw(c, 6080, 492, '💤 ركن الراحة', 'rgba(29,111,102,.92)'); }],
-    [520, c => rmPetDraw(c, 6150 + Math.sin(T / 70) * 40, 520, RM_PETD.duck, Math.cos(T / 70) > 0 ? 1 : -1, T / 4, true, 1.2)],
-    [470, c => { [6012, 6426].forEach(px => { c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(px - 8, 438, 16, 30, 4) : c.rect(px - 8, 438, 16, 30); c.fill(); c.fillStyle = '#3fa34d'; c.beginPath(); c.arc(px, 430, 13, 0, 7); c.arc(px - 8, 438, 8, 0, 7); c.arc(px + 8, 438, 8, 0, 7); c.fill(); }); }]
+    [470, c => { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(46080, 478, 30, 7, 0, 0, 7); c.fill(); c.fillStyle = '#ff9ec7'; c.beginPath(); c.ellipse(46080, 470, 28, 9, 0, 0, 7); c.fill(); c.fillStyle = '#ffd0e4'; c.beginPath(); c.ellipse(46080, 467, 20, 5, 0, 0, 7); c.fill(); rmPetDraw(c, 46072 + Math.sin(T / 60) * 3, 468, RM_PETD.bunny_g, 1, 0, false, 1.2); rmPetDraw(c, 46092, 469, RM_PETD.panda, -1, 0, false, 1.1); rmTagDraw(c, 46080, 492, '💤 ركن الراحة', 'rgba(29,111,102,.92)'); }],
+    [520, c => rmPetDraw(c, 46150 + Math.sin(T / 70) * 40, 520, RM_PETD.duck, Math.cos(T / 70) > 0 ? 1 : -1, T / 4, true, 1.2)],
+    [470, c => { [46012, 46426].forEach(px => { c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(px - 8, 438, 16, 30, 4) : c.rect(px - 8, 438, 16, 30); c.fill(); c.fillStyle = '#3fa34d'; c.beginPath(); c.arc(px, 430, 13, 0, 7); c.arc(px - 8, 438, 8, 0, 7); c.arc(px + 8, 438, 8, 0, 7); c.fill(); }); }]
   ];
 }
 function rmPetFg(c) {
@@ -7363,8 +7367,8 @@ function rmPetOk(d) {
 
 /* ================= محل ربشاتي للأزياء (المحل رقم 4) ================= */
 const RM_FSHOP = { x: 2380, y: 560 };
-const RM_FHI = { x0: 7000, x1: 7440, dx: 7220, vx0: 6985, vx1: 7455, vy0: 120, vy1: 632 };
-const RM_RBS = { x: 7352, y: 396, say: null, wave: 0, idleT: 0, near: false };
+const RM_FHI = { x0: 47000, x1: 47440, dx: 47220, vx0: 46985, vx1: 47455, vy0: 120, vy1: 632 };
+const RM_RBS = { x: 47352, y: 396, say: null, wave: 0, idleT: 0, near: false };
 const RM_RBS_PAL = { fur: '#e9d6ff', bel: '#fff6ff', ap: '#8a3dff', bow: '#ffd23f', ol: '#4a2a5c', ic: '👗', glass: 1 };
 // الأزياء: قبعات (hat) + نظارات (eye) + أجنحة/عباءات (back) — تنلبس على الشخصية والكل يشوفها
 const RM_WEAR = [
@@ -7519,28 +7523,28 @@ function rmFashBg(c) {
   g = c.createLinearGradient(0, 344, 0, 632); g.addColorStop(0, '#3a2350'); g.addColorStop(1, '#22142f'); c.fillStyle = g; c.fillRect(X0, 344, W, 288);
   c.strokeStyle = 'rgba(255,255,255,.06)'; c.lineWidth = 1; for (let x = X0; x < X1; x += 40) { c.beginPath(); c.moveTo(x, 344); c.lineTo(x, 632); c.stroke(); } for (let y = 344; y < 632; y += 40) { c.beginPath(); c.moveTo(X0, y); c.lineTo(X1, y); c.stroke(); }
   // ممشى عرض أزياء أحمر في النص
-  c.fillStyle = '#b3121a'; c.fillRect(7160, 420, 120, 212); c.fillStyle = '#ffd23f'; c.fillRect(7160, 420, 3, 212); c.fillRect(7277, 420, 3, 212);
-  [7060, 7220, 7380].forEach(lx => { c.fillStyle = '#331455'; c.fillRect(lx - 1, 132, 2, 14); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 150, 5, 0, 7); c.fill(); for (let i = 0; i < 5; i++) { c.fillStyle = 'rgba(255,255,255,.8)'; c.beginPath(); c.arc(lx + Math.cos(i * 1.26) * 8, 156 + Math.sin(i * 1.26) * 3, 1.4, 0, 7); c.fill(); } g = c.createRadialGradient(lx, 152, 4, lx, 152, 130); g.addColorStop(0, 'rgba(255,240,200,.35)'); g.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 152, 130, 0, 7); c.fill(); });
-  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 28px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#a35cff'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('✨ ربشاتي ✨', 7220, 178); c.restore();
+  c.fillStyle = '#b3121a'; c.fillRect(47160, 420, 120, 212); c.fillStyle = '#ffd23f'; c.fillRect(47160, 420, 3, 212); c.fillRect(47277, 420, 3, 212);
+  [47060, 47220, 47380].forEach(lx => { c.fillStyle = '#331455'; c.fillRect(lx - 1, 132, 2, 14); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 150, 5, 0, 7); c.fill(); for (let i = 0; i < 5; i++) { c.fillStyle = 'rgba(255,255,255,.8)'; c.beginPath(); c.arc(lx + Math.cos(i * 1.26) * 8, 156 + Math.sin(i * 1.26) * 3, 1.4, 0, 7); c.fill(); } g = c.createRadialGradient(lx, 152, 4, lx, 152, 130); g.addColorStop(0, 'rgba(255,240,200,.35)'); g.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 152, 130, 0, 7); c.fill(); });
+  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 28px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#a35cff'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('✨ ربشاتي ✨', 47220, 178); c.restore();
   // راك ملابس على الحايط (يسار)
-  c.strokeStyle = '#d7a400'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(7014, 204); c.lineTo(7186, 204); c.stroke(); c.fillStyle = '#d7a400'; c.fillRect(7012, 200, 4, 100); c.fillRect(7184, 200, 4, 100);
-  ['#ff5c97', '#8a3dff', '#3a8bff', '#ffd23f', '#3ddc84', '#ff7a1a', '#e8284a', '#ffffff', '#2b2b33'].forEach((col, i) => { const hx = 7026 + i * 19, sw = Math.sin(T / 40 + i) * 1.2; c.strokeStyle = '#8a8a99'; c.lineWidth = 1; c.beginPath(); c.moveTo(hx, 204); c.lineTo(hx, 208); c.moveTo(hx - 6, 213); c.lineTo(hx, 208); c.lineTo(hx + 6, 213); c.stroke(); c.fillStyle = col; c.beginPath(); c.moveTo(hx - 7 + sw, 213); c.lineTo(hx + 7 + sw, 213); c.lineTo(hx + 9 + sw, 248 + (i % 3) * 8); c.lineTo(hx - 9 + sw, 248 + (i % 3) * 8); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.2)'; c.stroke(); });
-  c.fillStyle = '#4b1f7a'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('أحدث الموديلات 👗', 7100, 288);
+  c.strokeStyle = '#d7a400'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(47014, 204); c.lineTo(47186, 204); c.stroke(); c.fillStyle = '#d7a400'; c.fillRect(47012, 200, 4, 100); c.fillRect(47184, 200, 4, 100);
+  ['#ff5c97', '#8a3dff', '#3a8bff', '#ffd23f', '#3ddc84', '#ff7a1a', '#e8284a', '#ffffff', '#2b2b33'].forEach((col, i) => { const hx = 47026 + i * 19, sw = Math.sin(T / 40 + i) * 1.2; c.strokeStyle = '#8a8a99'; c.lineWidth = 1; c.beginPath(); c.moveTo(hx, 204); c.lineTo(hx, 208); c.moveTo(hx - 6, 213); c.lineTo(hx, 208); c.lineTo(hx + 6, 213); c.stroke(); c.fillStyle = col; c.beginPath(); c.moveTo(hx - 7 + sw, 213); c.lineTo(hx + 7 + sw, 213); c.lineTo(hx + 9 + sw, 248 + (i % 3) * 8); c.lineTo(hx - 9 + sw, 248 + (i % 3) * 8); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.2)'; c.stroke(); });
+  c.fillStyle = '#4b1f7a'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('أحدث الموديلات 👗', 47100, 288);
   // مراية كبيرة بلمعة + غرفة قياس بستارة
-  c.fillStyle = '#d7a400'; c.beginPath(); c.ellipse(7230, 250, 26, 46, 0, 0, 7); c.fill(); g = c.createLinearGradient(7210, 210, 7250, 290); g.addColorStop(0, '#e8f4ff'); g.addColorStop(0.5, '#b9d4ee'); g.addColorStop(1, '#e8f4ff'); c.fillStyle = g; c.beginPath(); c.ellipse(7230, 250, 22, 42, 0, 0, 7); c.fill(); c.save(); c.beginPath(); c.ellipse(7230, 250, 22, 42, 0, 0, 7); c.clip(); c.fillStyle = 'rgba(255,255,255,.6)'; const ms = ((T * 0.8) % 140) - 40; c.beginPath(); c.moveTo(7200 + ms, 200); c.lineTo(7210 + ms, 200); c.lineTo(7190 + ms, 300); c.lineTo(7180 + ms, 300); c.closePath(); c.fill(); c.restore();
-  c.fillStyle = '#6a2fb0'; c.fillRect(7262, 200, 2, 140); for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#8a3dff' : '#a35cff'; c.beginPath(); c.moveTo(7264 + i * 6 + Math.sin(T / 30 + i) * 0.6, 202); c.lineTo(7270 + i * 6, 202); c.lineTo(7271 + i * 6 + Math.sin(T / 25 + i), 300); c.lineTo(7263 + i * 6 + Math.sin(T / 25 + i), 300); c.closePath(); c.fill(); } c.fillStyle = '#fff'; c.font = 'bold 8px Cairo, Arial'; c.fillText('غرفة القياس', 7282, 222);
+  c.fillStyle = '#d7a400'; c.beginPath(); c.ellipse(47230, 250, 26, 46, 0, 0, 7); c.fill(); g = c.createLinearGradient(47210, 210, 47250, 290); g.addColorStop(0, '#e8f4ff'); g.addColorStop(0.5, '#b9d4ee'); g.addColorStop(1, '#e8f4ff'); c.fillStyle = g; c.beginPath(); c.ellipse(47230, 250, 22, 42, 0, 0, 7); c.fill(); c.save(); c.beginPath(); c.ellipse(47230, 250, 22, 42, 0, 0, 7); c.clip(); c.fillStyle = 'rgba(255,255,255,.6)'; const ms = ((T * 0.8) % 140) - 40; c.beginPath(); c.moveTo(47200 + ms, 200); c.lineTo(47210 + ms, 200); c.lineTo(47190 + ms, 300); c.lineTo(47180 + ms, 300); c.closePath(); c.fill(); c.restore();
+  c.fillStyle = '#6a2fb0'; c.fillRect(47262, 200, 2, 140); for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#8a3dff' : '#a35cff'; c.beginPath(); c.moveTo(47264 + i * 6 + Math.sin(T / 30 + i) * 0.6, 202); c.lineTo(47270 + i * 6, 202); c.lineTo(47271 + i * 6 + Math.sin(T / 25 + i), 300); c.lineTo(47263 + i * 6 + Math.sin(T / 25 + i), 300); c.closePath(); c.fill(); } c.fillStyle = '#fff'; c.font = 'bold 8px Cairo, Arial'; c.fillText('غرفة القياس', 47282, 222);
   // ربشاتي ورا الكاونتر
   const near = rmNearRbs(); if (near && !RM_RBS.near) { RM_RBS.wave = 70; if (!RM_RBS.say || RM_RBS.say.t <= 0) rmRbsSay('هذا المحل سواه سجو بكل حب ❤️ فاشتري ملابسك بكل حب 💕', 240); } RM_RBS.near = near;
   if (near && (!RM_RBS.say || RM_RBS.say.t <= 0) && ++RM_RBS.idleT > 520) { RM_RBS.idleT = 0; rmRbsSay(['هذا المحل سواه سجو بكل حب ❤️ فاشتري ملابسك بكل حب 💕', 'تاج الذهب يخليك ملك المنتجع 👑', 'أجنحة الفراشة ترفرف وياك وين ما تروح 🦋', 'تكدر تلبس قبعة ونظارة وأجنحة سوا ✨', 'الدولارات من الصيد، بيع 15 سمكة وخذ دولارين 💵 🎣', 'الكشخة نص الحضور 😎'][Math.floor(Math.random() * 5)]); }
   if (RM_RBS.wave > 0) RM_RBS.wave--; rmGmzDraw(c, RM_RBS.x, RM_RBS.y, 1, RM_RBS.wave > 0, RM_RBS_PAL);
-  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#a35cff'); g.addColorStop(1, '#6a2fb0'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(7284, 368, 148, 46, 6) : c.rect(7284, 368, 148, 46); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(7280, 362, 156, 9); c.strokeStyle = '#4b1f7a'; c.lineWidth = 1.5; c.strokeRect(7280, 362, 156, 9);
-  c.font = '11px sans-serif'; ['👗', '👠', '🎀', '👜', '💍'].forEach((e, i) => { c.globalAlpha = 0.8; c.fillText(e, 7300 + i * 29, 392); }); c.globalAlpha = 1;
-  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(7394, 344, 30, 20, 3) : c.rect(7394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(7398, 347, 22, 6);
+  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#a35cff'); g.addColorStop(1, '#6a2fb0'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(47284, 368, 148, 46, 6) : c.rect(47284, 368, 148, 46); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(47280, 362, 156, 9); c.strokeStyle = '#4b1f7a'; c.lineWidth = 1.5; c.strokeRect(47280, 362, 156, 9);
+  c.font = '11px sans-serif'; ['👗', '👠', '🎀', '👜', '💍'].forEach((e, i) => { c.globalAlpha = 0.8; c.fillText(e, 47300 + i * 29, 392); }); c.globalAlpha = 1;
+  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(47394, 344, 30, 20, 3) : c.rect(47394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(47398, 347, 22, 6);
   rmTagDraw(c, RM_RBS.x, RM_RBS.y - 112, 'ربشاتي ✨ صاحبة المحل', 'rgba(106,47,176,.95)');
 }
 function rmFashList() {
   const T = RM.T, mk = (x, y, w, lbl) => [y, c => { c.fillStyle = '#ffd23f'; c.beginPath(); c.ellipse(x, y + 1, 16, 4.5, 0, 0, 7); c.fill(); c.fillStyle = '#4b1f7a'; c.beginPath(); c.ellipse(x, y, 14, 3.6, 0, 0, 7); c.fill(); c.save(); c.translate(x, y); c.rotate(Math.sin(T / 90 + x) * 0.02); rmManq(c, 0, 0, 1.25, w); c.restore(); if (lbl) rmTagDraw(c, x, y + 16, lbl, 'rgba(75,31,122,.92)'); }];
-  return [mk(7050, 470, { hat: 'h_crown', eye: 'e_sun', back: 'b_angel' }, '👑 الملكية'), mk(7110, 500, { hat: 'h_flower', eye: 'e_heart', back: 'b_bfly' }, ''), mk(7330, 575, { hat: 'h_witch', eye: 'e_star', back: 'b_bat' }, ''), mk(7405, 540, { hat: 'h_cowboy', eye: 'e_nerd', back: 'b_cape' }, '🤠 المغامر')];
+  return [mk(47050, 470, { hat: 'h_crown', eye: 'e_sun', back: 'b_angel' }, '👑 الملكية'), mk(47110, 500, { hat: 'h_flower', eye: 'e_heart', back: 'b_bfly' }, ''), mk(47330, 575, { hat: 'h_witch', eye: 'e_star', back: 'b_bat' }, ''), mk(47405, 540, { hat: 'h_cowboy', eye: 'e_nerd', back: 'b_cape' }, '🤠 المغامر')];
 }
 function rmFashFg(c) {
   const X0 = RM_FHI.vx0, X1 = RM_FHI.vx1, D = RM_FHI.dx;
@@ -7601,8 +7605,8 @@ function rmWearOk(d) {
 
 /* ===================== محل «روح للحقائب» 👜 — حقائب كيوت للبنات بس ===================== */
 const RM_BSHOP = { x: 2730, y: 560 };
-const RM_BHI = { x0: 8000, x1: 8440, dx: 8220, vx0: 7985, vx1: 8455, vy0: 120, vy1: 632 };
-const RM_RUH = { x: 8352, y: 396, say: null, wave: 0, idleT: 0, near: false };
+const RM_BHI = { x0: 48000, x1: 48440, dx: 48220, vx0: 47985, vx1: 48455, vy0: 120, vy1: 632 };
+const RM_RUH = { x: 48352, y: 396, say: null, wave: 0, idleT: 0, near: false };
 const RM_RUH_PAL = { fur: '#ffe0ef', bel: '#fff6fb', ap: '#ff5ca8', bow: '#ff2d7a', ol: '#7a2350', ic: '👜', glass: 1 };
 const RM_BAGCOL = { g_cherry: ['#e8284a', '#a3122e'], g_straw: ['#e7c27a', '#b08a3c'], g_heart: ['#ff6fae', '#c42a72'], g_star: ['#ffd23f', '#c9970a'], g_bow: ['#c9a2ff', '#8a5ad6'], g_bunny: ['#ffffff', '#d8c8d8'], g_cloud: ['#bfe4ff', '#6fb0e8'], g_pink: ['#ff9ec7', '#d65a92'], g_cat: ['#2b2b38', '#111118'], g_bear: ['#c98a5a', '#8a5a34'], g_pearl: ['#fff7fb', '#e0cfe0'], g_lux: ['#ffe27a', '#c9971f'] };
 /* رسم الحقيبة: معلّقة على الكتف وتطلع جنب الشخصية */
@@ -7707,26 +7711,26 @@ function rmBagBg(c) {
   g = c.createLinearGradient(0, 344, 0, 632); g.addColorStop(0, '#ffc2dc'); g.addColorStop(1, '#f59ac2'); c.fillStyle = g; c.fillRect(X0, 344, W, 288);
   for (let x = X0; x < X1; x += 40) for (let y = 344; y < 632; y += 40) { if (((x - X0) / 40 + (y - 344) / 40) % 2) { c.fillStyle = 'rgba(255,255,255,.16)'; c.fillRect(x, y, 40, 40); } }
   /* سجادة دائرية وفيها قلب */
-  c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(8220, 500, 120, 44, 0, 0, 7); c.fill(); c.fillStyle = '#ff7ab8'; c.beginPath(); c.ellipse(8220, 500, 108, 38, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.moveTo(8220, 516); c.bezierCurveTo(8196, 500, 8204, 482, 8220, 492); c.bezierCurveTo(8236, 482, 8244, 500, 8220, 516); c.fill();
+  c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(48220, 500, 120, 44, 0, 0, 7); c.fill(); c.fillStyle = '#ff7ab8'; c.beginPath(); c.ellipse(48220, 500, 108, 38, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.moveTo(48220, 516); c.bezierCurveTo(48196, 500, 48204, 482, 48220, 492); c.bezierCurveTo(48236, 482, 48244, 500, 48220, 516); c.fill();
   /* ثريا كريستال */
-  [8080, 8360].forEach(lx => { c.strokeStyle = '#d7a400'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(lx, 132); c.lineTo(lx, 148); c.stroke(); for (let i = 0; i < 7; i++) { const a = i / 6 * Math.PI, px = lx + Math.cos(a) * 18, py = 152 + Math.sin(a) * 8; c.fillStyle = 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(T / 10 + i)) + ')'; c.beginPath(); c.moveTo(px, py); c.lineTo(px - 2.5, py + 6); c.lineTo(px, py + 11); c.lineTo(px + 2.5, py + 6); c.closePath(); c.fill(); } g = c.createRadialGradient(lx, 156, 4, lx, 156, 120); g.addColorStop(0, 'rgba(255,230,245,.45)'); g.addColorStop(1, 'rgba(255,230,245,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 156, 120, 0, 7); c.fill(); });
-  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 26px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#ff5ca8'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('💖 روح للحقائب 💖', 8220, 172); c.font = 'bold 13px Cairo, system-ui, Arial'; c.shadowBlur = 6; c.fillText('🎀 محل للبنات فقط 🎀', 8220, 198); c.restore();
+  [48080, 48360].forEach(lx => { c.strokeStyle = '#d7a400'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(lx, 132); c.lineTo(lx, 148); c.stroke(); for (let i = 0; i < 7; i++) { const a = i / 6 * Math.PI, px = lx + Math.cos(a) * 18, py = 152 + Math.sin(a) * 8; c.fillStyle = 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(T / 10 + i)) + ')'; c.beginPath(); c.moveTo(px, py); c.lineTo(px - 2.5, py + 6); c.lineTo(px, py + 11); c.lineTo(px + 2.5, py + 6); c.closePath(); c.fill(); } g = c.createRadialGradient(lx, 156, 4, lx, 156, 120); g.addColorStop(0, 'rgba(255,230,245,.45)'); g.addColorStop(1, 'rgba(255,230,245,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 156, 120, 0, 7); c.fill(); });
+  c.save(); try { c.direction = 'rtl'; } catch (e) {} c.font = 'bold 26px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#ff5ca8'; c.shadowBlur = 14; c.fillStyle = '#fff'; c.fillText('💖 روح للحقائب 💖', 48220, 172); c.font = 'bold 13px Cairo, system-ui, Arial'; c.shadowBlur = 6; c.fillText('🎀 محل للبنات فقط 🎀', 48220, 198); c.restore();
   /* رفوف حقائب على الحايط */
-  [[8016, 212], [8016, 262]].forEach(([sx, sy], r) => { c.fillStyle = '#fff'; c.fillRect(sx, sy + 22, 170, 5); c.fillStyle = '#e8c8d8'; c.fillRect(sx, sy + 27, 170, 2); ['g_cherry', 'g_star', 'g_cloud', 'g_bow', 'g_straw', 'g_bear', 'g_pearl', 'g_cat'].slice(r * 4, r * 4 + 4).forEach((k, i) => { c.save(); c.translate(sx + 10 + i * 42, sy + 46); c.scale(1.5, 1.5); rmBagItem(c, k, 0, 0, T + i * 20); c.restore(); }); });
-  c.fillStyle = '#b8336e'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('أحلى الحقائب 👜✨', 8100, 296);
+  [[48016, 212], [48016, 262]].forEach(([sx, sy], r) => { c.fillStyle = '#fff'; c.fillRect(sx, sy + 22, 170, 5); c.fillStyle = '#e8c8d8'; c.fillRect(sx, sy + 27, 170, 2); ['g_cherry', 'g_star', 'g_cloud', 'g_bow', 'g_straw', 'g_bear', 'g_pearl', 'g_cat'].slice(r * 4, r * 4 + 4).forEach((k, i) => { c.save(); c.translate(sx + 10 + i * 42, sy + 46); c.scale(1.5, 1.5); rmBagItem(c, k, 0, 0, T + i * 20); c.restore(); }); });
+  c.fillStyle = '#b8336e'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('أحلى الحقائب 👜✨', 48100, 296);
   /* مرايا تجميل بإضاءة */
-  c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(8212, 206, 46, 82, 20) : c.rect(8212, 206, 46, 82); c.fill(); g = c.createLinearGradient(8216, 210, 8254, 284); g.addColorStop(0, '#f2f8ff'); g.addColorStop(0.5, '#cfe2f4'); g.addColorStop(1, '#f2f8ff'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(8217, 211, 36, 72, 16) : c.rect(8217, 211, 36, 72); c.fill(); for (let i = 0; i < 8; i++) { const a = i / 7 * Math.PI * 2; c.fillStyle = (Math.floor(T / 12) + i) % 2 ? '#fff7d0' : '#ffd1e6'; c.beginPath(); c.arc(8235 + Math.cos(a) * 25, 247 + Math.sin(a) * 43, 2.2, 0, 7); c.fill(); }
+  c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(48212, 206, 46, 82, 20) : c.rect(48212, 206, 46, 82); c.fill(); g = c.createLinearGradient(48216, 210, 48254, 284); g.addColorStop(0, '#f2f8ff'); g.addColorStop(0.5, '#cfe2f4'); g.addColorStop(1, '#f2f8ff'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(48217, 211, 36, 72, 16) : c.rect(48217, 211, 36, 72); c.fill(); for (let i = 0; i < 8; i++) { const a = i / 7 * Math.PI * 2; c.fillStyle = (Math.floor(T / 12) + i) % 2 ? '#fff7d0' : '#ffd1e6'; c.beginPath(); c.arc(48235 + Math.cos(a) * 25, 247 + Math.sin(a) * 43, 2.2, 0, 7); c.fill(); }
   /* روح ورا الكاونتر */
   const near = rmNearRuh(); if (near && !RM_RUH.near) { RM_RUH.wave = 70; if (!RM_RUH.say || RM_RUH.say.t <= 0) rmRuhSay('هلا حبيبتي 💖 كل الحقائب جديدة وكيوت، دوسي عليّ وشوفيها 👜', 240); } RM_RUH.near = near;
   if (near && (!RM_RUH.say || RM_RUH.say.t <= 0) && ++RM_RUH.idleT > 520) { RM_RUH.idleT = 0; rmRuhSay(['الحقيبة الذهبية فخمة كلش ✨👜', 'حقيبة الأرنب كيوت تخبل 🐰', 'الحقيبة تطلع على كتفج والكل يشوفها 💖', 'الدولارات من الصيد، بيعي 15 سمكة وخذي دولارين 💵🎣', 'لبسي الحقيبة ويا تاج ربشاتي، كشخة! 👑', 'هذا المحل للبنات بس 🎀'][Math.floor(Math.random() * 6)]); }
   if (RM_RUH.wave > 0) RM_RUH.wave--; rmGmzDraw(c, RM_RUH.x, RM_RUH.y, 1, RM_RUH.wave > 0, RM_RUH_PAL);
-  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#ff9ec7'); g.addColorStop(1, '#e8508e'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(8284, 368, 148, 46, 8) : c.rect(8284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(8280, 362, 156, 9); c.strokeStyle = '#b8336e'; c.lineWidth = 1.5; c.strokeRect(8280, 362, 156, 9);
-  c.font = '11px sans-serif'; ['👜', '🎀', '💖', '🌸', '💍'].forEach((e, i) => { c.globalAlpha = 0.85; c.fillText(e, 8300 + i * 29, 392); }); c.globalAlpha = 1;
+  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#ff9ec7'); g.addColorStop(1, '#e8508e'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(48284, 368, 148, 46, 8) : c.rect(48284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(48280, 362, 156, 9); c.strokeStyle = '#b8336e'; c.lineWidth = 1.5; c.strokeRect(48280, 362, 156, 9);
+  c.font = '11px sans-serif'; ['👜', '🎀', '💖', '🌸', '💍'].forEach((e, i) => { c.globalAlpha = 0.85; c.fillText(e, 48300 + i * 29, 392); }); c.globalAlpha = 1;
   rmTagDraw(c, RM_RUH.x, RM_RUH.y - 112, 'روح 🎀 صاحبة المحل', 'rgba(184,51,110,.95)');
 }
 function rmBagList() {
   const T = RM.T, mk = (x, y, k, lbl) => [y, c => { c.fillStyle = '#fff'; c.beginPath(); c.ellipse(x, y + 1, 18, 5, 0, 0, 7); c.fill(); c.fillStyle = '#ff7ab8'; c.beginPath(); c.ellipse(x, y, 15, 4, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(x - 2, y - 34, 4, 34); c.fillStyle = '#ffd1e6'; c.beginPath(); c.ellipse(x, y - 34, 14, 3, 0, 0, 7); c.fill(); c.save(); c.translate(x - 25, y + 22 + Math.sin(T / 40 + x) * 1.5); c.scale(1.9, 1.9); rmBagItem(c, k, 0, 0, T); c.restore(); if (lbl) rmTagDraw(c, x, y + 16, lbl, 'rgba(184,51,110,.92)'); }];
-  return [mk(8060, 470, 'g_lux', '✨ الفخمة'), mk(8110, 520, 'g_heart', ''), mk(8340, 575, 'g_bunny', ''), mk(8405, 530, 'g_pink', '💖 الكيوت')];
+  return [mk(48060, 470, 'g_lux', '✨ الفخمة'), mk(48110, 520, 'g_heart', ''), mk(48340, 575, 'g_bunny', ''), mk(48405, 530, 'g_pink', '💖 الكيوت')];
 }
 function rmBagFg(c) {
   const X0 = RM_BHI.vx0, X1 = RM_BHI.vx1, D = RM_BHI.dx;
@@ -8870,8 +8874,8 @@ function rmClkUpd() {
 
 /* ================= محل بالونات سبيناغ (جهة اليمين بالمنتجع) ================= */
 const RM_SHOP = { x: 1650, y: 560 };   // باب المحل من برّا
-const RM_SHI = { x0: 5000, x1: 5440, dx: 5220, vx0: 4985, vx1: 5455, vy0: 120, vy1: 632 };   // داخل المحل (منطقة منفصلة بالعالم، تتشارك بين اللاعبين)
-const RM_SPN = { x: 5352, y: 396, say: null, sayT: 0, wave: 0, idleT: 0 };
+const RM_SHI = { x0: 45000, x1: 45440, dx: 45220, vx0: 44985, vx1: 45455, vy0: 120, vy1: 632 };   // داخل المحل (منطقة منفصلة بالعالم، تتشارك بين اللاعبين)
+const RM_SPN = { x: 45352, y: 396, say: null, sayT: 0, wave: 0, idleT: 0 };
 const RM_BAL = [
   { k: 'red', n: 'أحمر', p: 10, c: '#ff3b55' }, { k: 'blue', n: 'أزرق', p: 10, c: '#3a8bff' }, { k: 'green', n: 'أخضر', p: 10, c: '#2ec26a' }, { k: 'purple', n: 'بنفسجي', p: 10, c: '#a34dff' },
   { k: 'heart', n: 'قلب', p: 20, c: '#ff3d7f', s: 'heart' }, { k: 'star', n: 'نجمة', p: 20, c: '#ffc21f', s: 'star' }, { k: 'smile', n: 'سمايل', p: 20, c: '#ffd84a', s: 'smile' }, { k: 'moon', n: 'هلال', p: 20, c: '#4a5cd8', s: 'moon' },
@@ -8884,7 +8888,7 @@ const RM_BAL = [
     ['om', 'عُمان'], ['ye', 'اليمن'], ['ly', 'ليبيا'], ['tn', 'تونس'], ['dz', 'الجزائر'], ['ma', 'المغرب'], ['mr', 'موريتانيا'], ['sd', 'السودان'], ['so', 'الصومال'], ['dj', 'جيبوتي'], ['km', 'جزر القمر']].map(f => ({ k: 'f_' + f[0], n: f[1], p: 0, f: f[0], c: '#fff' }))   // أعلام الدول العربية مجاناً
 ];
 const RM_BALD = {}; RM_BAL.forEach(b => { RM_BALD[b.k] = b; }); const RM_FLAGS = RM_BAL.filter(b => b.f);
-function rmInShop(o) { return (o || RM.me).x >= 4900; }
+function rmInShop(o) { return (o || RM.me).x >= 44900; }
 function rmWalkLim() { return rmInShop() ? [rmShi().x0 + 24, rmShi().x1 - 24, 422, 604] : [RMX0 + 24, RMW - 24, 212, RM_WALK]; }
 
 /* ---- رسم الأعلام داخل البالون ---- */
@@ -9184,35 +9188,35 @@ function rmShopBg(c) {
   g = c.createLinearGradient(0, 344, 0, 632); g.addColorStop(0, '#c98d5a'); g.addColorStop(1, '#a86d3e'); c.fillStyle = g; c.fillRect(X0, 344, W, 288);
   c.strokeStyle = 'rgba(80,40,10,.22)'; c.lineWidth = 1; for (let y = 344; y < 632; y += 18) { c.beginPath(); c.moveTo(X0, y); c.lineTo(X1, y); c.stroke(); const off = ((y / 18) % 2) * 40; for (let x = X0 + off; x < X1; x += 80) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 18); c.stroke(); } }
   // سجادة وسطية
-  c.fillStyle = '#ff7ab0'; c.beginPath(); c.ellipse(5190, 505, 120, 50, 0, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.setLineDash([8, 6]); c.beginPath(); c.ellipse(5190, 505, 108, 42, 0, 0, 7); c.stroke(); c.setLineDash([]);
+  c.fillStyle = '#ff7ab0'; c.beginPath(); c.ellipse(45190, 505, 120, 50, 0, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.setLineDash([8, 6]); c.beginPath(); c.ellipse(45190, 505, 108, 42, 0, 0, 7); c.stroke(); c.setLineDash([]);
   // ضوء دافي من السقف
-  [5060, 5220, 5380].forEach((lx, i) => { c.fillStyle = '#5a1f44'; c.fillRect(lx - 1, 132, 2, 18); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 154, 6, 0, 7); c.fill(); g = c.createRadialGradient(lx, 154, 4, lx, 154, 120); g.addColorStop(0, 'rgba(255,230,160,.4)'); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 154, 120, 0, 7); c.fill(); });
+  [45060, 45220, 45380].forEach((lx, i) => { c.fillStyle = '#5a1f44'; c.fillRect(lx - 1, 132, 2, 18); c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(lx, 154, 6, 0, 7); c.fill(); g = c.createRadialGradient(lx, 154, 4, lx, 154, 120); g.addColorStop(0, 'rgba(255,230,160,.4)'); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.beginPath(); c.arc(lx, 154, 120, 0, 7); c.fill(); });
   // لوحة نيون «سبيناغ»
-  c.save(); c.font = 'bold 30px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; const fl = 0.85 + 0.15 * Math.sin(T / 7) * (Math.random() < 0.02 ? -3 : 1); c.shadowColor = '#ff3d7f'; c.shadowBlur = 14 * fl; c.fillStyle = 'rgba(255,255,255,' + (0.85 + 0.15 * fl) + ')'; c.fillText('🎈 سبيناغ 🎈', 5220, 178); c.restore();
+  c.save(); c.font = 'bold 30px Lalezar, Cairo, system-ui, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; const fl = 0.85 + 0.15 * Math.sin(T / 7) * (Math.random() < 0.02 ? -3 : 1); c.shadowColor = '#ff3d7f'; c.shadowBlur = 14 * fl; c.fillStyle = 'rgba(255,255,255,' + (0.85 + 0.15 * fl) + ')'; c.fillText('🎈 سبيناغ 🎈', 45220, 178); c.restore();
   // رف أعلام الدول العربية (يسار)
-  c.fillStyle = '#8a5a34'; c.beginPath(); c.roundRect ? c.roundRect(5012, 196, 166, 104, 8) : c.rect(5012, 196, 166, 104); c.fill(); c.fillStyle = '#fff6ea'; c.beginPath(); c.roundRect ? c.roundRect(5017, 201, 156, 94, 6) : c.rect(5017, 201, 156, 94); c.fill();
-  c.fillStyle = '#7a2d5c'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('بالونات الدول العربية', 5095, 210);
-  for (let i = 0; i < 22; i++) { const col = i % 11, row = Math.floor(i / 11), bx = 5027 + col * 13.6, by = 236 + row * 38 + Math.sin(T / 30 + i) * 1.2; c.fillStyle = '#c9a27a'; c.fillRect(5019, 252 + row * 38, 152, 2); rmStr(c, bx, by + 6, bx, 252 + row * 38, 0); rmBal(c, bx, by, RM_FLAGS[i], 5.8); }
+  c.fillStyle = '#8a5a34'; c.beginPath(); c.roundRect ? c.roundRect(45012, 196, 166, 104, 8) : c.rect(45012, 196, 166, 104); c.fill(); c.fillStyle = '#fff6ea'; c.beginPath(); c.roundRect ? c.roundRect(45017, 201, 156, 94, 6) : c.rect(45017, 201, 156, 94); c.fill();
+  c.fillStyle = '#7a2d5c'; c.font = 'bold 10px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('بالونات الدول العربية', 45095, 210);
+  for (let i = 0; i < 22; i++) { const col = i % 11, row = Math.floor(i / 11), bx = 45027 + col * 13.6, by = 236 + row * 38 + Math.sin(T / 30 + i) * 1.2; c.fillStyle = '#c9a27a'; c.fillRect(45019, 252 + row * 38, 152, 2); rmStr(c, bx, by + 6, bx, 252 + row * 38, 0); rmBal(c, bx, by, RM_FLAGS[i], 5.8); }
   // رف الأشكال (وسط)
-  [[5196, 230], [5196, 280]].forEach((sh, r) => { c.fillStyle = '#8a5a34'; c.fillRect(sh[0], sh[1], 70, 5); for (let i = 0; i < 4; i++) { const b = RM_BAL[4 + r * 4 + i] || RM_BAL[i], bx = sh[0] + 9 + i * 17, by = sh[1] - 14 + Math.sin(T / 28 + i + r) * 1.4; rmStr(c, bx, by + 8, bx, sh[1], 0); rmBal(c, bx, by, b, 7.5); } });
+  [[45196, 230], [45196, 280]].forEach((sh, r) => { c.fillStyle = '#8a5a34'; c.fillRect(sh[0], sh[1], 70, 5); for (let i = 0; i < 4; i++) { const b = RM_BAL[4 + r * 4 + i] || RM_BAL[i], bx = sh[0] + 9 + i * 17, by = sh[1] - 14 + Math.sin(T / 28 + i + r) * 1.4; rmStr(c, bx, by + 8, bx, sh[1], 0); rmBal(c, bx, by, b, 7.5); } });
   // بالونات طايرة لازكة بالسقف
-  for (let i = 0; i < 14; i++) { const b = RM_BAL[i], bx = X0 + 30 + i * (W - 60) / 13 + Math.sin(T / 50 + i * 2.1) * 4, by = 152 + (i % 3) * 7 + Math.sin(T / 33 + i) * 3; if (bx > 5125 && bx < 5315) continue; rmStr(c, bx, by + 10, bx + Math.sin(T / 40 + i) * 4, by + 38 + (i % 4) * 6, 2); rmBal(c, bx, by, b, 9, Math.sin(T / 44 + i) * 0.1); }
+  for (let i = 0; i < 14; i++) { const b = RM_BAL[i], bx = X0 + 30 + i * (W - 60) / 13 + Math.sin(T / 50 + i * 2.1) * 4, by = 152 + (i % 3) * 7 + Math.sin(T / 33 + i) * 3; if (bx > 45125 && bx < 45315) continue; rmStr(c, bx, by + 10, bx + Math.sin(T / 40 + i) * 4, by + 38 + (i % 4) * 6, 2); rmBal(c, bx, by, b, 9, Math.sin(T / 44 + i) * 0.1); }
   // تانكي الهيليوم
-  c.fillStyle = '#9aa3b2'; c.beginPath(); c.roundRect ? c.roundRect(5262, 330, 18, 64, 8) : c.rect(5262, 330, 18, 64); c.fill(); c.fillStyle = '#c3cad6'; c.fillRect(5265, 334, 5, 56); c.fillStyle = '#4a4f5a'; c.fillRect(5267, 322, 8, 9); c.fillStyle = '#2fbf71'; c.font = 'bold 7px Arial'; c.textAlign = 'center'; c.fillText('He', 5271, 362);
+  c.fillStyle = '#9aa3b2'; c.beginPath(); c.roundRect ? c.roundRect(45262, 330, 18, 64, 8) : c.rect(45262, 330, 18, 64); c.fill(); c.fillStyle = '#c3cad6'; c.fillRect(45265, 334, 5, 56); c.fillStyle = '#4a4f5a'; c.fillRect(45267, 322, 8, 9); c.fillStyle = '#2fbf71'; c.font = 'bold 7px Arial'; c.textAlign = 'center'; c.fillText('He', 45271, 362);
   // سبيناغ ورا الكاونتر
   const near = rmNearSpn(); if (near && !RM_SPN.near) { RM_SPN.wave = 70; if (!RM_SPN.say || RM_SPN.say.t <= 0) rmSpnSay('بالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 220); } RM_SPN.near = near;
   if (near && (!RM_SPN.say || RM_SPN.say.t <= 0) && ++RM_SPN.idleT > 520) { RM_SPN.idleT = 0; rmSpnSay(['بالونات الدول العربية مجاناً لأن احنا نحبكم ❤️', 'جرب بالون القلب، الكل يحبه ❤️', 'البالون يطير وياك بكل المنتجع!', 'الذهبي اللامع يلمع حتى بالليل ✨', 'المحل محلك، تدلل 😄'][Math.floor(Math.random() * 5)]); }
   if (RM_SPN.wave > 0) RM_SPN.wave--; rmSpnDraw(c, RM_SPN.x, RM_SPN.y, 1, RM_SPN.wave > 0);
   // الكاونتر
-  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#ff7ab0'); g.addColorStop(1, '#c9578f'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(5284, 368, 148, 46, 6) : c.rect(5284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(5280, 362, 156, 9); c.strokeStyle = '#7a2d5c'; c.lineWidth = 1.5; c.strokeRect(5280, 362, 156, 9);
-  for (let i = 0; i < 5; i++) { c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(5300 + i * 29, 392, 7, 0, 7); c.fill(); }
-  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(5394, 344, 30, 20, 3) : c.rect(5394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(5398, 347, 22, 6); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(5300, 356, 6, 0, 7); c.fill(); c.fillStyle = '#e0a800'; c.font = 'bold 7px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 5300, 356.5);
+  g = c.createLinearGradient(0, 368, 0, 414); g.addColorStop(0, '#ff7ab0'); g.addColorStop(1, '#c9578f'); c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(45284, 368, 148, 46, 6) : c.rect(45284, 368, 148, 46); c.fill(); c.fillStyle = '#fff'; c.fillRect(45280, 362, 156, 9); c.strokeStyle = '#7a2d5c'; c.lineWidth = 1.5; c.strokeRect(45280, 362, 156, 9);
+  for (let i = 0; i < 5; i++) { c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(45300 + i * 29, 392, 7, 0, 7); c.fill(); }
+  c.fillStyle = '#3a3f4a'; c.beginPath(); c.roundRect ? c.roundRect(45394, 344, 30, 20, 3) : c.rect(45394, 344, 30, 20); c.fill(); c.fillStyle = '#7fe3a0'; c.fillRect(45398, 347, 22, 6); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(45300, 356, 6, 0, 7); c.fill(); c.fillStyle = '#e0a800'; c.font = 'bold 7px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 45300, 356.5);
   rmTagDraw(c, RM_SPN.x, RM_SPN.y - 130, 'سبيناغ 🎈 صاحب المحل');
 }
 function rmShopList() {
   const T = RM.T; return [
-    [470, c => { c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(5080, 472, 26, 7, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.ellipse(5080, 452, 24, 7, 0, 0, 7); c.fill(); c.fillStyle = '#c9578f'; c.fillRect(5076, 452, 8, 20); c.fillStyle = '#7a2d5c'; c.beginPath(); c.ellipse(5080, 470, 14, 4, 0, 0, 7); c.fill(); ['rainbow', 'crown', 'gold', 'diamond', 'cat'].forEach((k, i) => { const bx = 5080 + (i - 2) * 13 + Math.sin(T / 30 + i) * 2, by = 396 - (i % 2) * 12 + Math.sin(T / 24 + i) * 2; rmStr(c, 5080, 450, bx, by + 12, 0); }); ['rainbow', 'crown', 'gold', 'diamond', 'cat'].forEach((k, i) => { const bx = 5080 + (i - 2) * 13 + Math.sin(T / 30 + i) * 2, by = 396 - (i % 2) * 12 + Math.sin(T / 24 + i) * 2; rmBal(c, bx, by, RM_BALD[k], 10); }); rmTagDraw(c, 5080, 488, '✨ المميزة', 'rgba(122,45,92,.92)'); }],
-    [470, c => { [5012, 5426].forEach((px, i) => { c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(px - 8, 438, 16, 30, 4) : c.rect(px - 8, 438, 16, 30); c.fill(); c.fillStyle = '#3fa34d'; c.beginPath(); c.arc(px, 430, 13, 0, 7); c.arc(px - 8, 438, 8, 0, 7); c.arc(px + 8, 438, 8, 0, 7); c.fill(); }); }]
+    [470, c => { c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(45080, 472, 26, 7, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.ellipse(45080, 452, 24, 7, 0, 0, 7); c.fill(); c.fillStyle = '#c9578f'; c.fillRect(45076, 452, 8, 20); c.fillStyle = '#7a2d5c'; c.beginPath(); c.ellipse(45080, 470, 14, 4, 0, 0, 7); c.fill(); ['rainbow', 'crown', 'gold', 'diamond', 'cat'].forEach((k, i) => { const bx = 45080 + (i - 2) * 13 + Math.sin(T / 30 + i) * 2, by = 396 - (i % 2) * 12 + Math.sin(T / 24 + i) * 2; rmStr(c, 45080, 450, bx, by + 12, 0); }); ['rainbow', 'crown', 'gold', 'diamond', 'cat'].forEach((k, i) => { const bx = 45080 + (i - 2) * 13 + Math.sin(T / 30 + i) * 2, by = 396 - (i % 2) * 12 + Math.sin(T / 24 + i) * 2; rmBal(c, bx, by, RM_BALD[k], 10); }); rmTagDraw(c, 45080, 488, '✨ المميزة', 'rgba(122,45,92,.92)'); }],
+    [470, c => { [45012, 45426].forEach((px, i) => { c.fillStyle = '#fff'; c.beginPath(); c.roundRect ? c.roundRect(px - 8, 438, 16, 30, 4) : c.rect(px - 8, 438, 16, 30); c.fill(); c.fillStyle = '#3fa34d'; c.beginPath(); c.arc(px, 430, 13, 0, 7); c.arc(px - 8, 438, 8, 0, 7); c.arc(px + 8, 438, 8, 0, 7); c.fill(); }); }]
   ];
 }
 function rmShopFg(c) {
@@ -9599,6 +9603,7 @@ function rmDrawList2(L, r, MS) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'rmGoBig'; b.textContent = full ? '⛔ ممتلئة' : '🚀 ادخل الغرفة الرئيسية'; b.disabled = full; b.onclick = () => rmEnter(x.id, ''); card.appendChild(b);
       (MS || L).appendChild(card); return;
     }
+    return;   // غرف الأعضاء ملغية: بس المنتجع الرئيسي «بابي» يظهر
     const full = x.count >= x.cap, mine = x.id === r.mine, h = hv(x.id || x.name), pct = Math.min(100, Math.round((x.count || 0) / (x.cap || 1) * 100));
     const card = document.createElement('div'); card.className = 'rlCard' + (x.perm ? ' rlPerm' : ''); card.style.animationDelay = (k * 50) + 'ms'; if (!x.perm) card.style.setProperty('--rc', RL_C[h % RL_C.length]);
     const av = document.createElement('div'); av.className = 'rlAv'; av.textContent = x.perm ? '👑' : RL_EM[h % RL_EM.length];
@@ -9886,6 +9891,7 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/run.js?v=6"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=2"></script>
-<script src="/resort2.js?v=1"></script>
+<script src="/resort2.js?v=2"></script>
+<script src="/resort3.js?v=1"></script>
 </body>
 </html>
