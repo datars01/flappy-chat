@@ -1032,6 +1032,7 @@
       drawGhost(g, gx, gy, s, a, -0.3, 0.3 + Math.abs(Math.sin(R.t * 5)) * 0.4);
       if (out < 0.6) { let bx = gx + 60 * s; const by = gy - 100 * s; g.save(); g.globalAlpha = a; g.font = '900 ' + Math.round(15 + 4 * s) + 'px Cairo, system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; const tx = 'انتبه! مرة ثانية أمسكك 👻', tw = g.measureText(tx).width + 22; bx = Math.max(tw / 2 + 8, Math.min(R.W - tw / 2 - 8, bx)); g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, bx - tw / 2, by - 17, tw, 34, 14); g.fill(); g.beginPath(); g.moveTo(bx - 8, by + 16); g.lineTo(bx - 18, by + 30); g.lineTo(bx + 4, by + 16); g.fill(); g.fillStyle = '#c0182e'; g.fillText(tx, bx, by + 1); g.restore(); } }
     g.restore();
+    try { if (!window.__nofx) fx2d(g, W, H); } catch (e) {}
     // خطوط السرعة: كل ما تسرع أكثر تبين أوضح (والزلاجة تزيدها)
     { const k = Math.min(1, Math.max(0, (R.sp - 16) / 12)) + (R.board > 0 ? 0.35 : 0) + (R.pw.jet > 0 ? 0.5 : 0);
       if (k > 0 && R.ph === 'play' && !R.pause) { const cx = W / 2, cy = HOR + H * 0.08, r0 = Math.max(W, H) * 0.42, fr = Math.floor(R.t * 24); g.strokeStyle = 'rgba(255,255,255,' + Math.min(0.32, 0.2 * k) + ')'; g.lineWidth = 2; g.beginPath();
@@ -1105,6 +1106,32 @@
     gl.uniform1f(u.SP, Math.min(1, Math.max(0, (R.sp - 13) / 15)) + (R.pw && R.pw.jet > 0 ? 0.6 : 0)); const fc = rgb3(T.sky[1]); gl.uniform3f(u.FOG, fc[0], fc[1], fc[2]); gl.uniform3f(u.TINT, tint[0], tint[1], tint[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
+  /* ✨ نفس تأثيرات الـRTX (توهج الأضوية، أشعة الشمس، الضباب، تلوين الجو) بس مرسومة بطريقة خفيفة جداً:
+     نصغّر الصورة لنسخة صغيرة، نطلّع منها الأضوية بس، ونرجع نفرشها على الشاشة — بدل ما ننقل كل الصورة لـ WebGL كل فريم (هذا كان سبب اللاك) */
+  const G2 = { a: null, b: null, c: null };
+  function fx2d(g, W, H) {
+    const src = R.cv; if (!src || !src.width || !W || !H) return;
+    const sw = Math.max(40, Math.round(W / 5)), sh = Math.max(40, Math.round(H / 5));
+    if (!G2.a) { G2.a = document.createElement('canvas'); G2.b = document.createElement('canvas'); G2.c = document.createElement('canvas'); }
+    const A = G2.a, B = G2.b, Cc = G2.c; if (A.width !== sw || A.height !== sh) { A.width = B.width = Cc.width = sw; A.height = B.height = Cc.height = sh; }
+    const a = A.getContext('2d'), b = B.getContext('2d'), c = Cc.getContext('2d');
+    a.globalCompositeOperation = 'copy'; a.globalAlpha = 1; a.drawImage(src, 0, 0, sw, sh);
+    a.globalCompositeOperation = 'multiply'; a.drawImage(A, 0, 0); a.drawImage(A, 0, 0);   // يبقى بس اللي يضوي
+    const T = THEMES[R.zone] || THEMES[0]; let sx = 0.84, sy = HOR * 0.35 / H, ray = 0.8, bl = 1, tint = [1.03, 1, 0.96];
+    if (T.stars) { sx = 0.78; ray = 0.25; bl = 1.6; tint = [0.92, 0.97, 1.1]; } else if (R.zone === 5 || T.sunset || T.k === 'desert') { sx = T.k === 'desert' ? 0.72 : 0.3; sy = HOR * (T.k === 'desert' ? 0.38 : 0.86) / H; ray = 1.2; tint = T.k === 'desert' ? [1.07, 1, 0.9] : [1.08, 0.98, 0.94]; }
+    if (T.snow) { bl = 0.4; ray = 0.5; tint = [0.97, 1, 1.05]; } if (T.tint) tint = T.tint; if (T.nosun) { ray = 0; bl = 1.7; } if (T.earth) { ray = 0; bl = 1.3; } if (T.petal) bl = 0.7;
+    // توهج (Bloom) + أشعة شمس حجمية (من السما بس) بنسخة صغيرة وحدة، وبعدين نفرشها مرة وحدة على الشاشة
+    b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'copy'; b.globalAlpha = Math.min(1, 0.34 * bl); b.drawImage(A, 0, 0); b.globalCompositeOperation = 'lighter';
+    if (ray > 0) { c.globalCompositeOperation = 'copy'; c.globalAlpha = 1; c.drawImage(A, 0, 0); c.clearRect(0, Math.round(HOR / H * sh), sw, sh); const ox = sx * sw, oy = sy * sh;
+      for (let i = 0; i < 7; i++) { const k = 1 + i * 0.07; b.globalAlpha = Math.min(1, 0.5 * ray) * 0.5 * (1 - i / 7); b.setTransform(k, 0, 0, k, ox * (1 - k), oy * (1 - k)); b.drawImage(Cc, 0, 0); } b.setTransform(1, 0, 0, 1, 0, 0); }
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 1; g.drawImage(B, 0, 0, W, H);
+    // تلوين الجو (Color grading)
+    g.globalCompositeOperation = 'soft-light'; g.globalAlpha = 0.45; g.fillStyle = 'rgb(' + Math.min(255, Math.round(160 * tint[0])) + ',' + Math.min(255, Math.round(150 * tint[1])) + ',' + Math.min(255, Math.round(150 * tint[2])) + ')'; g.fillRect(0, 0, W, H);
+    // ضباب الأفق
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; const fg = g.createLinearGradient(0, HOR - H * 0.08, 0, HOR + H * 0.14), fc = rgb3(T.sky[1]).map(v => Math.round(v * 255)).join(',');
+    fg.addColorStop(0, 'rgba(' + fc + ',0)'); fg.addColorStop(0.4, 'rgba(' + fc + ',.22)'); fg.addColorStop(1, 'rgba(' + fc + ',0)'); g.fillStyle = fg; g.fillRect(0, HOR - H * 0.08, W, H * 0.22);
+    g.restore();
+  }
   function fxBtn() { const b = $r('runFxB'); if (b) { b.textContent = FX.on ? '✨ RTX شغّال' : '✨ RTX طافي'; b.classList.toggle('off', !FX.on); } if (!FX.on) { const c = $r('runGl'); if (c) c.style.display = 'none'; } }
 
   /* ---------- الحلقة ---------- */
@@ -1114,7 +1141,7 @@
     if (W && H && (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr))) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     R.W = W; R.H = H; const dt = Math.min(0.05, Math.max(0, (ts - (R.last || ts)) / 1000)); R.last = ts;
     if (document.hidden && R.ph === 'play' && !R.pause) togglePause();
-    try { update(dt); const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); draw(); try { fxRender(dt); } catch (e) { FX.dead = 1; console.warn(e); } hud(); musTick(); humTick(); } catch (e) { console.error(e); }
+    try { const q0 = performance.now(); update(dt); const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); draw(); const q1 = performance.now();  const q2 = performance.now(); if (window.__runR) { const P2 = window.__runP || (window.__runP = { n: 0, d: 0, f: 0 }); P2.n++; P2.d += q1 - q0; P2.f += q2 - q1; } hud(); musTick(); humTick(); } catch (e) { console.error(e); }
     R.raf = requestAnimationFrame(loop);
   }
   const kick = () => { if (!R.raf) { R.last = 0; R.raf = requestAnimationFrame(loop); } };
