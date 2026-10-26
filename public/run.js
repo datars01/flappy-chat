@@ -14,7 +14,17 @@
     { n: 'رائد فضاء', k: 'astro', skin: '#f0c8a0', hair: '#eef2f8', p: 250 },
     { n: 'بسبوس', k: 'cat', skin: '#ffe0c4', hair: '#ff9a3a', p: 400 },
     { n: 'دينو', k: 'dino', skin: '#f2c49b', hair: '#3fbf5a', p: 600 },
-    { n: 'الفارس', k: 'knight', skin: '#e8b88f', hair: '#c9ced8', p: 900 }];
+    { n: 'الفارس', k: 'knight', skin: '#e8b88f', hair: '#c9ced8', p: 900 },
+    { n: 'شعلة', k: 'boy', skin: '#e8b890', hair: '#2a1a10', p: 700, fx: 'fire', tr: 'flip' },
+    { n: 'برق', k: 'ninja', skin: '#e8b88f', hair: '#10141f', p: 800, fx: 'bolt', tr: 'spin' },
+    { n: 'ثلجة', k: 'girl', skin: '#f6dcc8', hair: '#d8ecff', p: 800, fx: 'frost', tr: 'wheel' },
+    { n: 'الراقص', k: 'boy', skin: '#d8a27a', hair: '#1a120c', p: 600, fx: 'notes', tr: 'dance' },
+    { n: 'ملاك', k: 'girl', skin: '#f6d0b0', hair: '#f2d27a', p: 1100, fx: 'wings', tr: 'dance' },
+    { n: 'الظل', k: 'ninja', skin: '#c8a080', hair: '#0a0a12', p: 1100, fx: 'shadow', tr: 'flip' },
+    { n: 'قوس قزح', k: 'cat', skin: '#ffe0c4', hair: '#ff7ad9', p: 1000, fx: 'rainbow', tr: 'mix' },
+    { n: 'المجرّة', k: 'astro', skin: '#f0c8a0', hair: '#eef2f8', p: 1400, fx: 'galaxy', tr: 'mix' },
+    { n: 'الملك بابي', k: 'boy', skin: '#f2c49b', hair: '#1a120c', p: 99999, adm: 1, fx: 'royal', tr: 'royal' },
+    { n: 'الملكة بابيتو', k: 'girl', skin: '#f6d0b0', hair: '#5a2a14', p: 99999, adm: 1, fx: 'royalG', tr: 'royal' }];
   const COLS = ['#ff4a6a', '#3a8bff', '#2ee48d', '#ffd23a', '#a24aff', '#ff8a2a', '#22d3ee', '#2a2a3a', '#ff7ad9', '#ffffff'];
   const HATS = [{ n: 'بدون', e: '', p: 0 }, { n: 'كاب', e: '🧢', p: 80 }, { n: 'تاج', e: '👑', p: 300 }, { n: 'قبعة ساحر', e: '🎩', p: 200 }, { n: 'فيونكة', e: '🎀', p: 120 }, { n: 'هالة', e: '😇', p: 500 }, { n: 'قرون', e: '😈', p: 500 }, { n: 'زهرة', e: '🌸', p: 150 }];
   /* الزلاجات الطايرة 🛹: تفعّلها بدوسة دبل أو بالزر، تدوم 30 ثانية وتحميك من ضربة وحدة (تنكسر بدالك) */
@@ -47,7 +57,7 @@
   const CN = () => isAdm() ? Infinity : S.coins;
   const CT = () => isAdm() ? '♾️' : String(S.coins);
   const spend = c => { if (!isAdm()) S.coins -= c; };
-  const ownC = i => isAdm() || CH[i].p === 0 || S.own.c.includes(i);
+  const ownC = i => CH[i].adm ? isAdm() : (isAdm() || CH[i].p === 0 || S.own.c.includes(i));
   const ownH = i => isAdm() || HATS[i].p === 0 || S.own.h.includes(i);
   const ownB = i => isAdm() || BOARDS[i].p === 0 || S.own.b.includes(i);
   const BDN = () => isAdm() ? Infinity : S.boards;
@@ -103,33 +113,212 @@
     HM.g.gain.setTargetAtTime(want ? 0.032 : 0.0001, a.currentTime, 0.12); HM.o.frequency.setTargetAtTime(fr, a.currentTime, 0.1); HM.o2.frequency.setTargetAtTime(fr * 2.01, a.currentTime, 0.1);
     if (!want) { if (++HM.off > 40) { try { HM.o.stop(); HM.o2.stop(); } catch (e) {} HM.o = null; HM.off = 0; } } else HM.off = 0;
   }
-  /* موسيقى ركض حماسية: بيس + طبل + لحن، تسرع شوية مع السرعة */
-  const M = { bus: null, next: 0, step: 0, on: false };
+  /* ===================== موسيقى حماسية لكل عالم 🎶 =====================
+     كل عالم إله أغنية بلحن ومقام وإيقاع خاص: مدينة (EDM)، شاطئ (تروبيكال هاوس)، ثلج (أجراس ملحمية)، صحراء (مقام حجاز ودربكة)، ليل (سينث ثقيل)، غروب (ترانس).
+     الترتيب: مقدمة ← بناء حماس (رول طبل + صعود) ← دروب كامل، وكل 8 مازورات فِل. عليها كومبريسور، دِلي وريفيرب. */
+  const tk = s => s.trim().split(/\s+/).map(x => x === '-' ? -1 : x === '.' ? 0 : +x);
+  const SONGS = [
+    { bpm: 140, ch: [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], ld: 'saw', pc: 'edm', mel: tk('76 - 74 - 72 - 69 - 72 - . 76 - 74 72 69  77 - 76 - 72 - 69 - 72 - 76 - 77 - 79 -  79 - 76 - 72 - 76 - 79 - 84 - 83 - 79 -  81 - 79 - 74 - 71 - 74 - - - 79 - 81 83') },
+    { bpm: 124, ch: [[64, 68, 71], [59, 63, 66], [61, 64, 68], [57, 61, 64]], ld: 'pluck', pc: 'trop', mel: tk('83 . 80 . 76 . 80 83 . 85 83 . 80 . 78 .  78 . 75 . 71 . 75 78 . 80 78 . 75 . 71 .  80 . 76 . 73 . 76 80 . 81 80 . 76 . 73 .  81 . 76 . 73 . 76 81 . 83 85 . 83 . 80 .') },
+    { bpm: 136, ch: [[62, 65, 69], [58, 62, 65], [53, 57, 60], [60, 64, 67]], ld: 'bell', pc: 'epic', mel: tk('81 . 77 . 74 . 77 . 81 . 86 . 84 - 81 -  82 . 77 . 74 . 77 . 82 . 86 . 84 - 82 -  81 . 77 . 72 . 77 . 81 . 84 . 89 - 88 -  84 - 79 - 76 - 79 - 84 - 88 - 86 - 84 -') },
+    { bpm: 128, ch: [[64, 68, 71], [65, 69, 72], [62, 65, 69], [64, 68, 71]], ld: 'mizmar', pc: 'darbuka', mel: tk('76 - 77 - 80 - 81 - 80 - 77 - 76 - - -  81 - 83 84 83 - 81 - 80 - 81 - 77 - - -  86 - 84 - 83 - 81 - 84 - 83 - 81 80 81 -  80 - 77 - 76 - 77 - 80 - 81 80 77 - 76 -') },
+    { bpm: 148, ch: [[65, 68, 72], [61, 65, 68], [56, 60, 63], [63, 67, 70]], ld: 'heavy', pc: 'heavy', mel: tk('77 - 77 80 - 77 84 - 82 - 80 - 77 - 75 77  80 - 80 82 - 80 85 - 84 - 82 - 80 - 77 80  84 - 84 87 - 84 89 - 87 - 84 - 80 - 79 80  82 - 82 84 - 82 87 - 85 - 84 - 82 - 79 -') },
+    { bpm: 138, ch: [[67, 70, 74], [63, 67, 70], [58, 62, 65], [65, 69, 72]], ld: 'trance', pc: 'edm', mel: tk('79 82 86 82 79 82 86 91 79 82 86 82 89 86 82 79  79 82 87 82 79 82 87 91 79 82 87 82 89 87 82 79  77 82 86 82 77 82 86 89 77 82 86 82 89 86 82 77  77 81 84 81 77 81 84 89 77 81 84 81 89 84 81 77') }];
+  const M = { bus: null, next: 0, step: 0, zone: -1, on: false };
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-  const PROG = [[45, 57, 60, 64], [41, 53, 57, 60], [48, 60, 64, 67], [43, 55, 59, 62]];
-  const MEL = [76, 0, 74, 76, 0, 79, 76, 74, 72, 0, 74, 72, 69, 0, 72, 74, 76, 0, 79, 81, 0, 79, 76, 74, 72, 74, 76, 0, 74, 0, 72, 0];
+  function musInit(a) {
+    const out = a.createGain(), comp = a.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.18; out.gain.value = 0.0001; out.connect(comp); comp.connect(a.destination);
+    const dry = a.createGain(); dry.connect(out);
+    const pump = a.createGain(); pump.connect(dry);   // الباد والبيس ينضغطون مع الكيك (سايدچين)
+    const del = a.createDelay(1), fb = a.createGain(), dlp = a.createBiquadFilter(), dsend = a.createGain(); dlp.type = 'lowpass'; dlp.frequency.value = 2600; fb.gain.value = 0.32; dsend.gain.value = 0.28; dsend.connect(del); del.connect(dlp); dlp.connect(fb); fb.connect(del); dlp.connect(dry);
+    const rev = a.createConvolver(), L = Math.floor(a.sampleRate * 1.8), ib = a.createBuffer(2, L, a.sampleRate); for (let c = 0; c < 2; c++) { const d = ib.getChannelData(c); for (let i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 3); } rev.buffer = ib; const rsend = a.createGain(); rsend.gain.value = 0.22; rsend.connect(rev); rev.connect(dry);
+    const lead = a.createGain(); lead.connect(dry); lead.connect(dsend); lead.connect(rsend);
+    Object.assign(M, { bus: out, dry, pump, del, dsend, rsend, lead, next: a.currentTime + 0.1 });
+  }
+  function vo(type, f, t, d, vol, dest, cut, det, att) {
+    const a = AC(), T = a.currentTime + t, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, T); if (det) o.detune.setValueAtTime(det, T);
+    let n = o; if (cut) { const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.setValueAtTime(cut, T); fl.Q.value = 2; o.connect(fl); n = fl; }
+    n.connect(g); g.connect(dest); g.gain.setValueAtTime(0.0001, T); g.gain.exponentialRampToValueAtTime(vol, T + (att || 0.006)); g.gain.setValueAtTime(vol, T + Math.max(att || 0.006, d * 0.55)); g.gain.exponentialRampToValueAtTime(0.0001, T + d); o.start(T); o.stop(T + d + 0.05); return o;
+  }
+  function mKick(t, b, hard) { const a = AC(), T = a.currentTime + t, o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(hard ? 190 : 160, T); o.frequency.exponentialRampToValueAtTime(42, T + 0.13); g.gain.setValueAtTime(hard ? 1 : 0.85, T); g.gain.exponentialRampToValueAtTime(0.0001, T + 0.32); o.connect(g); g.connect(b); o.start(T); o.stop(T + 0.35); noise(0.012, 0.25, t, 3500, 'highpass', b);
+    const p = M.pump.gain; p.cancelScheduledValues(T); p.setValueAtTime(0.25, T); p.linearRampToValueAtTime(1, T + 0.24); }
+  function snare(t, v) { noise(0.2, 0.32 * v, t, 1700, 'bandpass', M.dry); noise(0.22, 0.12 * v, t, 1700, 'bandpass', M.rsend); vo('triangle', 200, t, 0.1, 0.18 * v, M.dry); }
+  function clap(t, v) { [0, 0.012, 0.024].forEach(d => noise(0.06, 0.2 * v, t + d, 1400, 'bandpass', M.dry)); noise(0.3, 0.1 * v, t + 0.03, 1400, 'bandpass', M.rsend); }
+  function hat(t, v, open) { noise(open ? 0.16 : 0.035, (open ? 0.09 : 0.07) * v, t, 8000, 'highpass', M.dry); }
+  function leadNote(sg, f, t, d) {
+    const b = M.lead;
+    if (sg.ld === 'saw' || sg.ld === 'trance') { [-14, 0, 14].forEach(dt => vo('sawtooth', f, t, d, 0.034, b, sg.ld === 'trance' ? 2600 : 3600, dt)); vo('square', f / 2, t, d, 0.018, b, 1800); }
+    else if (sg.ld === 'pluck') { vo('triangle', f, t, 0.28, 0.12, b); vo('sine', f * 2, t, 0.16, 0.05, b); }
+    else if (sg.ld === 'bell') { vo('sine', f, t, 0.9, 0.11, b); vo('sine', f * 2.76, t, 0.35, 0.035, b); vo('triangle', f / 2, t, d, 0.03, b, 1500); }
+    else if (sg.ld === 'mizmar') { const o = vo('sawtooth', f, t, d * 1.05, 0.05, b, 2800, -60, 0.02), o2 = vo('square', f, t, d * 1.05, 0.025, b, 2200, 8, 0.02); const T = AC().currentTime + t; [o, o2].forEach(x => { x.detune.linearRampToValueAtTime(0, T + 0.06); x.detune.setValueAtTime(0, T + d * 0.5); x.detune.linearRampToValueAtTime(18, T + d * 0.75); x.detune.linearRampToValueAtTime(-18, T + d); }); }
+    else if (sg.ld === 'heavy') { [-20, 0, 20].forEach(dt => vo('sawtooth', f, t, d, 0.036, b, 2200, dt)); vo('square', f / 2, t, d, 0.03, b, 900); }
+  }
   function musTick() {
     const a = AC(); if (!a || a.state !== 'running') return;
-    const want = S.mus && R.ph === 'play' && !R.pause && window.curPage === 'run' && !document.hidden;
-    if (!M.bus) { const g = a.createGain(), lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; g.gain.value = 0.0001; g.connect(lp); lp.connect(a.destination); M.bus = g; M.next = a.currentTime + 0.1; }
-    M.bus.gain.setTargetAtTime(want ? 0.55 : 0.0001, a.currentTime, want ? 0.3 : 0.15);
-    if (!want) { M.next = Math.max(M.next, a.currentTime + 0.05); return; }
-    const bpm = 128 + Math.min(28, (R.sp - 13) * 1.6), st = 60 / bpm / 2;
-    while (M.next < a.currentTime + 0.25) {
-      const t = M.next - a.currentTime, i = M.step, bar = Math.floor(i / 8) % 4, ch = PROG[bar], b = M.bus;
-      if (i % 4 === 0) { tone('sine', 150, 45, 0.22, 0.32, t, b); }
-      if (i % 4 === 2) noise(0.12, 0.16, t, 1800, 'highpass', b);
-      if (i % 2 === 1) noise(0.04, 0.06, t, 7000, 'highpass', b);
-      tone('triangle', hz(ch[0] - 12 + (i % 2 ? 12 : 0)), 0, st * 0.9, 0.12, t, b);
-      if (i % 2 === 0) tone('square', hz(ch[1 + (i / 2) % 3]), 0, st * 0.6, 0.025, t, b);
-      const m = MEL[i % 32]; if (m && (Math.floor(i / 32) % 2 === 1 || R.dist > 300)) tone('square', hz(m), 0, st * 1.4, 0.035, t, b);
-      M.step++; M.next += st;
+    const want = S.mus && (R.ph === 'play' || R.ph === 'count') && !R.pause && window.curPage === 'run' && !document.hidden;
+    if (!M.bus) musInit(a);
+    M.bus.gain.setTargetAtTime(want ? 0.5 : 0.0001, a.currentTime, want ? 0.25 : 0.12);
+    if (!want) { M.next = Math.max(M.next, a.currentTime + 0.05); if (R.ph !== 'play') { M.step = 0; M.zone = -1; } return; }
+    const zn = R.zone % SONGS.length; if (zn !== M.zone) { const first = M.zone < 0; M.zone = zn; M.step = first ? 0 : 32;   // عالم جديد: نبدأ من البناء حتى يصعد الحماس
+      if (!first) { noise(1.6, 0.12, 0.02, 600, 'bandpass', M.rsend); vo('sawtooth', 110, 0.02, 1.4, 0.04, M.dry, 900); } }
+    const sg = SONGS[zn], bpm = sg.bpm + Math.min(10, (R.sp - 13) * 0.6), st = 60 / bpm / 4;
+    while (M.next < a.currentTime + 0.2) {
+      const t = Math.max(0, M.next - a.currentTime), i = M.step, s16 = i % 16, bar = Math.floor(i / 16), sec = bar < 2 ? 'intro' : bar < 4 ? 'build' : 'drop', db = bar - 4, fill = sec === 'drop' && db % 8 === 7, ch = sg.ch[bar % 4];
+      // الطبول
+      if (sg.pc === 'darbuka') {   // دربكة: دم تك تك دم تك
+        if (s16 === 0 || s16 === 8 || (sec === 'drop' && s16 === 10)) { vo('sine', 95, t, 0.22, 0.6, M.dry); vo('sine', 60, t, 0.25, 0.35, M.dry); if (sec === 'drop' && s16 === 0) mKick(t, M.dry, false); }
+        if ([3, 6, 11, 12, 14].includes(s16) || (fill && s16 % 2)) { noise(0.05, 0.24, t, 3200, 'highpass', M.dry); vo('triangle', 640, t, 0.04, 0.08, M.dry); }
+        if (sec === 'drop' && s16 % 2 === 1) noise(0.03, 0.05, t, 9000, 'highpass', M.dry);
+        if (sec !== 'intro' && s16 % 4 === 2) noise(0.02, 0.06, t, 6000, 'highpass', M.dry);
+      } else {
+        const heavy = sg.pc === 'heavy', trop = sg.pc === 'trop';
+        if (sec !== 'build' && (s16 % 4 === 0) && !(sec === 'intro' && s16 % 8)) mKick(t, M.dry, heavy);
+        if (sec === 'build') { const k = bar === 2 ? 4 : s16 < 8 ? 2 : 1; if (s16 % k === 0) snare(t, 0.35 + (s16 / 16 + bar - 2) * 0.35); if (s16 % 4 === 0) mKick(t, M.dry, false); }
+        if (sec === 'drop') { if (heavy ? s16 === 8 : (s16 === 4 || s16 === 12)) { snare(t, 1); clap(t, 0.8); }
+          if (trop) { if (s16 % 4 === 2) hat(t, 1, true); if ([3, 7, 11, 14].includes(s16)) vo('sine', 880, t, 0.05, 0.05, M.dry); } else { hat(t, s16 % 4 === 2 ? 1.2 : 0.6, s16 % 4 === 2); }
+          if (fill && s16 >= 8) snare(t, 0.5 + (s16 - 8) * 0.08); }
+        if (sec === 'drop' && db % 8 === 0 && s16 === 0) noise(1.4, 0.16, t, 5000, 'highpass', M.rsend);   // كراش
+      }
+      // صعود البناء
+      if (sec === 'build' && s16 === 0 && bar === 2) { const T = a.currentTime + t, o = a.createOscillator(), g2 = a.createGain(), f = a.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(110, T); o.frequency.exponentialRampToValueAtTime(880, T + st * 32); f.type = 'lowpass'; f.frequency.setValueAtTime(400, T); f.frequency.exponentialRampToValueAtTime(5000, T + st * 32); g2.gain.setValueAtTime(0.0001, T); g2.gain.exponentialRampToValueAtTime(0.05, T + st * 30); g2.gain.exponentialRampToValueAtTime(0.0001, T + st * 32.5); o.connect(f); f.connect(g2); g2.connect(M.dry); o.start(T); o.stop(T + st * 33); }
+      // الباد (كوردات طويلة مضغوطة مع الكيك)
+      if (s16 === 0) ch.forEach((n, k) => { vo('sawtooth', hz(n), t, st * 16, sec === 'intro' ? 0.022 : 0.03, M.pump, sec === 'drop' ? 2200 : 1100, k * 6 - 6, 0.08); vo('sawtooth', hz(n), t, st * 16, 0.014, M.rsend, 1400, 9, 0.1); });
+      // البيس
+      if (sec !== 'intro') { const bn = hz(ch[0] - 24); if (sg.pc === 'heavy') { if (s16 % 2 === 0) vo('sawtooth', bn, t, st * 1.8, 0.11, M.pump, 380 + (s16 % 8) * 90); }
+        else if (sg.pc === 'trop') { if ([0, 3, 6, 10, 12].includes(s16)) vo('sine', bn * 2, t, st * 2, 0.22, M.pump); }
+        else if (s16 % 4 !== 0) vo('sawtooth', s16 % 2 ? bn * 2 : bn, t, st * 0.9, 0.09, M.pump, 700); }
+      // أربيجيو
+      if (sec !== 'drop' || sg.ld === 'bell') { if (s16 % 2 === 0) vo('square', hz(ch[(s16 / 2) % 3] + 12), t, st * 1.2, 0.022, M.lead, 1800 + bar * 400); }
+      // اللحن (بالدروب، وبالبناء الثاني خفيف)
+      if (sec === 'drop' || (sec === 'build' && bar === 3 && s16 >= 8)) { const mi = (bar * 16 + s16) % 64, m = sg.mel[mi]; if (m > 0) { let ln = 1; while (sg.mel[(mi + ln) % 64] === -1 && ln < 8) ln++; leadNote(sg, hz(m + (sec === 'drop' && db % 16 >= 8 && sg.ld !== 'bell' && m < 82 ? 12 : 0)), t, st * ln * 0.95); } }
+      M.step++; if (M.step >= 16 * 36) M.step = 16 * 4; M.next += st;
     }
   }
 
   /* ---------- رسم الشخصية (من القدّام بالاختيار، ومن الورا باللعب) ---------- */
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function shade(hex, a) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; r = Math.max(0, Math.min(255, r + a)); g = Math.max(0, Math.min(255, g + a)); b = Math.max(0, Math.min(255, b + a)); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+  /* ===================== تأثيرات الشخصيات ✨ (هالة، نار، برق، ثلج، أجنحة، عباءة ملكية...) + حركات القفز (شقلبة، لفّة، رقصات) ===================== */
+  const AUR = { fire: '255,120,30', bolt: '90,200,255', frost: '160,225,255', wings: '255,228,150', shadow: '150,50,220', rainbow: '255,120,220', galaxy: '130,95,255', notes: '255,200,80', royal: '255,205,70', royalG: '255,110,200' };
+  const TRK = { flip: ['flip'], spin: ['spin'], wheel: ['wheel'], dance: ['dab', 'floss', 'disco', 'wave'], mix: ['flip', 'spin', 'dab', 'wheel', 'disco'], royal: ['flip', 'spin', 'dab', 'wheel', 'floss', 'wave', 'disco'] };
+  const TRN = { flip: 'شقلبة', spin: 'لفّة', wheel: 'دولاب', dance: 'رقصات', mix: 'حركات منوّعة', royal: 'كل الحركات' };
+  const FXN = { fire: '🔥 نار', bolt: '⚡ برق', frost: '❄️ ثلج', wings: '😇 أجنحة', shadow: '🌑 ظل', rainbow: '🌈 قوس قزح', galaxy: '🌌 مجرّة', notes: '🎵 موسيقى', royal: '👑 ملكي', royalG: '👑 ملكي' };
+  const ADMC = () => !!(CH[S.sel.c] || {}).adm && isAdm();
+  function gdot(g, x, y, r, c, a) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(' + c + ',' + a + ')'); gr.addColorStop(1, 'rgba(' + c + ',0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+  /* حركة القفزة: ترجع هل انقلبت الشخصية (تبين من القدّام) وأي وضعية رقص */
+  function trickApply(g, k, q) {
+    const e = q >= 1 ? 1 : (1 - Math.cos(q * Math.PI)) / 2, a = e * Math.PI * 2;
+    if (k === 'flip') { const c = Math.cos(a); g.translate(0, -62); g.scale(1, Math.sign(c || 1) * Math.max(0.07, Math.abs(c))); g.translate(0, 62); return { fl: c < 0 }; }
+    if (k === 'spin') { const c = Math.cos(a); g.translate(0, -62); g.scale(Math.sign(c || 1) * Math.max(0.07, Math.abs(c)), 1); g.translate(0, 62); return { fl: c < 0 }; }
+    if (k === 'wheel') { g.translate(0, -62); g.rotate(a); g.translate(0, 62); return { fl: false }; }
+    return { fl: false, pose: q < 1 ? k : null };
+  }
+  function flames(g, t, n, w, h, y0, cols, sp) {
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < n; i++) { const q = (t * sp + i / n) % 1, x = Math.sin(i * 2.3 + t * 3) * w * (1 - q) + ((i % 3) - 1) * w * 0.45, y = y0 - q * h, r = (w * 0.9) * (1 - q * 0.8) + 2;
+      const gr = g.createRadialGradient(x, y + r * 0.4, 0, x, y, r * 1.6); gr.addColorStop(0, 'rgba(' + cols[0] + ',' + (0.9 * (1 - q)).toFixed(2) + ')'); gr.addColorStop(0.45, 'rgba(' + cols[1] + ',' + (0.6 * (1 - q)).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(' + cols[2] + ',0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(x - r, y + r * 0.6); g.quadraticCurveTo(x - r * 0.9, y - r * 0.8, x, y - r * 2.1); g.quadraticCurveTo(x + r * 0.9, y - r * 0.8, x + r, y + r * 0.6); g.quadraticCurveTo(x, y + r * 1.4, x - r, y + r * 0.6); g.fill(); }
+    g.globalCompositeOperation = 'source-over';
+  }
+  function wings(g, t, kind) {
+    const fl = Math.sin(t * 7) * 0.22;
+    [-1, 1].forEach(s => { g.save(); g.translate(s * 7, -80); g.rotate(s * (0.15 + fl)); g.scale(s, 1);
+      if (kind === 'fly') {   // جناح فراشة من ضو
+        g.globalCompositeOperation = 'lighter'; [[0, -8, 34, 26, -0.5, '255,120,220'], [0, 10, 24, 18, 0.5, '170,120,255']].forEach(w => { const gr = g.createRadialGradient(w[2] * 0.4, w[1], 2, w[2] * 0.5, w[1], w[2]); gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(0.35, 'rgba(' + w[5] + ',.55)'); gr.addColorStop(1, 'rgba(' + w[5] + ',0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(w[2] * 0.55, w[1], w[2], w[3], w[4], 0, 7); g.fill(); });
+        g.strokeStyle = 'rgba(255,220,250,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(19, -8, 34 * 0.55, 26 * 0.55, -0.5, 0, 7); g.stroke(); g.globalCompositeOperation = 'source-over';
+      } else {   // جناح ملاك بريش
+        for (let r = 0; r < 3; r++) for (let i = 0; i < 6; i++) { const a = -1.1 + i * 0.34 + r * 0.08, L = 40 - r * 10 - i * 2.5, x = Math.cos(a) * (8 + r * 7), y = Math.sin(a) * (8 + r * 7);
+          const gr = g.createLinearGradient(x, y, x + Math.cos(a) * L, y + Math.sin(a) * L); gr.addColorStop(0, '#fffaf0'); gr.addColorStop(0.7, r ? '#fff2c8' : '#ffffff'); gr.addColorStop(1, '#e8c870'); g.fillStyle = gr; g.save(); g.translate(x, y); g.rotate(a); g.beginPath(); g.ellipse(L * 0.5, 0, L * 0.55, 4.2 - r * 0.6, 0, 0, 7); g.fill(); g.strokeStyle = 'rgba(180,140,60,.35)'; g.lineWidth = 0.6; g.stroke(); g.restore(); }
+        g.globalCompositeOperation = 'lighter'; gdot(g, 22, -4, 34, '255,235,170', 0.25); g.globalCompositeOperation = 'source-over';
+      }
+      g.restore(); });
+  }
+  function cape(g, t, c1, c2, front) {
+    const w = front ? 25 : 22, bot = -24, wav = x => Math.sin(t * 9 + x * 0.25) * 4 + Math.sin(t * 5.3 + x * 0.6) * 2;
+    g.beginPath(); g.moveTo(-15, -87); g.quadraticCurveTo(-w, -60, -w - 2 + wav(-w) * 0.4, bot + wav(-w));
+    for (let x = -w; x <= w; x += 5) g.lineTo(x, bot + 4 + wav(x) + Math.abs(x) * 0.08);
+    g.quadraticCurveTo(w, -60, 15, -87); g.quadraticCurveTo(0, -84, -15, -87); g.closePath();
+    const gr = g.createLinearGradient(-w, -86, w, bot); gr.addColorStop(0, shade(c1, 40)); gr.addColorStop(0.5, c1); gr.addColorStop(1, shade(c1, -70)); g.fillStyle = gr; g.fill();
+    g.save(); g.clip(); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 2; for (let x = -16; x <= 16; x += 8) { g.beginPath(); g.moveTo(x * 0.5, -84); g.quadraticCurveTo(x + wav(x) * 0.5, -55, x * 1.2 + wav(x), bot + 4); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 1.5; for (let x = -12; x <= 16; x += 8) { g.beginPath(); g.moveTo(x * 0.5 + 2, -84); g.quadraticCurveTo(x + 2 + wav(x) * 0.5, -55, x * 1.2 + 2 + wav(x), bot + 4); g.stroke(); }
+    g.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 9; i++) { const x = ((i * 37) % 40) - 20, y = -80 + ((i * 23) % 50); g.globalAlpha = 0.25 + 0.75 * Math.abs(Math.sin(t * 4 + i)); g.fillRect(x, y, 1.4, 1.4); } g.globalAlpha = 1; g.restore();
+    g.strokeStyle = c2; g.lineWidth = 2.2; g.stroke(); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.6; g.stroke();
+    g.fillStyle = c2; [-13, 13].forEach(x => { g.beginPath(); g.arc(x, -85, 3, 0, 7); g.fill(); });
+  }
+  function bolts(g, t, col) {
+    const sd = Math.floor(t * 13); g.globalCompositeOperation = 'lighter'; g.lineJoin = 'miter';
+    for (let b = 0; b < 3; b++) { const r = n => { const x = Math.sin((sd + b * 7 + n) * 12.9898) * 43758.5; return x - Math.floor(x); }; if (r(99) < 0.35) continue;
+      let a = r(1) * 6.283, x = Math.cos(a) * 26, y = -62 + Math.sin(a) * 40; g.beginPath(); g.moveTo(x, y);
+      for (let k = 0; k < 5; k++) { x += (r(k + 2) - 0.5) * 18 + Math.cos(a) * 5; y += (r(k + 9) - 0.5) * 18 + Math.sin(a) * 5; g.lineTo(x, y); }
+      g.strokeStyle = 'rgba(' + col + ',.55)'; g.lineWidth = 4; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 1.2; g.stroke(); }
+    g.globalCompositeOperation = 'source-over';
+  }
+  function orbit(g, t, half, kind) {
+    const n = kind === 'frost' ? 6 : 9; g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < n; i++) { const a = t * (kind === 'frost' ? 1.4 : 2) + i * 6.283 / n, d = Math.sin(a); if ((d > 0) !== (half === 1)) continue;
+      const x = Math.cos(a) * 34, y = -58 + d * 9 + Math.sin(t * 2 + i) * (kind === 'frost' ? 18 : 4), sz = 2.4 + d * 0.8;
+      if (kind === 'frost') { g.strokeStyle = 'rgba(220,245,255,.9)'; g.lineWidth = 1.1; for (let k = 0; k < 3; k++) { const b = k * 1.047 + t; g.beginPath(); g.moveTo(x - Math.cos(b) * sz * 1.6, y - Math.sin(b) * sz * 1.6); g.lineTo(x + Math.cos(b) * sz * 1.6, y + Math.sin(b) * sz * 1.6); g.stroke(); } gdot(g, x, y, 6, '160,225,255', 0.35); }
+      else { const c = i % 3 === 0 ? '255,200,120' : i % 3 === 1 ? '150,180,255' : '255,140,230'; gdot(g, x, y, i % 4 === 0 ? 7 : 4.5, c, 0.85); g.fillStyle = '#fff'; g.fillRect(x - 0.8, y - 0.8, 1.6, 1.6); }
+    }
+    if (kind === 'galaxy' && half === 0) { g.strokeStyle = 'rgba(170,140,255,.35)'; g.lineWidth = 1.2; g.beginPath(); g.ellipse(0, -58, 34, 9, 0, 0, 7); g.stroke(); }
+    g.globalCompositeOperation = 'source-over';
+  }
+  function floaters(g, t, glyphs, cols, n) {
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < n; i++) { const q = (t * 0.55 + i / n) % 1, x = Math.sin(i * 2.7 + t * 2) * 26 + ((i % 2) ? 14 : -14), y = -70 - q * 70; g.globalAlpha = Math.min(1, q * 4) * (1 - q); g.fillStyle = cols[i % cols.length]; g.font = '900 ' + (11 + (i % 3) * 3) + 'px system-ui'; g.fillText(glyphs[i % glyphs.length], x, y); }
+    g.globalAlpha = 1;
+  }
+  function smoke(g, t, n) { for (let i = 0; i < n; i++) { const q = (t * 0.8 + i / n) % 1, x = Math.sin(i * 1.9 + t) * 18 * (1 + q), y = -40 - q * 85, r = 8 + q * 16, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(40,10,60,' + (0.55 * (1 - q)).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(60,20,90,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); } }
+  function rainbowTrail(g, t) {
+    const C7 = ['#ff3a4a', '#ff9a2a', '#ffe23a', '#3ae86a', '#3ab8ff', '#7a5aff', '#e05aff']; g.globalAlpha = 0.85; g.lineCap = 'round';
+    C7.forEach((c, i) => { g.strokeStyle = c; g.lineWidth = 3; g.beginPath(); for (let k = 0; k <= 12; k++) { const y = -78 + k * 9, x = (i - 3) * 3 + Math.sin(t * 8 - k * 0.6) * (k * 1.4); if (k) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke(); });
+    g.globalAlpha = 1;
+  }
+  /* pass: 0 = ورا الشخصية، 1 = على الظهر (بعد الجسم)، 3 = فوك كلشي */
+  function chFx(g, C, t, front, pass) {
+    const f = C.fx; if (!f) return; g.save(); const onBack = front ? pass === 0 : pass === 1;
+    if (pass === 0) { g.globalCompositeOperation = 'lighter'; gdot(g, 0, -64, 64, AUR[f], 0.24 + 0.08 * Math.sin(t * 4)); g.globalCompositeOperation = 'source-over';
+      if (f === 'royal' || f === 'royalG') { const cc = f === 'royal' ? '255,210,80' : '255,130,210'; g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(' + cc + ',.75)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(0, 2, 38, 9, 0, 0, 7); g.stroke(); g.setLineDash([5, 7]); g.lineDashOffset = -t * 30; g.beginPath(); g.ellipse(0, 2, 30, 7, 0, 0, 7); g.stroke(); g.setLineDash([]); for (let i = 0; i < 8; i++) { const a = t * 1.5 + i * 0.785; gdot(g, Math.cos(a) * 38, 2 + Math.sin(a) * 9, 4, cc, 0.9); } g.globalCompositeOperation = 'source-over'; }
+      if (f === 'galaxy' || f === 'frost') orbit(g, t, 0, f);
+      if (f === 'shadow') smoke(g, t, 7);
+    }
+    if (onBack) {
+      if (f === 'fire') flames(g, t, 10, 12, 78, -58, ['255,250,200', '255,140,30', '200,30,10'], 1.7);
+      else if (f === 'wings') wings(g, t, 'angel');
+      else if (f === 'rainbow') rainbowTrail(g, t);
+      else if (f === 'royal') { cape(g, t, '#4a1a8a', '#ffd23a', front); flames(g, t, 6, 8, 50, -70, ['255,250,210', '255,200,60', '200,120,0'], 1.2); }
+      else if (f === 'royalG') { wings(g, t, 'fly'); cape(g, t, '#b0206e', '#ffd6f0', front); }
+      else if (f === 'shadow') { g.globalCompositeOperation = 'lighter'; flames(g, t, 5, 10, 60, -60, ['200,120,255', '120,40,200', '40,0,80'], 1.1); }
+    }
+    if (pass === 3) {
+      if (f === 'bolt') bolts(g, t, AUR.bolt);
+      else if (f === 'galaxy' || f === 'frost') orbit(g, t, 1, f);
+      else if (f === 'notes') floaters(g, t, ['♪', '♫', '♬', '♩'], ['#ffd23a', '#ff7ad9', '#3ab8ff', '#2ee48d'], 6);
+      else if (f === 'royalG') floaters(g, t, ['❤', '✿', '❤', '✦'], ['#ff5a9a', '#ffd6f0', '#ff2a6a', '#ffffff'], 7);
+      else if (f === 'royal') { floaters(g, t, ['✦', '✧', '♛', '✦'], ['#ffe27a', '#fff6c8', '#ffd23a', '#ffffff'], 6); if (Math.floor(t * 3) % 4 === 0) bolts(g, t, '255,210,80'); }
+      else if (f === 'shadow') smoke(g, t + 0.5, 3);
+      else if (f === 'fire') { g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 6; i++) { const q = (t * 1.2 + i / 6) % 1; gdot(g, Math.sin(i * 3 + t * 4) * 24, -30 - q * 100, 2.5, '255,180,60', 1 - q); } g.globalCompositeOperation = 'source-over'; }
+    }
+    g.restore();
+  }
+  /* تأثير الرجلين: ضو على الحذاء + دايرة بكل خطوة على الأرض */
+  function chFeet(g, C, t, FP, gait) {
+    const f = C.fx; if (!f) return; const c = AUR[f]; g.save(); g.globalCompositeOperation = 'lighter';
+    FP.forEach((p, i) => {
+      if (f === 'fire' || f === 'royal') flames(g, t + i * 0.3, 3, 4.5, 16, p[1] + 2, f === 'royal' ? ['255,250,210', '255,205,70', '200,120,0'] : ['255,250,200', '255,140,30', '200,30,10'], 2.4);
+      else if (f === 'royalG') { gdot(g, p[0], p[1], 12, c, 0.65); gdot(g, p[0], p[1] - 2, 5, '255,255,255', 0.6); }
+      else gdot(g, p[0], p[1], 10, c, 0.55);
+      if (gait) { const q = ((t * 11 / 6.283) + (i ? 0.5 : 0) + 0.2) % 1; g.strokeStyle = 'rgba(' + c + ',' + (0.75 * (1 - q)).toFixed(2) + ')'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(p[0], 2, 4 + q * 20, (4 + q * 20) * 0.28, 0, 0, 7); g.stroke(); }
+    });
+    g.restore();
+  }
+  function crown(g, t, girl) {
+    g.save(); g.translate(0, -15); const gr = g.createLinearGradient(0, -12, 0, 2); gr.addColorStop(0, '#fff6b0'); gr.addColorStop(0.5, '#ffd23a'); gr.addColorStop(1, '#b87a10'); g.fillStyle = gr; g.strokeStyle = 'rgba(90,50,0,.7)'; g.lineWidth = 0.9;
+    g.beginPath(); if (girl) { g.moveTo(-11, 2); g.quadraticCurveTo(-8, -6, -4, -4); g.lineTo(0, -11); g.lineTo(4, -4); g.quadraticCurveTo(8, -6, 11, 2); g.quadraticCurveTo(0, -1, -11, 2); } else { g.moveTo(-11, 2); g.lineTo(-12, -9); g.lineTo(-6, -3); g.lineTo(0, -12); g.lineTo(6, -3); g.lineTo(12, -9); g.lineTo(11, 2); g.closePath(); } g.fill(); g.stroke();
+    [[0, girl ? -7 : -5, girl ? '#ff4aa8' : '#ff2a4a'], [-7, -1, '#3ab8ff'], [7, -1, '#2ee48d']].forEach(q => { g.fillStyle = q[2]; g.beginPath(); g.arc(q[0], q[1], 1.7, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(q[0] - 0.6, q[1] - 1, 0.9, 0.9); });
+    g.globalCompositeOperation = 'lighter'; const sp = (t * 1.5) % 1; gdot(g, -10 + sp * 20, -6, 5, '255,250,200', 0.8 * Math.sin(sp * Math.PI)); g.restore();
+  }
+
   /* ===== رسم واقعي للشخصيات: إضاءة من فوك يسار، تظليل أسطواني للأطراف، قماش بطيّات، جلد بتدرّج، وخطوط خارجية رفيعة ===== */
   const OUT = 'rgba(14,10,22,.55)', LDX = -0.55, LDY = -0.83;
   const hx = c => (c && c[0] === '#' && c.length === 7) ? c : '#888888';
@@ -203,35 +392,49 @@
     const sw = run ? Math.sin(t * 11) : 0, air = o.air, sl = o.slide, onB = o.board != null && !sl, gait = run && !air && !sl && !onB, ph = t * 11;
     const k = C.k, metal = k === 'robot' || k === 'knight', mat = metal ? 'metal' : null;
     g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
-    if (sl) g.scale(1.08, 0.55);
+    if (sl) g.translate(0, 42);
     else if (onB) g.translate(0, 5 + Math.sin(t * 3) * 1.5);
     else if (run && !air) g.translate(0, -Math.abs(Math.cos(ph)) * 5 + 1);
+    chFx(g, C, t, front, 0); const FP = [];
     const legC = k === 'robot' ? '#8a96a8' : k === 'knight' ? '#9aa2b0' : k === 'dino' ? C.hair : k === 'astro' ? '#dfe4ec' : k === 'ninja' ? '#262833' : '#34466e';
     // الرجلين
     if (gait) [-1, 1].forEach(s => { const lp = ph + (s > 0 ? 0 : Math.PI), sn = Math.sin(lp);
       const knee = Math.max(0, Math.sin(lp + 0.55)), kick = sn > -0.15 ? Math.max(0, Math.sin(lp - 0.75)) : 0;
       const Lt = 19 * (1 - 0.48 * knee), ks = 1 - 1.6 * kick, kx = s * (7 + knee * 2), ky = -44 + Lt, fx = s * (6.5 - kick * 2), fy = ky + 17 * ks;
-      limb(g, s * 7, -46, kx, ky, 11.5, legC, mat); limb(g, kx, ky, fx, fy, 10, legC, mat); shoe(g, fx, fy + (ks < 0.2 ? 0 : 4), col, ks < 0.2, kick); });
-    else if (onB) [-1, 1].forEach(s => { const b = Math.sin(t * 3 + s) * 1.2; limb(g, s * 7, -46, s * 13, -28 + b, 11.5, legC, mat); limb(g, s * 13, -28 + b, s * 12, -7, 10, legC, mat); shoe(g, s * 12, -3, col, false, 0); });
+      limb(g, s * 7, -46, kx, ky, 11.5, legC, mat); limb(g, kx, ky, fx, fy, 10, legC, mat); shoe(g, fx, fy + (ks < 0.2 ? 0 : 4), col, ks < 0.2, kick); FP.push([fx, fy + 2]); });
+    else if (onB) [-1, 1].forEach(s => { const b = Math.sin(t * 3 + s) * 1.2; limb(g, s * 7, -46, s * 13, -28 + b, 11.5, legC, mat); limb(g, s * 13, -28 + b, s * 12, -7, 10, legC, mat); shoe(g, s * 12, -3, col, false, 0); FP.push([s * 12, -1]); });
+    else if (sl) [-1, 1].forEach(s => { limb(g, s * 7, -46, s * 17, -40, 11.5, legC, mat); limb(g, s * 17, -40, s * 11, -50, 10, legC, mat); shoe(g, s * 11, -50, col, true, 0.15); FP.push([s * 11, -46]); });
     else [-1, 1].forEach(s => { const up = air ? (s > 0 ? 12 : 4) : Math.max(0, sw * s) * 11, a = air ? 0.25 * s : sw * 0.12 * s; g.save(); g.translate(s * 7, -44); g.rotate(a); g.scale(1, (34 - up) / 34); limb(g, 0, 0, 0, 31, 11, legC, mat); shoe(g, 0, 35, col, false, 0); g.restore(); });
+    if (sl) { g.save(); for (let i = 0; i < 7; i++) { const q = (t * 2.6 + i / 7) % 1, sd = i % 2 ? 1 : -1, x = sd * (10 + q * 30), y = -42 + q * 22, r = 4 + q * 14, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(215,195,165,' + (0.5 * (1 - q)).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(215,195,165,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+      g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,200,90,.95)'; g.lineWidth = 1.3; for (let i = 0; i < 7; i++) { const q = (t * 5 + i / 7) % 1, x = 27 + q * 16, y = -43 + q * 12; g.globalAlpha = 1 - q; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 4 + q * 7, y + 3 + q * 5); g.stroke(); } g.restore(); }
+    if (!FP.length) FP.push([-7, -2], [7, -2]); chFeet(g, C, t, FP, gait);
     // الذيل
     if (k === 'dino' || k === 'cat') { g.save(); const tc = hx(k === 'dino' ? C.hair : col), tg = g.createLinearGradient(-10, -50, 25, -15); tg.addColorStop(0, shade(tc, 30)); tg.addColorStop(1, shade(tc, -50)); g.fillStyle = tg; g.strokeStyle = OUT; g.lineWidth = 1.3; g.beginPath(); const tw = Math.sin(t * 6) * 6; if (!front) { g.moveTo(-6, -48); g.quadraticCurveTo(tw, -20, 18 + tw, -16); g.quadraticCurveTo(6, -30, 6, -48); } else { g.moveTo(14, -50); g.quadraticCurveTo(30 + tw, -40, 26 + tw, -62); g.quadraticCurveTo(24, -46, 12, -44); } g.closePath(); g.fill(); g.stroke(); g.restore(); }
     // شنطة الأكسجين
     if (k === 'astro' && !front) { const bg = g.createLinearGradient(-17, 0, 17, 0); bg.addColorStop(0, '#ffffff'); bg.addColorStop(0.5, '#d4dae4'); bg.addColorStop(1, '#8a94a6'); g.fillStyle = bg; rr(g, -17, -86, 34, 34, 7); g.fill(); g.lineWidth = 1.2; g.strokeStyle = OUT; g.stroke(); g.fillStyle = '#5a6478'; rr(g, -12, -80, 24, 4, 2); g.fill(); g.fillStyle = (Math.floor(t * 3) % 2) ? '#ff4a5a' : '#7a2a30'; g.beginPath(); g.arc(9, -60, 2, 0, 7); g.fill(); [-8, 8].forEach(x => { const tg = g.createLinearGradient(x - 3, 0, x + 3, 0); tg.addColorStop(0, '#eef2f8'); tg.addColorStop(1, '#9aa4b6'); g.fillStyle = tg; rr(g, x - 3.5, -74, 7, 18, 3); g.fill(); }); }
     if (gait) g.rotate(Math.cos(ph) * 0.04);
+    if (sl) { g.translate(0, -46); g.rotate(0.1); g.translate(0, 46); }
     const body = k === 'robot' ? '#9aa8bc' : k === 'knight' ? '#c9ced8' : k === 'astro' ? '#eef2f8' : k === 'dino' ? C.hair : k === 'ninja' ? '#2a2c38' : col;
     const handC = metal ? '#7a8496' : k === 'astro' ? '#dfe6f0' : k === 'ninja' ? '#2a2c38' : C.skin, sleeve = body;
-    const hand = (x, y) => ball(g, x, y, 5, handC, mat);
+    const hand = (x, y) => { ball(g, x, y, 5, handC, mat); if (C.adm) { g.save(); g.globalCompositeOperation = 'lighter'; gdot(g, x, y, 12, AUR[C.fx], 0.75); g.restore(); } };
+    const poseArms = (p, pp) => { const A = (x1, y1, x2, y2, x3, y3) => { limb(g, x1, y1, x2, y2, 9.5, sleeve, mat); limb(g, x2, y2, x3, y3, 8.5, sleeve, mat); hand(x3, y3); };
+      if (p === 'dab') { A(15, -82, 30, -96, 44, -112); A(-15, -82, -4, -90, 8, -100); }
+      else if (p === 'floss') { const w = Math.sin(pp * 22) * 13; A(15, -82, 17 + w, -68, 19 + w * 1.4, -55); A(-15, -82, -17 + w, -68, -19 + w * 1.4, -55); }
+      else if (p === 'disco') { if (Math.sin(pp * 12) > 0) A(15, -82, 26, -100, 32, -120); else A(15, -82, 28, -70, 36, -56); A(-15, -82, -25, -70, -14, -60); }
+      else { const w = Math.sin(pp * 18) * 8; A(15, -82, 24, -100, 22 + w, -118); A(-15, -82, -24, -100, -22 - w, -118); } };
     // ركض حقيقي: الإيد اللي تروح لقدّام (بعيدة عن الكامرة) تختفي ورا الجسم، واللي ترجع لورا يبين كوعها طالع لورا
     const gArm = (s, pass) => { const c = Math.sin(ph + (s > 0 ? Math.PI : 0)), fw = Math.max(0, c), bk = Math.max(0, -c), nearCam = front ? c > 0 : c <= 0; if ((pass === 1) !== nearCam) return; let ex, ey, hx2, hy;
       if (front) { ex = s * (18 + bk * 6); ey = -80 + 15 * (1 - fw * 0.35) - bk * 3; hx2 = fw > 0 ? s * (12 - fw * 6) : s * (18 + bk * 4); hy = fw > 0 ? ey + 9 - fw * 13 : ey + 13; }
       else { ex = s * (17 + bk * 5 - fw * 2); ey = -67 - bk * 10 + fw * 4; hx2 = fw > 0 ? s * (10 - fw * 3) : s * (15 + bk * 2); hy = fw > 0 ? -73 - fw * 6 : -53 + bk * 3; }
       limb(g, s * 15, -82, ex, ey, 9.5, sleeve, mat); limb(g, ex, ey, hx2, hy, 8.5, sleeve, mat); hand(hx2, hy); };
-    if (gait) [-1, 1].forEach(s => gArm(s, 0));
+    if (gait && !o.pose) [-1, 1].forEach(s => gArm(s, 0));
     torso(g, C, body, mat, front, col, t);
+    chFx(g, C, t, front, 1);
     if (k === 'dino' && !front) { g.save(); g.strokeStyle = OUT; g.lineWidth = 1; [-78, -68, -58].forEach(y => { const sg = g.createLinearGradient(0, y - 9, 0, y); sg.addColorStop(0, '#ffe680'); sg.addColorStop(1, '#d8a020'); g.fillStyle = sg; g.beginPath(); g.moveTo(-5, y); g.lineTo(0, y - 9); g.lineTo(5, y); g.closePath(); g.fill(); g.stroke(); }); g.restore(); }
     // الإيدين
-    if (gait) [-1, 1].forEach(s => gArm(s, 1));   // الإيد اللي جاية صوب الكامرة تترسم فوك الجسم
+    if (o.pose) poseArms(o.pose, o.pp || 0);
+    else if (sl) { limb(g, 15, -82, 24, -62, 9.5, sleeve, mat); limb(g, 24, -62, 28, -46, 8.5, sleeve, mat); hand(28, -44); limb(g, -15, -82, -28, -92, 9.5, sleeve, mat); limb(g, -28, -92, -34, -106, 8.5, sleeve, mat); hand(-34, -108); }
+    else if (gait) [-1, 1].forEach(s => gArm(s, 1));   // الإيد اللي جاية صوب الكامرة تترسم فوك الجسم
     else if (onB) [-1, 1].forEach(s => { const w = Math.sin(t * 3) * s; limb(g, s * 15, -82, s * 28, -72 + w * 4, 9.5, sleeve, mat); limb(g, s * 28, -72 + w * 4, s * 39, -79 + w * 7, 8.5, sleeve, mat); hand(s * 39, -79 + w * 7); });
     else [-1, 1].forEach(s => { const a = air ? -s * 2.5 : -s * (0.32 + Math.max(0, -sw * s) * 0.35), ln = air ? 1 : 1 - Math.max(0, sw * s) * 0.3; g.save(); g.translate(s * 15, -82); g.rotate(a); g.scale(1, ln); limb(g, 0, 0, 0, 25, 9, sleeve, mat); hand(0, 29); g.restore(); });
     // الرگبة
@@ -286,8 +489,8 @@
         if (front) face(g, C);
       }
     }
-    const H = HATS[o.hat || 0]; if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
-    g.restore(); g.restore();
+    const H = C.adm ? null : HATS[o.hat || 0]; if (C.adm) crown(g, t, k === 'girl'); if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
+    g.restore(); chFx(g, C, t, front, 3); g.restore();
   }
 
   /* زلاجة طايرة احترافية (Hoverboard): لوح كاربون بحافة كروم ونيون، محركين مضاد للجاذبية بأعمدة ضو وحلقات بلازما، وضواية خلفية */
@@ -378,12 +581,13 @@
     for (let i = 0; i < n; i++) { const zz = z - (n - 1) * 0.8 + i * 1.6 - (arc ? 0 : 3); const y = arc ? 0.7 + Math.max(0, 1.6 - Math.abs(zz - z) * 0.35) : 0.7; R.coinsA.push({ l, z: zz, y, x: LX[l] }); }
   }
   function start() {
+    if ((CH[S.sel.c] || {}).adm && !isAdm()) S.sel.c = 0;
     reset(); R.ph = 'count'; R.cnt = performance.now(); sfx('go'); hideOv(); hud();
   }
 
   /* ---------- الحركة ---------- */
   const JV = () => R.pw.jump > 0 ? 13.2 : 10.2;
-  function doJump(air) { R.vy = air ? JV() * 0.92 : JV(); R.slide = 0; R.jb = 0; R.sq = -0.18; sfx('jump'); if (air) { R.djUsed = true; for (let i = 0; i < 8; i++) R.fx.push({ x: R.x + rnd(-0.4, 0.4), y: R.y + 0.2, z: 0, vx: rnd(-2, 2), vy: rnd(-2, 0), vz: rnd(-1, 1), t: 0.5, e: '✨' }); } }
+  function doJump(air) { { const Cc = CH[S.sel.c]; if (Cc && Cc.tr) { const L = TRK[Cc.tr]; R.trN = (R.trN || 0) + 1; R.trk = { t0: R.t, k: L[R.trN % L.length] }; } } R.vy = air ? JV() * 0.92 : JV(); R.slide = 0; R.jb = 0; R.sq = -0.18; sfx('jump'); if (air) { R.djUsed = true; for (let i = 0; i < 8; i++) R.fx.push({ x: R.x + rnd(-0.4, 0.4), y: R.y + 0.2, z: 0, vx: rnd(-2, 2), vy: rnd(-2, 0), vz: rnd(-1, 1), t: 0.5, e: '✨' }); } }
   function act(k) {
     if (R.ph !== 'play' || R.pause) return;
     if (k === 'left' && R.lane > 0) { R.plane = R.lane; R.lane--; R.tilt = -1; sfx('left'); }
@@ -453,13 +657,13 @@
     // القفز: نزول أسرع من الصعود ولحظة تعليق فوك حتى تحس بيه
     else if (R.y > 0 || R.vy > 0) {
       const gv = R.vy > 0 ? (Math.abs(R.vy) < 2.2 ? 17 : 30) : 44; R.vy -= gv * dt; R.y += R.vy * dt;
-      if (R.y <= 0) { R.y = 0; const hard = R.vy < -14; R.vy = 0; R.djUsed = false; R.sq = hard ? 0.28 : 0.18; sfx('land'); for (let i = 0; i < (hard ? 8 : 4); i++) R.fx.push({ x: R.x + rnd(-0.5, 0.5), y: 0.15, z: rnd(-0.2, 0.3), vx: rnd(-2.2, 2.2), vy: rnd(0.5, 1.6), vz: 0, t: 0.35, e: '💨', sm: 1 }); if (R.jb > 0) doJump(false); }
+      if (R.y <= 0) { R.y = 0; if ((CH[S.sel.c] || {}).fx) R.ring = 0.45; R.trk = null; const hard = R.vy < -14; R.vy = 0; R.djUsed = false; R.sq = hard ? 0.28 : 0.18; sfx('land'); for (let i = 0; i < (hard ? 8 : 4); i++) R.fx.push({ x: R.x + rnd(-0.5, 0.5), y: 0.15, z: rnd(-0.2, 0.3), vx: rnd(-2.2, 2.2), vy: rnd(0.5, 1.6), vz: 0, t: 0.35, e: '💨', sm: 1 }); if (R.jb > 0) doJump(false); }
     }
     if (R.jb > 0) R.jb -= dt; R.sq += (0 - R.sq) * Math.min(1, dt * 10);
     R.cy += ((R.pw.jet > 0 ? R.y * 0.55 : Math.max(0, R.y) * 0.18) - R.cy) * Math.min(1, dt * 5);
     if (R.slide > 0) R.slide -= dt;
     for (const k in R.pw) if (R.pw[k] > 0) R.pw[k] -= dt;
-    if (R.inv > 0) R.inv -= dt; R.shake = Math.max(0, R.shake - dt * 2.4); if (R.stT > 0) R.stT -= dt; if (R.ghT > 0) R.ghT -= dt;
+    if (R.inv > 0) R.inv -= dt; if (R.ring > 0) R.ring -= dt; R.shake = Math.max(0, R.shake - dt * 2.4); if (R.stT > 0) R.stT -= dt; if (R.ghT > 0) R.ghT -= dt;
     const mv = o => { o.z -= d; };
     R.obs.forEach(mv); R.coinsA.forEach(mv); R.pws.forEach(mv); R.blds.forEach(mv); R.nextZ -= d; R.nextB -= d; R.busy = R.busy.map(b => b - d);
     while (R.nextZ < 80) { spawnRow(R.nextZ); R.nextZ += Math.max(11, rnd(13, 20) + R.sp * 0.18); }
@@ -482,7 +686,7 @@
     }
     R.obs = R.obs.filter(o => !o.gone);
     // العملات
-    const mag = R.pw.mag > 0 || R.pw.jet > 0, cm = R.pw.x2 > 0 ? 2 : 1;
+    const mag = R.pw.mag > 0 || R.pw.jet > 0 || ADMC(), cm = (R.pw.x2 > 0 || ADMC()) ? 2 : 1;
     R.coinsA.forEach(c => { if (mag && c.z < 14 && c.z > -1) { c.x += (R.x - c.x) * Math.min(1, dt * 7); c.y += (R.y + 0.8 - c.y) * Math.min(1, dt * 7); c.z -= c.z * Math.min(1, dt * 5); }
       const cx = c.x !== undefined ? c.x : LX[c.l]; if (Math.abs(c.z) < 0.7 && Math.abs(cx - R.x) < 0.9 && Math.abs(c.y - (R.y + 0.8)) < 1.25) { c.got = true; R.coins += cm; sfx('coin'); R.fx.push({ x: cx, y: c.y + 0.3, z: c.z, vx: 0, vy: 2.5, vz: 0, t: 0.5, txt: '+' + cm }); } });
     R.pws.forEach(p => { if (Math.abs(p.z) < 0.8 && Math.abs(LX[p.l] - R.x) < 0.95 && R.y < 2.4) { p.got = true; sfx(p.k === 'jet' ? 'jet' : 'power'); if (p.k === 'sh') R.shield = 1; else if (p.k === 'bd') { if (!isAdm()) S.boards++; save(); } else R.pw[p.k] = PW[p.k].d; if (p.k === 'jet') { R.obs = R.obs.filter(o => o.z > 40 || o.k === 'train'); } showToastR(PW[p.k].e + ' ' + PW[p.k].n + '!'); for (let i = 0; i < 14; i++) R.fx.push({ x: R.x, y: 1.2, z: 0.3, vx: rnd(-3, 3), vy: rnd(1, 5), vz: rnd(-1, 2), t: 0.7, e: PW[p.k].e }); } });
@@ -662,6 +866,7 @@
     { const L = sunDir(), hh = 1.5, e0 = P(R.x + L[0] * R.y, 0, Math.max(NEAR + 0.05, L[1] * R.y)), e1 = P(R.x + L[0] * (R.y + hh), 0, Math.max(NEAR + 0.05, L[1] * (R.y + hh))), w0 = 0.22 * e0[2], w1 = 0.13 * e1[2], dx = e1[0] - e0[0], dy = e1[1] - e0[1], dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl;
       g.fillStyle = 'rgba(8,10,30,' + (L[2] * Math.max(0.3, 1 - R.y * 0.25)) + ')'; g.beginPath(); g.moveTo(e0[0] + nx * w0, e0[1] + ny * w0); g.lineTo(e1[0] + nx * w1, e1[1] + ny * w1); g.quadraticCurveTo(e1[0] + dx / dl * w1 * 1.4, e1[1] + dy / dl * w1 * 1.4, e1[0] - nx * w1, e1[1] - ny * w1); g.lineTo(e0[0] - nx * w0, e0[1] - ny * w0); g.closePath(); g.fill(); }
     g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(s0[0], s0[1], 0.55 * s0[2] * Math.max(0.35, 1 - R.y * 0.2), 0.14 * s0[2] * Math.max(0.35, 1 - R.y * 0.2), 0, 0, 7); g.fill();
+    if (R.ring > 0) { const fx0 = (CH[S.sel.c] || {}).fx, kq = 1 - R.ring / 0.45; g.save(); g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(' + (AUR[fx0] || '255,255,255') + ',' + (0.9 * (1 - kq)).toFixed(2) + ')'; g.lineWidth = 3 * (1 - kq) + 1; g.beginPath(); g.ellipse(s0[0], s0[1], (0.4 + kq * 1.6) * s0[2], (0.1 + kq * 0.4) * s0[2], 0, 0, 7); g.stroke(); g.restore(); }
     if (R.shield > 0) { g.strokeStyle = 'rgba(80,200,255,' + (0.5 + Math.sin(R.t * 8) * 0.3) + ')'; g.lineWidth = 4; g.beginPath(); g.ellipse(p[0], p[1] - 65 * sc, 55 * sc, 75 * sc, 0, 0, 7); g.stroke(); }
     if (R.pw.ph > 0) { g.strokeStyle = 'rgba(162,74,255,.7)'; g.lineWidth = 3; g.setLineDash([6, 6]); g.lineDashOffset = -R.t * 40; g.beginPath(); g.ellipse(p[0], p[1] - 65 * sc, 52 * sc, 72 * sc, 0, 0, 7); g.stroke(); g.setLineDash([]); }
     g.save(); g.translate(p[0], p[1]);
@@ -671,7 +876,8 @@
     if (R.pw.ph > 0 || (R.inv > 0 && Math.floor(R.t * 14) % 2)) g.globalAlpha = 0.55;
     const onB = R.board > 0 && !(R.pw.jet > 0) && R.ph !== 'dead';
     if (onB) { const hv = 13 + Math.sin(R.t * 5) * 3; g.save(); g.translate(0, -hv); drawBoard(g, S.bsel, R.t, R.y < 0.1 ? hv : 0); }
-    drawChar(g, S.sel.c, { col: S.sel.col, hat: S.sel.h, t: R.ph === 'play' ? R.gt : R.t, front: false, air: R.y > 0.05, slide: R.slide > 0 && R.y < 0.3, run: R.ph === 'play' || R.ph === 'count', board: onB ? S.bsel : null });
+    const Cc = CH[S.sel.c] || CH[0]; let tf = null; if (Cc.tr && R.trk && R.y > 0.05 && R.ph === 'play' && !onB) tf = trickApply(g, R.trk.k, Math.min(1, (R.t - R.trk.t0) / 0.62));
+    drawChar(g, S.sel.c, { col: S.sel.col, hat: S.sel.h, t: R.ph === 'play' ? R.gt : R.t, front: !!(tf && tf.fl), pose: tf && tf.pose, pp: R.trk ? R.t - R.trk.t0 : 0, air: R.y > 0.05, slide: R.slide > 0 && R.y < 0.3, run: R.ph === 'play' || R.ph === 'count', board: onB ? S.bsel : null });
     if (onB) g.restore();
     g.globalAlpha = 1;
     if (R.pw.jet > 0) { g.font = '46px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.save(); g.translate(0, -60); g.rotate(Math.PI * 0.25); g.fillText('🚀', 0, 0); g.restore(); }
@@ -848,7 +1054,7 @@
     const g = cv.getContext('2d'), dpr = 2; cv.width = cv.clientWidth * dpr || 160; cv.height = cv.clientHeight * dpr || 160;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); const s = cv.height / (big ? 175 : 165); g.translate(cv.width / 2, cv.height * 0.93); g.scale(s, s);
     g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(0, 2, 30, 7, 0, 0, 7); g.fill();
-    if (o.board != null) { const hv = 14 + Math.sin(o.t * 5) * 3; g.translate(0, -hv); drawBoard(g, o.board, o.t, hv); } drawChar(g, id, o);
+    if (o.board != null) { const hv = 14 + Math.sin(o.t * 5) * 3; g.translate(0, -hv); drawBoard(g, o.board, o.t, hv); } else { const Cc = CH[id]; if (Cc && Cc.tr && o.run !== false) { const per = 2.4, tt = o.t % per; if (tt < 0.75) { const q = tt / 0.75, L = TRK[Cc.tr], kk = L[Math.floor(o.t / per) % L.length]; g.translate(0, -Math.sin(q * Math.PI) * 30); const tf = trickApply(g, kk, q); o = Object.assign({}, o, { air: true, front: o.front !== tf.fl, pose: tf.pose, pp: tt }); } } } drawChar(g, id, o);
   }
   let pvT = 0, pickTab = 'c';
   function animPreviews() {
@@ -866,8 +1072,11 @@
       if (pickTab === 'col') b.style.setProperty('--sw', it);
       const cv = mk('canvas'); cv.dataset.i = i; b.appendChild(cv);
       b.appendChild(mk('b', '', pickTab === 'col' ? '🎨' : it.n));
-      if (!own) b.appendChild(mk('small', 'pr', '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
+      if (pickTab === 'c' && (it.fx || it.tr)) b.appendChild(mk('small', 'fxB', (it.fx ? FXN[it.fx] : '') + (it.tr ? ' • ' + TRN[it.tr] : '')));
+      if (pickTab === 'c' && it.adm) b.classList.add('adm');
+      if (!own) b.appendChild(mk('small', 'pr', it.adm ? '👑 للمشرفين بس' : '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
       b.onclick = () => {
+        if (!own && it.adm) { sfx('click'); showToastR('👑 هاي الشخصية بس للمشرفين بابي وبابيتو'); return; }
         if (!own) { if (CN() < it.p) { sfx('click'); showToastR('😅 ينقصك ' + (it.p - S.coins) + ' 🪙 — اركض واجمع أكثر!'); return; } if (!confirm('تشتري «' + it.n + '» بـ ' + it.p + ' عملة ركض؟')) return; spend(it.p); (pickTab === 'c' ? S.own.c : pickTab === 'b' ? S.own.b : S.own.h).push(i); sfx('buy'); showToastR('🎉 صار عندك «' + it.n + '»!'); }
         else sfx('click');
         if (pickTab === 'c') S.sel.c = i; else if (pickTab === 'h') S.sel.h = i; else if (pickTab === 'b') S.bsel = i; else S.sel.col = i; save(); renderPick(); menuInfo();
