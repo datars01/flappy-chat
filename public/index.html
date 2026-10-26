@@ -13,12 +13,38 @@
   document.documentElement.classList.toggle('lowfx', window.LOWFX);
   /* الظل الضبابي (shadowBlur) أثقل شي بالرسم على الموبايل: بالوضع الخفيف نطفيه */
   try { var P = CanvasRenderingContext2D.prototype, d = Object.getOwnPropertyDescriptor(P, 'shadowBlur'); if (d && d.set) Object.defineProperty(P, 'shadowBlur', { configurable: true, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, window.LOWFX ? 0 : v); } }); } catch (e) {}
-  /* 🎯 60 فريم ثابتة: كل الرسم باللعبة يمشي على 60 بالضبط، حتى الشاشات السريعة (120Hz) ما تصعد فوكها وتسبب تذبذب.
-     ما نغيّر جودة الرسومات أبد — الرسم يبقى بنفس الدقة طول الوقت. */
+  /* 🎯 الفريمات حسب الجهاز (بدون ما نغيّر جودة الرسومات أبد):
+     • جهاز شاشته 120Hz ويلحك → 120 فريم
+     • باقي الأجهزة → 60 فريم ثابتة
+     • جهاز ما يلحك 60 → 40 فريم ثابتة (أنعم من 60 متقطعة)، ويرجع 60 إذا ارتاح */
   (function () {
-    var raw = window.requestAnimationFrame.bind(window), q = [], live = {}, last = 0, pend = 0, nid = 1;
-    function pump(t) { pend = 0; if (last && t - last < 10) { pend = raw(pump); return; } last = t; var cbs = q; q = [];
-      for (var i = 0; i < cbs.length; i++) { var c = cbs[i]; if (!live[c.id]) continue; delete live[c.id]; try { c.fn(t); } catch (e) { console.error(e); } } }
+    var raw = window.requestAnimationFrame.bind(window), q = [], live = {}, pend = 0, nid = 1;
+    var nat = [], lastNat = 0, hz = 60, fps = 60, nextT = 0, lastF = 0, iv = [], wk = [], slowT = 0, okT = 0;
+    function setFps(f) { if (f === fps) return; fps = f; nextT = 0; iv.length = 0; wk.length = 0; slowT = okT = 0; window.FPS_CAP = f; }
+    window.FPS_CAP = 60;
+    function avg(a) { var x = 0; for (var i = 0; i < a.length; i++) x += a[i]; return a.length ? x / a.length : 0; }
+    function pump(t) {
+      pend = 0;
+      if (lastNat && !document.hidden) { var d = t - lastNat; if (d > 4 && d < 40) { nat.push(d); if (nat.length > 120) nat.shift(); } }
+      lastNat = t;
+      // نعرف سرعة شاشة الجهاز (60 لو 120)
+      if (nat.length >= 60) { var srt = nat.slice().sort(function (x, y) { return x - y; }), med = srt[srt.length >> 1], h = med < 9.6 ? 120 : 60; if (h !== hz) { hz = h; if (fps !== 40) setFps(h); } }
+      var step = 1000 / fps;
+      if (!nextT) nextT = t;
+      if (t < nextT - 2) { pend = raw(pump); return; }
+      nextT += step; if (nextT < t - step) nextT = t + step;
+      if (lastF && !document.hidden) { var fi = t - lastF; if (fi < 200) { iv.push(fi); if (iv.length > 40) iv.shift(); } }
+      lastF = t;
+      var cbs = q; q = []; var w0 = performance.now();
+      for (var i = 0; i < cbs.length; i++) { var c = cbs[i]; if (!live[c.id]) continue; delete live[c.id]; try { c.fn(t); } catch (e) { console.error(e); } }
+      if (cbs.length) { wk.push(performance.now() - w0); if (wk.length > 40) wk.shift(); }
+      // نراقب: إذا ما يلحك ننزل الفريمات (مو الرسومات)، وإذا ارتاح نرجّعها
+      if (iv.length >= 30) { var a = avg(iv), w = avg(wk), need = 1000 / fps;
+        if (a > need * 1.15) { slowT++; okT = 0; } else { slowT = Math.max(0, slowT - 1); if (w < (fps === 40 ? 11 : need * 0.6)) okT++; else okT = 0; }
+        if (slowT > fps * 2.5) { setFps(fps === 120 ? 60 : 40); }
+        else if (okT > fps * 6) { if (fps === 40) setFps(60); else if (fps === 60 && hz === 120) setFps(120); }
+      }
+    }
     window.requestAnimationFrame = function (fn) { var c = { id: nid++, fn: fn }; q.push(c); live[c.id] = 1; if (!pend) pend = raw(pump); return c.id; };
     window.cancelAnimationFrame = function (id) { delete live[id]; };
   })();
