@@ -480,6 +480,22 @@ app.get('/health', (req, res) => res.send('ok'));
 /* ---- الزوار والتقييم ---- */
 const devOk = d => typeof d === 'string' && /^[a-z0-9]{12,40}$/i.test(d);
 const optUser = req => { try { const h = req.headers.authorization || ''; const k = keyFromToken(h.startsWith('Bearer ') ? h.slice(7) : ''); return k && db.users[k] ? db.users[k] : null; } catch (e) { return null; } };
+/* ===== مترجم آلي لشات المنتجع 🌐: الرسالة تتترجم للغة اللي مختارها كل لاعب (عربي/English) ===== */
+const TR_CACHE = new Map();   // كاش بالذاكرة حتى نفس الجملة ما تنترجم مرتين
+app.post('/api/tr', async (req, res) => {
+  const b = req.body || {}, txt = String(b.txt || '').slice(0, 300).trim(), to = b.to === 'en' ? 'en' : 'ar';
+  if (!txt) return res.json({ txt: '' });
+  const ck = to + '|' + txt; if (TR_CACHE.has(ck)) return res.json(TR_CACHE.get(ck));
+  if (limited('tr:' + req.ip, 120, 60e3)) return res.status(429).json({ error: 'slow' });
+  try {
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 6000);
+    const r = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&dt=t&tl=' + to + '&q=' + encodeURIComponent(txt), { signal: ac.signal });
+    clearTimeout(tm); const j = await r.json();
+    const out = { txt: (j[0] || []).map(x => x[0]).join('').trim(), src: j[2] || '' };
+    TR_CACHE.set(ck, out); if (TR_CACHE.size > 5000) TR_CACHE.delete(TR_CACHE.keys().next().value);
+    res.json(out);
+  } catch (e) { res.status(502).json({ error: 'tr' }); }
+});
 app.post('/api/visit', (req, res) => {
   const d = req.body && req.body.dev; if (!devOk(d)) return res.status(400).json({ error: 'bad' });
   if (limited('vis:' + req.ip, 30, 600e3)) return res.json({ ok: 1 });
