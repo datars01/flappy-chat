@@ -130,22 +130,6 @@
   /* ---------- رسم الشخصية (من القدّام بالاختيار، ومن الورا باللعب) ---------- */
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function shade(hex, a) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; r = Math.max(0, Math.min(255, r + a)); g = Math.max(0, Math.min(255, g + a)); b = Math.max(0, Math.min(255, b + a)); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
-  /* رسم الزلاجة من الورا: سطح بمنظور + حافة + محركين بلهب، وتوهج تحتها */
-  function drawBoard(g, bi, t, glow) {
-    const B = BOARDS[bi] || BOARDS[0];
-    if (glow) { const gr = g.createRadialGradient(0, 0, 4, 0, 0, 52); gr.addColorStop(0, B.c1 + 'cc'); gr.addColorStop(1, B.c1 + '00'); g.fillStyle = gr; g.beginPath(); g.ellipse(0, glow, 54, 13, 0, 0, 7); g.fill(); }
-    g.save(); g.lineJoin = 'round'; g.lineWidth = 2.5; g.strokeStyle = '#1e1428';
-    const fl = 10 + Math.sin(t * 30) * 3 + Math.sin(t * 47) * 2;
-    [-17, 17].forEach(x => { const fg = g.createLinearGradient(0, 8, 0, 8 + fl + 6); fg.addColorStop(0, '#ffffff'); fg.addColorStop(0.3, B.c1); fg.addColorStop(1, B.c1 + '00'); g.fillStyle = fg; g.beginPath(); g.moveTo(x - 5, 9); g.quadraticCurveTo(x, 9 + fl * 1.6, x + 5, 9); g.fill(); });
-    g.fillStyle = shade(B.c2, -40); rr(g, -33, 1, 66, 9, 4.5); g.fill(); g.stroke();
-    const dg = g.createLinearGradient(-30, 0, 30, 0); dg.addColorStop(0, B.c2); dg.addColorStop(0.5, B.c1); dg.addColorStop(1, B.c2); g.fillStyle = dg;
-    g.beginPath(); g.moveTo(-33, 4); g.lineTo(-22, -7); g.quadraticCurveTo(0, -11, 22, -7); g.lineTo(33, 4); g.quadraticCurveTo(0, 8, -33, 4); g.closePath(); g.fill(); g.stroke();
-    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 2; g.beginPath(); g.moveTo(-14, 0); g.lineTo(-9, -6); g.moveTo(14, 0); g.lineTo(9, -6); g.stroke();
-    if (B.st) { g.fillStyle = '#fff'; [[-18, -2], [6, -5], [20, 0], [-4, 2]].forEach((q, i) => { g.globalAlpha = 0.5 + Math.sin(t * 6 + i) * 0.5; g.fillRect(q[0], q[1], 2, 2); }); g.globalAlpha = 1; }
-    if (B.hr) { g.fillStyle = '#fff'; g.font = '9px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('❤', 0, -2); }
-    [-17, 17].forEach(x => { g.fillStyle = '#2a2f40'; g.beginPath(); g.arc(x, 6, 5.5, 0, 7); g.fill(); g.strokeStyle = '#1e1428'; g.lineWidth = 2; g.stroke(); g.fillStyle = B.c1; g.beginPath(); g.arc(x, 6, 3.2, 0, 7); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(x, 6, 1.4, 0, 7); g.fill(); });
-    g.restore();
-  }
   /* ===== رسم واقعي للشخصيات: إضاءة من فوك يسار، تظليل أسطواني للأطراف، قماش بطيّات، جلد بتدرّج، وخطوط خارجية رفيعة ===== */
   const OUT = 'rgba(14,10,22,.55)', LDX = -0.55, LDY = -0.83;
   const hx = c => (c && c[0] === '#' && c.length === 7) ? c : '#888888';
@@ -236,14 +220,18 @@
     if (k === 'astro' && !front) { const bg = g.createLinearGradient(-17, 0, 17, 0); bg.addColorStop(0, '#ffffff'); bg.addColorStop(0.5, '#d4dae4'); bg.addColorStop(1, '#8a94a6'); g.fillStyle = bg; rr(g, -17, -86, 34, 34, 7); g.fill(); g.lineWidth = 1.2; g.strokeStyle = OUT; g.stroke(); g.fillStyle = '#5a6478'; rr(g, -12, -80, 24, 4, 2); g.fill(); g.fillStyle = (Math.floor(t * 3) % 2) ? '#ff4a5a' : '#7a2a30'; g.beginPath(); g.arc(9, -60, 2, 0, 7); g.fill(); [-8, 8].forEach(x => { const tg = g.createLinearGradient(x - 3, 0, x + 3, 0); tg.addColorStop(0, '#eef2f8'); tg.addColorStop(1, '#9aa4b6'); g.fillStyle = tg; rr(g, x - 3.5, -74, 7, 18, 3); g.fill(); }); }
     if (gait) g.rotate(Math.cos(ph) * 0.04);
     const body = k === 'robot' ? '#9aa8bc' : k === 'knight' ? '#c9ced8' : k === 'astro' ? '#eef2f8' : k === 'dino' ? C.hair : k === 'ninja' ? '#2a2c38' : col;
+    const handC = metal ? '#7a8496' : k === 'astro' ? '#dfe6f0' : k === 'ninja' ? '#2a2c38' : C.skin, sleeve = body;
+    const hand = (x, y) => ball(g, x, y, 5, handC, mat);
+    // ركض حقيقي: الإيد اللي تروح لقدّام (بعيدة عن الكامرة) تختفي ورا الجسم، واللي ترجع لورا يبين كوعها طالع لورا
+    const gArm = (s, pass) => { const c = Math.sin(ph + (s > 0 ? Math.PI : 0)), fw = Math.max(0, c), bk = Math.max(0, -c), nearCam = front ? c > 0 : c <= 0; if ((pass === 1) !== nearCam) return; let ex, ey, hx2, hy;
+      if (front) { ex = s * (18 + bk * 6); ey = -80 + 15 * (1 - fw * 0.35) - bk * 3; hx2 = fw > 0 ? s * (12 - fw * 6) : s * (18 + bk * 4); hy = fw > 0 ? ey + 9 - fw * 13 : ey + 13; }
+      else { ex = s * (17 + bk * 5 - fw * 2); ey = -67 - bk * 10 + fw * 4; hx2 = fw > 0 ? s * (10 - fw * 3) : s * (15 + bk * 2); hy = fw > 0 ? -73 - fw * 6 : -53 + bk * 3; }
+      limb(g, s * 15, -82, ex, ey, 9.5, sleeve, mat); limb(g, ex, ey, hx2, hy, 8.5, sleeve, mat); hand(hx2, hy); };
+    if (gait) [-1, 1].forEach(s => gArm(s, 0));
     torso(g, C, body, mat, front, col, t);
     if (k === 'dino' && !front) { g.save(); g.strokeStyle = OUT; g.lineWidth = 1; [-78, -68, -58].forEach(y => { const sg = g.createLinearGradient(0, y - 9, 0, y); sg.addColorStop(0, '#ffe680'); sg.addColorStop(1, '#d8a020'); g.fillStyle = sg; g.beginPath(); g.moveTo(-5, y); g.lineTo(0, y - 9); g.lineTo(5, y); g.closePath(); g.fill(); g.stroke(); }); g.restore(); }
     // الإيدين
-    const handC = metal ? '#7a8496' : k === 'astro' ? '#dfe6f0' : k === 'ninja' ? '#2a2c38' : C.skin, sleeve = body;
-    const hand = (x, y) => ball(g, x, y, 5, handC, mat);
-    if (gait) [-1, 1].forEach(s => { const c = Math.sin(ph + (s > 0 ? Math.PI : 0)), fw = Math.max(0, c), bk = Math.max(0, -c);
-      const ex = s * (18 + bk * 6), ey = -80 + 15 * (1 - fw * 0.35) - bk * 3, hx2 = fw > 0 ? s * (12 - fw * 6) : s * (18 + bk * 4), hy = fw > 0 ? ey + 9 - fw * 13 : ey + 13;
-      limb(g, s * 15, -82, ex, ey, 9.5, sleeve, mat); limb(g, ex, ey, hx2, hy, 8.5, sleeve, mat); hand(hx2, hy); });
+    if (gait) [-1, 1].forEach(s => gArm(s, 1));   // الإيد اللي جاية صوب الكامرة تترسم فوك الجسم
     else if (onB) [-1, 1].forEach(s => { const w = Math.sin(t * 3) * s; limb(g, s * 15, -82, s * 28, -72 + w * 4, 9.5, sleeve, mat); limb(g, s * 28, -72 + w * 4, s * 39, -79 + w * 7, 8.5, sleeve, mat); hand(s * 39, -79 + w * 7); });
     else [-1, 1].forEach(s => { const a = air ? -s * 2.5 : -s * (0.32 + Math.max(0, -sw * s) * 0.35), ln = air ? 1 : 1 - Math.max(0, sw * s) * 0.3; g.save(); g.translate(s * 15, -82); g.rotate(a); g.scale(1, ln); limb(g, 0, 0, 0, 25, 9, sleeve, mat); hand(0, 29); g.restore(); });
     // الرگبة
@@ -300,6 +288,49 @@
     }
     const H = HATS[o.hat || 0]; if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
     g.restore(); g.restore();
+  }
+
+  /* زلاجة طايرة احترافية (Hoverboard): لوح كاربون بحافة كروم ونيون، محركين مضاد للجاذبية بأعمدة ضو وحلقات بلازما، وضواية خلفية */
+  function drawBoard(g, bi, t, glow) {
+    const B = BOARDS[bi] || BOARDS[0], c1 = hx(B.c1), c2 = hx(B.c2);
+    g.save(); g.lineJoin = 'round';
+    if (glow) { const gr = g.createRadialGradient(0, glow, 2, 0, glow, 62); gr.addColorStop(0, c1 + 'aa'); gr.addColorStop(0.5, c1 + '33'); gr.addColorStop(1, c1 + '00'); g.fillStyle = gr; g.beginPath(); g.ellipse(0, glow, 64, 14, 0, 0, 7); g.fill(); }
+    const bh = glow ? Math.max(8, glow - 4) : 16;
+    [-19, 19].forEach((x, i) => { const pl = 0.75 + Math.sin(t * 14 + i * 2) * 0.25, bg = g.createLinearGradient(0, 9, 0, 9 + bh); bg.addColorStop(0, 'rgba(255,255,255,' + (0.85 * pl).toFixed(2) + ')'); bg.addColorStop(0.3, c1 + '99'); bg.addColorStop(1, c1 + '00'); g.fillStyle = bg; g.beginPath(); g.moveTo(x - 6, 9); g.lineTo(x + 6, 9); g.lineTo(x + 11, 9 + bh); g.lineTo(x - 11, 9 + bh); g.closePath(); g.fill();
+      g.lineWidth = 1.2; for (let k = 0; k < 3; k++) { const q = (t * 2.4 + k / 3 + i * 0.5) % 1; g.strokeStyle = 'rgba(255,255,255,' + ((1 - q) * 0.65).toFixed(2) + ')'; g.beginPath(); g.ellipse(x, 10 + q * bh * 0.85, 6 + q * 7, 1.6 + q * 3, 0, 0, 7); g.stroke(); }
+      const pg = g.createRadialGradient(x, 9, 0, x, 9, 7); pg.addColorStop(0, '#ffffff'); pg.addColorStop(0.4, c1); pg.addColorStop(1, shade(c2, -60)); g.fillStyle = pg; g.beginPath(); g.ellipse(x, 9, 7, 3, 0, 0, 7); g.fill(); });
+    const deck = () => { g.beginPath(); g.moveTo(-37, 1); g.bezierCurveTo(-38, -5, -32, -9.5, -23, -10); g.lineTo(23, -10); g.bezierCurveTo(32, -9.5, 38, -5, 37, 1); g.bezierCurveTo(36, 4.5, 30, 5.5, 23, 5.5); g.lineTo(-23, 5.5); g.bezierCurveTo(-30, 5.5, -36, 4.5, -37, 1); g.closePath(); };
+    g.save(); g.translate(0, 4.5); deck(); const sg = g.createLinearGradient(0, -10, 0, 6); sg.addColorStop(0, '#f6f8fc'); sg.addColorStop(0.45, '#8f98ab'); sg.addColorStop(0.56, '#454c5e'); sg.addColorStop(1, '#151822'); g.fillStyle = sg; g.fill(); g.restore();
+    deck(); const dg = g.createLinearGradient(-37, -10, 37, 6); dg.addColorStop(0, shade(c2, -25)); dg.addColorStop(0.5, shade(c2, -70)); dg.addColorStop(1, shade(c2, -100)); g.fillStyle = dg; g.fill();
+    g.save(); deck(); g.clip();
+    g.fillStyle = 'rgba(255,255,255,.05)'; for (let y = -10; y < 6; y += 2) for (let x = -38 + (y & 2); x < 38; x += 4) g.fillRect(x, y, 1, 1);   // ملمس الكاربون
+    const st = g.createLinearGradient(-32, 0, 32, 0); st.addColorStop(0, c1 + '00'); st.addColorStop(0.5, c1); st.addColorStop(1, c1 + '00'); g.fillStyle = st; g.beginPath(); g.moveTo(-32, -1.4); g.lineTo(32, -1.4); g.lineTo(28, 1.4); g.lineTo(-28, 1.4); g.closePath(); g.fill();
+    g.strokeStyle = shade(c1, 40); g.lineWidth = 1.3; g.globalAlpha = 0.75; [-1, 1].forEach(s => { for (let i = 0; i < 3; i++) { const x = s * (10 + i * 5), a = 0.45 + 0.55 * Math.max(0, Math.sin(t * 8 - i)); g.globalAlpha = a; g.beginPath(); g.moveTo(x, -8); g.lineTo(x + s * 3, -5.2); g.lineTo(x, -2.6); g.stroke(); } }); g.globalAlpha = 1;
+    const hl = g.createLinearGradient(0, -10, 0, -3); hl.addColorStop(0, 'rgba(255,255,255,.38)'); hl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = hl; g.fillRect(-38, -10, 76, 7);
+    if (B.st) { g.fillStyle = '#fff'; [[-22, -6], [-6, -8], [8, -4], [20, -7], [-14, 2], [16, 2]].forEach((q, i) => { g.globalAlpha = 0.35 + Math.abs(Math.sin(t * 5 + i)) * 0.65; g.fillRect(q[0], q[1], 1.6, 1.6); }); g.globalAlpha = 1; }
+    if (B.hr) { g.fillStyle = '#ffffff'; g.font = '900 9px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('❤', 0, -5); }
+    g.restore();
+    deck(); g.strokeStyle = c1 + '55'; g.lineWidth = 4.5; g.stroke(); g.strokeStyle = shade(c1, 70); g.lineWidth = 1.1; g.stroke();
+    [-31, 31].forEach(x => { const lg = g.createRadialGradient(x, 6.5, 0, x, 6.5, 7); lg.addColorStop(0, 'rgba(255,60,70,.9)'); lg.addColorStop(1, 'rgba(255,40,60,0)'); g.fillStyle = lg; g.beginPath(); g.arc(x, 6.5, 7, 0, 7); g.fill(); g.fillStyle = '#ff4a55'; rr(g, x - 4, 5.5, 8, 2.2, 1.1); g.fill(); });
+    g.restore();
+  }
+  /* ---------- ظلال اتجاهية (من الشمس للأرض) ---------- */
+  function sunDir() { const T = THEMES[R.zone] || THEMES[0]; if (T.stars) return [-0.2, -0.05, 0.16]; if (R.zone === 5) return [0.6, -0.25, 0.34]; if (T.k === 'desert') return [-0.45, -0.22, 0.32]; if (T.snow) return [-0.4, -0.18, 0.22]; return [-0.45, -0.18, 0.28]; }
+  function boxShadow(g, x0, x1, z0, z1, h, L) {
+    const ox = L[0] * h, oz = L[1] * h, zc = z => Math.max(NEAR + 0.05, z); if (z1 + Math.min(0, oz) < NEAR || z0 > FAR) return;
+    const pt = (x, z) => P(x, 0, zc(z)), Q = (a, b, c, d) => { g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.closePath(); };
+    const b0 = pt(x0, z0), b1 = pt(x1, z0), b2 = pt(x1, z1), b3 = pt(x0, z1), t0 = pt(x0 + ox, z0 + oz), t1 = pt(x1 + ox, z0 + oz), t2 = pt(x1 + ox, z1 + oz), t3 = pt(x0 + ox, z1 + oz);
+    Q(b0, b1, b2, b3); Q(t0, t1, t2, t3); Q(b0, b1, t1, t0); Q(b1, b2, t2, t1); Q(b2, b3, t3, t2); Q(b3, b0, t0, t3);
+  }
+  function drawShadows(g) {
+    const L = sunDir(); g.save(); g.fillStyle = 'rgba(8,10,30,' + L[2] + ')'; g.beginPath();
+    for (const o of R.obs) { const x = LX[o.l]; if (o.k === 'train') boxShadow(g, x - 0.78, x + 0.78, o.z, o.z + o.len, 2.5, L); else if (o.k === 'barrier') boxShadow(g, x - 0.8, x + 0.8, o.z, o.z + 0.12, 0.95, L); else if (o.k === 'bar') { boxShadow(g, x - 0.85, x + 0.85, o.z, o.z + 0.1, 1.75, L); } }
+    g.fill('nonzero'); g.restore();
+  }
+  function drawBldShadows(g) {
+    const L = sunDir(); g.save(); g.fillStyle = 'rgba(8,10,30,' + (L[2] * 0.85) + ')'; g.beginPath();
+    for (const b of R.blds) { if (b.em || b.h === undefined) continue; const xi = b.x, xo = b.x + b.s * b.w; boxShadow(g, Math.min(xi, xo), Math.max(xi, xo), b.z, b.z + b.len, b.h, L); }
+    g.fill('nonzero'); g.restore();
   }
 
   /* ---------- حالة اللعبة ---------- */
@@ -428,7 +459,7 @@
     R.cy += ((R.pw.jet > 0 ? R.y * 0.55 : Math.max(0, R.y) * 0.18) - R.cy) * Math.min(1, dt * 5);
     if (R.slide > 0) R.slide -= dt;
     for (const k in R.pw) if (R.pw[k] > 0) R.pw[k] -= dt;
-    if (R.inv > 0) R.inv -= dt; if (R.stT > 0) R.stT -= dt; if (R.ghT > 0) R.ghT -= dt;
+    if (R.inv > 0) R.inv -= dt; R.shake = Math.max(0, R.shake - dt * 2.4); if (R.stT > 0) R.stT -= dt; if (R.ghT > 0) R.ghT -= dt;
     const mv = o => { o.z -= d; };
     R.obs.forEach(mv); R.coinsA.forEach(mv); R.pws.forEach(mv); R.blds.forEach(mv); R.nextZ -= d; R.nextB -= d; R.busy = R.busy.map(b => b - d);
     while (R.nextZ < 80) { spawnRow(R.nextZ); R.nextZ += Math.max(11, rnd(13, 20) + R.sp * 0.18); }
@@ -526,6 +557,7 @@
     // القضبان
     for (let l = 0; l < 3; l++) [-0.55, 0.55].forEach(dx => { const x = LX[l] + dx; quad(g, P(x - 0.07, 0.05, FAR), P(x + 0.07, 0.05, FAR), P(x + 0.07, 0.05, NEAR), P(x - 0.07, 0.05, NEAR), T.rail); });
     // المناظر (البعيدة أول)
+    drawBldShadows(g);
     R.blds.slice().sort((a, b) => b.z - a.z).forEach(b => b.em ? drawEmo(g, b) : drawBld(g, b, THEMES[b.zn !== undefined ? b.zn : R.zone].b ? THEMES[b.zn !== undefined ? b.zn : R.zone] : T));
     // جو كل عالم: ثلج ينزل، رمل يطير، ...
     if (T.snow) { g.fillStyle = 'rgba(255,255,255,.9)'; for (let i = 0; i < 70; i++) { const x = (i * 71.7 + R.t * 30 * (1 + i % 3) + Math.sin(R.t + i) * 20) % W, y = (i * 43.1 + R.t * 70 * (1 + i % 2)) % H; g.beginPath(); g.arc(x, y, 1.4 + (i % 3) * 0.8, 0, 7); g.fill(); } }
@@ -627,6 +659,8 @@
   function drawPw(g, p) { const q = P(LX[p.l], p.y + Math.sin(R.t * 4) * 0.15, p.z), r = 0.42 * q[2]; const gl = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], r * 1.6); gl.addColorStop(0, 'rgba(255,255,255,.95)'); gl.addColorStop(1, 'rgba(162,74,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(q[0], q[1], r * 1.6, 0, 7); g.fill(); g.font = (r * 1.3) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(PW[p.k].e, q[0], q[1]); }
   function drawPlayer(g) {
     const p = P(R.x, R.y, 0), s0 = P(R.x, 0, 0), sc = 1.75 * p[2] / 130;
+    { const L = sunDir(), hh = 1.5, e0 = P(R.x + L[0] * R.y, 0, Math.max(NEAR + 0.05, L[1] * R.y)), e1 = P(R.x + L[0] * (R.y + hh), 0, Math.max(NEAR + 0.05, L[1] * (R.y + hh))), w0 = 0.22 * e0[2], w1 = 0.13 * e1[2], dx = e1[0] - e0[0], dy = e1[1] - e0[1], dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl;
+      g.fillStyle = 'rgba(8,10,30,' + (L[2] * Math.max(0.3, 1 - R.y * 0.25)) + ')'; g.beginPath(); g.moveTo(e0[0] + nx * w0, e0[1] + ny * w0); g.lineTo(e1[0] + nx * w1, e1[1] + ny * w1); g.quadraticCurveTo(e1[0] + dx / dl * w1 * 1.4, e1[1] + dy / dl * w1 * 1.4, e1[0] - nx * w1, e1[1] - ny * w1); g.lineTo(e0[0] - nx * w0, e0[1] - ny * w0); g.closePath(); g.fill(); }
     g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(s0[0], s0[1], 0.55 * s0[2] * Math.max(0.35, 1 - R.y * 0.2), 0.14 * s0[2] * Math.max(0.35, 1 - R.y * 0.2), 0, 0, 7); g.fill();
     if (R.shield > 0) { g.strokeStyle = 'rgba(80,200,255,' + (0.5 + Math.sin(R.t * 8) * 0.3) + ')'; g.lineWidth = 4; g.beginPath(); g.ellipse(p[0], p[1] - 65 * sc, 55 * sc, 75 * sc, 0, 0, 7); g.stroke(); }
     if (R.pw.ph > 0) { g.strokeStyle = 'rgba(162,74,255,.7)'; g.lineWidth = 3; g.setLineDash([6, 6]); g.lineDashOffset = -R.t * 40; g.beginPath(); g.ellipse(p[0], p[1] - 65 * sc, 52 * sc, 72 * sc, 0, 0, 7); g.stroke(); g.setLineDash([]); }
@@ -696,6 +730,7 @@
     items.push([0.05, 3, null]);
     // القطارات اللي صارت يم اللاعب ترسم حسب نهايتها
     items.forEach(it => { const o = it[2]; if (it[1] === 0 && o.k === 'train' && o.z < 0.5) it[0] = o.z + o.len > 0.5 ? (Math.abs(LX[o.l] - R.x) < 0.9 && R.y < 2.5 ? -10 : 0.6) : -10; });
+    drawShadows(g);
     items.sort((a, b) => b[0] - a[0]).forEach(it => { if (it[1] === 0) drawObs(g, it[2]); else if (it[1] === 1) drawCoin(g, it[2]); else if (it[1] === 2) drawPw(g, it[2]); else drawPlayer(g); });
     R.fx.forEach(f => { const p = P(f.x, f.y, Math.max(-3, f.z)); g.globalAlpha = Math.min(1, f.t * 2); g.textAlign = 'center'; g.textBaseline = 'middle'; if (f.txt) { g.font = 'bold 20px Cairo, system-ui'; g.fillStyle = '#ffd23a'; g.strokeStyle = '#3a2200'; g.lineWidth = 3; g.strokeText(f.txt, p[0], p[1]); g.fillText(f.txt, p[0], p[1]); } else { g.font = (f.sm ? 14 : 22) + 'px system-ui'; g.fillText(f.e, p[0], p[1]); } g.globalAlpha = 1; });
     // الشبح يلاحقك بعد ما تتعثر
@@ -721,7 +756,6 @@
      ياخذ صورة اللعبة كل فريم ويضيفلها: توهّج (Bloom) للأضوية، أشعة شمس حجمية (God rays)، ضباب جوّي حسب البعد،
      حدّة HD، تدرّج ألوان سينمائي، انحراف لوني خفيف بالأطراف، فينييت وحبيبات فلم. ينزل جودته وحده إذا الجهاز ضعيف. */
   const FX = { on: 1, gl: null, prog: null, tex: null, u: {}, q: 1, dead: 0, fps: 60, lowT: 0, note: 0 };
-  try { const v = localStorage.getItem('run_fx'); if (v !== null) FX.on = v === '1' ? 1 : 0; } catch (e) {}
   const FX_VS = 'attribute vec2 a;varying vec2 v;void main(){v=vec2(a.x*.5+.5,.5-a.y*.5);gl_Position=vec4(a,0.,1.);}';
   const FX_FS = [
     'precision mediump float;uniform sampler2D T;uniform vec2 RS,SUN;uniform float TM,HZ,BL,RAY,SP;uniform vec3 FOG,TINT;varying vec2 v;',
@@ -732,18 +766,18 @@
     // انحراف لوني بالأطراف
     'float ca=r2*(.006+SP*.004);vec3 c=vec3(tx(uv+cc*ca).r,tx(uv).g,tx(uv-cc*ca).b);',
     // حدة HD
-    'vec3 n=tx(uv+vec2(px.x,0.))+tx(uv-vec2(px.x,0.))+tx(uv+vec2(0.,px.y))+tx(uv-vec2(0.,px.y));c+=(c-n*.25)*.45;',
+    'vec3 n=tx(uv+vec2(px.x,0.))+tx(uv-vec2(px.x,0.))+tx(uv+vec2(0.,px.y))+tx(uv-vec2(0.,px.y));c+=(c-n*.25)*.55;',
     // بلوم
     'vec3 bl=vec3(0.);float tw=0.;for(int i=0;i<10;i++){float fi=float(i),an=fi*2.39996,rd=1.5+fi*1.15;vec2 o=vec2(cos(an),sin(an))*rd*px*2.;vec3 s=tx(uv+o);float w=1./(1.+fi*.3);float b=max(lum(s)-.74,0.);bl+=s*b*w;tw+=w;}c+=bl/tw*BL*2.4;',
     // أشعة الشمس الحجمية (بس من السما)
     'if(RAY>0.){vec2 d=(uv-SUN)/14.;vec2 p=uv;float dc=1.;vec3 gr=vec3(0.);for(int i=0;i<14;i++){p-=d;if(p.y<HZ){vec3 s=tx(p);float sd=length((p-SUN)*vec2(RS.x/RS.y,1.));gr+=s*max(lum(s)-.78,0.)*dc*exp(-sd*9.);}dc*=.9;}float fall=exp(-length((uv-SUN)*vec2(RS.x/RS.y,1.))*1.6);c+=gr*RAY*1.6*(.25+fall);}',
     // ضباب جوّي: الأرض البعيدة (يم الأفق) تذوب بلون السما
-    'float fg=(uv.y>HZ?exp(-(uv.y-HZ)*8.):exp(-(HZ-uv.y)*14.))*.3;c=mix(c,FOG,fg);',
+    'float fg=(uv.y>HZ?exp(-(uv.y-HZ)*10.):exp(-(HZ-uv.y)*16.))*.22;c=mix(c,FOG,fg);',
     // تدرّج سينمائي: كونتراست ناعم + تشبّع + لون الجو
-    'c=max(c,0.);c=mix(c,c*c*(3.-2.*min(c,1.)),.32);float L=lum(c);c=mix(vec3(L),c,1.16)*TINT;',
+    'c=max(c,0.);c=mix(c,c*c*(3.-2.*min(c,1.)),.32);float L=lum(c);c=mix(vec3(L),c,1.22)*TINT;',
     'c=c/(1.+max(L-1.,0.)*.6);',
     // فينييت + حبيبات
-    'c*=1.-r2*.62;c+=(hs(uv*RS+TM)-.5)*.022;gl_FragColor=vec4(clamp(c,0.,1.),1.);}'].join('');
+    'c*=1.-r2*.5;c+=(hs(uv*RS+TM)-.5)*.022;gl_FragColor=vec4(clamp(c,0.,1.),1.);}'].join('');
   function fxInit(cv) {
     try {
       const gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl');
@@ -766,7 +800,7 @@
     if (!FX.gl && !fxInit(cv)) { FX.dead = 1; cv.style.display = 'none'; return; }
     // جهاز ضعيف؟ ننزل الدقة شوية شوية، وإذا بقى ثقيل نطفي التأثيرات حتى اللعب يبقى سلس
     if (R.ph === 'play' && !R.pause && dt > 0) { FX.fps = FX.fps * 0.94 + (1 / dt) * 0.06; if (FX.fps < 42) FX.lowT += dt; else FX.lowT = Math.max(0, FX.lowT - dt * 0.5);
-      if (FX.lowT > 2.5) { FX.lowT = 0; FX.fps = 60; if (FX.q > 0.6) FX.q = FX.q > 0.8 ? 0.75 : 0.55; else { FX.on = 0; fxBtn(); showToastR('✨ طفّيت RTX حتى تبقى اللعبة سلسة على جهازك — تكدر ترجعه من القائمة'); return; } } }
+      if (FX.lowT > 2.5) { FX.lowT = 0; FX.fps = 60; if (FX.q > 0.62) FX.q = FX.q > 0.8 ? 0.75 : 0.6; } }
     const gl = FX.gl, src = R.cv, w = Math.max(2, Math.round(src.width * FX.q)), h = Math.max(2, Math.round(src.height * FX.q));
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     if (cv.style.display === 'none') cv.style.display = '';
@@ -862,7 +896,7 @@
 <div id="runMenu" class="runOv on"><div class="rmBox"><div class="rmTitle"><span class="rmE">🏃‍♂️💨</span><h2>ركض ربش</h2><small>اركض على سكة القطار، تفادى، اقفز، ازحف واجمع العملات!</small></div>
 <div class="rmStage"><canvas id="runMenuChar"></canvas><div class="rmName" id="runMenuName"></div></div>
 <button id="runGo" class="rmBtn big" type="button">▶ ابدأ الركض</button><button id="runPickBtn" class="rmBtn" type="button">🧍 شخصيتي وشكلها</button>
-<div id="runMenuInfo" class="rmInfo"></div><div class="rmTog"><button id="runMusB" type="button"></button><button id="runSfxB" type="button"></button><button id="runFxB" type="button"></button></div>
+<div id="runMenuInfo" class="rmInfo"></div><div class="rmTog"><button id="runMusB" type="button"></button><button id="runSfxB" type="button"></button></div>
 <div class="rmHow">👆 اسحب ⬅️ ➡️ تبدّل السكة • ⬆️ أو دوسة تقفز • ⬇️ تزحف</div><div class="rmHow">🛹 دوسة دبل أو زر الزلاجة = تطير على زلاجة 30 ثانية وتحميك من ضربة وحدة</div><div class="rmPws">${Object.keys(PW).map(k => '<span>' + PW[k].e + ' ' + PW[k].n + '</span>').join('')}</div><div class="rmHow">🌍 كل 600 متر عالم جديد: مدينة، شاطئ، ثلج، صحراء… وانتبه من الشبح 👻🔪</div></div></div>
 <div id="runPick" class="runOv"><div class="rmBox wide"><div class="rpHead"><button id="runPickX" type="button">→ رجوع</button><b>🧍 اختار شخصيتك</b><span id="runBank"></span></div>
 <div class="rpStage"><canvas id="runBig"></canvas><div class="rpName" id="runPickName"></div><small>تلف وتبين من الورا مثل ما تشوفها وانت تركض 👀</small></div>
@@ -881,7 +915,6 @@
     $r('runPickX').onclick = () => { sfx('click'); hideOv(); R.ph = 'menu'; $r('runMenu').classList.add('on'); menuInfo(); };
     const toMenu = () => { sfx('click'); hideOv(); R.ph = 'menu'; reset(); $r('runMenu').classList.add('on'); menuInfo(); };
     $r('runOvMenu').onclick = toMenu; $r('runQuit').onclick = toMenu;
-    $r('runFxB').onclick = () => { sfx('click'); if (FX.dead) { showToastR('جهازك ما يدعم WebGL، فـ RTX ما يشتغل عليه 😔'); return; } FX.on = FX.on ? 0 : 1; FX.q = 1; FX.lowT = 0; try { localStorage.setItem('run_fx', FX.on ? '1' : '0'); } catch (e) {} fxBtn(); }; fxBtn();
     $r('runPause').onclick = togglePause; $r('runBd').onclick = useBoard; $r('runResume').onclick = togglePause;
     document.querySelectorAll('#runTabs button').forEach(b => b.onclick = () => { pickTab = b.dataset.t; sfx('click'); renderPick(); });
     reset(); animPreviews();
