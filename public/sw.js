@@ -11,7 +11,7 @@ self.addEventListener('fetch', e => {
   const r = e.request; if (r.method !== 'GET') return;
   const u = new URL(r.url);
   if (u.origin === location.origin && (u.pathname.startsWith('/api/') || u.pathname.startsWith('/ws') || u.pathname.startsWith('/uploads'))) return;   // دايماً من السيرفر
-  if (r.mode === 'navigate') {   // الصفحة: الأحدث أول، وإذا ماكو نت من الكاش
+  if (r.mode === 'navigate' && (u.pathname === '/' || u.pathname === '/index.html')) {   // بس الصفحة الرئيسية (مو صفحات الألعاب اللي بإطار مثل المزرعة)   // الصفحة: الأحدث أول، وإذا ماكو نت من الكاش
     e.respondWith(fetch(r).then(res => { const cp = res.clone(); caches.open(CACHE).then(c => c.put('/index.html', cp)); return res; }).catch(() => caches.match('/index.html').then(m => m || caches.match('/'))));
     return;
   }

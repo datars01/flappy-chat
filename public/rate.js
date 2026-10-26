@@ -143,7 +143,7 @@
     if (document.hidden || $q('splash') || $q('langPick')) return;
     sec++; if (sec % 5 === 0) LS.s('flappyRateSec', String(sec));
     if (LS.g('flappyRated') || LS.g('flappyRateSeen') || sec < NEED || (ov && !ov.hidden) || !navigator.onLine) return;
-    if (window.curPage === 'run' || window.curPage === 'sus' || document.fullscreenElement || document.webkitFullscreenElement) return;   // ما نقاطع وسط اللعب
+    if (window.curPage === 'run' || window.curPage === 'sus' || window.curPage === 'farm' || document.fullscreenElement || document.webkitFullscreenElement) return;   // ما نقاطع وسط اللعب
     LS.s('flappyRateSeen', '1'); tile(); window.rateOpen();
   }, 1000);
 })();
