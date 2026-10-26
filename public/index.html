@@ -8,24 +8,33 @@
   var pref = null; try { pref = localStorage.getItem('babito_lowfx'); } catch (e) {}
   var hc = navigator.hardwareConcurrency || 8, dm = navigator.deviceMemory || 8;
   window.LOWFX = pref === '1' || (pref !== '0' && (hc <= 2 || dm <= 2));
-  window.fxDpr = function (max) { var r = window.devicePixelRatio || 1; return Math.min(window.LOWFX ? 1.25 : (max || 2), r); };
+  window.PERFQ = 1;   // يتعدّل تلقائياً حتى نحافظ على 60 فريم
+  window.fxDpr = function (max) { var r = window.devicePixelRatio || 1, m = window.LOWFX ? 1.25 : Math.max(1, (max || 2) * window.PERFQ); return Math.min(m, r); };
   window.setLowFx = function (on, save) { window.LOWFX = !!on; document.documentElement.classList.toggle('lowfx', !!on); if (save) { try { localStorage.setItem('babito_lowfx', on ? '1' : '0'); } catch (e) {} } try { window.dispatchEvent(new Event('lowfx')); } catch (e) {} };
   document.documentElement.classList.toggle('lowfx', window.LOWFX);
   /* الظل الضبابي (shadowBlur) أثقل شي بالرسم على الموبايل: بالوضع الخفيف نطفيه */
   try { var P = CanvasRenderingContext2D.prototype, d = Object.getOwnPropertyDescriptor(P, 'shadowBlur'); if (d && d.set) Object.defineProperty(P, 'shadowBlur', { configurable: true, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, window.LOWFX ? 0 : v); } }); } catch (e) {}
-  /* قياس تلقائي: إذا الجهاز يرسم أقل من 40 صورة بالثانية لمدة 5 ثواني نشغّل الخفيف */
-  if (pref === null && !window.LOWFX) {
-    var fr = [], lt = 0, slow = 0, stop = Date.now() + 90000;
-    var tick = function (t) { if (lt && !document.hidden) { fr.push(t - lt); if (fr.length > 60) fr.shift(); } lt = t;
-      if (fr.length >= 60) { var a = fr.reduce(function (x, y) { return x + y; }, 0) / fr.length; if (a > 25) slow++; else slow = Math.max(0, slow - 2); if (slow > 300) { window.setLowFx(true); try { if (window.showToast) showToast('⚡ شغلتلك الوضع الخفيف حتى تصير اللعبة أسلس — تكدر تطفيه من الإعدادات'); } catch (e) {} return; } }
-      if (Date.now() < stop && !window.LOWFX) requestAnimationFrame(tick); };
+  /* 🎯 حارس الـ60 فريم: يقيس سرعة الرسم طول الوقت. إذا نزل عن ~55 فريم ينزّل دقة الرسم شوية شوية، وإذا الجهاز رجع مرتاح يرجّعها.
+     وإذا الجهاز ضعيف هواية (أقل من 40) يشغّل الوضع الخفيف وحده (إلا إذا المستخدم طافيه بيده). */
+  (function () {
+    var fr = [], lt = 0, slow = 0, bad = 0, good = 0;
+    var tick = function (t) {
+      if (lt && !document.hidden) { var d = t - lt; if (d < 250) { fr.push(d); if (fr.length > 30) fr.shift(); } } else fr.length = 0; lt = t;
+      if (fr.length >= 30) { var a = 0; for (var i = 0; i < fr.length; i++) a += fr[i]; a /= fr.length;
+        if (a > 18.2) { bad++; good = 0; } else if (a < 16.9) { good++; bad = Math.max(0, bad - 2); } else { bad = Math.max(0, bad - 1); }
+        if (bad > 90 && window.PERFQ > 0.62) { window.PERFQ = Math.max(0.62, window.PERFQ - 0.12); bad = 0; fr.length = 0; try { window.dispatchEvent(new Event('perfq')); } catch (e) {} }
+        if (good > 900 && window.PERFQ < 1) { window.PERFQ = Math.min(1, window.PERFQ + 0.12); good = 0; try { window.dispatchEvent(new Event('perfq')); } catch (e) {} }
+        if (pref === null && !window.LOWFX) { if (a > 25) slow++; else slow = Math.max(0, slow - 2); if (slow > 300) { window.setLowFx(true); slow = 0; try { if (window.showToast) showToast('⚡ شغلتلك الوضع الخفيف حتى تصير اللعبة أسلس — تكدر تطفيه من الإعدادات'); } catch (e) {} } } }
+      requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
-  }
+  })();
 })();
 </script>
 <style>
 html.lowfx *, html.lowfx *::before, html.lowfx *::after { animation-iteration-count: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; filter: none !important; transition-duration: .12s !important; }
 html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
+/* لما تنفتح صفحة (لعبة/منتجع...) نوقف حركات الشاشة الرئيسية اللي ورا حتى الجهاز يصرف كل قوته على الصفحة المفتوحة */
+body.pgOn #bgFx { display: none !important; } body.pgOn #hub, body.pgOn #hub *, body.pgOn #hub *::before, body.pgOn #hub *::after { animation-play-state: paused !important; }
 </style>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -4756,7 +4765,7 @@ function renderHome() {
 }
 function openPage(id) {
   if (GW.wall && !auth) id = 'account';
-  const el = $('pg-' + id); if (!el) return;
+  const el = $('pg-' + id); if (!el) return; document.body.classList.add('pgOn');
   if (!navigator.onLine && id === 'rooms') { $('offMod').hidden = false; return; }
   if (!navigator.onLine && (id === 'friends' || id === 'lb')) offShow(true);
   if (document.body.classList.contains('full')) exitFull();   // وضع ملء الشاشة كان يخفي الصفحات خلف اللعبة
@@ -4769,7 +4778,7 @@ function openPage(id) {
     if (id === 'house') { houseLoad(); setTimeout(() => { if (curPage === 'house' && !hFull) hSetFull(true, true); }, 0); } else if (id === 'sus') susOpen(); else if (id === 'ludo') { if (window.ludoOpen) ludoOpen(); } else if (id === 'run') { if (window.runOpen) runOpen(); } else if (id === 'farm') { const f = $('farmFr'), adm = auth && auth.admin ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('farm:adm:' + (auth && auth.admin ? 1 : 0), '*'); } catch (e) {} }; f.src = '/farm.html?v=2&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('farm:adm:' + adm, '*'); } catch (e) {} } } else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
-function hidePage() { if (curPage === 'farm') { try { $('farmFr').contentWindow.postMessage('farm:pause', '*'); } catch (e) {} } document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
+function hidePage() { document.body.classList.remove('pgOn'); if (curPage === 'farm') { try { $('farmFr').contentWindow.postMessage('farm:pause', '*'); } catch (e) {} } document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
 function closePage() { if (!curPage) return; let ok = false; try { if (history.state && history.state.pg) { history.back(); ok = true; } } catch (e) {} if (!ok) hidePage(); }
 window.addEventListener('popstate', () => { if (curPage) hidePage(); });
 
@@ -9942,7 +9951,7 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 <script src="/sus.js?v=6"></script>
-<script src="/run.js?v=9"></script>
+<script src="/run.js?v=10"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
 <script src="/resort2.js?v=2"></script>
