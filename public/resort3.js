@@ -360,6 +360,26 @@ function r3NewList() {
   return L;
 }
 
+/* ===================== البنايات صلبة: ما تمشي بنصها 🧱 ===================== */
+const R3_SOLID = [];
+(function () {
+  const S = (x0, x1, y0, y1) => R3_SOLID.push({ x0, x1, y0, y1 });
+  [RM_SHOP, RM_PSHOP, RM_FSHOP, RM_BSHOP, RX_SAL].forEach(B => S(B.x - 162, B.x + 162, 388, B.y + 4));   // صف المحلات + صالون ملاذ
+  S(RX_HT.x0 - 6, RX_HT.x1 + 6, 212, RX_HT.y + 6);                                                         // فندق بابيت
+  S(RX_JUI.x - 92, RX_JUI.x + 92, RX_JUI.y - 70, RX_JUI.y + 4);                                             // كشك العصائر
+  S(R3_TKT.x - 128, R3_TKT.x + 128, R3_TKT.y - 150, R3_TKT.y + 10);                                         // مركز حجز التذاكر
+  S(R3_TERM.x0 - 4, R3_TERM.x1 + 4, 380, R3_TERM.y + 4);                                                    // التيرمنال
+  S(R3_TWR.x - 26, R3_TWR.x + 26, R3_TWR.y - 70, R3_TWR.y + 4);                                             // برج المراقبة
+  S(R3_PLANE.x - 196, R3_PLANE.x + 196, R3_PLANE.y - 70, R3_PLANE.y + 2);                                   // الطيارة الواكفة
+  S(7330 - 144, 7330 + 144, 560 - 50, 562);                                                                  // الطيارة الثانية
+  S(5600 - 10, 5600 + 10, 838, 852);                                                                         // عمود لوحة المغادرة
+})();
+const r3SolidAt = (x, y) => { for (const r of R3_SOLID) if (x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) return r; return null; };
+function r3Solid(m, px, py) {
+  const r = r3SolidAt(m.x, m.y); if (!r) return;
+  if (!r3SolidAt(px, py)) { if (!r3SolidAt(m.x, py)) { m.y = py; if (r3SolidAt(m.x, m.ty)) m.ty = py; } else if (!r3SolidAt(px, m.y)) { m.x = px; if (r3SolidAt(m.tx, m.y)) m.tx = px; } else { m.x = px; m.y = py; m.tx = px; m.ty = py; R3.path = []; } return; }
+  m.y = r.y1 + 3; if (r3SolidAt(m.tx, m.ty)) { m.tx = m.x; m.ty = m.y; }   // كان جوّه (مثلاً انتقال): نطلعه لقدام البناية
+}
 /* ===================== الحركة: الجسر، باب الحديقة، البركة ===================== */
 function r3Region(x, y) { if (y <= R3_BR.bandA + 8) return 'N'; if (y < R3_BR.bandB) return 'B'; return r3InG(x, y) ? 'G' : 'S'; }
 function r3Plan(x, y) {   // يرجّع نقاط الطريق من مكانك للمكان المطلوب
@@ -375,7 +395,7 @@ function r3FixTarget(x, y) {
   if (y > R3_BR.bandA && y < R3_BR.bandB && (x < R3_BR.x0 + 12 || x > R3_BR.x1 - 12)) { if (Math.abs(x - R3_BR.cx) < 160) x = R3_BR.cx; else y = y < 1345 ? R3_BR.bandA : R3_BR.bandB + 4; }
   if (y > R3_BR.bandA && y < R3_BR.bandB) x = Math.max(R3_BR.x0 + 12, Math.min(R3_BR.x1 - 12, x));
   if (r3InPond(x, y, 1.06)) { const an = Math.atan2((y - R3_POND.y) / R3_POND.ry, (x - R3_POND.x) / R3_POND.rx); x = R3_POND.x + Math.cos(an) * R3_POND.rx * 1.1; y = R3_POND.y + Math.sin(an) * R3_POND.ry * 1.14; }
-  if (x > R3_TERM.x0 && x < R3_TERM.x1 && y < R3_TERM.y + 6 && y > 380) y = R3_TERM.y + 8;
+  { const r = r3SolidAt(x, y); if (r) y = r.y1 + 6; }
   return [x, y];
 }
 const r3WalkO = rmWalkTo; rmWalkTo = function (x, y) {
@@ -395,7 +415,7 @@ const r3UpdO = rmUpdMe; rmUpdMe = function () {
       const gi0 = r3InG(px, py), gi1 = r3InG(m.x, m.y); if (gi0 !== gi1 && Math.abs(m.x - R3_G.gx) > R3_G.gw / 2 + 4 && Math.abs(py - R3_G.y0) < 60) { m.x = px; m.y = py; m.tx = m.x; m.ty = m.y; R3.path = []; }
       if (gi0 !== gi1 && Math.abs(py - R3_G.y0) >= 60) { m.x = px; m.y = py; m.tx = px; m.ty = py; R3.path = []; }
       if (r3InPond(m.x, m.y, 1.04)) { const an = Math.atan2((m.y - R3_POND.y) / R3_POND.ry, (m.x - R3_POND.x) / R3_POND.rx); m.x = R3_POND.x + Math.cos(an) * R3_POND.rx * 1.06; m.y = R3_POND.y + Math.sin(an) * R3_POND.ry * 1.08; m.tx = m.x; m.ty = m.y; }
-      if (m.x > R3_TERM.x0 && m.x < R3_TERM.x1 && m.y < R3_TERM.y + 4 && m.y > 380) { m.y = R3_TERM.y + 4; if (m.ty < m.y) m.ty = m.y; }
+      r3Solid(m, px, py);
       if (R3.path.length && !m.sit && !m.goal && Math.hypot(m.x - m.tx, m.y - m.ty) < 2.5) { const n = R3.path.shift(); m.tx = n[0]; m.ty = n[1]; }
       if (R3.autoFly && R3.tk && Math.hypot(m.x - R3_CAP.x - 34, m.y - R3_CAP.y) < 40) { R3.autoFly = false; r3GiveTicket(); }
     }
@@ -413,7 +433,7 @@ const r3GroundO = rmXGround; rmXGround = function (c) { r3GroundO(c); try { r3Gr
 const r3OutO = rmXOutList; rmXOutList = function (L) { r3OutO(L); try { r3OutList(L); } catch (e) {} };
 
 /* ===================== القرب واللمس والأزرار ===================== */
-const r3NearTkt = () => !rmInShop() && Math.abs(RM.me.x - R3_TKT.x) < 130 && RM.me.y > R3_TKT.y + 4 && RM.me.y < R3_TKT.y + 90;
+const r3NearTkt = () => !rmInShop() && Math.abs(RM.me.x - R3_TKT.x) < 130 && RM.me.y > R3_TKT.y + 8 && RM.me.y < R3_TKT.y + 95;
 const r3NearCap = () => rmShopId() === 0 && Math.hypot(RM.me.x - R3_CAP.x, RM.me.y - R3_CAP.y) < 95;
 const r3NearCap2 = () => rmShopId() === 8 && Math.hypot(RM.me.x - R3_CAP2.x, RM.me.y - R3_CAP2.y) < 100;
 function r3Ask() {   // نطلب حالة البجعة/التذكرة بس إذا قربت (أخف على السيرفر)

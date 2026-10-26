@@ -522,7 +522,7 @@ html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
   .rlNew { flex: 2; background: linear-gradient(135deg, #8e3bff, #c04dff); box-shadow: 0 6px 16px rgba(142,59,255,.45); } .rlHelp { flex: 1; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.4) !important; }
   .rlTabs { display: flex; gap: 6px; margin: 12px 0 4px; padding: 4px; border-radius: 14px; background: var(--card2); border: 1px solid var(--line); } .rlTabs button { flex: 1; border: 0; border-radius: 10px; padding: 8px 4px; font-size: 13px; font-weight: 800; background: none; color: var(--muted); }
   .rlTabs button.on { background: linear-gradient(135deg, #1fbf7a, #2ee48d); color: #073b24; box-shadow: 0 3px 10px rgba(46,228,141,.35); }
-  #rmNew, #rmForm, .rlSecH, #rmTabs, #rmLobby .rlStats { display: none !important; }
+  #rmNew, #rmForm, .rlSecH, #rmTabs, #rmLobby .rlStats, #rmLobby .rlEmpty { display: none !important; }
   #rmLobby .rlMain { padding: 40px 18px 22px; min-height: 340px; border-width: 4px; box-shadow: 0 14px 40px rgba(192,77,255,.45), 0 0 0 6px rgba(255,209,102,.18); }
   #rmLobby .rlMain .rmCrown { font-size: 92px; } #rmLobby .rlMain .rmNm { font-size: 38px; margin-top: 10px; } #rmLobby .rlMain .rmSub { font-size: 18px; padding: 7px 18px; } #rmLobby .rlMain .rmHint { font-size: 15px; margin-top: 12px; }
   #rmLobby .rlMain .rmGoBig { font-size: 21px !important; padding: 16px 20px !important; margin-top: 18px; }
@@ -9628,7 +9628,7 @@ function rmDrawList2(L, r, MS) {
     card.append(av, mid, go); L.appendChild(card);
   });
   if (!auth) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>👋</b>'; e.append('تكدر تدخل غرفة «بابي» كضيف. سجّل حساب حتى تسوي غرفتك وتدخل باقي الغرف'); L.appendChild(e); }
-  else if (!own.length) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>🌴</b>'; e.append('ماكو غرف بعد. اضغط «➕ غرفة جديدة» وسوّي غرفتك الخاصة'); L.appendChild(e); }
+  // غرف الأعضاء ملغية: ما نعرض رسالة «ماكو غرف»
   else if (RM.lf !== 'all' && rooms.length <= r.rooms.filter(x => x.perm).length) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>🔍</b>'; e.append('ماكو غرف بهذا النوع هسه'); L.appendChild(e); }
 }
 function rmNewPaint(mine) {
@@ -9892,6 +9892,6 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=2"></script>
 <script src="/resort2.js?v=2"></script>
-<script src="/resort3.js?v=1"></script>
+<script src="/resort3.js?v=2"></script>
 </body>
 </html>
