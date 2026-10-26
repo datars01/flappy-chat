@@ -7,26 +7,20 @@
 (function () {
   var pref = null; try { pref = localStorage.getItem('babito_lowfx'); } catch (e) {}
   var hc = navigator.hardwareConcurrency || 8, dm = navigator.deviceMemory || 8;
-  window.LOWFX = pref === '1' || (pref !== '0' && (hc <= 2 || dm <= 2));
-  window.PERFQ = 1;   // يتعدّل تلقائياً حتى نحافظ على 60 فريم
-  window.fxDpr = function (max) { var r = window.devicePixelRatio || 1, m = window.LOWFX ? 1.25 : Math.max(1, (max || 2) * window.PERFQ); return Math.min(m, r); };
+  window.LOWFX = pref === '1'; void hc; void dm;   // الوضع الخفيف بس إذا المستخدم شغّله بيده
+  window.fxDpr = function (max) { var r = window.devicePixelRatio || 1; return Math.min(window.LOWFX ? 1.25 : (max || 2), r); };
   window.setLowFx = function (on, save) { window.LOWFX = !!on; document.documentElement.classList.toggle('lowfx', !!on); if (save) { try { localStorage.setItem('babito_lowfx', on ? '1' : '0'); } catch (e) {} } try { window.dispatchEvent(new Event('lowfx')); } catch (e) {} };
   document.documentElement.classList.toggle('lowfx', window.LOWFX);
   /* الظل الضبابي (shadowBlur) أثقل شي بالرسم على الموبايل: بالوضع الخفيف نطفيه */
   try { var P = CanvasRenderingContext2D.prototype, d = Object.getOwnPropertyDescriptor(P, 'shadowBlur'); if (d && d.set) Object.defineProperty(P, 'shadowBlur', { configurable: true, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, window.LOWFX ? 0 : v); } }); } catch (e) {}
-  /* 🎯 حارس الـ60 فريم: يقيس سرعة الرسم طول الوقت. إذا نزل عن ~55 فريم ينزّل دقة الرسم شوية شوية، وإذا الجهاز رجع مرتاح يرجّعها.
-     وإذا الجهاز ضعيف هواية (أقل من 40) يشغّل الوضع الخفيف وحده (إلا إذا المستخدم طافيه بيده). */
+  /* 🎯 60 فريم ثابتة: كل الرسم باللعبة يمشي على 60 بالضبط، حتى الشاشات السريعة (120Hz) ما تصعد فوكها وتسبب تذبذب.
+     ما نغيّر جودة الرسومات أبد — الرسم يبقى بنفس الدقة طول الوقت. */
   (function () {
-    var fr = [], lt = 0, slow = 0, bad = 0, good = 0;
-    var tick = function (t) {
-      if (lt && !document.hidden) { var d = t - lt; if (d < 250) { fr.push(d); if (fr.length > 30) fr.shift(); } } else fr.length = 0; lt = t;
-      if (fr.length >= 30) { var a = 0; for (var i = 0; i < fr.length; i++) a += fr[i]; a /= fr.length;
-        if (a > 18.2) { bad++; good = 0; } else if (a < 16.9) { good++; bad = Math.max(0, bad - 2); } else { bad = Math.max(0, bad - 1); }
-        if (bad > 90 && window.PERFQ > 0.62) { window.PERFQ = Math.max(0.62, window.PERFQ - 0.12); bad = 0; fr.length = 0; try { window.dispatchEvent(new Event('perfq')); } catch (e) {} }
-        if (good > 900 && window.PERFQ < 1) { window.PERFQ = Math.min(1, window.PERFQ + 0.12); good = 0; try { window.dispatchEvent(new Event('perfq')); } catch (e) {} }
-        if (pref === null && !window.LOWFX) { if (a > 25) slow++; else slow = Math.max(0, slow - 2); if (slow > 300) { window.setLowFx(true); slow = 0; try { if (window.showToast) showToast('⚡ شغلتلك الوضع الخفيف حتى تصير اللعبة أسلس — تكدر تطفيه من الإعدادات'); } catch (e) {} } } }
-      requestAnimationFrame(tick); };
-    requestAnimationFrame(tick);
+    var raw = window.requestAnimationFrame.bind(window), q = [], live = {}, last = 0, pend = 0, nid = 1;
+    function pump(t) { pend = 0; if (last && t - last < 10) { pend = raw(pump); return; } last = t; var cbs = q; q = [];
+      for (var i = 0; i < cbs.length; i++) { var c = cbs[i]; if (!live[c.id]) continue; delete live[c.id]; try { c.fn(t); } catch (e) { console.error(e); } } }
+    window.requestAnimationFrame = function (fn) { var c = { id: nid++, fn: fn }; q.push(c); live[c.id] = 1; if (!pend) pend = raw(pump); return c.id; };
+    window.cancelAnimationFrame = function (id) { delete live[id]; };
   })();
 })();
 </script>
@@ -9951,7 +9945,7 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 <script src="/sus.js?v=6"></script>
-<script src="/run.js?v=10"></script>
+<script src="/run.js?v=11"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
 <script src="/resort2.js?v=2"></script>

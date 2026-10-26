@@ -1091,9 +1091,7 @@
     const cv = $r('runGl'); if (!cv) return;
     if (!FX.on || FX.dead || !R.cv || !R.cv.width) { if (cv.style.display !== 'none') cv.style.display = 'none'; return; }
     if (!FX.gl && !fxInit(cv)) { FX.dead = 1; cv.style.display = 'none'; return; }
-    // جهاز ضعيف؟ ننزل الدقة شوية شوية، وإذا بقى ثقيل نطفي التأثيرات حتى اللعب يبقى سلس
-    if (R.ph === 'play' && !R.pause && dt > 0) { FX.fps = FX.fps * 0.92 + (1 / dt) * 0.08; if (FX.fps < 55) { FX.lowT += dt; FX.hiT = 0; } else { FX.lowT = Math.max(0, FX.lowT - dt * 0.5); if (FX.fps > 58.5) FX.hiT = (FX.hiT || 0) + dt; }
-      if (FX.lowT > 1.5 && FX.lv < 4) { FX.lv++; FX.lowT = 0; FX.fps = 60; } else if (FX.hiT > 8 && FX.lv > 0) { FX.lv--; FX.hiT = 0; } FX.q = [1, 0.8, 0.66, 0.55, 0.45][FX.lv]; }
+    // الجودة ثابتة دائماً (بدون تنزيل)
     const gl = FX.gl, src = R.cv, w = Math.max(2, Math.round(src.width * FX.q)), h = Math.max(2, Math.round(src.height * FX.q));
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     if (cv.style.display === 'none') cv.style.display = '';
@@ -1112,7 +1110,7 @@
   /* ---------- الحلقة ---------- */
   function loop(ts) {
     R.raf = 0; if (window.curPage !== 'run') { musTick(); humTick(); return; }
-    const cv = R.cv; if (!cv) return; const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.max(1, (window.fxDpr ? fxDpr(2) : Math.min(2, window.devicePixelRatio || 1)) * [1, 1, 0.88, 0.78, 0.68][FX.lv]);
+    const cv = R.cv; if (!cv) return; const W = cv.clientWidth, H = cv.clientHeight, dpr = window.fxDpr ? fxDpr(2) : Math.min(2, window.devicePixelRatio || 1);
     if (W && H && (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr))) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     R.W = W; R.H = H; const dt = Math.min(0.05, Math.max(0, (ts - (R.last || ts)) / 1000)); R.last = ts;
     if (document.hidden && R.ph === 'play' && !R.pause) togglePause();
