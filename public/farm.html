@@ -136,6 +136,7 @@ const $ = id => document.getElementById(id);
 const KEY = 'frenzy_rbsh_v1';
 let P = { open: 1, stars: [], snd: 1 };
 try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) P = Object.assign(P, o); } catch (e) {}
+let ADM = /[?&]adm=1/.test(location.search); // المشرفين (بابي وبابيتو): شراء وتطوير ومي لانهائي
 const saveP = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
 
 /* ---------- الصوت ---------- */
@@ -383,8 +384,8 @@ function tap(x, y) {
   if (Math.abs(x - 348) < 44 && y > 30 && y < 110) { openWh(); return; }
   if (y > 530 && G.truck.st === 'home' && x < 200) { openTruck(); return; }
   if (x > F.x0 + 8 && x < F.x1 - 8 && y > F.y0 + 10 && y < F.y1 - 6) {
-    if (G.water <= 0) { sfx('bad'); toast('💧 خلص المي — دوس البير يملاه'); return; }
-    G.water--; G.grass.push({ x, y, a: 3 }); if (G.tut === 1) G.tut = 2; sfx('grass'); burst(x, y, '#7cc24f', 8);
+    if (!ADM && G.water <= 0) { sfx('bad'); toast('💧 خلص المي — دوس البير يملاه'); return; }
+    if (!ADM) G.water--; G.grass.push({ x, y, a: 3 }); if (G.tut === 1) G.tut = 2; sfx('grass'); burst(x, y, '#7cc24f', 8);
   }
 }
 function tapWS(k) {
@@ -397,22 +398,22 @@ cv.addEventListener('pointerdown', e => { ac(); if (!G || !G.run) return; const 
 /* ---------- الواجهة ---------- */
 function goalsUI(reset) { if (reset) goalDone = {}; const el = $('goals'); el.innerHTML = G.L.goals.map(q => { const v = goalVal(q[0]), ok = v >= q[1]; return '<span class="goal' + (ok ? ' ok' : '') + '"><i style="width:' + Math.min(100, v / q[1] * 100) + '%"></i><span>' + GN[q[0]] + ' ' + Math.min(v, q[1]) + '/' + q[1] + (ok ? ' ✔' : '') + '</span></span>'; }).join(''); }
 function hud() {
-  if (!G) return; $('lv').textContent = G.n; $('coins').textContent = G.coins.toLocaleString('en');
+  if (!G) return; $('lv').textContent = G.n; $('coins').textContent = ADM ? '∞ 👑' : G.coins.toLocaleString('en');
   const s = Math.floor(G.t), L = G.L; $('tTx').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
   $('tSt').style.background = s <= L.gold ? 'var(--gold)' : s <= L.silver ? 'var(--silver)' : 'var(--bronze)';
   goalsUI(); shopUI();
 }
-function shopUI() { [['hen', 'bHen'], ['cow', 'bCow'], ['cat', 'bCat']].forEach(q => { const b = $(q[1]), ok = G && G.L.shop.includes(q[0]), pr = q[0] === 'cat' ? CAT_P : ANI[q[0]].p; b.disabled = !ok || G.coins < pr; const sm = b.querySelector('small'); if (sm) sm.textContent = ok ? pr : '🔒'; }); }
-function buy(k) { ac(); if (!G || !G.run) return; if (!G.L.shop.includes(k)) { toast('تنفتح بمرحلة جاية'); return; } if (G.coins < ANI[k].p) { sfx('bad'); toast('ما عندك عملات كافية'); return; } G.coins -= ANI[k].p; addAni(k); const a = G.ani[G.ani.length - 1]; a.y = F.y0 + 30; sfx(k === 'hen' ? 'cluck' : 'moo'); burst(a.x, a.y, '#fff', 12); hud(); }
+function shopUI() { [['hen', 'bHen'], ['cow', 'bCow'], ['cat', 'bCat']].forEach(q => { const b = $(q[1]), ok = G && G.L.shop.includes(q[0]), pr = q[0] === 'cat' ? CAT_P : ANI[q[0]].p; b.disabled = !ok || (!ADM && G.coins < pr); const sm = b.querySelector('small'); if (sm) sm.textContent = ok ? pr : '🔒'; }); }
+function buy(k) { ac(); if (!G || !G.run) return; if (!G.L.shop.includes(k)) { toast('تنفتح بمرحلة جاية'); return; } if (!ADM && G.coins < ANI[k].p) { sfx('bad'); toast('ما عندك عملات كافية'); return; } if (!ADM) G.coins -= ANI[k].p; addAni(k); const a = G.ani[G.ani.length - 1]; a.y = F.y0 + 30; sfx(k === 'hen' ? 'cluck' : 'moo'); burst(a.x, a.y, '#fff', 12); hud(); }
 $('bHen').onclick = () => buy('hen'); $('bCow').onclick = () => buy('cow');
-$('bCat').onclick = () => { ac(); if (!G || !G.run) return; if (!G.L.shop.includes('cat')) { toast('🐱 القطة تنفتح بالمرحلة 3'); return; } if (G.coins < CAT_P) { sfx('bad'); toast('ما عندك عملات كافية'); return; } G.coins -= CAT_P; G.cats.push({ x: 348, y: 120, dir: -1, mv: 0 }); sfx('cluck'); toast('🐱 القطة تجمع المنتجات بدالك!'); hud(); };
+$('bCat').onclick = () => { ac(); if (!G || !G.run) return; if (!G.L.shop.includes('cat')) { toast('🐱 القطة تنفتح بالمرحلة 3'); return; } if (!ADM && G.coins < CAT_P) { sfx('bad'); toast('ما عندك عملات كافية'); return; } if (!ADM) G.coins -= CAT_P; G.cats.push({ x: 348, y: 120, dir: -1, mv: 0 }); sfx('cluck'); toast('🐱 القطة تجمع المنتجات بدالك!'); hud(); };
 $('bUp').onclick = () => { ac(); if (!G || G.won) return; openUp(); };
 function openUp() {
-  G.run = 0; let h = '<div class="oh"><h3>⬆️ تطوير المزرعة</h3><button type="button" data-x>سد</button></div><div class="ob"><p class="note">🪙 عندك ' + G.coins + ' • التطوير لهاي المرحلة بس</p>';
+  G.run = 0; let h = '<div class="oh"><h3>⬆️ تطوير المزرعة</h3><button type="button" data-x>سد</button></div><div class="ob"><p class="note">🪙 عندك ' + (ADM ? '∞ 👑' : G.coins) + ' • التطوير لهاي المرحلة بس</p>';
   for (const k in UP) { const U = UP[k], lv = G.up[k], lock = (k === 'bake' || k === 'dairy') && !G.ws[k], max = lv >= 2, c = U.c[lv];
-    h += '<div class="row"><span class="e">' + U.e + '</span><div class="tx"><b>' + U.n + ' ' + '⭐'.repeat(lv) + '</b><small>' + (lock ? 'مقفول بهاي المرحلة' : U.d[lv] + (max ? '' : ' ← ' + U.d[lv + 1])) + '</small></div>' + (lock || max ? '<span class="q">' + (max ? '✔' : '🔒') + '</span>' : '<button type="button" class="ub" data-u="' + k + '"' + (G.coins < c ? ' disabled' : '') + '>' + c + '</button>') + '</div>'; }
+    h += '<div class="row"><span class="e">' + U.e + '</span><div class="tx"><b>' + U.n + ' ' + '⭐'.repeat(lv) + '</b><small>' + (lock ? 'مقفول بهاي المرحلة' : U.d[lv] + (max ? '' : ' ← ' + U.d[lv + 1])) + '</small></div>' + (lock || max ? '<span class="q">' + (max ? '✔' : '🔒') + '</span>' : '<button type="button" class="ub" data-u="' + k + '"' + (!ADM && G.coins < c ? ' disabled' : '') + '>' + c + '</button>') + '</div>'; }
   h += '</div>'; ov(h);
-  $('ovBox').querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const k = b.dataset.u, c = UP[k].c[G.up[k]]; if (G.coins < c) return; G.coins -= c; G.up[k]++; if (k === 'well') G.water = wellCap(); sfx('goal'); hud(); openUp(); });
+  $('ovBox').querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const k = b.dataset.u, c = UP[k].c[G.up[k]]; if (!ADM && G.coins < c) return; if (!ADM) G.coins -= c; G.up[k]++; if (k === 'well') G.water = wellCap(); sfx('goal'); hud(); openUp(); });
 }
 $('bSnd').onclick = () => { ac(); P.snd = P.snd ? 0 : 1; $('bSnd').textContent = P.snd ? '🔊' : '🔇'; saveP(); }; $('bSnd').textContent = P.snd ? '🔊' : '🔇';
 $('bMus').onclick = () => { ac(); P.mus = P.mus ? 0 : 1; $('bMus').style.opacity = P.mus ? 1 : 0.45; saveP(); }; $('bMus').style.opacity = P.mus ? 1 : 0.45;
@@ -478,7 +479,7 @@ function loop(ts) { const dt = Math.min(0.05, (ts - (last || ts)) / 1000); last 
 fit(); requestAnimationFrame(fit); setTimeout(fit, 300);
 startLevel(Math.min(P.open, LEVELS.length)); G.run = 0; splash();
 requestAnimationFrame(loop);
-window.addEventListener('message', e => { if (e.data === 'farm:pause' && G && G.run && !G.won) { G.run = 0; showMap(); } });
+window.addEventListener('message', e => { if (typeof e.data === 'string' && e.data.indexOf('farm:adm:') === 0) { ADM = e.data === 'farm:adm:1'; if (G) { hud(); shopUI(); } return; } if (e.data === 'farm:pause' && G && G.run && !G.won) { G.run = 0; showMap(); } });
 </script>
 
 </body>
