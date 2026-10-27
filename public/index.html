@@ -1882,6 +1882,13 @@ window.addEventListener('message', e => {
 const cv = $('c');
 const ctx = cv.getContext('2d');
 const W = 320, H = 480;
+/* HD: دقة الكانفاس تتبع حجم الشاشة الحقيقي × كثافة البكسل، والرسم كله يبقى بنفس الإحداثيات */
+let BHD = 1, _gskN = 0;
+function gHD() {
+  if (--_gskN > 0) return; _gskN = 30; const r = cv.getBoundingClientRect(); if (r.width < 20) return;
+  const dpr = Math.min(3, window.devicePixelRatio || 1), k = Math.max(1, Math.min(4, Math.round(Math.min(r.width / W, r.height / H) * dpr * 4) / 4));
+  if (k === BHD && cv.width === Math.round(W * k)) return; BHD = k; cv.width = Math.round(W * k); cv.height = Math.round(H * k); _scBmp.clear(); _trackKey = ''; BSPR.clear();
+}
 let state = 'ready'; // ready | play | map | dead
 let startFresh = false, startLv = 0;
 function cpGet() { if (auth) return Math.max(1, auth.cp || 1); try { return Math.max(1, parseInt(localStorage.getItem('flappyCp')) || 1); } catch (e) { return 1; } }
@@ -2373,13 +2380,18 @@ function zPos(s) {
 }
 let _trackCv = null, _trackKey = '';
 function trackCanvas(sc) {
-  const tk = pathKey + '|' + (sc ? sc.n : ''); if (_trackCv && _trackKey === tk) return _trackCv; _trackKey = tk;
-  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const tk = pathKey + '|' + (sc ? sc.n : '') + '|' + BHD; if (_trackCv && _trackKey === tk) return _trackCv; _trackKey = tk;
+  const c = document.createElement('canvas'); c.width = Math.round(W * BHD); c.height = Math.round(H * BHD); const x = c.getContext('2d'); x.scale(BHD, BHD);
   x.lineCap = 'round'; x.lineJoin = 'round';
   const trace = () => { x.beginPath(); for (let s = 0; s <= PATH.L; s += 5) { const p = zPos(s); if (s === 0) x.moveTo(p.x, p.y); else x.lineTo(p.x, p.y); } };
   const tr = (sc && sc.trk) || ['rgba(0,0,0,.38)', 'rgba(255,255,255,.07)'];
   trace(); x.strokeStyle = tr[0]; x.lineWidth = 34; x.stroke();
+  x.save(); x.translate(0, 3); trace(); x.strokeStyle = 'rgba(0,0,0,.28)'; x.lineWidth = 36; x.filter = 'blur(3px)'; x.stroke(); x.restore(); x.filter = 'none';
+  trace(); x.strokeStyle = tr[0]; x.lineWidth = 34; x.stroke();
   trace(); x.strokeStyle = tr[1]; x.lineWidth = 28; x.stroke();
+  x.save(); x.translate(0, -1.2); trace(); x.strokeStyle = 'rgba(255,255,255,.10)'; x.lineWidth = 30; x.stroke(); x.restore();   // حافة السكة مضوية من فوق
+  x.save(); x.translate(0, 1.6); trace(); x.strokeStyle = 'rgba(0,0,0,.22)'; x.lineWidth = 24; x.stroke(); x.restore();   // عمق المجرى
+  trace(); x.strokeStyle = tr[1]; x.lineWidth = 22; x.stroke();
   trace(); x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 2; x.setLineDash([2, 10]); x.stroke();
   return (_trackCv = c);
 }
@@ -2603,11 +2615,29 @@ function text(str, x, y, size, color) {
   ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#222';
   ctx.strokeText(str, x, y); ctx.fillStyle = color || '#fff'; ctx.fillText(str, x, y);
 }
+/* كرات HD بإضاءة مثل تتبع الأشعة: ظل ناعم على الأرض، تظليل كروي، ارتداد ضوء ملوّن، حافة فرينل، لمعة مرآة وانعكاس شباك.
+   كل لون وحجم يترسم مرة وحدة بصورة جاهزة (أسرع بهواية) */
+const BSPR = new Map();
+function hexMix(h, t, k) { const p = q => parseInt(q, 16), a = h.replace('#', ''), b = t.replace('#', ''), f = i => Math.round(p(a.substr(i, 2)) * (1 - k) + p(b.substr(i, 2)) * k).toString(16).padStart(2, '0'); return '#' + f(0) + f(2) + f(4); }
+function ballSprite(col, dark, r) {
+  const rq = Math.max(2, Math.round(r * 2) / 2), key = col + dark + rq + '|' + BHD; let sp = BSPR.get(key); if (sp) return sp;
+  const S = Math.ceil((rq * 2 + rq * 1.2) * BHD), k = document.createElement('canvas'); k.width = k.height = S; const g = k.getContext('2d'), R = rq * BHD, cx = S / 2, cy = S / 2 - R * 0.12;
+  // ظل ناعم تحت الكرة
+  let q = g.createRadialGradient(cx + R * 0.18, cy + R * 0.62, R * 0.1, cx + R * 0.18, cy + R * 0.62, R * 1.15); q.addColorStop(0, 'rgba(0,0,0,.42)'); q.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = q; g.beginPath(); g.ellipse(cx + R * 0.18, cy + R * 0.62, R * 1.15, R * 0.62, 0, 0, 6.2832); g.fill();
+  g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.clip();
+  q = g.createRadialGradient(cx - R * 0.32, cy - R * 0.38, R * 0.05, cx + R * 0.1, cy + R * 0.12, R * 1.18); q.addColorStop(0, hexMix(col, '#ffffff', 0.55)); q.addColorStop(0.3, col); q.addColorStop(0.78, dark); q.addColorStop(1, hexMix(dark, '#000000', 0.45)); g.fillStyle = q; g.fillRect(cx - R, cy - R, R * 2, R * 2);
+  q = g.createRadialGradient(cx + R * 0.38, cy + R * 0.55, 0, cx + R * 0.38, cy + R * 0.55, R * 0.75); q.addColorStop(0, hexMix(col, '#ffffff', 0.25) + 'aa'); q.addColorStop(1, hexMix(col, '#ffffff', 0.25) + '00'); g.fillStyle = q; g.fillRect(cx - R, cy - R, R * 2, R * 2);   // ارتداد الضوء من الأرض
+  q = g.createRadialGradient(cx, cy, R * 0.7, cx, cy, R); q.addColorStop(0, 'rgba(255,255,255,0)'); q.addColorStop(1, 'rgba(255,255,255,.28)'); g.fillStyle = q; g.fillRect(cx - R, cy - R, R * 2, R * 2);   // حافة فرينل
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = R * 0.1; g.lineCap = 'round'; g.beginPath(); g.arc(cx, cy, R * 0.72, Math.PI * 1.08, Math.PI * 1.38); g.stroke();   // انعكاس شباك
+  g.restore();
+  g.save(); g.translate(cx - R * 0.36, cy - R * 0.42); g.rotate(-0.6); q = g.createRadialGradient(0, 0, 0, 0, 0, R * 0.34); q.addColorStop(0, 'rgba(255,255,255,.98)'); q.addColorStop(0.5, 'rgba(255,255,255,.55)'); q.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = q; g.beginPath(); g.ellipse(0, 0, R * 0.34, R * 0.2, 0, 0, 6.2832); g.fill(); g.restore();   // لمعة المرآة
+  g.fillStyle = 'rgba(255,255,255,.95)'; g.beginPath(); g.arc(cx - R * 0.4, cy - R * 0.46, Math.max(0.8, R * 0.08), 0, 6.2832); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = Math.max(0.8, BHD * 0.8); g.beginPath(); g.arc(cx, cy, R - g.lineWidth / 2, 0, 6.2832); g.stroke();
+  sp = { k, S: S / BHD, oy: rq * 0.12 }; if (BSPR.size > 600) BSPR.clear(); BSPR.set(key, sp); return sp;
+}
 function drawBall(x, y, c, r) {
-  const g = ctx.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r);
-  g.addColorStop(0, '#fff'); g.addColorStop(.25, BCOL[c]); g.addColorStop(1, BDARK[c]);
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.stroke();
+  const sp = ballSprite(BCOL[c] || '#cccccc', BDARK[c] || '#555555', r), sc = r / Math.max(2, Math.round(r * 2) / 2), S = sp.S * sc;
+  ctx.drawImage(sp.k, x - S / 2, y + sp.oy * sc - S / 2, S, S);
 }
 function drawShooter(x, y, ang, skin, cur, next, aimLine) {
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(x, y + 3, 31, 0, 6.2832); ctx.fill();
@@ -2667,8 +2697,8 @@ const SCN = [
 const sceneOf = lv => SCN[zoneOf(lv) % 4][(Math.max(1, lv) - 1) % 7];
 const _scBmp = new Map();
 function sceneBitmap(lv) {
-  const zi = zoneOf(lv) % 4, ii = (Math.max(1, lv) - 1) % 7, key = zi + '_' + ii; let c = _scBmp.get(key); if (c) return c;
-  const sc = SCN[zi][ii]; c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const zi = zoneOf(lv) % 4, ii = (Math.max(1, lv) - 1) % 7, key = zi + '_' + ii + '_' + BHD; let c = _scBmp.get(key); if (c) return c;
+  const sc = SCN[zi][ii]; c = document.createElement('canvas'); c.width = Math.round(W * BHD); c.height = Math.round(H * BHD); const x = c.getContext('2d'); x.scale(BHD, BHD);
   const rnd = mulberry32(zi * 977 + ii * 131 + 7), PI2 = Math.PI * 2;
   const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, sc.sky[0]); g.addColorStop(0.7, sc.sky[1]); g.addColorStop(1, sc.sky[1]); x.fillStyle = g; x.fillRect(0, 0, W, H);
   const glow = (px, py, r, col) => { const q = x.createRadialGradient(px, py, 0, px, py, r * 3); q.addColorStop(0, col); q.addColorStop(1, 'rgba(255,255,255,0)'); x.globalAlpha = .55; x.fillStyle = q; x.fillRect(px - r * 3, py - r * 3, r * 6, r * 6); x.globalAlpha = 1; };
@@ -2741,8 +2771,8 @@ function drawBoard(g, lvl, hole, duoMode) {
   setPathFor(lvl || 1, !!duoMode);
   setPalette(zoneOf(lvl || 1) % ZONES.length);
   const scn = sceneOf(lvl || 1);
-  ctx.drawImage(sceneBitmap(lvl || 1), 0, 0);
-  ctx.drawImage(trackCanvas(scn), 0, 0);
+  ctx.drawImage(sceneBitmap(lvl || 1), 0, 0, W, H);
+  ctx.drawImage(trackCanvas(scn), 0, 0, W, H);
   sceneFx(scn);
   const hp = zPos(PATH.L), hx0 = hp.x, hy0 = hp.y, prog = zProg(g), danger = Math.max(0, (prog - 0.78) / 0.22);
   ctx.save();
@@ -3014,6 +3044,7 @@ let last = performance.now();
 function loop(t) {
   const raw = Math.max(0, t - last); last = t;
   fxUpdate(raw);
+  gHD(); ctx.setTransform(BHD, 0, 0, BHD, 0, 0); ctx.imageSmoothingQuality = 'high';
   ctx.save();
   if (FX.shake > 0) { ctx.fillStyle = '#0b1520'; ctx.fillRect(0, 0, W, H); ctx.translate((Math.random() - .5) * FX.shake * 2, (Math.random() - .5) * FX.shake * 2); }
   const covered = curPage && !document.hidden && (() => { const P = document.getElementById('pg-' + curPage); return !!(P && P.classList.contains('open')); })();   // صفحة كاملة مغطية اللعبة: نحدّث بس وما نرسم (يخفف اللاك)
@@ -10097,7 +10128,7 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/rate.js?v=3"></script>
 <script src="/resort2.js?v=2"></script>
 <script src="/resort3.js?v=2"></script>
-<script src="/resort4.js?v=1"></script>
+<script src="/resort4.js?v=2"></script>
 <script src="/resort-map.js?v=2"></script>
 <script>
 /* منع التحديد والقائمة عند الضغط المطوّل خارج خانات الكتابة */

@@ -16,6 +16,7 @@
     c.lineWidth = 2; c.strokeStyle = col; c.shadowColor = col; c.shadowBlur = 6 + night * 10; rr(c, x - w / 2, y - 13, w, 24, 12); c.stroke(); c.shadowBlur = 0;
     c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore();
   };
+  const hexL = (h, k) => { const n = parseInt(h.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k)))); return 'rgb(' + f(n >> 16) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')'; };
   const bulb = (c, x, y, r, col, on) => { c.fillStyle = on ? col : 'rgba(255,255,255,.25)'; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); if (on) { c.fillStyle = 'rgba(255,255,255,.8)'; c.beginPath(); c.arc(x - r * 0.3, y - r * 0.3, r * 0.35, 0, TAU); c.fill(); } };
 
   /* ---------- أكواد الركوب: 50-55 سفينة القرصان، 60-67 الأفعوانية ---------- */
@@ -24,7 +25,10 @@
   const RIDES = { fer: { n: RM_FER.n, code: 20, nm: '🎡 دولاب الهوا' }, car: { n: RM_CAR.n, code: 26, nm: '🎠 الدوّارة' }, pir: { n: PIR.n, code: PIR.code, nm: '🏴‍☠️ سفينة القرصان' }, cst: { n: CST.n, code: CST.code, nm: '🎢 الأفعوانية' } };
   function board(kind) {
     const m = RM.me, D = RIDES[kind]; if (m.sit) { rmStand(); return; } if (m.jump) return;
-    const used = new Set(rmRiders(kind).filter(R => !R.me).map(R => R.i)); let pick = -1; for (let i = 0; i < D.n; i++) if (!used.has(i)) { pick = i; break; }
+    const used = new Set(rmRiders(kind).filter(R => !R.me).map(R => R.i)); let pick = -1, best = 1e9;
+    for (let i = 0; i < D.n; i++) { if (used.has(i)) continue; let sc = i;   // نركب بالمقعد اللي واصل تحت/گدام هسه، مثل الحقيقة
+      if (kind === 'fer' || kind === 'car') { const a = (kind === 'fer' ? ferAngle() : carA()) + i * TAU / D.n; sc = Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))); }
+      if (sc < best) { best = sc; pick = i; } }
     if (pick < 0) { showToast('⛔ كل المقاعد مليانة، انتظر شوي'); return; }
     if (!rmRideOf(m)) R4.from = { x: m.x, y: m.y }; m.tx = m.x; m.ty = m.y; rmSetDance(D.code + pick); RM.sent = '';
     snd([['sine', 523, 523, 0.16, 0.05], ['sine', 659, 659, 0.16, 0.05, 0.1], ['sine', 784, 784, 0.16, 0.05, 0.2], ['triangle', 1047, 1047, 0.3, 0.05, 0.3]]);
@@ -33,6 +37,11 @@
   }
   rmRideBoard = board; window.r4Board = board;
 
+  /* راكب بحجم واضح، واسمه بلافتة صغيرة فوك اللعبة حتى ما يغطي الشخصية */
+  function rider(c, R, x, y, s, tagY) {
+    c.save(); c.translate(x, y); c.scale((R.o.dir || 1) * s, s); AVT.drawAt(c, R.o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, sit: 1, dance: 1, dt: RM.T }); c.restore();
+    c.save(); c.translate(x, tagY); c.scale(0.78, 0.78); rmTag(c, R.nm, 0, -13, { me: R.me, adm: R.o.adm || (R.me ? RM.myAdm : 0) }); c.restore();
+  }
   /* ================= دولاب الهوا الاحترافي ================= */
   function ferAngle() { return now() * 0.19; }
   rmFerPos = function (i) { const F = RM_FER, a = ferAngle() + i * TAU / F.n; return [F.x + Math.cos(a) * F.R, F.cy + Math.sin(a) * F.R]; };
@@ -64,18 +73,22 @@
     c.fillStyle = '#ff5fa8'; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -a0 * 2 + k * Math.PI / 5, r = k % 2 ? 3 : 7.5; c[k ? 'lineTo' : 'moveTo'](F.x + Math.cos(a) * r, F.cy + Math.sin(a) * r); } c.closePath(); c.fill();
     // الأرجل الأمامية
     truss(c, F.x - 50, F.by - 10, F.x, F.cy + 2, 4, '#5b6aa8'); truss(c, F.x + 50, F.by - 10, F.x, F.cy + 2, 4, '#5b6aa8');
-    // الكابينات (تبقى واكفة وتتمرجح شوية)
+    // الكابينات: سقف وأعمدة وشباك مفتوح ومقعد — تبقى واكفة وتتمرجح شوية، والراكب يبين كامل
     const riders = rmRiders('fer');
     for (let i = 0; i < F.n; i++) {
-      const p = rmFerPos(i), col = cols[i], sw = Math.sin(t * 1.3 + i) * 0.07; c.save(); c.translate(p[0], p[1]);
-      c.strokeStyle = '#3a3a4a'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 3, 0, TAU); c.stroke(); c.rotate(sw);
-      c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 9); c.stroke();
-      c.fillStyle = col; c.beginPath(); c.moveTo(-18, 13); c.quadraticCurveTo(0, 2, 18, 13); c.closePath(); c.fill();
-      c.fillStyle = 'rgba(20,30,60,.55)'; rr(c, -16, 13, 32, 14, 4); c.fill();   // الشباك
-      riders.filter(R => R.i === i).forEach(R => { c.save(); c.rotate(-sw); rmRiderDraw(c, R, 0, 40, 0.42); c.restore(); });
-      const bgr = c.createLinearGradient(0, 24, 0, 40); bgr.addColorStop(0, col); bgr.addColorStop(1, 'rgba(0,0,0,.25)'); c.fillStyle = col; rr(c, -18, 25, 36, 15, 6); c.fill(); c.fillStyle = bgr; rr(c, -18, 25, 36, 15, 6); c.fill();
-      c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(-14, 28, 28, 2.5); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1; rr(c, -18, 13, 36, 27, 6); c.stroke();
-      if (nd > 0.2) { c.fillStyle = 'rgba(255,230,150,' + 0.5 * nd + ')'; rr(c, -15, 14, 30, 10, 3); c.fill(); }
+      const p = rmFerPos(i), col = cols[i], sw = Math.sin(t * 1.3 + i) * 0.06; c.save(); c.translate(p[0], p[1]);
+      c.fillStyle = '#3a3a4a'; c.beginPath(); c.arc(0, 0, 3.2, 0, TAU); c.fill(); c.rotate(sw);
+      c.strokeStyle = '#3a3a4a'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 7); c.stroke();
+      const rg = c.createLinearGradient(0, 6, 0, 16); rg.addColorStop(0, hexL(col, 0.35)); rg.addColorStop(1, col); c.fillStyle = rg; c.beginPath(); c.moveTo(-25, 16); c.quadraticCurveTo(0, 2, 25, 16); c.lineTo(23, 18); c.lineTo(-23, 18); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.moveTo(-16, 13); c.quadraticCurveTo(0, 6, 16, 13); c.lineTo(14, 13.6); c.quadraticCurveTo(0, 7.6, -14, 13.6); c.fill();
+      c.fillStyle = 'rgba(30,40,70,.28)'; rr(c, -21, 18, 42, 18, 4); c.fill();   // جوة الكابينة
+      c.fillStyle = hexL(col, -0.25); rr(c, -19, 30, 38, 5, 2); c.fill();   // المقعد
+      riders.filter(R => R.i === i).forEach(R => { c.save(); c.rotate(-sw); rider(c, R, 0, 40, 0.56, -2); c.restore(); });
+      c.strokeStyle = hexL(col, -0.3); c.lineWidth = 2.4; [-21, 21].forEach(px => { c.beginPath(); c.moveTo(px, 17); c.lineTo(px, 36); c.stroke(); });   // الأعمدة
+      const bgr = c.createLinearGradient(0, 33, 0, 48); bgr.addColorStop(0, col); bgr.addColorStop(1, hexL(col, -0.35)); c.fillStyle = bgr; rr(c, -24, 33, 48, 15, 7); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.45)'; rr(c, -19, 36, 38, 2.6, 1.3); c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1; rr(c, -24, 33, 48, 15, 7); c.stroke();
+      c.strokeStyle = '#ffd166'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-20, 32); c.lineTo(20, 32); c.stroke();   // حاجز الأمان
+      if (nd > 0.2) { c.fillStyle = 'rgba(255,230,150,' + 0.45 * nd + ')'; rr(c, -20, 19, 40, 13, 3); c.fill(); }
       c.restore();
     }
     sign(c, '🎡 دولاب الهوا', F.x, F.by + 24, '#ff5fa8', nd); c.restore();
@@ -109,7 +122,7 @@
       const bob = Math.sin(t * 2.6 + i * 1.7) * 6, hx = p[0], hy = p[1] - 30 + bob, col = ['#ffffff', '#ffe0f0', '#dff3ff', '#fff4cc', '#e6ffe0', '#efe0ff'][i], sad = ['#ff5a8a', '#8f5cff', '#20b2aa', '#ff9a4a', '#e0306a', '#3a8adf'][i];
       for (let k = 0; k < 6; k++) { c.strokeStyle = k % 2 ? '#fff6c8' : '#d4a017'; c.lineWidth = 2.6; const y0 = C.y - 86 + k * ((p[1] + 6 - (C.y - 86)) / 6); c.beginPath(); c.moveTo(hx, y0); c.lineTo(hx, y0 + (p[1] + 6 - (C.y - 86)) / 6); c.stroke(); }
       horse(c, hx, hy, p[3] > 0 ? 1 : -1, col, sad, Math.sin(t * 5 + i));
-      riders.filter(R => R.i === i).forEach(R => rmRiderDraw(c, R, hx - (p[3] > 0 ? 2 : -2), hy - 2, 0.46));
+      riders.filter(R => R.i === i).forEach(R => rider(c, R, hx - (p[3] > 0 ? 2 : -2), hy - 2, 0.5, hy - 34));
     };
     items.filter(it => it[0][2] < 0).forEach(one);
     // العمود الوسطي بمرايات وأضوية
@@ -167,12 +180,43 @@
     { const lx = P.x + P.w + 30, ly = P.y + P.h + 4; c.strokeStyle = '#f4f4f4'; c.lineWidth = 3; c.beginPath(); c.moveTo(lx - 10, ly); c.lineTo(lx - 6, ly - 42); c.moveTo(lx + 10, ly); c.lineTo(lx + 6, ly - 42); c.moveTo(lx - 9, ly - 14); c.lineTo(lx + 9, ly - 14); c.stroke(); c.fillStyle = '#ff4d4d'; rr(c, lx - 10, ly - 50, 20, 9, 3); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 7px Cairo, system-ui'; c.textAlign = 'center'; c.fillText('+', lx, ly - 43); }
     sign(c, '🏊 المسبح', P.x + P.w / 2, P.y - 34, '#5ad1ff', nd); c.restore();
   };
+  /* السباحة الحقيقية: لما يتحرك ينبطح على المي ويسبح حرة (راسه لگدام ورجليه تضرب ورا)، ولما يوكف يعوم واكف وكتافه وراسه فوك المي */
+  function swimSt(o) {
+    const key = o === RM.me ? '@me' : (o.name || ''), W = R4.wk[key] || (R4.wk[key] = { x: o.x, y: o.y, tr: [], last: 0, dir: 1 }), nowT = performance.now();
+    const dx = o.x - W.x, dy = o.y - W.y, mv = Math.hypot(dx, dy); if (mv > 0.25) { W.last = nowT; if (Math.abs(dx) > 0.15) W.dir = dx > 0 ? 1 : -1; } W.mv = mv; W.x = o.x; W.y = o.y;
+    W.swim = nowT - W.last < 450; return W;
+  }
+  rmSwimStart = function (c, o) {
+    if (!rmInPool(o)) return false; const T = RM.T, W = swimSt(o), ph = (o.pseed || 0);
+    if (W.swim) {
+      const dir = W.dir, wl = o.y - 30 + Math.sin(T / 6 + ph) * 0.8; o._wl = wl; o._sw = 1; o._dir = dir;
+      c.fillStyle = 'rgba(8,50,100,.32)'; c.beginPath(); c.ellipse(o.x - dir * 4, wl + 6, 40, 7, 0, 0, TAU); c.fill();   // جسمه تحت المي
+      c.save(); c.beginPath(); c.rect(o.x - 120, wl - 140, 240, 140 + 1); c.clip(); R4.sw = { bx: c.getTransform(), x: o.x, wl };
+      const roll = Math.sin(T / 5 + ph) * 0.08; c.translate(o.x, wl + 3); c.rotate(dir * (Math.PI / 2 * 0.9) + roll); c.translate(-o.x, -(o.y - 40));
+      return true;
+    }
+    const wl = o.y - 50 + Math.sin(T / 11 + ph) * 1.6; o._wl = wl; o._sw = 0;
+    c.fillStyle = 'rgba(8,50,100,.3)'; c.beginPath(); c.ellipse(o.x, wl + 14, 14, 20, 0, 0, TAU); c.fill();
+    c.save(); c.beginPath(); c.rect(o.x - 80, o.y - 260, 160, wl - (o.y - 260)); c.clip(); c.translate(0, Math.sin(T / 11 + ph) * 1.6);
+    return true;
+  };
+  /* الاسم والفقاعة للسابح المنبطح يبقون عدلين فوك راسه */
+  const tagO = rmTag; rmTag = function (c, txt, x, y, o) { const S = R4.sw; if (!S) return tagO(c, txt, x, y, o); c.save(); c.setTransform(S.bx); tagO(c, txt, S.x, S.wl - 36, o); c.restore(); };
+  const bubO = rmBub; rmBub = function (c, n, x, y, a, b2) { const S = R4.sw; if (!S) return bubO(c, n, x, y, a, b2); c.save(); c.setTransform(S.bx); bubO(c, n, S.x, S.wl - 44, a, b2); c.restore(); };
   /* السباحة: موجات حول السابح وأثر مي لما يتحرك */
   rmSwimEnd = function (c, o) {
-    c.restore(); const wl = o._wl, T = RM.T, key = o === RM.me ? '@me' : (o.name || ''), W = R4.wk[key] || (R4.wk[key] = { x: o.x, y: o.y, tr: [] });
-    const mv = Math.hypot(o.x - W.x, o.y - W.y); W.x = o.x; W.y = o.y; if (mv > 0.4 && T % 3 === 0) W.tr.push({ x: o.x, y: wl, t: 30, d: o.x > (W.px || o.x) ? -1 : 1 }); W.px = o.x;
+    c.restore(); R4.sw = null; const wl = o._wl, T = RM.T, key = o === RM.me ? '@me' : (o.name || ''), W = R4.wk[key] || (R4.wk[key] = { x: o.x, y: o.y, tr: [] });
+    const mv = W.mv || 0; if (mv > 0.25 && T % 3 === 0) W.tr.push({ x: o.x - (o._sw ? (o._dir || 1) * 30 : 0), y: wl, t: 34 });
     c.save(); W.tr = W.tr.filter(p => --p.t > 0); W.tr.forEach(p => { const k = 1 - p.t / 30; c.strokeStyle = 'rgba(255,255,255,' + (0.6 * (1 - k)) + ')'; c.lineWidth = 1.3; c.beginPath(); c.ellipse(p.x, p.y, 6 + k * 18, (6 + k * 18) * 0.28, 0, 0, TAU); c.stroke(); });
-    c.fillStyle = 'rgba(255,255,255,.32)'; c.beginPath(); c.ellipse(o.x, wl, 15, 4, 0, 0, TAU); c.fill();
+    if (o._sw) {   // ضربات الرجلين ورا + موجة V گدام الراس + ضربات الإيدين
+      const d = o._dir || 1, fx = o.x - d * 42, hx = o.x + d * 30;
+      c.fillStyle = 'rgba(255,255,255,.75)'; for (let k = 0; k < 5; k++) { const a = T / 2.2 + k * 1.3; c.beginPath(); c.arc(fx + Math.sin(a) * 5 - d * k * 2, wl - Math.abs(Math.sin(a * 1.7)) * 4, 1.8 + (k % 2), 0, TAU); c.fill(); }
+      c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(hx + d * 6, wl); c.lineTo(hx - d * 22, wl - 6); c.moveTo(hx + d * 6, wl); c.lineTo(hx - d * 22, wl + 6); c.stroke();
+      const st = (T / 9 + (o.pseed || 0)) % TAU, ax = o.x + d * 10 + Math.cos(st) * d * 20, ay = wl - Math.max(0, Math.sin(st)) * 12;
+      if (Math.sin(st) > 0) { c.strokeStyle = 'rgba(255,214,160,.95)'; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(o.x + d * 8, wl - 2); c.quadraticCurveTo((o.x + d * 8 + ax) / 2, ay - 6, ax, ay); c.stroke(); }
+      if (Math.abs(Math.sin(st)) < 0.12 && RM.T % 2 === 0) for (let i = 0; i < 4; i++) R4.drops.push({ x: ax, y: wl, vx: (Math.random() - 0.5) * 1.6, vy: -1 - Math.random() * 1.4, wl, t: 30 });
+      c.fillStyle = 'rgba(255,255,255,.3)'; c.beginPath(); c.ellipse(o.x - d * 6, wl, 40, 5, 0, 0, TAU); c.fill();
+    } else { c.fillStyle = 'rgba(255,255,255,.32)'; c.beginPath(); c.ellipse(o.x, wl, 15, 4, 0, 0, TAU); c.fill(); }
     c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.6; for (let i = 0; i < 2; i++) { const r = 12 + i * 7 + Math.sin(T / 7 + i) * 2; c.globalAlpha = 0.75 - i * 0.3; c.beginPath(); c.ellipse(o.x, wl, r, r * 0.3, 0, 0, TAU); c.stroke(); }
     c.restore();
     if (mv > 0.4 && T % 5 === 0) for (let i = 0; i < 3; i++) R4.drops.push({ x: o.x + (Math.random() - 0.5) * 20, y: wl, vx: (Math.random() - 0.5) * 1.4, vy: -1.2 - Math.random() * 1.2, wl, t: 40 });
@@ -230,7 +274,7 @@
     c.fillStyle = '#fff'; c.font = '7px system-ui'; c.textAlign = 'center'; c.fillText('☠', 10, -69);
     c.restore();
     // الركاب (واكفين بشكل طبيعي، ورا جدار السفينة)
-    rmRiders('pir').forEach(R => { const s = pirSeat(R.i); rmRiderDraw(c, R, s[0], s[1] + 8, 0.5); });
+    rmRiders('pir').forEach(R => { const s = pirSeat(R.i); rider(c, R, s[0], s[1] + 8, 0.52, s[1] - 26); });
     c.save(); c.translate(X, PY); c.rotate(-a); c.translate(0, PIR.L);
     // جسم السفينة
     const hg = c.createLinearGradient(0, -14, 0, 22); hg.addColorStop(0, '#a86a30'); hg.addColorStop(1, '#5a3418'); c.fillStyle = hg;
@@ -279,7 +323,7 @@
     const riders = rmRiders('cst');
     const cars = []; for (let k = 0; k < 4; k++) { const u = carU(k), p = spos(u), q = spos(u + 0.003); cars.push({ k, u, p, ang: Math.atan2(q[1] - p[1], q[0] - p[0]), fr: Math.sin(u * TAU) >= 0 }); }
     const car = (C) => {
-      riders.filter(R => (R.i >> 1) === C.k).forEach(R => rmRiderDraw(c, R, C.p[0] + ((R.i & 1) ? 5 : -5), C.p[1] + 2, 0.4));
+      riders.filter(R => (R.i >> 1) === C.k).forEach(R => rider(c, R, C.p[0] + ((R.i & 1) ? 5 : -5), C.p[1] + 2, 0.42, C.p[1] - 24));
       c.save(); c.translate(C.p[0], C.p[1]); let an = C.ang; if (Math.cos(an) < 0) { c.scale(-1, 1); an = Math.PI - an; } c.rotate(an);
       const cg = c.createLinearGradient(0, -12, 0, 4); cg.addColorStop(0, ['#ff4d6d', '#ffd166', '#5ad1ff', '#8f5cff'][C.k]); cg.addColorStop(1, '#3a2a5a'); c.fillStyle = cg;
       c.beginPath(); c.moveTo(-14, -9); c.lineTo(12, -9); c.quadraticCurveTo(18, -9, 17, -2); c.lineTo(15, 3); c.lineTo(-14, 3); c.closePath(); c.fill();
@@ -296,7 +340,7 @@
 
   /* ---------- مواقع المقاعد + الكاميرا تمشي ويه الراكب + أصوات الركوب ---------- */
   function seatOf(r) {
-    if (r.k === 'fer') { const p = rmFerPos(r.i); return [p[0], p[1] + 40]; }
+    if (r.k === 'fer') { const p = rmFerPos(r.i); return [p[0], p[1] + 30]; }
     if (r.k === 'car') { const p = rmCarPos(r.i); return [p[0], p[1] - 20]; }
     if (r.k === 'pir') { const s = pirSeat(r.i); return [s[0], s[1]]; }
     if (r.k === 'cst') { const s = cstSeat(r.i); return [s[0], s[1]]; }
