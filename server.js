@@ -601,6 +601,18 @@ app.post('/api/admin/grant', (req, res) => {
 });
 
 app.get('/api/me', authMw, (req, res) => res.json(userInfo(req.key)));
+// حفظ تقدم الألعاب على الحساب (المزرعة، ركض ربش، عدّاد صيد المنتجع) — يبقى دائماً مع الحساب
+const GS_KEYS = { run: 9000, farm: 9000, rmf: 600 };
+app.get('/api/gs', authMw, (req, res) => { const u = db.users[req.key]; res.set('Cache-Control', 'no-store'); res.json({ gs: (u && u.gs) || {} }); });
+app.post('/api/gs', authMw, (req, res) => {
+  const u = db.users[req.key], k = String((req.body && req.body.k) || ''), d = req.body && req.body.d;
+  if (!u) return res.status(401).json({ error: 'سجّل دخول' });
+  if (!GS_KEYS[k] || !d || typeof d !== 'object' || Array.isArray(d)) return res.status(400).json({ error: 'بيانات غير صالحة' });
+  const js = JSON.stringify(d); if (js.length > GS_KEYS[k]) return res.status(413).json({ error: 'البيانات كبيرة' });
+  if (!u.gs) u.gs = {}; const old = u.gs[k];
+  if (old && old.d && (Number(old.d._t) || 0) > (Number(d._t) || 0) + 1000) return res.json({ ok: 1, kept: 1, d: old.d });   // نسخة السيرفر أحدث: ما نكتب فوكها
+  u.gs[k] = { t: Date.now(), d: JSON.parse(js) }; save(); res.json({ ok: 1 });
+});
 
 // تغيير كلمة السر (يطلّع باقي الأجهزة)
 app.post('/api/password', authMw, (req, res) => {

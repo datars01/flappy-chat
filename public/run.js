@@ -53,10 +53,21 @@
   function emo(e) { let c = EMC[e]; if (c) return c; c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.font = '104px system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); EMC[e] = c; return c; }
 
   /* ---------- الحفظ ---------- */
-  let S = { coins: 0, best: 0, runs: 0, own: { c: [0, 1, 2], h: [0] }, sel: { c: 0, col: 0, h: 0 }, mus: 1, sfx: 1 };
+  const defS = () => ({ coins: 0, best: 0, runs: 0, own: { c: [0, 1, 2], h: [0] }, sel: { c: 0, col: 0, h: 0 }, mus: 1, sfx: 1 });
+  const fixS = () => { if (!S.own) S.own = { c: [0, 1, 2], h: [0] }; if (!S.own.c) S.own.c = [0, 1, 2]; if (!S.own.h) S.own.h = [0]; if (!S.own.b) S.own.b = [0]; if (!S.sel) S.sel = { c: 0, col: 0, h: 0 }; if (S.boards == null) S.boards = 3; if (S.bsel == null) S.bsel = 0; };   // كل لاعب ياخذ 3 زلاجات هدية
+  let S = defS();
   try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) S = Object.assign(S, o); } catch (e) {}
-  if (!S.own.b) S.own.b = [0]; if (S.boards == null) S.boards = 3; if (S.bsel == null) S.bsel = 0;   // كل لاعب ياخذ 3 زلاجات هدية
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  fixS();
+  /* الحفظ بالجهاز + بحساب اللاعب (يرجعله من أي جهاز) */
+  const save = () => { S._t = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} if (window.gsReady && gsReady() && S._acct === gsAcct()) gsPush('run', S); };
+  let synced = '';
+  function runSync() {
+    if (!window.gsReady || !gsReady()) return; const me = gsAcct(); if (synced === me) return; try { if (R.ph === 'play') return; } catch (e) { return; } synced = me;
+    const r = gsMerge(S, gsGet('run')); S = Object.assign(defS(), r.d || {}); fixS(); S._acct = me;
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} if (r.push || !gsGet('run')) gsPush('run', S);
+    try { menuInfo(); } catch (e) {}
+  }
+  document.addEventListener('gs-ready', () => { synced = ''; runSync(); });
   const isAdm = () => { try { return !!(typeof auth !== 'undefined' && auth && (auth.admin || auth.name === 'بابي' || auth.name === 'بابيتو')); } catch (e) { return false; } };
   /* المشرفين (بابي وبابيتو): عملات لانهائية ♾️ */
   const CN = () => isAdm() ? Infinity : S.coins;
@@ -1243,7 +1254,7 @@
   }
   try { if (/rdbg/.test(location.search)) window.__runR = { R, die, act }; } catch (e) {}
   window.runOpen = function () {
-    build(); if (R.ph === 'play') { R.pause = true; $r('runPauseOv').classList.add('on'); }
+    runSync(); build(); if (R.ph === 'play') { R.pause = true; $r('runPauseOv').classList.add('on'); }
     if (R.ph === 'menu') { $r('runMenu').classList.add('on'); }
     menuInfo(); kick();
   };
