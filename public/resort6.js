@@ -1,12 +1,11 @@
-/* بابيتو شات — ورا المحلات على البحر: ممشى خشبي، ملعب كرة طائرة شاطئية تلعب بيه، محل ألعاب البحر (جت سكي + باراسيلنغ)،
-   كافيه ومثلجات، منطقة شوي وتخييم، تلسكوب وإطار تصوير بالورد. كلشي HD ويتحرك حسب الوقت فينشاف نفس الشي عند الكل. */
+/* بابيتو شات — ورا المحلات على البحر: ممشى خشبي، جلسات وكراسي تكعد عليها، محل ألعاب البحر (جت سكي + باراسيلنغ)،
+   منطقة شوي وتخييم، تلسكوب وإطار تصوير بالورد. كلشي HD ويتحرك حسب الوقت فينشاف نفس الشي عند الكل. */
 (function () {
   'use strict';
   if (typeof RM === 'undefined' || typeof rmRideOf !== 'function') return;
   const TAU = Math.PI * 2, now = () => Date.now() / 1000, nightD = () => (RM.dn && RM.dn.d) || 0;
-  const VB = { x: 1475, y: 282, w: 250, h: 50 }, WS = { x: 1790, y: 300 }, JET = { n: 4, code: 102 }, PARA = { code: 106 }, CAFE = { x: 2070, y: 300 }, CAMP = { grill: { x: 2585, y: 298 }, fire: { x: 2725, y: 290 } }, TEL = { x: 3000, y: 290 }, PHO = { x: 3190, y: 300 };
-  const R6 = window.R6 = { from: null, prev: '', vb: { score: 0, best: 0, ball: null, hitT: 0 }, cone: null, nt: 0 };
-  try { R6.vb.best = +localStorage.getItem('rmVbBest') || 0; } catch (e) {}
+  const WS = { x: 1790, y: 300 }, JET = { n: 4, code: 102 }, PARA = { code: 106 }, CAMP = { grill: { x: 2585, y: 298 }, fire: { x: 2725, y: 290 } }, TEL = { x: 3000, y: 290 }, PHO = { x: 3190, y: 300 };
+  const R6 = window.R6 = { from: null, prev: '', nt: 0 };
   const snd = list => { try { if (RM.ambMute) return; list.forEach(q => blip(q[0], q[1], q[2], q[3], q[4], q[5] || 0)); } catch (e) {} };
   const rr = (c, x, y, w, h, r) => { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); };
   const ell = (c, x, y, a, b) => { c.beginPath(); c.ellipse(x, y, Math.max(.1, a), Math.max(.1, b), 0, 0, TAU); };
@@ -23,29 +22,6 @@
     for (let x = x0 + 40; x < x1; x += 160) { c.fillStyle = '#3a3a42'; c.fillRect(x - 2, y - 48, 4, 48); c.fillStyle = '#2a2a30'; rr(c, x - 7, y - 62, 14, 16, 3); c.fill(); const g = c.createRadialGradient(x, y - 54, 1, x, y - 54, 9); g.addColorStop(0, nd > .2 ? '#fff4c0' : '#ffe9a0'); g.addColorStop(1, 'rgba(255,200,90,.2)'); c.fillStyle = g; rr(c, x - 5, y - 60, 10, 12, 2); c.fill(); }
     c.restore(); }
 
-  /* ================= 1) كرة طائرة شاطئية تلعب بيها ================= */
-  function vbBall() {   // الكرة تروح وترجع بين الجهتين كل 1.6 ثانية — نفس الشي عند الكل
-    const per = 1.6, t = now(), k = Math.floor(t / per), u = (t % per) / per, side = k % 2 ? 1 : -1, x0 = VB.x - side * 80, x1 = VB.x + side * 80, x = x0 + (x1 - x0) * u, h = Math.sin(u * Math.PI) * 70 + 20, y = VB.y + Math.sin(k * 1.3) * 16;
-    return { x, y, h, u, side, k };
-  }
-  function inCourt(o) { return Math.abs(o.x - VB.x) < VB.w / 2 && Math.abs(o.y - VB.y) < VB.h / 2 + 10; }
-  function vbDraw(c) { const t = now(), nd = nightD(), x0 = VB.x - VB.w / 2, y0 = VB.y - VB.h / 2; c.save();
-    c.fillStyle = 'rgba(255,240,210,.55)'; rr(c, x0, y0, VB.w, VB.h, 6); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = 3; rr(c, x0, y0, VB.w, VB.h, 6); c.stroke(); c.beginPath(); c.moveTo(VB.x, y0); c.lineTo(VB.x, y0 + VB.h); c.stroke();
-    [[x0 - 18, VB.y], [x0 + VB.w + 18, VB.y]].forEach(([bx, by]) => { for (let k = 0; k < 3; k++) { wood(c, bx - 12, by - 26 + k * 12, 24, 5, '#ffffff', '#c8d2dc'); } c.fillStyle = '#8a98a8'; c.fillRect(bx - 11, by - 26, 2, 36); c.fillRect(bx + 9, by - 26, 2, 36); });   // مدرجات
-    // الشبكة
-    const ny = y0 - 46; 
-    { const nt = y0 - 34, nb = y0 + VB.h - 14; c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(VB.x - 6, nt, 12, nb - nt); c.strokeStyle = 'rgba(30,30,45,.6)'; c.lineWidth = .8; for (let yy = nt; yy <= nb; yy += 4) { c.beginPath(); c.moveTo(VB.x - 6, yy); c.lineTo(VB.x + 6, yy); c.stroke(); } for (let xx = -6; xx <= 6; xx += 4) { c.beginPath(); c.moveTo(VB.x + xx, nt); c.lineTo(VB.x + xx, nb); c.stroke(); } c.fillStyle = '#fff'; c.fillRect(VB.x - 7, nt - 2, 14, 3); c.fillStyle = '#3a8adf'; c.fillRect(VB.x - 7, nb, 14, 2); c.fillStyle = '#d8d8e0'; c.fillRect(VB.x - 2, nt - 4, 4, y0 - nt + 4); c.fillRect(VB.x - 2, nb - 20, 4, y0 + VB.h - nb + 22); } c.fillStyle = '#fff'; c.fillRect(VB.x - 2, ny, 4, 4);
-    const b = vbBall(); c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, b.x, b.y, 7 - b.h / 30, 2.4); c.fill();
-    const bx = b.x, by = b.y - b.h; const g = c.createRadialGradient(bx - 2, by - 2, 1, bx, by, 7); g.addColorStop(0, '#ffffff'); g.addColorStop(.6, '#ffe066'); g.addColorStop(1, '#3a8adf'); c.fillStyle = g; c.beginPath(); c.arc(bx, by, 6.5, 0, TAU); c.fill(); c.strokeStyle = 'rgba(40,80,160,.6)'; c.lineWidth = 1; c.beginPath(); c.arc(bx, by, 6.5, t * 6, t * 6 + 2); c.stroke();
-    // لاعبين NPC بالجهتين إذا ماكو أحد
-    const me = inCourt(RM.me) ? (RM.me.x < VB.x ? -1 : 1) : 0;
-    [-1, 1].forEach(sd => { if (sd === me) return; const px = VB.x + sd * 80, jump = (b.side === -sd && b.u > .8) || (b.side === sd && b.u < .15) ? 8 : 0; c.save(); c.translate(px, VB.y - jump); c.scale(-sd * .55, .55); AVT.drawAt(c, AVT.DEF, 0, 0, AV_H, { t: RM.T, dance: jump ? 1 : 0, dt: RM.T }); c.restore(); });
-    if (me) { c.font = 'bold 11px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#1a4a8a'; c.fillText('🏐 ' + R6.vb.score + ' • أفضل ' + R6.vb.best, VB.x, y0 - 30); }
-    sign(c, '🏐 كرة طائرة شاطئية', VB.x - 70, 236, '#ffd23f', nd); c.restore(); }
-  function vbHit() { const b = vbBall(), my = RM.me.x < VB.x ? -1 : 1; const coming = b.side === my && b.u > .7 || b.side === -my && b.u < .12; const k = b.k;
-    if (R6.vb.hitT === k) return; R6.vb.hitT = k;
-    if (coming) { R6.vb.score++; if (R6.vb.score > R6.vb.best) { R6.vb.best = R6.vb.score; try { localStorage.setItem('rmVbBest', R6.vb.best); } catch (e) {} } snd([['triangle', 520, 780, .1, .06], ['square', 180, 120, .06, .03]]); for (let i = 0; i < 6; i++) RM.sparks.push({ x: RM.me.x, y: RM.me.y - 60, vx: (Math.random() - .5) * 2, vy: -1.5, t: 14, dust: 1 }); if (R6.vb.score % 5 === 0) showToast('🏐 ' + R6.vb.score + ' ضربات ورا بعض! 🔥'); rmSetDance(5); setTimeout(() => { if ((RM.me.dance || 0) === 5) rmSetDance(0); }, 400); }
-    else { if (R6.vb.score) showToast('😅 فاتتك! نتيجتك ' + R6.vb.score); R6.vb.score = 0; snd([['sine', 300, 150, .2, .04]]); } rmPrompt(true); }
 
   /* ================= 2) محل ألعاب البحر: جت سكي + باراسيلنغ ================= */
   function jetPos(i) { const t = now() * .35 + i * TAU / JET.n, cx = 1820, cy = 88, rx = 300 + (i % 2) * 40, ry = 42; const x = cx + Math.cos(t) * rx + Math.sin(t * 2.3 + i) * 20, y = cy + Math.sin(t) * ry; const dx = -Math.sin(t) * rx, dir = dx > 0 ? 1 : -1; return [x, y, dir]; }
@@ -78,29 +54,6 @@
     const pr = rmRiders('para'); pr.forEach(R => rider(c, R, 0, 56, .42, 18)); if (!pr.length) { c.fillStyle = '#ffd23f'; rr(c, -5, 36, 10, 10, 3); c.fill(); }
     c.restore(); c.restore(); }
 
-  /* ================= 3) كافيه ومثلجات ================= */
-  const FLAV = [['🍓', 'فراولة', '#ff7aa8'], ['🍫', 'شوكولاتة', '#7a4a2a'], ['🥭', 'مانجا', '#ffb02a'], ['🍦', 'فانيلا', '#fff2c8'], ['🫐', 'توت أزرق', '#6a7aff'], ['🍵', 'فستق', '#8ad85a']];
-  function cafeDraw(c) { const x = CAFE.x, y = CAFE.y, t = now(), nd = nightD(); c.save();
-    c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, x, y + 2, 66, 10); c.fill();
-    c.fillStyle = '#fff6ee'; rr(c, x - 58, y - 40, 116, 40, 6); c.fill(); c.fillStyle = '#ff9ac8'; c.fillRect(x - 58, y - 10, 116, 10);
-    c.fillStyle = 'rgba(200,240,255,.75)'; rr(c, x - 50, y - 36, 100, 20, 4); c.fill(); FLAV.forEach((f, i) => { c.fillStyle = f[2]; ell(c, x - 40 + i * 16, y - 24, 6, 4); c.fill(); });
-    // مظلة على شكل آيس كريم
-    c.fillStyle = '#c8935a'; c.fillRect(x - 3, y - 100, 6, 60); for (let k = 0; k < 10; k++) { c.fillStyle = k % 2 ? '#ffffff' : '#ff7aa8'; c.beginPath(); c.moveTo(x, y - 122); c.lineTo(x - 72 + k * 14.4, y - 86); c.lineTo(x - 72 + (k + 1) * 14.4, y - 86); c.closePath(); c.fill(); }
-    c.save(); c.translate(x, y - 132 + Math.sin(t * 2) * 2); c.fillStyle = '#e0a050'; c.beginPath(); c.moveTo(-9, 0); c.lineTo(9, 0); c.lineTo(0, 22); c.closePath(); c.fill(); c.fillStyle = '#ff9ac8'; c.beginPath(); c.arc(0, -4, 11, 0, TAU); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-3, -7, 3, 0, TAU); c.fill(); c.fillStyle = '#e83a4a'; c.beginPath(); c.arc(0, -15, 3, 0, TAU); c.fill(); c.restore();
-    for (let k = 0; k < 8; k++) bulb(c, x - 64 + k * 18.3, y - 87, 1.8, '#fff6a0', Math.sin(k + t * 4) > 0);
-    // طاولات بمظلات
-    [2170, 2270, 2370].forEach((tx, i) => { const col = ['#3da5ff', '#ffd23f', '#3ddc84'][i]; c.fillStyle = 'rgba(0,0,0,.16)'; ell(c, tx, y + 4, 34, 7); c.fill(); c.fillStyle = '#e8e8e8'; ell(c, tx, y - 18, 16, 5); c.fill(); c.fillStyle = '#9aa2b0'; c.fillRect(tx - 1.5, y - 18, 3, 20);
-      [[-22, 0], [22, 0]].forEach(([dx]) => { c.fillStyle = '#c8935a'; rr(c, tx + dx - 7, y - 14, 14, 4, 2); c.fill(); c.fillRect(tx + dx - 6, y - 10, 2, 10); c.fillRect(tx + dx + 4, y - 10, 2, 10); c.fillRect(tx + dx + (dx > 0 ? 5 : -7), y - 28, 2, 16); });
-      c.fillStyle = '#fff'; c.font = '10px system-ui'; c.textAlign = 'center'; c.fillText(['🥤', '🍨', '☕'][i], tx, y - 20);
-      c.fillStyle = '#c8c8c8'; c.fillRect(tx - 1, y - 80, 2, 62); for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff' : col; c.beginPath(); c.moveTo(tx, y - 94); c.lineTo(tx - 38 + k * 9.5, y - 72); c.lineTo(tx - 38 + (k + 1) * 9.5, y - 72); c.closePath(); c.fill(); } });
-    sign(c, '🍦 كافيه ومثلجات البحر', x, 236, '#ff9ac8', nd); c.restore(); }
-  function iceMenu() { let P = document.getElementById('r6Ice'); if (P) P.remove(); P = document.createElement('div'); P.id = 'r6Ice'; P.style.cssText = 'position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(0,0,0,.45)';
-    const B = document.createElement('div'); B.style.cssText = 'background:#fff6ee;color:#3a1a2a;border-radius:18px;padding:14px;width:min(320px,90%);text-align:center;font-family:Cairo,system-ui;box-shadow:0 10px 30px rgba(0,0,0,.4)';
-    B.innerHTML = '<b style="font-size:18px">🍦 اختار نكهتك</b><div style="font-size:12px;opacity:.7;margin-bottom:8px">مجاناً — تشيله بإيدك وتاكله</div>';
-    const G = document.createElement('div'); G.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px'; FLAV.forEach(f => { const b = document.createElement('button'); b.type = 'button'; b.style.cssText = 'border:0;border-radius:12px;padding:10px 4px;background:' + f[2] + '33;font:800 13px Cairo,system-ui;cursor:pointer;color:#3a1a2a'; b.innerHTML = '<div style="font-size:24px">' + f[0] + '</div>' + f[1]; b.onclick = () => { R6.cone = { f, until: performance.now() + 45000 }; P.remove(); snd([['sine', 880, 1320, .2, .05], ['sine', 1320, 1760, .2, .04, .1]]); try { rmSend({ t: 'rm_react', e: '🍦' }); } catch (e) {} showToast(f[0] + ' آيس كريم ' + f[1] + '! بالعافية 😋'); }; G.appendChild(b); });
-    const X = document.createElement('button'); X.type = 'button'; X.textContent = 'سكّر'; X.style.cssText = 'margin-top:10px;border:0;border-radius:10px;padding:8px 18px;background:#3a1a2a;color:#fff;font:800 13px Cairo,system-ui;cursor:pointer'; X.onclick = () => P.remove();
-    B.append(G, X); P.appendChild(B); P.addEventListener('pointerdown', e => { if (e.target === P) P.remove(); }); (document.getElementById('rmBox') || document.body).appendChild(P); }
-  function coneDraw(c) { const C = R6.cone; if (!C || performance.now() > C.until || rmRideOf(RM.me) || rmInShop()) return; const m = RM.me, x = m.x + (m.dir || 1) * 14, y = m.y - 44, left = (C.until - performance.now()) / 45000; c.save(); c.translate(x, y); c.fillStyle = '#e0a050'; c.beginPath(); c.moveTo(-5, 0); c.lineTo(5, 0); c.lineTo(0, 13); c.closePath(); c.fill(); c.strokeStyle = 'rgba(120,70,20,.5)'; c.lineWidth = .6; c.beginPath(); c.moveTo(-3, 2); c.lineTo(2, 8); c.moveTo(3, 2); c.lineTo(-2, 8); c.stroke(); c.fillStyle = C.f[2]; c.beginPath(); c.arc(0, -3, 6 * Math.max(.35, left), 0, TAU); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(-2, -5, 1.6, 0, TAU); c.fill(); c.restore(); }
 
   /* ================= 4) منطقة الشوي والتخييم ================= */
   function tent(c, x, y, col) { c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, x, y + 2, 46, 8); c.fill(); c.fillStyle = col; c.beginPath(); c.moveTo(x - 44, y); c.lineTo(x, y - 56); c.lineTo(x + 44, y); c.closePath(); c.fill(); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.moveTo(x, y - 56); c.lineTo(x + 44, y); c.lineTo(x + 12, y); c.closePath(); c.fill(); c.fillStyle = '#2a1a10'; c.beginPath(); c.moveTo(x - 12, y); c.lineTo(x, y - 30); c.lineTo(x + 10, y); c.closePath(); c.fill(); c.strokeStyle = 'rgba(80,60,40,.7)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y - 56); c.lineTo(x, y - 64); c.moveTo(x - 44, y); c.lineTo(x - 56, y + 4); c.moveTo(x + 44, y); c.lineTo(x + 56, y + 4); c.stroke(); c.restore(); }
@@ -113,7 +66,6 @@
     if (RM.T % 6 === 0) RM.sparks.push({ x: G.x + (Math.random() - .5) * 30, y: G.y - 36, vx: (Math.random() - .5) * .5, vy: -.8, t: 46, puff: 1, smoke: 1 });
     c.font = 'bold 10px Cairo, system-ui'; c.textAlign = 'center'; c.fillStyle = '#5a2a10'; c.fillText('🍢 مشويات', G.x, G.y + 14);
     // نار المخيم وكراسي جذوع
-    [[-34, 4], [34, 4], [0, 22]].forEach(([dx, dy]) => { wood(c, F.x + dx - 14, F.y + dy - 8, 28, 9, '#a06a3a', '#6a3a1a'); c.fillStyle = '#d8a870'; ell(c, F.x + dx + 14, F.y + dy - 3.5, 2.5, 4.5); c.fill(); });
     c.fillStyle = '#5a5a5a'; for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; ell(c, F.x + Math.cos(a) * 13, F.y + Math.sin(a) * 5, 4, 3); c.fill(); }
     c.fillStyle = '#5a3a1a'; c.save(); c.translate(F.x, F.y - 4); [-.5, .5].forEach(r => { c.save(); c.rotate(r); c.fillRect(-12, -2, 24, 4); c.restore(); }); c.restore();
     for (let k = 0; k < 3; k++) { const fl = 1 + Math.sin(t * 11 + k * 2) * .15, h = (18 - k * 4) * fl; c.fillStyle = ['#ff5a1a', '#ffa82a', '#fff0a0'][k]; c.beginPath(); c.moveTo(F.x - 9 + k * 3, F.y - 4); c.quadraticCurveTo(F.x - 6 + k * 2, F.y - h * .6, F.x + Math.sin(t * 7) * 2, F.y - 4 - h); c.quadraticCurveTo(F.x + 6 - k * 2, F.y - h * .6, F.x + 9 - k * 3, F.y - 4); c.closePath(); c.fill(); }
@@ -150,7 +102,7 @@
   function palm(c, x, y) { const t = now(); c.save(); c.fillStyle = 'rgba(0,0,0,.18)'; ell(c, x + 10, y + 2, 26, 6); c.fill(); c.fillStyle = '#b0703a'; rr(c, x - 10, y - 14, 20, 14, 3); c.fill(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 5; c.beginPath(); c.moveTo(x, y - 12); c.quadraticCurveTo(x + 6, y - 50, x + 2, y - 84); c.stroke(); c.strokeStyle = 'rgba(60,40,20,.5)'; c.lineWidth = 1; for (let k = 0; k < 9; k++) { const yy = y - 18 - k * 7.5; c.beginPath(); c.moveTo(x - 2, yy); c.lineTo(x + 5, yy - 2); c.stroke(); }
     for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * .5 + Math.sin(t * 1.2 + k) * .05; c.fillStyle = k % 2 ? '#3a9a4a' : '#2a7a3a'; c.beginPath(); c.moveTo(x + 2, y - 84); c.quadraticCurveTo(x + 2 + Math.cos(a) * 30, y - 84 + Math.sin(a) * 30 - 10, x + 2 + Math.cos(a) * 46, y - 84 + Math.sin(a) * 30 + 14); c.quadraticCurveTo(x + 2 + Math.cos(a) * 26, y - 84 + Math.sin(a) * 20, x + 2, y - 84); c.fill(); }
     c.fillStyle = '#6a4a2a'; [[-3, 2], [4, 3], [0, 6]].forEach(([dx, dy]) => { c.beginPath(); c.arc(x + 2 + dx, y - 80 + dy, 3.2, 0, TAU); c.fill(); }); c.restore(); }
-  function rightDecor(c) { lounger(c, 3080, 300, '#3da5ff'); lounger(c, 3110, 312, '#ff7aa8'); palm(c, 2960, 306); palm(c, 3285, 304); [[3045, 312], [3140, 296], [3250, 318]].forEach(([x, y], i) => { c.fillStyle = '#3a8a3a'; ell(c, x, y - 5, 10, 6); c.fill(); for (let k = 0; k < 5; k++) { c.fillStyle = ['#ff5a8a', '#ffd166', '#c78bff'][(k + i) % 3]; c.beginPath(); c.arc(x - 7 + k * 3.5, y - 9 + (k % 2) * 3, 2.4, 0, TAU); c.fill(); } }); }
+  function rightDecor(c) { palm(c, 2960, 306); palm(c, 3285, 304); [[3045, 312], [3140, 296], [3250, 318]].forEach(([x, y], i) => { c.fillStyle = '#3a8a3a'; ell(c, x, y - 5, 10, 6); c.fill(); for (let k = 0; k < 5; k++) { c.fillStyle = ['#ff5a8a', '#ffd166', '#c78bff'][(k + i) % 3]; c.beginPath(); c.arc(x - 7 + k * 3.5, y - 9 + (k % 2) * 3, 2.4, 0, TAU); c.fill(); } }); }
 
   /* ---------- الركوب: جت سكي (4) + باراسيلنغ (1) ---------- */
   const rideOld = rmRideOf; rmRideOf = function (o) { const e = o && o.dance || 0; if (e >= JET.code && e < JET.code + JET.n) return { k: 'jet', i: e - JET.code }; if (e === PARA.code) return { k: 'para', i: 0 }; return rideOld(o); };
@@ -165,19 +117,32 @@
   const walkOld = rmWalkTo; rmWalkTo = function (x, y) { const r = rmRideOf(RM.me); if (r && (r.k === 'jet' || r.k === 'para')) { showToast('🚪 انزل أول'); return; } return walkOld(x, y); };
 
   /* ---------- الأزرار حسب القرب ---------- */
-  const near = { vb: () => inCourt(RM.me), ws: () => Math.hypot(RM.me.x - WS.x, (RM.me.y - WS.y) * 1.4) < 110, ice: () => Math.hypot(RM.me.x - CAFE.x, (RM.me.y - CAFE.y) * 1.4) < 90, bbq: () => Math.hypot(RM.me.x - CAMP.grill.x, (RM.me.y - CAMP.grill.y) * 1.4) < 80, tel: () => Math.hypot(RM.me.x - TEL.x, (RM.me.y - TEL.y) * 1.4) < 60, pho: () => Math.hypot(RM.me.x - PHO.x, (RM.me.y - PHO.y) * 1.4) < 70 };
+  const near = { ws: () => Math.hypot(RM.me.x - WS.x, (RM.me.y - WS.y) * 1.4) < 110, bbq: () => Math.hypot(RM.me.x - CAMP.grill.x, (RM.me.y - CAMP.grill.y) * 1.4) < 80, tel: () => Math.hypot(RM.me.x - TEL.x, (RM.me.y - TEL.y) * 1.4) < 60, pho: () => Math.hypot(RM.me.x - PHO.x, (RM.me.y - PHO.y) * 1.4) < 70 };
   const nearList = () => rmShopId() === 0 && !rmRideOf(RM.me) ? Object.keys(near).filter(k => near[k]()) : [];
-  const keyOld = rmXKey; rmXKey = function () { const b = near.vb() ? vbBall().k : ''; return keyOld() + '|r6' + nearList().join('') + b; };
+  const keyOld = rmXKey; rmXKey = function () { return keyOld() + '|r6' + nearList().join(''); };
   const promptOld = rmXPrompt; rmXPrompt = function (mk) {
-    nearList().forEach(k => { if (k === 'vb') mk('🏐 اضرب الكرة!', vbHit); if (k === 'ws') { mk('🏄 اركب جت سكي', () => board('jet')); mk('🪂 طير بالباراسيلنغ', () => board('para')); } if (k === 'ice') mk('🍦 اطلب آيس كريم', iceMenu); if (k === 'bbq') mk('🍢 اطلب مشويات', () => { snd([['sawtooth', 200, 120, .4, .015], ['triangle', 900, 700, .15, .03, .2]]); for (let i = 0; i < 8; i++) RM.sparks.push({ x: CAMP.grill.x + (Math.random() - .5) * 30, y: CAMP.grill.y - 36, vx: (Math.random() - .5), vy: -1, t: 40, puff: 1, smoke: 1 }); try { rmSend({ t: 'rm_react', e: '🍢' }); } catch (e) {} showToast('🍢 مشويات طازة! بالعافية'); }); if (k === 'tel') mk('🔭 شوف بالتلسكوب', scope); if (k === 'pho') mk('📸 التقط صورة', () => { try { rmPhotoTake(); } catch (e) {} }); });
+    nearList().forEach(k => { if (k === 'ws') { mk('🏄 اركب جت سكي', () => board('jet')); mk('🪂 طير بالباراسيلنغ', () => board('para')); } if (k === 'bbq') mk('🍢 اطلب مشويات', () => { snd([['sawtooth', 200, 120, .4, .015], ['triangle', 900, 700, .15, .03, .2]]); for (let i = 0; i < 8; i++) RM.sparks.push({ x: CAMP.grill.x + (Math.random() - .5) * 30, y: CAMP.grill.y - 36, vx: (Math.random() - .5), vy: -1, t: 40, puff: 1, smoke: 1 }); try { rmSend({ t: 'rm_react', e: '🍢' }); } catch (e) {} showToast('🍢 مشويات طازة! بالعافية'); }); if (k === 'tel') mk('🔭 شوف بالتلسكوب', scope); if (k === 'pho') mk('📸 التقط صورة', () => { try { rmPhotoTake(); } catch (e) {} }); });
     return promptOld(mk); };
   const hitOld = rmXHit; rmXHit = function (x, y) { if (rmShopId() === 0 && !rmRideOf(RM.me)) {
-      const Z = [['ws', WS.x - 70, WS.x + 70, WS.y - 90, WS.y + 6, WS.x, WS.y + 24, () => board('jet')], ['ice', CAFE.x - 60, CAFE.x + 60, CAFE.y - 140, CAFE.y + 6, CAFE.x, CAFE.y + 24, iceMenu], ['tel', TEL.x - 22, TEL.x + 22, TEL.y - 40, TEL.y + 6, TEL.x + 24, TEL.y + 10, scope]];
-      for (const z of Z) if (x > z[1] && x < z[2] && y > z[3] && y < z[4]) { if (near[z[0]]()) z[7](); else { rmWalkTo(z[5], z[6]); rmTapMark(z[5], z[6]); } return true; } }
+      const Z = [['ws', WS.x - 70, WS.x + 70, WS.y - 90, WS.y + 6, WS.x, WS.y + 24], ['tel', TEL.x - 22, TEL.x + 22, TEL.y - 40, TEL.y + 6, TEL.x + 24, TEL.y + 10]];
+      for (const z of Z) if (x > z[1] && x < z[2] && y > z[3] && y < z[4]) { rmWalkTo(z[5], z[6]); rmTapMark(z[5], z[6]); rmPrompt(true); return true; } }
     return hitOld(x, y); };
-  const holesOld = rmXHoles; rmXHoles = function (hole, fl) { try { holesOld(hole, fl); } catch (e) {} for (let x = 1360; x < 3320; x += 160) hole(x, 170, 70, .7); hole(CAMP.fire.x, CAMP.fire.y - 10, 150 * fl, .95); hole(CAFE.x, CAFE.y - 60, 120, .8); hole(WS.x, WS.y - 40, 100, .7); hole(VB.x, VB.y, 130, .6); };
-  const glowOld = rmXGlow; rmXGlow = function (c, d, fl) { try { glowOld(c, d, fl); } catch (e) {} rmGlow(c, CAMP.fire.x, CAMP.fire.y - 12, 120 * fl, .35 * d, '255,140,40'); rmGlow(c, CAFE.x, CAFE.y - 90, 80, .2 * d, '255,150,200'); for (let x = 1360; x < 3320; x += 160) rmGlow(c, x, 168, 26, .4 * d, '255,220,140'); };
+  const holesOld = rmXHoles; rmXHoles = function (hole, fl) { try { holesOld(hole, fl); } catch (e) {} for (let x = 1360; x < 3320; x += 160) hole(x, 170, 70, .7); hole(CAMP.fire.x, CAMP.fire.y - 10, 150 * fl, .95); hole(WS.x, WS.y - 40, 100, .7); };
+  const glowOld = rmXGlow; rmXGlow = function (c, d, fl) { try { glowOld(c, d, fl); } catch (e) {} rmGlow(c, CAMP.fire.x, CAMP.fire.y - 12, 120 * fl, .35 * d, '255,140,40'); for (let x = 1360; x < 3320; x += 160) rmGlow(c, x, 168, 26, .4 * d, '255,220,140'); };
 
-  RM_DECOR.push({ y: 230, f: boardwalk }, { y: 200, f: seaDraw }, { y: VB.y + VB.h / 2, f: vbDraw }, { y: WS.y, f: wsHut }, { y: CAFE.y, f: cafeDraw }, { y: 312, f: campDraw }, { y: TEL.y, f: telDraw }, { y: PHO.y, f: phoDraw }, { y: 305, f: rightDecor }, { y: 99998, f: coneDraw });
-  window.R6_SPOTS = { vb: VB, ws: WS, cafe: CAFE, camp: CAMP.fire, tel: TEL };
+  RM_DECOR.push({ y: 230, f: boardwalk }, { y: 200, f: seaDraw }, { y: WS.y, f: wsHut }, { y: 312, f: campDraw }, { y: TEL.y, f: telDraw }, { y: PHO.y, f: phoDraw }, { y: 305, f: rightDecor });
+  window.R6_SPOTS = { ws: WS, camp: CAMP.fire, tel: TEL, seat: { x: 1500, y: 300 } };
+
+  /* ---------- مقاعد ورا المحلات تكدر تكعد عليها (نفس نظام الجلوس الأصلي) ---------- */
+  const SEATS6 = [];
+  const addSeat = (kind, x, y, s) => { const sd = { kind, x: Math.round(x), y: Math.round(y), s: s || 1, i: RM_SEATS.length, r6: 1 }; RM_SEATS.push(sd); rmSpots(sd).forEach(sp => RM_SPOTS.push(sp)); SEATS6.push(sd); return sd; };
+  [1395, 1455, 1530, 1590, 2370, 3075, 3125].forEach((x, i) => addSeat('lounge', x, 300 + (i % 2) * 8));
+  [2000, 2140, 2280].forEach(x => addSeat('bench', x, 306));
+  for (let i = 0; i < 5; i++) { const a = Math.PI * .1 + i / 5 * TAU; addSeat('log', CAMP.fire.x + Math.cos(a) * 46, CAMP.fire.y + 4 + Math.sin(a) * 16); }
+  SEATS6.forEach(sd => RM_DECOR.push({ y: sd.y, f: c => rmSeatDraw(c, sd) }));
+  function umb(c, x, y, col) { c.save(); c.fillStyle = 'rgba(0,0,0,.14)'; ell(c, x + 8, y + 2, 30, 7); c.fill(); c.fillStyle = '#d8d8d8'; c.fillRect(x - 1.5, y - 74, 3, 74); for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff' : col; c.beginPath(); c.moveTo(x, y - 88); c.lineTo(x - 40 + k * 10, y - 64); c.lineTo(x - 40 + (k + 1) * 10, y - 64); c.closePath(); c.fill(); } c.fillStyle = col; c.beginPath(); c.arc(x, y - 89, 2.5, 0, TAU); c.fill(); c.restore(); }
+  function planter(c, x, y, i) { c.save(); c.fillStyle = 'rgba(0,0,0,.15)'; ell(c, x, y + 2, 16, 4); c.fill(); c.fillStyle = '#b0703a'; rr(c, x - 13, y - 14, 26, 14, 3); c.fill(); c.fillStyle = '#3a8a3a'; ell(c, x, y - 18, 14, 9); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = ['#ff5a8a', '#ffd166', '#c78bff', '#ffffff'][(k + i) % 4]; c.beginPath(); c.arc(x - 10 + k * 4, y - 20 + (k % 2) * 4, 2.6, 0, TAU); c.fill(); } c.restore(); }
+  [[1425, 292, '#ff4d6d'], [1560, 292, '#3da5ff'], [2400, 292, '#ffd23f']].forEach(([x, y, col]) => RM_DECOR.push({ y, f: c => umb(c, x, y, col) }));
+  [[1930, 304], [2070, 304], [2210, 304], [2340, 304]].forEach(([x, y], i) => RM_DECOR.push({ y, f: c => planter(c, x, y, i) }));
+  RM_DECOR.push({ y: 236, f: c => sign(c, '🏖️ جلسات البحر — اكعد واستمتع', 1495, 236, '#3da5ff', nightD()) }, { y: 236, f: c => sign(c, '🌺 جلسة الممشى', 2140, 236, '#ff9ac8', nightD()) });
 })();

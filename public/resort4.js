@@ -371,8 +371,8 @@
   };
   const hitOld = rmXHit; rmXHit = function (x, y) {
     if (rmShopId() === 0 && !rmRideOf(RM.me)) {
-      if (Math.abs(x - PIR.x) < 95 && y > PIR.py - 20 && y < PIR.y + 10) { if (nearPir()) board('pir'); else { rmWalkTo(PIR.x, PIR.y + 30); rmTapMark(PIR.x, PIR.y + 30); } return true; }
-      const p = spos(0.25); if (Math.abs(x - p[0]) < 60 && y > p[2] - 50 && y < p[2] + 14) { if (nearCst()) board('cst'); else { rmWalkTo(p[0], p[2] + 26); rmTapMark(p[0], p[2] + 26); } return true; }
+      if (Math.abs(x - PIR.x) < 95 && y > PIR.py - 20 && y < PIR.y + 10) { rmWalkTo(PIR.x, PIR.y + 30); rmTapMark(PIR.x, PIR.y + 30); if (!nearPir()) showToast('🚶 روح للعبة ودوس زر «اركب»'); return true; }
+      const p = spos(0.25); if (Math.abs(x - p[0]) < 60 && y > p[2] - 50 && y < p[2] + 14) { rmWalkTo(p[0], p[2] + 26); rmTapMark(p[0], p[2] + 26); if (!nearCst()) showToast('🚶 روح للعبة ودوس زر «اركب»'); return true; }
     }
     return hitOld(x, y);
   };

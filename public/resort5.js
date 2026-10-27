@@ -4,7 +4,7 @@
   'use strict';
   if (typeof RM === 'undefined' || typeof rmRideOf !== 'function') return;
   const TAU = Math.PI * 2, now = () => Date.now() / 1000, nightD = () => (RM.dn && RM.dn.d) || 0;
-  const DROP = { x: -200, y: 640, H: 280, n: 8, code: 40 }, BUMP = { x: -1140, y: 1015, w: 380, h: 200, n: 6, code: 70 }, OCT = { x: -740, y: 1015, R: 92, n: 8, code: 80 }, SWG = { x: -250, y: 1075, n: 12, code: 90 };
+  const DROP = { x: -120, y: 640, H: 280, n: 8, code: 40 }, BUMP = { x: -1140, y: 1015, w: 380, h: 200, n: 6, code: 70 }, OCT = { x: -740, y: 1015, R: 92, n: 8, code: 80 }, SWG = { x: -250, y: 1075, n: 12, code: 90 };
   const R5 = window.R5 = { from: null, prev: '', nt: 0, last: 0 };
   const snd = list => { try { if (RM.ambMute) return; list.forEach(q => blip(q[0], q[1], q[2], q[3], q[4], q[5] || 0)); } catch (e) {} };
   const rr = (c, x, y, w, h, r) => { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); };
@@ -92,8 +92,8 @@
   }
 
   /* ================= 3) الأخطبوط ================= */
-  const octA = () => now() * .55;
-  function octSeat(i) { const arm = i >> 1, a = octA() + arm / 4 * TAU, up = Math.sin(now() * 1.3 + arm * 1.6) * 26, sub = octA() * 2.4 * (arm % 2 ? 1 : -1) + (i & 1) * Math.PI, ax = OCT.x + Math.cos(a) * OCT.R, ay = OCT.y + Math.sin(a) * OCT.R * .36 - 30 - up; return [ax + Math.cos(sub) * 20, ay + Math.sin(sub) * 7, Math.sin(a), ax, ay]; }
+  const octA = () => (now() % 10000) * .38;
+  function octSeat(i) { const arm = i >> 1, a = octA() + arm / 4 * TAU, up = Math.sin(now() * 1.3 + arm * 1.6) * 26, sub = octA() * 1.8 * (arm % 2 ? 1 : -1) + (i & 1) * Math.PI, ax = OCT.x + Math.cos(a) * OCT.R, ay = OCT.y + Math.sin(a) * OCT.R * .36 - 30 - up; return [ax + Math.cos(sub) * 20, ay + Math.sin(sub) * 7, Math.sin(a), ax, ay]; }
   function octDraw(c) {
     const O = OCT, t = now(), nd = nightD(); c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, O.x, O.y + 8, O.R + 40, (O.R + 40) * .34); c.fill();
     c.fillStyle = '#2a6a8a'; ell(c, O.x, O.y + 4, O.R + 30, (O.R + 30) * .34); c.fill(); const fg = c.createLinearGradient(0, O.y - 30, 0, O.y + 30); fg.addColorStop(0, '#7ad8ff'); fg.addColorStop(1, '#2a9ad8'); c.fillStyle = fg; ell(c, O.x, O.y - 2, O.R + 26, (O.R + 26) * .32); c.fill();
@@ -113,8 +113,11 @@
   }
 
   /* ================= 4) الكراسي الطائرة ================= */
-  function swgState() { const ph = now() % 24; let sp; if (ph < 3) sp = 0; else if (ph < 8) sp = (ph - 3) / 5; else if (ph < 19) sp = 1; else sp = Math.max(0, 1 - (ph - 19) / 5); return { sp, a: now() * .9 * (.25 + .75 * sp) + (now() % 24) * 0 }; }
-  function swgSeat(i) { const S = swgState(), a = S.a * 1.2 + i / SWG.n * TAU, tilt = .15 + S.sp * .85, L = 64, r0 = 46, r = r0 + Math.sin(tilt * .9) * L, topY = SWG.y - 150, y = topY + 28 + Math.cos(tilt * .9) * L; return [SWG.x + Math.cos(a) * r, y + Math.sin(a) * r * .3, Math.sin(a), SWG.x + Math.cos(a) * r0, topY + 28 + Math.sin(a) * r0 * .3]; }
+  function swgState() {   // الزاوية = مجموع السرعة على الوقت (مو الوقت × السرعة) حتى ما تفتر فجأة وتسرع بشكل مجنون
+    const W = .55, t = now(), cyc = Math.floor(t / 24), ph = t - cyc * 24; let sp, I;
+    if (ph < 3) { sp = 0; I = 0; } else if (ph < 8) { const u = ph - 3; sp = u / 5; I = u * u / 10; } else if (ph < 19) { sp = 1; I = 2.5 + (ph - 8); } else { const u = ph - 19; sp = Math.max(0, 1 - u / 5); I = 13.5 + u - u * u / 10; }
+    return { sp, a: ((cyc * 16 * W) % TAU) + I * W }; }
+  function swgSeat(i) { const S = swgState(), a = S.a + i / SWG.n * TAU, tilt = .15 + S.sp * .85, L = 64, r0 = 46, r = r0 + Math.sin(tilt * .9) * L, topY = SWG.y - 150, y = topY + 28 + Math.cos(tilt * .9) * L; return [SWG.x + Math.cos(a) * r, y + Math.sin(a) * r * .3, Math.sin(a), SWG.x + Math.cos(a) * r0, topY + 28 + Math.sin(a) * r0 * .3]; }
   function swgDraw(c) {
     const X = SWG.x, Y = SWG.y, t = now(), nd = nightD(), S = swgState(), topY = Y - 150; c.save();
     c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, X, Y + 4, 140, 30); c.fill(); c.fillStyle = '#e8d2a8'; ell(c, X, Y, 120, 26); c.fill(); c.strokeStyle = '#b08a5a'; c.lineWidth = 3; c.stroke();
@@ -125,7 +128,7 @@
     const cg = c.createLinearGradient(X - 12, 0, X + 12, 0); cg.addColorStop(0, '#b07a10'); cg.addColorStop(.5, '#ffe9a0'); cg.addColorStop(1, '#b07a10'); c.fillStyle = cg; c.fillRect(X - 10, topY + 20, 20, 130);
     for (let k = 0; k < 5; k++) bulb(c, X, topY + 34 + k * 22, 2, '#ff7ab8', Math.sin(k * 1.4 - t * 5) > 0);
     // المظلة الدوارة
-    const ra = S.a * 1.2; for (let k = 0; k < 12; k++) { const a1 = ra + k / 12 * TAU, a2 = a1 + TAU / 12; if (Math.sin((a1 + a2) / 2) < -.3) continue; c.fillStyle = k % 2 ? '#ffffff' : '#3da5ff'; c.beginPath(); c.moveTo(X, topY - 18); c.lineTo(X + Math.cos(a1) * 60, topY + 26 + Math.sin(a1) * 18); c.lineTo(X + Math.cos(a2) * 60, topY + 26 + Math.sin(a2) * 18); c.closePath(); c.fill(); }
+    const ra = S.a; for (let k = 0; k < 12; k++) { const a1 = ra + k / 12 * TAU, a2 = a1 + TAU / 12; if (Math.sin((a1 + a2) / 2) < -.3) continue; c.fillStyle = k % 2 ? '#ffffff' : '#3da5ff'; c.beginPath(); c.moveTo(X, topY - 18); c.lineTo(X + Math.cos(a1) * 60, topY + 26 + Math.sin(a1) * 18); c.lineTo(X + Math.cos(a2) * 60, topY + 26 + Math.sin(a2) * 18); c.closePath(); c.fill(); }
     for (let k = 0; k < 20; k++) { const a = k / 20 * TAU; if (Math.sin(a) < -.2) continue; bulb(c, X + Math.cos(a) * 60, topY + 28 + Math.sin(a) * 18, 1.8, '#fff6a0', Math.sin(k + t * 6) > 0); }
     c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(X, topY - 20, 5, 0, TAU); c.fill(); c.strokeStyle = '#7a5200'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X, topY - 24); c.lineTo(X, topY - 40); c.stroke(); c.fillStyle = '#ff4d6d'; c.beginPath(); c.moveTo(X, topY - 40); c.quadraticCurveTo(X + 8, topY - 40 + Math.sin(t * 6) * 2, X + 15, topY - 36); c.lineTo(X, topY - 32); c.fill();
     items.filter(it => it[0][2] >= 0).forEach(chair);
@@ -171,14 +174,14 @@
     return updOld();
   };
   const walkOld = rmWalkTo; rmWalkTo = function (x, y) { const r = rmRideOf(RM.me); if (r && KINDS[r.k]) { showToast('🚪 انزل من اللعبة أول'); return; } return walkOld(x, y); };
-  const near = { drop: () => Math.hypot(RM.me.x - DROP.x, (RM.me.y - DROP.y) * 1.4) < 110, bump: () => Math.abs(RM.me.x - BUMP.x) < BUMP.w / 2 + 40 && Math.abs(RM.me.y - BUMP.y) < BUMP.h / 2 + 40, oct: () => Math.hypot(RM.me.x - OCT.x, (RM.me.y - OCT.y) * 1.4) < 150, swg: () => Math.hypot(RM.me.x - SWG.x, (RM.me.y - SWG.y) * 1.4) < 140 };
+  const near = { drop: () => Math.hypot(RM.me.x - DROP.x, (RM.me.y - DROP.y) * 1.2) < 130, bump: () => Math.abs(RM.me.x - BUMP.x) < BUMP.w / 2 + 40 && Math.abs(RM.me.y - BUMP.y) < BUMP.h / 2 + 40, oct: () => Math.hypot(RM.me.x - OCT.x, (RM.me.y - OCT.y) * 1.4) < 150, swg: () => Math.hypot(RM.me.x - SWG.x, (RM.me.y - SWG.y) * 1.4) < 140 };
   const nearAny = () => rmShopId() === 0 && !rmRideOf(RM.me) ? Object.keys(near).filter(k => near[k]()) : [];
   const keyOld = rmXKey; rmXKey = function () { return keyOld() + '|r5' + nearAny().join(''); };
   const promptOld = rmXPrompt; rmXPrompt = function (mk) { nearAny().forEach(k => mk('اركب ' + NAMES[k], () => board(k))); return promptOld(mk); };
   const hitOld = rmXHit; rmXHit = function (x, y) {
     if (rmShopId() === 0 && !rmRideOf(RM.me)) {
       const zones = [['drop', DROP.x - 60, DROP.x + 60, DROP.y - DROP.H, DROP.y + 14, DROP.x, DROP.y + 30], ['bump', BUMP.x - BUMP.w / 2, BUMP.x + BUMP.w / 2, BUMP.y - BUMP.h / 2 - 60, BUMP.y + BUMP.h / 2, BUMP.x, BUMP.y + BUMP.h / 2 + 34], ['oct', OCT.x - OCT.R - 30, OCT.x + OCT.R + 30, OCT.y - 110, OCT.y + 34, OCT.x, OCT.y + 56], ['swg', SWG.x - 130, SWG.x + 130, SWG.y - 190, SWG.y + 26, SWG.x, SWG.y + 50]];
-      for (const z of zones) if (x > z[1] && x < z[2] && y > z[3] && y < z[4]) { if (near[z[0]]()) board(z[0]); else { rmWalkTo(z[5], z[6]); rmTapMark(z[5], z[6]); } return true; }
+      for (const z of zones) if (x > z[1] && x < z[2] && y > z[3] && y < z[4]) { rmWalkTo(z[5], z[6]); rmTapMark(z[5], z[6]); if (!near[z[0]]()) showToast('🚶 روح للعبة ودوس زر «اركب»'); return true; }
     }
     return hitOld(x, y);
   };
@@ -189,8 +192,8 @@
   RM_DECOR.push({ y: DROP.y, f: dropDraw }, { y: BUMP.y + BUMP.h / 2, f: bumpDraw }, { y: OCT.y + 20, f: octDraw }, { y: SWG.y + 20, f: swgDraw }, { y: 1185, f: gate });
   [[-900, 1160, 'pop'], [-430, 930, 'cotton'], [-1240, 885, 'cotton']].forEach(([x, y, k]) => RM_DECOR.push({ y, f: c => cart(c, x, y, k) }));
   [[-1290, 1175], [-1010, 1175], [-640, 895], [-330, 1170], [-80, 980], [-1370, 1175]].forEach(([x, y]) => RM_DECOR.push({ y, f: c => bench(c, x, y) }));
-  [[-1350, 860, 90], [-930, 860, 90], [-470, 860, 90], [-60, 860, 90], [-60, 520, 90]].forEach(([x, y, h]) => RM_DECOR.push({ y, f: c => pole(c, x, y, h) }));
+  [[-1350, 860, 90], [-930, 860, 90], [-470, 860, 90], [-60, 860, 90], [-20, 470, 90]].forEach(([x, y, h]) => RM_DECOR.push({ y, f: c => pole(c, x, y, h) }));
   RM_DECOR.push({ y: 772, f: c => { stringLights(c, -1350, 770, -930, 770); stringLights(c, -930, 770, -470, 770); stringLights(c, -470, 770, -60, 770); } });
-  RM_DECOR.push({ y: 640, f: c => booth(c, -410, 640) }); [[-470, 560], [-350, 560], [-110, 700], [-300, 720], [-700, 900], [-560, 900]].forEach(([x, y]) => RM_DECOR.push({ y, f: c => flowers(c, x, y) }));
+  RM_DECOR.push({ y: 640, f: c => booth(c, -410, 640) }); [[-470, 560], [-350, 560], [-30, 720], [-300, 720], [-700, 900], [-560, 900]].forEach(([x, y]) => RM_DECOR.push({ y, f: c => flowers(c, x, y) }));
   window.R5_RIDES = { drop: DROP, bump: BUMP, oct: OCT, swg: SWG };
 })();
