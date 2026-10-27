@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ساحة بابي الحربية</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@600;800&display=swap">
+<style>
+/* Layout: منظور علوي مثل ألعاب الموبا، HUD عسكري فوق المشهد، منطقة المشي بالنص الجوة من الشاشة */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); --bg: #0c1014; --ink: #f4ecda; --sand: #e2b878; --olive: #7d8a4e; --alert: #ff5a3c; --good: #7bd36a; --hud: rgba(10,14,18,.66); --line: rgba(244,236,218,.26);
+  --disp: "Lalezar", "Cairo", system-ui, sans-serif; --body: "Cairo", system-ui, sans-serif; color-scheme: dark; }
+html, body { height: 100%; margin: 0; } body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+[hidden] { display: none !important; }
+canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: fixed; z-index: 5; pointer-events: none; }
+#top { top: calc(env(safe-area-inset-top, 0px) + 10px); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; direction: rtl; }
+.chip { background: var(--hud); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; font-weight: 800; font-size: 13px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+.chip b { font-family: var(--disp); font-weight: 400; font-size: 20px; color: var(--sand); }
+#hpc { flex-direction: column; align-items: stretch; width: min(200px, 40vw); } #hpc .bar { height: 9px; border-radius: 5px; background: rgba(255,255,255,.15); overflow: hidden; } #hpc .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--good), #d8e86a); transition: width .2s; }
+#mid { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); pointer-events: none; }
+#pause { pointer-events: auto; position: fixed; z-index: 6; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(16px, env(safe-area-inset-right, 0px)); width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--hud); color: var(--ink); font-size: 16px; cursor: pointer; }
+#joy { position: fixed; z-index: 6; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); width: 150px; height: 150px; margin-left: -75px; border-radius: 50%; background: radial-gradient(circle, rgba(10,14,18,.25) 40%, rgba(10,14,18,.55)); border: 2px solid rgba(244,236,218,.35); box-shadow: 0 0 0 6px rgba(244,236,218,.06), inset 0 0 24px rgba(0,0,0,.4); touch-action: none; }
+#joyK { position: absolute; left: 45px; top: 45px; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8e8, var(--sand) 55%, #9a7440); box-shadow: 0 4px 12px rgba(0,0,0,.5); will-change: transform; }
+#joy span { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-size: 11px; opacity: .6; pointer-events: none; }
+#gunBtn { position: fixed; z-index: 6; right: calc(max(16px, env(safe-area-inset-right, 0px)) + 4px); bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); border-radius: 14px; border: 2px solid var(--sand); background: var(--hud); color: var(--ink); font: 800 13px var(--body); padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#gunBtn b { font: 400 20px var(--disp); color: var(--sand); } #gunBtn small { font-size: 10px; opacity: .7; }
+#skills { position: fixed; z-index: 6; right: calc(max(16px, env(safe-area-inset-right, 0px)) + 4px); top: 50%; transform: translateY(-60%); display: grid; grid-template-columns: repeat(2, auto); gap: 10px; direction: rtl; }
+.sk { position: relative; width: 62px; height: 62px; border-radius: 50%; border: 2px solid var(--line); background: var(--hud); color: var(--ink); font: 800 10px var(--body); display: grid; place-items: center; cursor: pointer; overflow: hidden; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.sk .ic { font-size: 24px; line-height: 1; } .sk .nm { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 9px; opacity: .8; }
+.sk .cd { position: absolute; inset: 0; background: conic-gradient(rgba(0,0,0,.72) var(--p, 0%), transparent 0); border-radius: 50%; }
+.sk .cdn { position: absolute; inset: 0; display: grid; place-items: center; font: 400 20px var(--disp); color: #fff; }
+.sk.lock { opacity: .35; } .sk.ult { border-color: var(--sand); width: 74px; height: 74px; } .sk:focus-visible, .btn:focus-visible, .lv:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+#feed { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 64px); left: max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+#feed div { background: var(--hud); border-left: 3px solid var(--alert); padding: 3px 10px; border-radius: 6px; font-size: 13px; animation: fd 3s forwards; }
+@keyframes fd { 0% { opacity: 0; transform: translateX(-8px); } 10%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+#nums { position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+#nums i { position: absolute; font: 400 18px var(--disp); font-style: normal; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px rgba(0,0,0,.7); transform: translate(-50%, -50%); animation: nm .8s forwards; }
+#nums i.c { color: var(--sand); font-size: 24px; } #nums i.p { color: var(--alert); }
+@keyframes nm { to { transform: translate(-50%, -160%); opacity: 0; } }
+#banner { position: fixed; z-index: 7; left: 50%; top: 30%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; opacity: 0; transition: opacity .3s; }
+#banner b { display: block; font: 400 clamp(40px, 11vw, 78px) var(--disp); color: var(--sand); text-shadow: 0 6px 24px rgba(0,0,0,.7); }
+#banner small { font-size: 15px; font-weight: 800; }
+#dmg { inset: 0; opacity: 0; background: radial-gradient(circle, transparent 55%, rgba(255,40,20,.5)); transition: opacity .3s; }
+/* القوائم */
+.ov { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: linear-gradient(180deg, rgba(12,16,20,.45), rgba(12,16,20,.92)); padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px; overflow-y: auto; }
+.box { width: min(560px, 100%); display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+.box h1 { margin: 0; font: 400 clamp(44px, 12vw, 80px) var(--disp); color: var(--sand); line-height: 1; text-wrap: balance; text-shadow: 0 6px 26px rgba(0,0,0,.6); }
+.box h2 { margin: 0; font: 400 38px var(--disp); color: var(--sand); }
+.box p { margin: 0; line-height: 1.8; opacity: .9; max-width: 46ch; }
+.tag { font-size: 12px; letter-spacing: .25em; opacity: .7; }
+.btn { background: var(--sand); color: #1a1206; border: 0; border-radius: 14px; padding: 12px 34px; font: 400 24px var(--disp); cursor: pointer; box-shadow: 0 6px 0 #8a6a3a; }
+.btn.alt { background: var(--hud); color: var(--ink); border: 1px solid var(--line); box-shadow: none; font-size: 18px; }
+.btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #8a6a3a; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+#lvGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; direction: rtl; }
+.lv { aspect-ratio: 1; border-radius: 14px; border: 1px solid var(--line); background: var(--hud); color: var(--ink); font: 400 24px var(--disp); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; cursor: pointer; position: relative; }
+.lv small { font: 800 11px var(--body); color: var(--sand); letter-spacing: 1px; } .lv.boss { border-color: var(--alert); } .lv.boss::after { content: "زعيم"; position: absolute; top: 4px; font: 800 9px var(--body); color: var(--alert); }
+.lv.lock { opacity: .35; cursor: not-allowed; } .lv.next { border-color: var(--sand); box-shadow: 0 0 0 2px var(--sand) inset; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; width: 100%; font-size: 12px; } .legend span { background: var(--hud); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.stars { font-size: 34px; letter-spacing: 6px; }
+.btn.sm { font-size: 16px; padding: 8px 14px; } .row.pg { align-items: center; } .btn:disabled { opacity: .35; }
+.box.wide { width: min(960px, 100%); }
+.shTop { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: space-between; flex-wrap: wrap; } .shTop h2 { font-size: 32px; }
+.shNote { font-size: 13px; opacity: .8; }
+#shopGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 10px; width: 100%; direction: rtl; }
+.wc { background: var(--hud); border: 1px solid var(--line); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 6px; text-align: right; position: relative; min-width: 0; }
+.wc.eq { border-color: var(--sand); box-shadow: 0 0 0 1px var(--sand) inset; } .wc.top { border-color: #ff7a3a; background: linear-gradient(160deg, rgba(255,122,58,.22), var(--hud)); }
+.wc img { width: 100%; aspect-ratio: 2 / 1; object-fit: contain; background: radial-gradient(circle, rgba(244,236,218,.12), transparent 70%); border-radius: 10px; }
+.wc b { font: 400 20px var(--disp); color: var(--ink); } .wc .cl { font-size: 11px; opacity: .7; }
+.wc .rec { position: absolute; top: 8px; left: 8px; background: var(--sand); color: #1a1206; font: 800 10px var(--body); padding: 2px 7px; border-radius: 10px; }
+.st { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; align-items: center; } .st i { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; } .st i u { display: block; height: 100%; background: linear-gradient(90deg, var(--sand), #ff7a3a); }
+.wc button { margin-top: auto; border: 0; border-radius: 10px; padding: 8px; font: 800 13px var(--body); cursor: pointer; background: var(--sand); color: #1a1206; } .wc button.own { background: rgba(255,255,255,.14); color: var(--ink); } .wc button:disabled { opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { #feed div, #nums i { animation-duration: .01s; } }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="joy"><div id="joyK"></div><span>حرّك</span></div><button id="gunBtn" type="button"></button>
+<div class="hud" id="top">
+  <div class="chip" id="hpc"><span>❤️ <b id="hpN">100</b></span><div class="bar"><i id="hpB"></i></div></div>
+  <div class="chip">🪙 <b class="coinsN">0</b></div><div class="chip">💀 باقي <b id="left">0</b></div>
+</div>
+<div id="mid"><div class="chip">🎖️ المرحلة <b id="lvN">1</b>/100</div></div>
+<button id="pause" type="button" aria-label="توقف">⏸</button>
+<div id="feed"></div>
+<div id="nums"></div>
+<div class="hud" id="dmg"></div>
+<div id="banner"><b id="bnT"></b><small id="bnS"></small></div>
+<div id="skills"></div>
+
+<div class="ov" id="home"><div class="box">
+  <div class="tag">موبا حربية • 3D HD • 100 مرحلة • 30 سلاح</div>
+  <h1>ساحة بابي الحربية</h1>
+  <p>حرّك جنديك بالگير اللي بالنص الجوة، وهو يطلق النار وحده على أقرب عدو. كل ما تتقدم الأعداء يصيرون أقوى، فاجمع عملات واشتري أسلحة أقوى من المتجر لحد RPG-7. استخدم القنابل والصواريخ والضربة الجوية وخلّص كل المراحل.</p>
+  <div class="legend"><span>🕹️ الگير بالنص الجوة: مشي</span><span>🔫 رمي تلقائي • 30 سلاح بالمتجر</span><span>💣🚀⚡💊 مهارات يمين</span><span>🛩️ ضربة جوية من المرحلة 10</span></div>
+  <div class="row pg"><button class="btn alt sm" id="lvPrev" type="button">→</button><div class="chip">المراحل <b id="lvPg">1–20</b></div><button class="btn alt sm" id="lvNext" type="button">←</button></div>
+  <div id="lvGrid"></div>
+  <div class="row"><button class="btn" id="goNext" type="button">ابدأ</button><button class="btn alt" id="goShop" type="button">🛒 متجر الأسلحة <span class="coinsN"></span> 🪙</button></div>
+</div></div>
+<div class="ov" id="win" hidden><div class="box">
+  <h2 id="winT">نصر!</h2><div class="stars" id="winS">★★★</div><p id="winP"></p>
+  <div class="row"><button class="btn" id="winNext" type="button">المرحلة الجاية</button><button class="btn alt" id="winShop" type="button">🛒 المتجر</button><button class="btn alt" id="winHome" type="button">المراحل</button></div>
+</div></div>
+<div class="ov" id="lose" hidden><div class="box">
+  <h2>انصبت!</h2><p id="loseP">الأعداء غلبوك هالمرة. جرب مرة ثانية وخلي مسافة بينك وبينهم.</p>
+  <div class="row"><button class="btn" id="loseRe" type="button">أعد المرحلة</button><button class="btn alt" id="loseShop" type="button">🛒 اشتري سلاح أقوى</button><button class="btn alt" id="loseHome" type="button">المراحل</button></div>
+</div></div>
+<div class="ov" id="shop" hidden><div class="box wide">
+  <div class="shTop"><h2>🛒 متجر الأسلحة</h2><div class="chip">🪙 <b class="coinsN">0</b></div><button class="btn alt sm" id="shopX" type="button">✕ سكّر</button></div>
+  <p class="shNote">كل سلاح أقوى من اللي قبله. إذا علكت بمرحلة وما تكدر تعبرها، اشتري السلاح اللي يناسبها. الرقم الأصفر يكلك من يا مرحلة يصير السلاح مناسب.</p>
+  <div id="shopGrid"></div>
+</div></div>
+<div class="ov" id="pz" hidden><div class="box"><h2>توقف</h2><div class="row"><button class="btn" id="pzGo" type="button">كمّل</button><button class="btn alt" id="pzShop" type="button">🛒 المتجر</button><button class="btn alt" id="pzHome" type="button">المراحل</button></div></div></div>
+
+<script src="/vendor/three-r128.min.js"></script>
+<script src="/vendor/three-post-r128.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id), rnd = (a, b) => a + Math.random() * (b - a), TAU = Math.PI * 2;
+/* ---------------- المشهد HD ---------------- */
+const cv = $('gl'), R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.12;
+const S = new THREE.Scene(), CAM = new THREE.PerspectiveCamera(42, 1, .5, 300);
+/* إضاءة مثل تتبع الأشعة: انعكاسات بيئة حقيقية على المعادن (PMREM)، توهج (Bloom)، تلوين سينمائي وحدّة أعلى، وظلال 4K */
+const PMREM = new THREE.PMREMGenerator(R), ENVS = {};
+function envFor(T) { const k = T.n; if (ENVS[k]) return ENVS[k]; const es = new THREE.Scene(), top = new THREE.Color(T.night ? '#0a0f20' : '#5a86c8'), hor = new THREE.Color(T.fog), gnd = new THREE.Color(T.g[0]);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { a: { value: top }, b: { value: hor }, c: { value: gnd } }, vertexShader: 'varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }', fragmentShader: 'uniform vec3 a,b,c; varying vec3 p; void main(){ vec3 col = p.y > 0. ? mix(b, a, pow(p.y, .6)) : mix(b, c, pow(-p.y, .4)); gl_FragColor = vec4(col, 1.); }' }));
+  es.add(sky); const sunD = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 8), new THREE.MeshBasicMaterial({ color: T.night ? '#ffd890' : '#fff4dc' })); sunD.position.set(-25, 35, -12); sunD.material.color.multiplyScalar(T.night ? 2 : 6); es.add(sunD);
+  return ENVS[k] = PMREM.fromScene(es, .03).texture; }
+const GRADE_SH = { uniforms: { tDiffuse: { value: null }, exposure: { value: 1 }, res: { value: new THREE.Vector2(1, 1) }, night: { value: 0 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+  fragmentShader: 'uniform sampler2D tDiffuse; uniform float exposure, night; uniform vec2 res; varying vec2 vUv;' +
+    'vec3 aces(vec3 x){ return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14), 0., 1.); }' +
+    'void main(){ vec2 px = 1. / res; vec3 c = texture2D(tDiffuse, vUv).rgb; vec3 n = texture2D(tDiffuse, vUv + vec2(px.x,0.)).rgb + texture2D(tDiffuse, vUv - vec2(px.x,0.)).rgb + texture2D(tDiffuse, vUv + vec2(0.,px.y)).rgb + texture2D(tDiffuse, vUv - vec2(0.,px.y)).rgb;' +
+    ' c = max(c + (c * 4. - n) * .22, 0.); c = aces(c * exposure); float l = dot(c, vec3(.299,.587,.114)); c = mix(vec3(l), c, 1.14); c = (c - .5) * 1.13 + .5;' +
+    ' c *= mix(vec3(1.03,1.,.96), vec3(.92,.97,1.08), night); vec2 q = vUv - .5; c *= 1. - dot(q, q) * .55; gl_FragColor = vec4(clamp(c, 0., 1.), 1.); }' };
+let COMP = null, BLOOM = null, GRADE = null;
+let ENV_OK = null;   // نتأكد إن الجهاز يدعم انعكاسات البيئة، وإذا ما يدعمها نكمل بدونها حتى ما تطلع الشاشة سودة
+function envCheck() { if (ENV_OK !== null || !S.environment) return; try { const gl = R.getContext(), env = S.environment, px = new Uint8Array(4), W2 = gl.drawingBufferWidth, H2 = gl.drawingBufferHeight;
+  const probe = () => { R.setRenderTarget(null); R.render(S, CAM); let t = 0; for (let i = 1; i <= 4; i++) for (let j = 1; j <= 4; j++) { gl.readPixels(Math.floor(W2 * i / 5), Math.floor(H2 * j / 5), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); t += px[0] + px[1] + px[2]; } return t; };
+  S.environment = null; const a0 = probe(); S.environment = env; const a1 = probe(); ENV_OK = a1 > a0 * .6; if (!ENV_OK) S.environment = null; } catch (e) { ENV_OK = false; S.environment = null; } }
+function setupPost() { try { const pr = R.getPixelRatio(), w = Math.round(innerWidth * pr), h = Math.round(innerHeight * pr);
+  const rt = R.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget ? new THREE.WebGLMultisampleRenderTarget(w, h, { format: THREE.RGBAFormat }) : new THREE.WebGLRenderTarget(w, h, { format: THREE.RGBAFormat });
+  COMP = new THREE.EffectComposer(R, rt); COMP.addPass(new THREE.RenderPass(S, CAM)); BLOOM = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .3, .4, .985); COMP.addPass(BLOOM); GRADE = new THREE.ShaderPass(GRADE_SH); COMP.addPass(GRADE); } catch (e) { COMP = null; } }
+const hemi = new THREE.HemisphereLight('#fff2d8', '#7a6040', .72); S.add(hemi);
+const sun = new THREE.DirectionalLight('#ffe2b0', 1.25); sun.castShadow = true; sun.shadow.mapSize.set(R.capabilities.maxTextureSize >= 8192 ? 4096 : 2048, R.capabilities.maxTextureSize >= 8192 ? 4096 : 2048); Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 160 }); sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; S.add(sun, sun.target);
+function tex(w, h, draw, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; if (rep) t.repeat.set(rep[0], rep[1]); t.anisotropy = R.capabilities.getMaxAnisotropy(); return t; }
+/* أربع جبهات: صحراء، غابة، ثلج، مدينة بالليل — كل 5 مراحل جبهة */
+const THEMES = [
+  { n: 'جبهة الصحراء', g: ['#d6b07a', 200, 165, 110], fog: '#e3c294', sky: '#e8c99a', sun: 1.25, hemi: .72, wall: '#c9a37a', tree: '#4f7a2e' },
+  { n: 'جبهة الغابة', g: ['#5f7a3a', 90, 120, 60], fog: '#9fb58a', sky: '#a9c4a0', sun: 1.1, hemi: .7, wall: '#7a6a52', tree: '#2f5a22' },
+  { n: 'جبهة الثلج', g: ['#e8eef2', 225, 232, 238], fog: '#dfe8ef', sky: '#cfdbe6', sun: 1.0, hemi: .85, wall: '#8a8f96', tree: '#2a4a3a' },
+  { n: 'المدينة بالليل', g: ['#3a3d44', 60, 62, 70], fog: '#1a2030', sky: '#141a28', sun: .45, hemi: .4, wall: '#5a5560', tree: '#203828', night: 1 }
+];
+const groundTex = THEMES.map(T => tex(512, 512, (g, w, h) => { g.fillStyle = T.g[0]; g.fillRect(0, 0, w, h); for (let i = 0; i < 9000; i++) { const v = rnd(-26, 26) | 0; g.fillStyle = `rgba(${T.g[1] + v},${T.g[2] + v},${T.g[3] + v},.35)`; g.fillRect(rnd(0, w), rnd(0, h), rnd(1, 3), rnd(1, 3)); } if (T.night) { g.strokeStyle = 'rgba(255,220,120,.25)'; g.lineWidth = 6; g.setLineDash([30, 30]); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); } }, [16, 16]));
+const wallTex = THEMES.map(T => tex(256, 256, (g, w, h) => { g.fillStyle = T.wall; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 16) for (let x = (y / 16 % 2) * 16; x < w; x += 32) { const v = rnd(-16, 16) | 0; g.fillStyle = `rgba(${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${Math.abs(v) / 120})`; g.fillRect(x + 1, y + 1, 30, 14); } }));
+const crateT = tex(256, 256, (g, w, h) => { g.fillStyle = '#6e5232'; g.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#7c5d39' : '#6a4f30'; g.fillRect(0, i * 32, w, 31); } g.strokeStyle = '#3e2c18'; g.lineWidth = 14; g.strokeRect(7, 7, w - 14, h - 14); g.beginPath(); g.moveTo(10, 10); g.lineTo(w - 10, h - 10); g.stroke(); });
+const barrelT = tex(128, 128, (g, w, h) => { g.fillStyle = '#b5281c'; g.fillRect(0, 0, w, h); g.fillStyle = '#7a160e'; [14, 60, 106].forEach(y => g.fillRect(0, y, w, 8)); g.fillStyle = '#ffd23a'; g.font = 'bold 26px sans-serif'; g.fillText('⚠', 46, 50); });
+const softTex = tex(64, 64, g => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+const ringTex = tex(128, 128, g => { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 6; g.beginPath(); g.arc(64, 64, 56, 0, TAU); g.stroke(); g.setLineDash([10, 12]); g.lineWidth = 3; g.beginPath(); g.arc(64, 64, 44, 0, TAU); g.stroke(); });
+const groundM = new THREE.MeshStandardMaterial({ map: groundTex[0], roughness: 1 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), groundM); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);
+const ARENA = 34;   // نص عرض الساحة
+
+/* ---------------- الجنود ---------------- */
+/* ---------------- الأسلحة HD: M4 و AKM ---------------- */
+const GUNS = {};
+const MAT = {};
+const mat = (k, c, r, m, map) => MAT[k] || (MAT[k] = new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .7 : r, metalness: m || 0, map: map || null }));
+const woodT = tex(128, 32, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#a5592a'); gr.addColorStop(.5, '#8a4520'); gr.addColorStop(1, '#6a3216'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(40,15,5,.35)'; for (let i = 0; i < 14; i++) { g.lineWidth = rnd(.5, 1.5); g.beginPath(); const y = rnd(0, h); g.moveTo(0, y); g.bezierCurveTo(w * .3, y + rnd(-4, 4), w * .6, y + rnd(-4, 4), w, y + rnd(-3, 3)); g.stroke(); } });
+function buildGun(type) {
+  const g = new THREE.Group(), BK = mat('gunB', '#1c1e21', .38, .78), DK = mat('gunD', '#2b2e32', .45, .7), PL = mat('gunP', '#141516', .7, .1), WD = mat('gunW', '#ffffff', .6, 0, woodT), GL = mat('gunG', '#ff3030', .2, .2);
+  const p = (geo, m, x, y, z, rx, ry, rz) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx || 0, ry || 0, rz || 0); o.castShadow = true; g.add(o); return o; };
+  const cyl = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10);
+  if (type === 'm4') {
+    p(new THREE.BoxGeometry(.075, .1, .42), BK, 0, 0, .02);                     // جسم السلاح العلوي
+    p(new THREE.BoxGeometry(.07, .075, .3), DK, 0, -.075, -.02);               // الجسم السفلي
+    p(new THREE.BoxGeometry(.05, .03, .5), BK, 0, .065, .1);                     // سكة بيكاتيني
+    for (let i = 0; i < 9; i++) p(new THREE.BoxGeometry(.056, .012, .022), DK, 0, .085, -.12 + i * .055);
+    p(cyl(.045, .045, .34, 8), DK, 0, .005, .38, Math.PI / 2);                  // الواقي الأمامي
+    for (let i = 0; i < 4; i++) p(new THREE.BoxGeometry(.018, .018, .32), BK, Math.cos(i * Math.PI / 2) * .048, .005 + Math.sin(i * Math.PI / 2) * .048, .38);
+    p(cyl(.014, .014, .2, 8), BK, 0, .005, .64, Math.PI / 2);                   // السبطانة
+    p(cyl(.02, .02, .06, 6), BK, 0, .005, .76, Math.PI / 2);                     // مانع الوهج
+    p(new THREE.BoxGeometry(.012, .07, .02), BK, 0, .1, .5);                     // نيشان أمامي
+    p(new THREE.BoxGeometry(.04, .15, .075), BK, 0, -.17, .1, .22);             // مخزن مستقيم
+    p(new THREE.BoxGeometry(.04, .13, .06), PL, 0, -.13, -.14, -.35);           // المقبض
+    p(new THREE.BoxGeometry(.012, .04, .05), BK, 0, -.11, -.05);                 // الزناد
+    p(cyl(.017, .017, .22, 8), BK, 0, -.01, -.27, Math.PI / 2);                 // أنبوب الأخمص
+    p(new THREE.BoxGeometry(.06, .09, .16), PL, 0, -.03, -.41);                  // الأخمص القابل للطي
+    // منظار ريد دوت
+    p(cyl(.032, .032, .1, 12), BK, 0, .125, -.02, Math.PI / 2); p(new THREE.BoxGeometry(.045, .03, .07), BK, 0, .09, -.02);
+    p(new THREE.CircleGeometry(.024, 12), GL, 0, .125, .031).material = mat('gunLens', '#3a6aff', .05, .9);
+    p(new THREE.SphereGeometry(.006, 6, 4), GL, 0, .125, .02);
+    p(new THREE.BoxGeometry(.03, .05, .08), PL, 0, -.06, .28);                  // مقبض أمامي
+  } else {
+    p(new THREE.BoxGeometry(.07, .095, .4), BK, 0, 0, 0);                        // الجسم
+    p(new THREE.BoxGeometry(.068, .04, .38), DK, 0, .062, -.01);                // الغطاء
+    p(new THREE.BoxGeometry(.062, .075, .24), WD, 0, -.005, .32);               // واقي خشب سفلي
+    p(new THREE.BoxGeometry(.05, .035, .2), WD, 0, .05, .31);                    // واقي خشب علوي
+    p(cyl(.017, .017, .22, 8), DK, 0, .055, .36, Math.PI / 2);                  // أنبوب الغاز
+    p(cyl(.015, .015, .38, 8), BK, 0, .005, .55, Math.PI / 2);                  // السبطانة
+    p(new THREE.BoxGeometry(.05, .06, .03), BK, 0, .03, .64);                    // قاعدة النيشان
+    p(new THREE.BoxGeometry(.012, .06, .012), BK, 0, .08, .64);
+    p(new THREE.BoxGeometry(.035, .035, .06), BK, 0, .005, .76, 0, 0, .1);    // مانع الارتداد المائل
+    const mag = new THREE.Group(); mag.position.set(0, -.07, .07); g.add(mag);  // مخزن مقوس
+    for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(.042, .05, .07), mat('gunMag', '#5a3a1e', .55, .25)); const a = i * .16; s.position.set(0, -i * .045, Math.sin(a) * .1 + i * .012); s.rotation.x = a * .9; s.castShadow = true; mag.add(s); }
+    p(new THREE.BoxGeometry(.045, .12, .055), WD, 0, -.1, -.14, -.35);          // المقبض
+    p(new THREE.BoxGeometry(.012, .04, .05), BK, 0, -.08, -.05);
+    const st = p(new THREE.BoxGeometry(.055, .1, .34), WD, 0, -.045, -.38, .14); // أخمص خشب
+    p(new THREE.BoxGeometry(.058, .12, .02), BK, 0, -.07, -.55, .14);
+  }
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, .005, .8); g.add(muzzle);
+  const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); fl.scale.set(.7, .7, .7); fl.position.copy(muzzle.position).add(new THREE.Vector3(0, 0, .12)); g.add(fl);
+  g.userData = { muzzle, fl }; return g;
+}
+const flashTex = tex(64, 64, g => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,230,1)'); r.addColorStop(.25, 'rgba(255,200,90,.95)'); r.addColorStop(1, 'rgba(255,110,20,0)'); g.fillStyle = r; g.beginPath(); for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, rr = i % 2 ? 12 : 32; g.lineTo(32 + Math.cos(a) * rr, 32 + Math.sin(a) * rr); } g.fill(); });
+const camoCache = {}; const blobM = new THREE.MeshBasicMaterial({ map: tex(64, 64, g => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(0,0,0,.55)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }), transparent: true, depthWrite: false });
+function camo(base, c2, c3) { const k = base + c2 + c3; if (camoCache[k]) return camoCache[k]; return camoCache[k] = tex(128, 128, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); [c2, c3, c2].forEach((c, j) => { g.fillStyle = c; for (let i = 0; i < 14; i++) { g.beginPath(); const x = rnd(0, w), y = rnd(0, h); for (let k2 = 0; k2 < 7; k2++) { const a = k2 / 7 * TAU, r = rnd(5, 14 - j * 3); g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * .7); } g.fill(); } }); }); }
+/* ---------------- جنود واقعيين: أطراف مدورة، سترة واقية بجيوب، حقيبة، خوذة بنظارة، قفازات وركب ---------------- */
+/* ================= 30 سلاح: كل واحد أقوى من اللي قبله، وأقوى شي RPG-7 ================= */
+const CLS = {
+  pistol: { n: 'مسدس', rate: .3, pel: 1, range: 13, spread: .15, snd: [3000, 220] },
+  smg: { n: 'رشاش صغير', rate: .085, pel: 1, range: 13, spread: .28, snd: [4200, 200] },
+  rifle: { n: 'بندقية هجومية', rate: .12, pel: 1, range: 17, spread: .14, snd: [3300, 150] },
+  shotgun: { n: 'شوزن', rate: .78, pel: 8, range: 9, spread: .9, snd: [1700, 90] },
+  dmr: { n: 'قناصة نص آلية', rate: .42, pel: 1, range: 22, spread: .04, snd: [2600, 110] },
+  sniper: { n: 'قناصة', rate: 1.05, pel: 1, range: 27, spread: .01, snd: [2200, 70] },
+  lmg: { n: 'رشاش ثقيل', rate: .075, pel: 1, range: 18, spread: .3, snd: [2800, 120] },
+  mini: { n: 'مدفع دوار', rate: .042, pel: 1, range: 17, spread: .35, snd: [3600, 160] },
+  gl: { n: 'قاذف قنابل', rate: .85, pel: 1, range: 18, spread: 0, boom: 3.6, snd: [900, 60] },
+  rpg: { n: 'قاذف صواريخ', rate: 1.0, pel: 1, range: 22, spread: 0, boom: 5.2, snd: [700, 50] }
+};
+const WEAP = [
+  ['glock', 'Glock 17', 'pistol', { c: '#2a2c2e' }], ['m9', 'Beretta M9', 'pistol', { c: '#3a3c40' }], ['deagle', 'Desert Eagle', 'pistol', { c: '#b8bcc0', m: .9 }],
+  ['uzi', 'Uzi', 'smg', { c: '#2a2a2a' }], ['mp5', 'MP5', 'smg', { c: '#1e1e20' }], ['ump', 'UMP45', 'smg', { c: '#3a3a30' }], ['vector', 'Kriss Vector', 'smg', { c: '#d8d2c0' }], ['p90', 'P90', 'smg', { c: '#4a4a3a' }],
+  ['akm', 'AKM', 'rifle', {}], ['m4', 'M4A1', 'rifle', {}], ['m16', 'M16A4', 'rifle', { c: '#1c1c1e', L: 1.15 }], ['famas', 'FAMAS', 'rifle', { c: '#2e3030', bull: 1 }], ['aug', 'Steyr AUG', 'rifle', { c: '#5a5e4a', bull: 1, scope: 1 }],
+  ['g36', 'G36C', 'rifle', { c: '#2f3236' }], ['scar', 'SCAR-H', 'rifle', { c: '#b49a6a' }], ['hk416', 'HK416', 'rifle', { c: '#7a6a4e', scope: 1 }],
+  ['r870', 'Remington 870', 'shotgun', { c: '#2a2a2a', wood: 1 }], ['spas', 'SPAS-12', 'shotgun', { c: '#2e2e30' }], ['aa12', 'AA-12', 'shotgun', { c: '#3a3d36', drum: 1 }],
+  ['svd', 'SVD Dragunov', 'dmr', { c: '#2a2a2a', wood: 1, scope: 1 }], ['m14', 'M14 EBR', 'dmr', { c: '#3a3a34', scope: 1 }],
+  ['pkm', 'PKM', 'lmg', { c: '#2a2a2a', wood: 1, box: 1 }], ['m249', 'M249 SAW', 'lmg', { c: '#2e3230', box: 1 }], ['m60', 'M60', 'lmg', { c: '#30302a', box: 1, L: 1.15 }],
+  ['barrett', 'Barrett M82', 'sniper', { c: '#2a2c2a', scope: 1, L: 1.35 }], ['awm', 'AWM', 'sniper', { c: '#5a6a3a', scope: 1, L: 1.25 }],
+  ['minigun', 'M134 Minigun', 'mini', { c: '#3a3c3e' }], ['m32', 'M32 MGL', 'gl', { c: '#2e3226', drum: 1 }], ['xm25', 'XM25', 'gl', { c: '#4a4e3a', scope: 1 }],
+  ['rpg', 'RPG-7', 'rpg', {}]
+].map((w, i) => { const C0 = CLS[w[2]], dps = 38 * Math.pow(1.19, i) * (C0.boom ? .78 : 1), dmg = dps * C0.rate / C0.pel;
+  return { id: w[0], n: w[1], cls: w[2], o: w[3], i, C: C0, rate: C0.rate, pel: C0.pel, range: C0.range, spread: C0.spread, boom: C0.boom || 0, dmg, dps, price: i === 0 ? 0 : Math.round(260 * Math.pow(1.282, i - 1) / 10) * 10, rec: 1 + Math.round(i * 3.4) }; });
+const WBY = {}; WEAP.forEach(w => WBY[w.id] = w);
+function gunFor(id) { return WBY[id] || WEAP[0]; }
+function buildGunAny(id) {
+  if (id === 'm4' || id === 'akm') return buildGun(id);
+  const W = gunFor(id), o = W.o, g = new THREE.Group(), L = o.L || 1;
+  const BK = new THREE.MeshStandardMaterial({ color: o.c || '#222', roughness: .38, metalness: o.m || .75 }), DK = mat('gunD', '#2b2e32', .45, .7), PL = mat('gunP', '#141516', .7, .1), WD = mat('gunW', '#ffffff', .6, 0, woodT), MET = mat('gunMet', '#8a9096', .3, .9);
+  const p = (geo, m, x, y, z, rx) => { const k = new THREE.Mesh(geo, m); k.position.set(x, y, z); if (rx) k.rotation.x = rx; k.castShadow = true; g.add(k); return k; };
+  const cyl = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10); let tip = .8;
+  if (W.cls === 'pistol') { p(new THREE.BoxGeometry(.05, .07, .26), BK, 0, .02, .12); p(new THREE.BoxGeometry(.045, .12, .06), PL, 0, -.06, .03, -.25); p(cyl(.012, .012, .06, 8), DK, 0, .02, .27, Math.PI / 2); tip = .3; }
+  else if (W.cls === 'smg') { p(new THREE.BoxGeometry(.065, .09, .36 * L), BK, 0, 0, .05); p(cyl(.02, .02, .18, 8), DK, 0, .01, .32, Math.PI / 2); p(new THREE.BoxGeometry(.035, .16, .05), DK, 0, -.13, .12); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.06, -.3); p(new THREE.BoxGeometry(.04, .06, .18), PL, 0, -.01, -.22); if (W.id === 'p90') p(new THREE.BoxGeometry(.06, .03, .3), mat('p90m', '#c8b070', .3, .1), 0, .07, .05); tip = .43; }
+  else if (W.cls === 'rifle') { const bull = o.bull; p(new THREE.BoxGeometry(.075, .1, .44 * L), BK, 0, 0, bull ? -.12 : .02); p(cyl(.04, .04, .3, 8), DK, 0, 0, .36 * L, Math.PI / 2); p(cyl(.014, .014, .2, 8), BK, 0, 0, .6 * L, Math.PI / 2); p(new THREE.BoxGeometry(.04, .15, .07), BK, 0, -.16, bull ? -.25 : .1, .2); p(new THREE.BoxGeometry(.04, .12, .055), PL, 0, -.12, bull ? .05 : -.13, -.35); if (!bull) p(new THREE.BoxGeometry(.06, .09, .18), PL, 0, -.03, -.36); p(new THREE.BoxGeometry(.05, .025, .4), BK, 0, .065, .05); tip = .72 * L; }
+  else if (W.cls === 'shotgun') { p(new THREE.BoxGeometry(.07, .1, .32), BK, 0, 0, 0); p(cyl(.02, .02, .55, 10), DK, 0, .03, .42, Math.PI / 2); p(cyl(.022, .022, .4, 10), MET, 0, -.03, .36, Math.PI / 2); p(new THREE.BoxGeometry(.06, .06, .14), o.wood ? WD : PL, 0, -.03, .3); p(new THREE.BoxGeometry(.06, .1, .26), o.wood ? WD : PL, 0, -.04, -.26, .12); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.08, -.3); if (o.drum) p(cyl(.09, .09, .07, 16), DK, 0, -.13, .08); tip = .72; }
+  else if (W.cls === 'dmr' || W.cls === 'sniper') { const sn = W.cls === 'sniper'; p(new THREE.BoxGeometry(.075, .1, .5 * L), BK, 0, 0, 0); p(cyl(sn ? .022 : .016, sn ? .02 : .016, .55 * L, 10), BK, 0, .01, .5 * L, Math.PI / 2); if (W.id === 'barrett') p(new THREE.BoxGeometry(.07, .05, .08), BK, 0, .01, .8 * L); p(new THREE.BoxGeometry(.04, .14, .07), BK, 0, -.14, .05); p(new THREE.BoxGeometry(.065, .11, .3), o.wood ? WD : PL, 0, -.03, -.38, .1); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.12, -.3);
+    [-1, 1].forEach(s => { const b = p(cyl(.008, .008, .26, 6), DK, s * .04, -.12, .42 * L); b.rotation.z = s * .35; }); tip = .78 * L + .1; }
+  else if (W.cls === 'lmg') { p(new THREE.BoxGeometry(.09, .12, .5 * L), BK, 0, 0, 0); p(cyl(.02, .02, .45 * L, 10), DK, 0, .01, .46 * L, Math.PI / 2); for (let k = 0; k < 6; k++) p(cyl(.026, .026, .03, 8), DK, 0, .01, .3 + k * .04, Math.PI / 2); p(new THREE.BoxGeometry(.1, .13, .13), mat('box', '#4a4e36', .7, .2), .02, -.13, .05); p(new THREE.BoxGeometry(.07, .11, .26), o.wood ? WD : PL, 0, -.03, -.36, .1); p(new THREE.BoxGeometry(.04, .12, .05), PL, 0, -.11, -.12, -.3); p(new THREE.BoxGeometry(.06, .06, .14), BK, 0, .08, .08); tip = .7 * L; }
+  else if (W.cls === 'mini') { const bar = new THREE.Group(); bar.position.set(0, 0, .3); g.add(bar); for (let k = 0; k < 6; k++) { const a = k / 6 * TAU, b = new THREE.Mesh(cyl(.014, .014, .7, 8), MET); b.rotation.x = Math.PI / 2; b.position.set(Math.cos(a) * .045, Math.sin(a) * .045, .2); b.castShadow = true; bar.add(b); } const hb = new THREE.Mesh(cyl(.06, .06, .08, 14), DK); hb.rotation.x = Math.PI / 2; hb.position.z = .5; bar.add(hb); p(new THREE.BoxGeometry(.16, .15, .3), BK, 0, 0, -.05); p(new THREE.BoxGeometry(.06, .08, .14), PL, 0, .12, -.1); p(new THREE.BoxGeometry(.14, .16, .16), mat('box', '#4a4e36', .7, .2), .12, -.12, -.05); g.userData.spin = bar; tip = .95; }
+  else if (W.cls === 'gl') { p(new THREE.BoxGeometry(.08, .1, .3), BK, 0, 0, 0); p(cyl(.045, .045, .3, 12), DK, 0, .01, .3, Math.PI / 2); if (o.drum) { const d = p(cyl(.1, .1, .2, 6), BK, 0, -.02, .02, Math.PI / 2); } p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.11, -.08, -.3); p(new THREE.BoxGeometry(.06, .09, .2), PL, 0, -.02, -.25); tip = .5; }
+  else if (W.cls === 'rpg') {   // RPG-7: أنبوب، رأس صاروخ ظاهر، ونيشان بصري
+    p(cyl(.042, .042, .95, 14), mat('rpgT', '#3a3e30', .55, .35), 0, 0, 0, Math.PI / 2); p(cyl(.05, .05, .2, 14), WD, 0, 0, .06, Math.PI / 2); p(cyl(.06, .045, .16, 14), DK, 0, 0, -.52, Math.PI / 2);
+    p(cyl(.05, .05, .06, 14), DK, 0, 0, .48, Math.PI / 2); const wh = p(new THREE.ConeGeometry(.07, .26, 14), mat('rpgW', '#5a6a3a', .5, .4), 0, 0, .66, Math.PI / 2); p(cyl(.07, .05, .12, 14), mat('rpgW', '#5a6a3a', .5, .4), 0, 0, .52, Math.PI / 2);
+    p(new THREE.BoxGeometry(.03, .1, .04), PL, 0, -.08, .02); p(new THREE.BoxGeometry(.03, .1, .04), PL, 0, -.08, .2); p(new THREE.BoxGeometry(.03, .07, .12), BK, .04, .07, .12); p(cyl(.015, .015, .1, 8), mat('lens2', '#3a6aff', .05, .9), .04, .07, .19, Math.PI / 2); g.userData.warhead = wh; tip = .8; }
+  if (o.scope) { p(cyl(.03, .03, .22, 12), BK, 0, .1, .02, Math.PI / 2); p(cyl(.036, .036, .03, 12), BK, 0, .1, .13, Math.PI / 2); p(new THREE.CircleGeometry(.03, 12), mat('lens', '#20304a', .1, .8), 0, .1, .146); p(new THREE.BoxGeometry(.03, .05, .06), BK, 0, .06, .02); }
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0, tip); g.add(muzzle);
+  const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); const fs = W.cls === 'pistol' ? .4 : W.cls === 'mini' ? .8 : W.boom ? .9 : .65; fl.scale.set(fs, fs, fs); fl.position.copy(muzzle.position).add(new THREE.Vector3(0, 0, .1)); g.add(fl);
+  if (W.cls === 'pistol' || W.cls === 'smg') g.scale.setScalar(1.15);
+  g.userData.muzzle = muzzle; g.userData.fl = fl; return g;
+}
+/* صور المتجر: نرسم كل سلاح مرة وحدة */
+const THUMB = {}; let thumbR = null;
+function gunThumb(id) {
+  if (THUMB[id]) return THUMB[id];
+  try { if (!thumbR) { thumbR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); thumbR.setSize(240, 120); thumbR.toneMapping = THREE.ACESFilmicToneMapping; }
+    const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#ffffff', '#444444', 1.1)); const dl = new THREE.DirectionalLight('#fff', 1.2); dl.position.set(2, 3, 2); sc.add(dl); if (S.environment) sc.environment = S.environment;
+    const gn = buildGunAny(id); gn.rotation.y = -Math.PI / 2; const bb = new THREE.Box3().setFromObject(gn), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()); gn.position.sub(c); sc.add(gn);
+    const cam = new THREE.OrthographicCamera(-1, 1, .5, -.5, .1, 10), k = Math.max(sz.x, sz.z) * .58; cam.left = -k; cam.right = k; cam.top = k / 2; cam.bottom = -k / 2; cam.position.set(0, .25, 3); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+    thumbR.render(sc, cam); THUMB[id] = thumbR.domElement.toDataURL(); } catch (e) { THUMB[id] = ''; }
+  return THUMB[id];
+}
+
+function soldier(o) {
+  o = o || {}; const g = new THREE.Group(), sc = o.scale || 1;
+  const uni = new THREE.MeshStandardMaterial({ map: camo(o.c1 || '#6b6f4a', o.c2 || '#4f5536', o.c3 || '#8a8460'), roughness: .9 }),
+    vest = new THREE.MeshStandardMaterial({ color: o.vest || '#4a4a36', roughness: .85 }), skin = new THREE.MeshStandardMaterial({ color: o.skin || '#c48c64', roughness: .6 }),
+    blk = mat('blk', '#1d1d1f', .7), boot = mat('boot', '#3a2c1e', .8), helm = new THREE.MeshStandardMaterial({ color: o.helm || '#5a5e40', roughness: .75 }), lens = mat('lens', '#20304a', .1, .8);
+  const P2 = (geo, m, x, y, z, par, rx, rz) => { const k = new THREE.Mesh(geo, m); k.position.set(x, y, z); if (rx) k.rotation.x = rx; if (rz) k.rotation.z = rz; k.castShadow = true; (par || g).add(k); return k; };
+  const C = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10), SP = (r, a, b) => new THREE.SphereGeometry(r, a || 12, b || 8);
+  const hip = new THREE.Group(); hip.position.y = .98; g.add(hip);
+  P2(C(.2, .19, .2, 12), uni, 0, 0, 0, hip).scale.z = .7; P2(C(.205, .205, .05, 12), blk, 0, .08, 0, hip).scale.z = .72;   // حزام
+  const legs = [-1, 1].map(s => { const L = new THREE.Group(); L.position.set(s * .11, -.04, 0); hip.add(L);
+    P2(C(.085, .075, .44, 10), uni, 0, -.22, 0, L); const knee = new THREE.Group(); knee.position.y = -.44; L.add(knee); P2(SP(.07), mat('kp', '#2a2a26', .8), 0, 0, .04, knee).scale.set(1, 1, .6);
+    P2(C(.07, .06, .42, 10), uni, 0, -.21, 0, knee); P2(new THREE.BoxGeometry(.13, .1, .26), boot, 0, -.46, .04, knee); P2(new THREE.BoxGeometry(.135, .03, .28), blk, 0, -.51, .04, knee); L.userData.knee = knee; return L; });
+  const top = new THREE.Group(); top.position.y = .98; g.add(top);
+  const tor = P2(C(.21, .18, .52, 14), uni, 0, .3, 0, top); tor.scale.z = .68;
+  const vst = P2(C(.235, .215, .4, 14), vest, 0, .34, 0, top); vst.scale.z = .74;
+  for (let i = -1; i <= 1; i++) P2(new THREE.BoxGeometry(.1, .12, .06), mat('pouch', o.pouch || '#55583f', .9), i * .11, .24, .17, top);   // جيوب المخازن
+  P2(new THREE.BoxGeometry(.14, .08, .05), mat('pouch2', '#3d3f2e', .9), .1, .46, .16, top); P2(new THREE.BoxGeometry(.05, .14, .03), mat('radio', '#222', .5, .3), -.15, .46, .15, top); P2(C(.006, .006, .14, 4), blk, -.15, .58, .15, top);
+  P2(new THREE.BoxGeometry(.32, .36, .14), mat('pack', o.pack || '#4f5236', .9), 0, .32, -.2, top); P2(new THREE.BoxGeometry(.3, .06, .12), mat('pack2', '#3c3e2a', .9), 0, .54, -.2, top);   // حقيبة الظهر
+  P2(C(.06, .065, .08, 8), skin, 0, .6, 0, top);                                                              // رقبة
+  const head = new THREE.Group(); head.position.y = .72; top.add(head);
+  P2(SP(.12, 14, 10), skin, 0, 0, .01, head).scale.set(.95, 1.08, 1); P2(new THREE.BoxGeometry(.03, .04, .03), skin, 0, -.01, .125, head);
+  [-1, 1].forEach(s => { P2(SP(.012, 6, 4), blk, s * .042, .02, .11, head); P2(SP(.025, 6, 4), skin, s * .118, 0, 0, head); });
+  P2(SP(.155, 16, 10, 0), helm, 0, .04, 0, head).scale.set(1, .82, 1.05);                                    // خوذة
+  const hc = P2(C(.165, .17, .04, 16), helm, 0, -.005, 0, head); hc.scale.z = 1.06;
+  P2(new THREE.BoxGeometry(.2, .05, .04), lens, 0, .08, .13, head, -.25); P2(C(.155, .155, .03, 16, 1), blk, 0, .08, 0, head).scale.z = 1.04;   // نظارة على الخوذة
+  P2(new THREE.BoxGeometry(.05, .04, .04), blk, 0, .14, .15, head);
+  // الإيدين ماسكة السلاح
+  const gun = buildGunAny(o.gun || 'akm'); gun.position.set(.06, .38, .32); top.add(gun);
+  const arm = (side, rx, ry, rz, ex) => { const A = new THREE.Group(); A.position.set(side * .25, .5, 0); top.add(A); A.rotation.set(rx, ry, rz); P2(SP(.07), uni, 0, 0, 0, A); P2(C(.06, .055, .26, 9), uni, 0, -.13, 0, A); const E = new THREE.Group(); E.position.y = -.26; A.add(E); E.rotation.x = ex; P2(C(.055, .045, .25, 9), uni, 0, -.12, 0, E); P2(SP(.048), mat('glove', '#262624', .8), 0, -.26, 0, E); return A; };
+  arm(1, -.55, 0, .25, -1.0); arm(-1, -1.05, -.35, -.55, -.75);
+  const cs = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), blobM); cs.rotation.x = -Math.PI / 2; cs.position.y = .025; cs.renderOrder = 1; g.add(cs);
+  g.scale.setScalar(sc); g.userData = { ph: Math.random() * 6, legL: legs[0], legR: legs[1], top, head, muzzle: gun.userData.muzzle, fl: gun.userData.fl, hip, gun };
+  return g;
+}
+
+function tank() {   // زعيم: دبابة
+  const g = new THREE.Group(), M = (c, m) => new THREE.MeshStandardMaterial({ color: c, roughness: .6, metalness: m || .3 });
+  const part = (geo, mat, x, y, z, par) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; (par || g).add(m); return m; };
+  part(new THREE.BoxGeometry(3.4, 1.0, 5.0), M('#55603a'), 0, .9, 0); [-1.55, 1.55].forEach(x => { part(new THREE.BoxGeometry(.7, .9, 5.3), M('#222', .5), x, .55, 0); for (let k = 0; k < 6; k++) part(new THREE.CylinderGeometry(.32, .32, .72, 14), M('#3a3a3a', .6), x, .45, -2.1 + k * .84).rotation.z = Math.PI / 2; });
+  const tur = new THREE.Group(); tur.position.y = 1.65; g.add(tur); part(new THREE.CylinderGeometry(1.25, 1.4, .8, 18), M('#5f6b40'), 0, 0, 0, tur); part(new THREE.CylinderGeometry(.16, .2, 3.2, 12), M('#333', .7), 0, .1, 2.0, tur).rotation.x = Math.PI / 2; part(new THREE.CylinderGeometry(.3, .3, .3, 10), M('#2a2a2a'), .6, .5, -.4, tur);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, .1, 3.7); tur.add(muzzle); g.userData = { tur, muzzle }; return g;
+}
+
+/* ---------------- الخريطة: قاعدة عسكرية مرسومة (شوارع، مجمعات، مخابئ، أبراج، سيارات محروقة) ---------------- */
+let LVL = 1, THEME = THEMES[0]; const WORLD = []; let SOLID = [], HITTABLE = [], BARRELS = [];
+function clearWorld() { WORLD.forEach(o => S.remove(o)); WORLD.length = 0; SOLID = []; HITTABLE = []; BARRELS = []; }
+const roadTex = THEMES.map(T => tex(1024, 1024, (g, w, h) => {
+  g.clearRect(0, 0, w, h); const road = T.night ? '#2a2c31' : T === THEMES[2] ? 'rgba(150,160,170,.85)' : T === THEMES[1] ? 'rgba(110,90,60,.85)' : 'rgba(150,115,70,.75)';
+  g.fillStyle = road; g.fillRect(w * .44, 0, w * .12, h); g.fillRect(0, h * .44, w, h * .12);   // شارعين متقاطعين
+  g.beginPath(); g.arc(w / 2, h / 2, w * .16, 0, TAU); g.fill();                                  // ساحة بالنص
+  for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(0,0,0,${rnd(.02, .08)})`; g.fillRect(rnd(0, w), rnd(0, h), rnd(1, 4), rnd(1, 4)); }
+  g.strokeStyle = T.night ? 'rgba(255,220,120,.55)' : 'rgba(255,255,255,.35)'; g.lineWidth = 5; g.setLineDash([36, 30]); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h * .34); g.moveTo(w / 2, h * .66); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w * .34, h / 2); g.moveTo(w * .66, h / 2); g.lineTo(w, h / 2); g.stroke();
+  g.setLineDash([]); g.strokeStyle = 'rgba(0,0,0,.15)'; g.lineWidth = 3; for (let i = 0; i < 40; i++) { g.beginPath(); const x = rnd(0, w), y = rnd(0, h); g.moveTo(x, y); g.lineTo(x + rnd(-30, 30), y + rnd(-30, 30)); g.stroke(); }   // تشققات
+  // آثار عجلات + بقع
+  g.strokeStyle = 'rgba(40,30,20,.18)'; g.lineWidth = 6; for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(w * (.47 + k * .06), 0); g.lineTo(w * (.47 + k * .06), h); g.stroke(); }
+  for (let i = 0; i < 30; i++) { const x = rnd(0, w), y = rnd(0, h), r = rnd(20, 60), rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, T === THEMES[1] ? 'rgba(40,90,30,.35)' : T === THEMES[2] ? 'rgba(255,255,255,.5)' : 'rgba(120,90,50,.25)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2); }
+}));
+function buildWorld(n) {
+  clearWorld(); const ti = Math.floor((n - 1) / 5) % 4; THEME = THEMES[ti]; groundM.map = groundTex[ti]; groundM.needsUpdate = true;
+  S.background = new THREE.Color(THEME.sky); S.environment = null; S.fog = new THREE.Fog(THEME.fog, 50, 120); sun.intensity = THEME.sun; hemi.intensity = THEME.hemi * .85; R.toneMappingExposure = THEME.night ? 1.25 : .98;
+  const wm = new THREE.MeshStandardMaterial({ map: wallTex[ti], roughness: .95 }), cm = new THREE.MeshStandardMaterial({ map: crateT, roughness: .85 }), bm = new THREE.MeshStandardMaterial({ map: barrelT, roughness: .5, metalness: .35 });
+  const conc = mat('conc' + ti, THEME.night ? '#77777f' : '#b8b2a6', .9), stripe = mat('stripe', '#e0b020', .6), roof = mat('roof' + ti, THEME.night ? '#3a3a42' : '#7a6a58', .9), dark = mat('dk', '#1e1814', 1), bag = mat('bag' + ti, ti === 2 ? '#c8c8c0' : '#a89468', 1), rust = mat('rust', '#6a4030', .8, .3), metal = mat('met', '#5a5e62', .5, .6), wood = mat('wood', '#7a5a36', .9), leaf = new THREE.MeshStandardMaterial({ color: THEME.tree, roughness: .9 }), rock = mat('rock' + ti, ti === 2 ? '#a8b0b8' : '#8a7e6a', 1);
+  const add = (m, solid, nohit) => { m.traverse(k => { if (k.isMesh) { k.castShadow = k.receiveShadow = true; if (!nohit) HITTABLE.push(k); } }); S.add(m); WORLD.push(m); if (solid) SOLID.push(solid); return m; };
+  const box = (x, z, w, h, d, m, y, nosolid) => { const k = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); k.position.set(x, (y || 0) + h / 2, z); return add(k, nosolid ? null : { x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2 }); };
+  const decal = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 2 + 4, ARENA * 2 + 4), new THREE.MeshStandardMaterial({ map: roadTex[ti], transparent: true, roughness: 1, depthWrite: false })); decal.rotation.x = -Math.PI / 2; decal.position.y = .02; decal.receiveShadow = true; S.add(decal); WORLD.push(decal);
+  // سور خرساني بخطوط تحذير
+  for (let i = -ARENA; i < ARENA; i += 4) [[i + 2, -ARENA - .6, 4, .9], [i + 2, ARENA + .6, 4, .9], [-ARENA - .6, i + 2, .9, 4], [ARENA + .6, i + 2, .9, 4]].forEach(([x, z, w, d]) => { box(x, z, w * .96, 1.5, d * .96, conc); box(x, z, w * .97, .14, d * .97, stripe, 1.1, 1); });
+  // أربع مجمعات بالزوايا: بيت + سور واطي بباب
+  const house = (cx, cz, w, d, h) => { box(cx, cz, w, h, d, wm); box(cx, cz, w + .5, .3, d + .5, roof, h, 1); [[0, d / 2 + .25, w + .5, .5], [0, -d / 2 - .25, w + .5, .5], [w / 2 + .25, 0, .5, d], [-w / 2 - .25, 0, .5, d]].forEach(([x, z, ww, dd]) => box(cx + x, cz + z, ww, .5, dd, wm, h + .3, 1));
+    for (let i = 0; i < 3; i++) box(cx - w / 3 + i * w / 3, cz - d / 2 - .03, .9, .9, .06, dark, h * .55, 1); box(cx, cz - d / 2 - .03, 1.2, 2.1, .06, dark, 0, 1);
+    const ac = box(cx + w / 3, cz + d / 4, 1, .5, .8, metal, h + .3, 1); };
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz], i) => { const cx = sx * 22, cz = sz * 22; house(cx + sx * 2, cz + sz * 2, 8, 7, 3.6 + (i % 2) * 1.2);
+    box(cx - sx * 3.5, cz - sz * 3, 5, 1.1, .5, wm); box(cx - sx * 4, cz + sz * 1.5, .5, 1.1, 4, wm); });
+  // ساحة بالنص: نصب تذكاري + مخابئ أكياس رمل
+  { const g = new THREE.Group(); g.position.set(0, 0, 0); const b1 = new THREE.Mesh(C(2.4, 2.8, .6, 20), conc); b1.position.y = .3; g.add(b1); const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 4, 1.2), conc); b2.position.y = 2.6; g.add(b2); const st = new THREE.Mesh(new THREE.OctahedronGeometry(.7), mat('gold', '#d8b050', .3, .7)); st.position.y = 5.2; g.add(st); add(g, { x0: -2.6, x1: 2.6, z0: -2.6, z1: 2.6 }); }
+  const bunker = (cx, cz, rot) => { const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = rot; for (let k = 0; k < 3; k++) for (let j = 0; j < 7; j++) { const a = (j - 3) * .28, b = new THREE.Mesh(new THREE.BoxGeometry(.95, .38, .55), bag); b.position.set(Math.sin(a) * 3.2, .19 + k * .38, Math.cos(a) * 3.2 - 3.2); b.rotation.y = a; b.scale.y = 1 - (k % 2) * .05; g.add(b); } add(g); const cs = Math.cos(rot), sn = Math.sin(rot); const px = cx + sn * 0, pz = cz; SOLID.push({ x0: cx - 2.2, x1: cx + 2.2, z0: cz - .5, z1: cz + .5, rot }); };
+  bunker(0, 12, 0); bunker(0, -10, Math.PI); bunker(12, 0, Math.PI / 2); bunker(-12, 0, -Math.PI / 2);
+  SOLID.splice(SOLID.length - 4, 4, { x0: -2.4, x1: 2.4, z0: 11.4, z1: 12.4 }, { x0: -2.4, x1: 2.4, z0: -10.4, z1: -9.4 }, { x0: 11.4, x1: 12.4, z0: -2.4, z1: 2.4 }, { x0: -12.4, x1: -11.4, z0: -2.4, z1: 2.4 });
+  // أبراج مراقبة
+  [[-28, 6], [28, -6]].forEach(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const l = new THREE.Mesh(C(.09, .12, 5, 6), wood); l.position.set(a * 1.1, 2.5, b * 1.1); l.rotation.z = -a * .06; g.add(l); }); const pl = new THREE.Mesh(new THREE.BoxGeometry(2.8, .2, 2.8), wood); pl.position.y = 5; g.add(pl); for (let s = 0; s < 4; s++) { const r = new THREE.Mesh(new THREE.BoxGeometry(2.8, .8, .1), wood); r.position.set(0, 5.5, 1.4); r.rotation.y = s * Math.PI / 2; const gg = new THREE.Group(); gg.rotation.y = s * Math.PI / 2; gg.add(r); g.add(gg); } const rf = new THREE.Mesh(new THREE.ConeGeometry(2.3, 1.2, 4), roof); rf.position.y = 7.2; rf.rotation.y = Math.PI / 4; g.add(rf); add(g, { x0: x - 1.3, x1: x + 1.3, z0: z - 1.3, z1: z + 1.3 }); });
+  // سيارات محروقة
+  const wreck = (x, z, rot) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; const b = new THREE.Mesh(new THREE.BoxGeometry(1.9, .8, 4.2), rust); b.position.y = .75; g.add(b); const c = new THREE.Mesh(new THREE.BoxGeometry(1.7, .7, 2), mat('rust2', '#4a2a20', .9, .2)); c.position.set(0, 1.45, -.3); g.add(c); [[-1, 1.3], [1, 1.3], [-1, -1.3], [1, -1.3]].forEach(([a, b2]) => { const w = new THREE.Mesh(C(.38, .38, .3, 12), dark); w.rotation.z = Math.PI / 2; w.position.set(a * .95, .38, b2); g.add(w); }); add(g); const cs = Math.abs(Math.cos(rot)), sn = Math.abs(Math.sin(rot)), hw = cs * 1 + sn * 2.1, hd = sn * 1 + cs * 2.1; SOLID.push({ x0: x - hw, x1: x + hw, z0: z - hd, z1: z + hd }); puffSmoke.push(new THREE.Vector3(x, 1.8, z)); };
+  puffSmoke.length = 0; wreck(-6, 24, .3); wreck(17, -14, 1.2); wreck(-20, -6, -.4);
+  // صناديق وبراميل بمجموعات
+  [[7, 6], [-8, -18], [20, 12], [-16, 14], [6, -24], [26, 26], [-27, -26]].forEach(([x, z], i) => { const s = 1.4 + (i % 3) * .2; box(x, z, s, s, s, cm).rotation.y = i * .4; if (i % 2) box(x + 1.6, z + .3, s * .8, s * .8, s * .8, cm).rotation.y = i; if (i % 3 === 0) box(x + .2, z, s * .7, s * .7, s * .7, cm, s, 1).rotation.y = i * .7; });
+  [[9, -6], [-10, 8], [15, 22], [-22, -15], [24, -24], [-3, -26]].forEach(([x, z], i) => { for (let k = 0; k < (i % 2 ? 2 : 1); k++) { const m = new THREE.Mesh(C(.55, .55, 1.3, 16), bm); const bx = x + k * 1.2, bz = z + k * .4; m.position.set(bx, .65, bz); m.userData.barrel = { hp: 30, alive: true }; add(m, { x0: bx - .55, x1: bx + .55, z0: bz - .55, z1: bz + .55, barrel: m }); BARRELS.push(m); } });
+  // صخور وعشب وشجيرات (ديكور)
+  for (let i = 0; i < 40; i++) { const x = rnd(-ARENA + 2, ARENA - 2), z = rnd(-ARENA + 2, ARENA - 2); if (Math.abs(x) < 5 || Math.abs(z) < 5 || blocked(x, z, 1)) continue; const k = new THREE.Mesh(i % 3 ? new THREE.ConeGeometry(.25, .6, 5) : new THREE.DodecahedronGeometry(rnd(.25, .6)), i % 3 ? leaf : rock); k.position.set(x, i % 3 ? .3 : .15, z); k.rotation.y = rnd(0, 3); add(k, null, true); }
+  // أشجار برا السور
+  for (let i = 0; i < 44; i++) { const a = i / 44 * TAU + rnd(-.05, .05), rr = ARENA + rnd(4, 14), g = new THREE.Group(); g.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr); const h = rnd(3, 6);
+    const t = new THREE.Mesh(C(.18, .3, h, 7), wood); t.position.y = h / 2; g.add(t); if (ti === 0) { for (let k = 0; k < 6; k++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.35, 2.6, 4), leaf); l.position.y = h; l.rotation.set(1.1, k / 6 * TAU, 0, 'YXZ'); l.geometry.translate(0, 1.2, 0); g.add(l); } }
+    else for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(ti === 3 ? new THREE.SphereGeometry(1.3 - k * .3, 10, 8) : new THREE.ConeGeometry(1.7 - k * .4, 2, 9), ti === 2 && k === 0 ? mat('snowc', '#f2f6fa', .9) : leaf); c.position.y = h + k * 1.1 - .5; g.add(c); }
+    add(g, null, true); }
+  if (THEME.night) [[-15, -15], [15, -15], [-15, 15], [15, 15], [0, -28], [0, 28]].forEach(([x, z]) => { const L = new THREE.PointLight('#ffcf7a', 1.6, 24, 1.6); L.position.set(x, 5, z); S.add(L); WORLD.push(L); const pole = new THREE.Mesh(C(.08, .1, 5, 6), metal); pole.position.set(x, 2.5, z); const lamp = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffe0a0' })); lamp.position.set(x, 5, z); S.add(pole, lamp); WORLD.push(pole, lamp); });
+}
+const C = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10), puffSmoke = [];
+
+function blocked(x, z, r) { for (const b of SOLID) if (!(b.barrel && !b.barrel.visible) && x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) return b; return null; }
+function slide(p, nx, nz, r) { if (!blocked(nx, p.z, r)) p.x = nx; if (!blocked(p.x, nz, r)) p.z = nz; }
+const RC = new THREE.Raycaster();
+function los(a, b) { const d = new THREE.Vector3().subVectors(b, a), L = d.length(); RC.set(a, d.normalize()); RC.far = L; return !RC.intersectObjects(HITTABLE, false).length; }
+
+/* ---------------- اللاعب ---------------- */
+const P = { pos: new THREE.Vector3(0, 0, -20), yaw: 0, aim: 0, hp: 100, max: 100, walkT: 0, alive: true, regen: 0, target: null, cool: 0, dash: 0, shield: 0 };
+let GUN = 'glock';
+let PM = null; function makePlayer() { if (PM) S.remove(PM); PM = soldier({ c1: '#5a6a4a', c2: '#3e4a34', c3: '#7a8460', vest: '#2f3428', helm: '#4a5238', skin: '#c48c64', gun: GUN, pack: '#3e4430' }); S.add(PM); } makePlayer();
+const ring = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: ringTex, color: '#7bd3ff', transparent: true, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; S.add(ring);
+const rangeRing = new THREE.Mesh(new THREE.RingGeometry(15.8, 16, 64), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .12, depthWrite: false })); rangeRing.rotation.x = -Math.PI / 2; rangeRing.position.y = .04; S.add(rangeRing);
+const moveMark = new THREE.Mesh(new THREE.RingGeometry(.35, .55, 24), new THREE.MeshBasicMaterial({ color: '#e2b878', transparent: true, opacity: 0, depthWrite: false })); moveMark.rotation.x = -Math.PI / 2; moveMark.position.y = .06; S.add(moveMark);
+const flash = new THREE.PointLight('#ffb25a', 0, 9); S.add(flash);
+let RANGE = 13; const curW = () => gunFor(GUN);
+
+/* ---------------- الأعداء ---------------- */
+const KINDS = {
+  grunt: { n: 'جندي', hp: 60, sp: 3.0, range: 13, rate: 1.4, dmg: 6, col: ['#9a7a54', '#6a5238', '#b89868'], vest: '#4a3a2a', sc: 1 },
+  heavy: { n: 'ثقيل', hp: 170, sp: 2.0, range: 7, rate: 1.6, dmg: 13, col: ['#3a3a3a', '#222222', '#555555'], vest: '#1a1a1a', sc: 1.22, heavy: 1 },
+  sniper: { n: 'قناص', hp: 50, sp: 2.2, range: 26, rate: 3.2, dmg: 18, col: ['#6a7a44', '#4a5a30', '#8a9a5a'], vest: '#3a4428', sc: .97, laser: 1, gun: 'm4' },
+  bomber: { n: 'انتحاري', hp: 45, sp: 5.2, range: 1.6, rate: 99, dmg: 30, col: ['#8a3a2a', '#5a1a14', '#a8584a'], vest: '#6a1a10', sc: .95, bomb: 1 },
+  boss: { n: 'الدبابة', hp: 1400, sp: 1.4, range: 24, rate: 2.2, dmg: 22, boss: 1 }
+};
+let EN = [];
+function mkBar(e, w) { const bg = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#000', depthTest: false, transparent: true, opacity: .6 })), fg = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#ff4a3a', depthTest: false })); bg.scale.set(w, .16, 1); fg.scale.set(w, .12, 1); bg.renderOrder = 10; fg.renderOrder = 11; S.add(bg, fg); e.bars = [bg, fg]; e.bw = w; }
+function spawn(kind, x, z) {
+  const K = KINDS[kind], e = { kind, K, hp: K.hp * diff(LVL), max: 0, alive: true, cool: rnd(.6, 2), yaw: 0, walkT: 0, strafe: rnd(-1, 1), dead: 0, aimT: 0 };
+  e.max = e.hp; e.m = K.boss ? tank() : soldier({ c1: K.col[0], c2: K.col[1], c3: K.col[2], vest: K.vest, helm: K.col[1], skin: K.skin || '#a8764e', scale: K.sc, gun: K.gun || 'akm', pouch: K.vest }); e.m.position.set(x, 0, z); S.add(e.m);
+  e.m.traverse(o => { if (o.isMesh) o.userData.enemy = e; });
+  if (K.laser) { e.laser = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0 })); S.add(e.laser); }
+  mkBar(e, K.boss ? 4 : 1.2); EN.push(e); return e;
+}
+function levelPlan(n) {
+  const total = Math.round(5 + Math.min(26, n * .32)), L = [];
+  for (let i = 0; i < total; i++) { const r = Math.random(); const q = Math.min(1, n / 60); L.push(n >= 6 && r < .1 + q * .12 ? 'sniper' : n >= 3 && r < .25 + q * .2 ? 'heavy' : n >= 8 && r < .34 + q * .22 ? 'bomber' : 'grunt'); }
+  if (n % 5 === 0) L.push('boss'); return L;
+}
+
+/* ---------------- المؤثرات ---------------- */
+const FX = [];
+const casM = new THREE.MeshStandardMaterial({ color: '#d8a640', metalness: .9, roughness: .25 }), casG = new THREE.CylinderGeometry(.018, .018, .06, 6);
+function casing() { if (!PM) return; const c = new THREE.Mesh(casG, casM), p = new THREE.Vector3(); PM.userData.gun.getWorldPosition(p); c.position.copy(p).add(new THREE.Vector3(0, .1, 0)); S.add(c); const side = new THREE.Vector3(Math.cos(P.aim), 0, -Math.sin(P.aim)); FX.push({ o: c, t: 1.2, l: 1.2, k: 'cas', v: side.multiplyScalar(rnd(2, 3)).add(new THREE.Vector3(0, rnd(2.5, 3.5), 0)), spin: rnd(10, 20) }); }
+function tracer(a, b, col) { const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]), new THREE.LineBasicMaterial({ color: col || '#ffd08a', transparent: true, opacity: .95, blending: THREE.AdditiveBlending })); S.add(l); FX.push({ o: l, t: .07, l: .07, k: 'line' }); }
+function puff(p, col, n, sp, life, size, up, normal) { for (let i = 0; i < n; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTex, color: col, transparent: true, depthWrite: false, blending: normal ? THREE.NormalBlending : THREE.AdditiveBlending })); s.position.copy(p); const sz = size * rnd(.6, 1.2); s.scale.setScalar(sz); S.add(s); FX.push({ o: s, t: life * rnd(.6, 1), l: life, v: new THREE.Vector3(rnd(-1, 1), rnd(0, 1) * (up || 1), rnd(-1, 1)).multiplyScalar(sp), k: 'spr', sz, g: normal ? .6 : 0 }); } }
+const exL = new THREE.PointLight('#ff9a40', 0, 26); S.add(exL); let shake = 0;
+function explode(p, dmg, rad, byPlayer) {
+  puff(p, '#ffcf6a', 18, 8, .45, 2.4, 1.4); puff(p, '#ff6a1a', 14, 5, .6, 3, 1.2); puff(p.clone().setY(p.y + .5), '#444', 14, 2.6, 2, 3.6, 1.4, 1); exL.position.copy(p).setY(2); exL.intensity = 6; shake = Math.max(shake, .7); snd('boom', .9);
+  const sc = new THREE.Mesh(new THREE.CircleGeometry(rad * .3, 20), new THREE.MeshBasicMaterial({ color: '#1a120a', transparent: true, opacity: .5, depthWrite: false })); sc.rotation.x = -Math.PI / 2; sc.position.set(p.x, .03, p.z); S.add(sc); FX.push({ o: sc, t: 12, l: 12, k: 'decal' });
+  if (byPlayer !== 'e') for (const e of EN) if (e.alive) { const d = e.m.position.distanceTo(p); if (d < rad) hurtE(e, dmg * (1 - d / rad * .6), p); }
+  for (const b of BARRELS) if (b.visible && b.position.distanceTo(p) < rad * .8 && b.position.distanceTo(p) > .2) setTimeout(() => barrelHit(b, 99), 120);
+  const dp = P.pos.distanceTo(p); if (dp < rad && byPlayer !== 'p') hurtP(dmg * .45 * (1 - dp / rad));
+}
+function barrelHit(b, d) { const B = b.userData.barrel; if (!b.visible) return; B.hp -= d; if (B.hp > 0) return; b.visible = false; const i = HITTABLE.indexOf(b); if (i >= 0) HITTABLE.splice(i, 1); explode(b.position.clone(), 120, 6.5, 'b'); }
+const nums = $('nums');
+function num(p, txt, cls) { const v = p.clone().project(CAM); if (v.z > 1) return; const i = document.createElement('i'); i.textContent = txt; if (cls) i.className = cls; i.style.left = ((v.x + 1) / 2 * innerWidth + rnd(-12, 12)) + 'px'; i.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; nums.appendChild(i); setTimeout(() => i.remove(), 800); }
+function feed(t) { const f = $('feed'), d = document.createElement('div'); d.textContent = t; f.prepend(d); setTimeout(() => d.remove(), 3100); while (f.children.length > 4) f.lastChild.remove(); }
+function banner(t, s, ms) { $('bnT').textContent = t; $('bnS').textContent = s || ''; $('banner').style.opacity = 1; clearTimeout(banner.t); banner.t = setTimeout(() => $('banner').style.opacity = 0, ms || 1600); }
+
+/* ---------------- الصوت ---------------- */
+let AC = null, NB = null;
+function snd(k, vol) { if (!AC) return; vol = vol == null ? 1 : vol; const t = AC.currentTime, out = AC.createGain(); out.gain.value = .8; out.connect(AC.destination);
+  const noise = (dur, f, q, v, type) => { const s = AC.createBufferSource(); s.buffer = NB; const fl = AC.createBiquadFilter(); fl.type = type || 'lowpass'; fl.frequency.value = f; fl.Q.value = q || 1; const g = AC.createGain(); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(fl).connect(g).connect(out); s.start(t); s.stop(t + dur); };
+  const tone = (f0, f1, dur, v, type) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(out); o.start(t); o.stop(t + dur); };
+  ({ step: () => noise(.06, THEME === THEMES[2] ? 900 : 500, 1.4, .05, 'bandpass'), shot: () => { const W = curW(); const G = W.C.snd; if (W.boom) { noise(.5, 700, 1, .5, 'bandpass'); tone(260, 60, .4, .25, 'sawtooth'); return; } if (W.cls === 'sniper') { noise(.45, 2200, .5, .6); tone(200, 45, .3, .35, 'sawtooth'); return; } if (W.cls === 'shotgun') { noise(.3, 1600, .7, .6); tone(110, 40, .2, .4, 'square'); return; } noise(.11, G[0], .8, .36); tone(G[1], 55, .08, .26, 'square'); noise(.05, 6000, 1, .08, 'highpass'); }, eshot: () => noise(.09, 2000, .8, .16), boom: () => { noise(1.3, 420, .6, .9); tone(70, 25, .9, .7); }, cast: () => tone(500, 1200, .2, .15, 'triangle'), heal: () => { tone(660, 990, .3, .15, 'sine'); tone(880, 1320, .3, .1, 'sine'); }, dash: () => noise(.25, 1500, 2, .3, 'bandpass'), win: () => [523, 659, 784, 1047].forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i * .12); g.gain.exponentialRampToValueAtTime(.2, t + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .4); o.connect(g).connect(out); o.start(t + i * .12); o.stop(t + i * .12 + .45); }), jet: () => { noise(1.6, 900, .7, .5, 'bandpass'); tone(400, 120, 1.4, .2, 'sawtooth'); }, die: () => tone(300, 90, .35, .12, 'triangle') })[k]?.();
+}
+
+/* ---------------- المهارات ---------------- */
+const SK = [
+  { id: 'gr', ic: '💣', nm: 'قنبلة', cd: 6, u: 1 },
+  { id: 'dash', ic: '⚡', nm: 'اندفاع', cd: 5, u: 2 },
+  { id: 'heal', ic: '💊', nm: 'علاج', cd: 18, u: 3 },
+  { id: 'rk', ic: '🚀', nm: 'صاروخ', cd: 9, u: 5 },
+  { id: 'air', ic: '🛩️', nm: 'ضربة جوية', cd: 28, u: 10, ult: 1 }
+];
+const CD = {}; const skBox = $('skills');
+SK.forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sk' + (s.ult ? ' ult' : ''); b.id = 'sk_' + s.id; b.innerHTML = `<span class="ic">${s.ic}</span><span class="nm">${s.nm}</span><span class="cd"></span><span class="cdn"></span>`;
+  b.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); useSkill(s); }); skBox.appendChild(b); CD[s.id] = 0; });
+document.addEventListener('keydown', e => { const m = { KeyQ: 'gr', Space: 'dash', KeyE: 'heal', KeyR: 'rk', KeyF: 'air' }[e.code]; if (m) { e.preventDefault(); useSkill(SK.find(s => s.id === m)); } });
+function nearest(maxD) { let best = null, bd = maxD || 1e9; for (const e of EN) { if (!e.alive) continue; const d = e.m.position.distanceTo(P.pos); if (d < bd) { bd = d; best = e; } } return best; }
+function useSkill(s) {
+  if (!playing || !P.alive || LVL < s.u) { if (LVL < s.u) feed(`🔒 ${s.nm} تنفتح بالمرحلة ${s.u}`); return; } if (CD[s.id] > 0) return;
+  const tg = nearest(30), aim = tg ? tg.m.position.clone() : P.pos.clone().add(new THREE.Vector3(Math.sin(P.aim) * 12, 0, Math.cos(P.aim) * 12));
+  if (s.id === 'gr') { throwProj('gr', aim); snd('cast'); }
+  else if (s.id === 'rk') { throwProj('rk', aim); snd('cast'); }
+  else if (s.id === 'dash') { const dir = JOY.id !== null && Math.hypot(JOY.x, JOY.y) > .12 ? new THREE.Vector3(-JOY.x, 0, -JOY.y).normalize() : new THREE.Vector3(Math.sin(P.yaw), 0, Math.cos(P.yaw)); P.dash = .22; P.dashDir = dir; P.shield = .5; snd('dash'); puff(P.pos.clone().setY(.5), '#9ad8ff', 10, 3, .4, .8); }
+  else if (s.id === 'heal') { const hv = Math.round(P.max * .45); P.hp = Math.min(P.max, P.hp + hv); num(P.pos.clone().setY(2.6), '+' + hv, 'c'); puff(P.pos.clone().setY(1), '#7bd36a', 16, 2, .8, .8, 2); snd('heal'); ui(); }
+  else if (s.id === 'air') { airStrike(aim); }
+  CD[s.id] = s.cd;
+}
+function airStrike(c) {
+  snd('jet'); feed('🛩️ ضربة جوية بالطريق!'); const jet = new THREE.Group(); const b = new THREE.Mesh(new THREE.ConeGeometry(.7, 5, 10), new THREE.MeshStandardMaterial({ color: '#8f9aa6', metalness: .6, roughness: .4 })); b.rotation.x = Math.PI / 2; jet.add(b); const w = new THREE.Mesh(new THREE.BoxGeometry(6, .15, 1.6), b.material); w.position.z = -.6; jet.add(w); jet.position.set(c.x - 50, 14, c.z); jet.rotation.y = Math.PI / 2; S.add(jet);
+  FX.push({ o: jet, t: 2.2, l: 2.2, k: 'jet', x0: c.x - 50, x1: c.x + 50 });
+  for (let i = 0; i < 7; i++) setTimeout(() => { if (!playing) return; explode(new THREE.Vector3(c.x + rnd(-6, 6), .3, c.z + rnd(-6, 6)), 140 * diff(LVL) * .7, 6.5, 'p'); }, 700 + i * 160);
+}
+const PROJ = [];
+function throwProj(kind, aim) {
+  const o = new THREE.Vector3(); PM.userData.muzzle.getWorldPosition(o); let mesh;
+  if (kind === 'gr') mesh = new THREE.Mesh(new THREE.SphereGeometry(.18, 12, 8), new THREE.MeshStandardMaterial({ color: '#3d4a2a', metalness: .3 }));
+  else { mesh = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .8, 10), new THREE.MeshStandardMaterial({ color: '#5a6a3a', metalness: .4 })); b.rotation.x = Math.PI / 2; mesh.add(b); }
+  mesh.castShadow = true; mesh.position.copy(o); S.add(mesh);
+  const to = new THREE.Vector3().subVectors(aim, o); let v; if (kind === 'gr') { const T = Math.max(.6, to.length() / 16); v = new THREE.Vector3(to.x / T, (aim.y + .3 - o.y) / T + 8 * T, to.z / T); } else v = to.setY(0).normalize().multiplyScalar(30);
+  PROJ.push({ kind, mesh, v, t: 0, by: 'p' });
+}
+function fireProj(W, from, aim) {
+  const mesh = new THREE.Group(); if (W.cls === 'rpg') { const b = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .5, 10), mat('rpgW', '#5a6a3a', .5, .4)); b.rotation.x = Math.PI / 2; mesh.add(b); const c = new THREE.Mesh(new THREE.ConeGeometry(.09, .3, 12), mat('rpgW', '#5a6a3a', .5, .4)); c.rotation.x = Math.PI / 2; c.position.z = .38; mesh.add(c); const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: '#ffb050', blending: THREE.AdditiveBlending, depthWrite: false })); fl.scale.setScalar(.7); fl.position.z = -.35; mesh.add(fl); }
+  else { const b = new THREE.Mesh(new THREE.SphereGeometry(.1, 10, 8), mat('gl40', '#c8a640', .4, .6)); mesh.add(b); }
+  mesh.position.copy(from); S.add(mesh); const to = new THREE.Vector3().subVectors(aim, from);
+  if (W.cls === 'rpg') PROJ.push({ kind: 'rk', mesh, v: to.normalize().multiplyScalar(34), t: 0, by: 'p', dmg: W.dmg, boom: W.boom, rpg: 1 });
+  else { const T = Math.max(.35, to.length() / 26); PROJ.push({ kind: 'gl', mesh, v: new THREE.Vector3(to.x / T, (aim.y - from.y) / T + 8 * T, to.z / T), t: 0, by: 'p', dmg: W.dmg, boom: W.boom }); }
+}
+function shell(from, aim, dmg) { const mesh = new THREE.Mesh(new THREE.SphereGeometry(.25, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffcf6a' })); mesh.position.copy(from); S.add(mesh); const to = new THREE.Vector3().subVectors(aim, from), T = Math.max(.7, to.length() / 18); PROJ.push({ kind: 'sh', mesh, v: new THREE.Vector3(to.x / T, (aim.y - from.y) / T + 8 * T, to.z / T), t: 0, by: 'e', dmg });
+  const warn = new THREE.Mesh(new THREE.RingGeometry(2.6, 3, 32), new THREE.MeshBasicMaterial({ color: '#ff3a2a', transparent: true, opacity: .7, depthWrite: false })); warn.rotation.x = -Math.PI / 2; warn.position.set(aim.x, .07, aim.z); S.add(warn); FX.push({ o: warn, t: T, l: T, k: 'warn' }); }
+
+/* ---------------- الضرر ---------------- */
+function hurtE(e, d, from) { if (!e.alive) return; e.byP = 1; const crit = Math.random() < .12; if (crit) d *= 1.8; e.hp -= d; num(e.m.position.clone().setY(e.K.boss ? 3.2 : 2.4), Math.round(d), crit ? 'c' : ''); if (e.hp <= 0) killE(e); }
+function killE(e) { e.alive = false; if (!e.K.bomb || e.byP) { const c = killCoin(LVL) * (e.K.boss ? 12 : e.K.heavy ? 2 : 1); coinEarned += c; if (!ADM) { SAVE.coins += c; } num(e.m.position.clone().setY(3), '+' + c + ' 🪙', 'c'); coinsUI(); } e.dead = 0; e.bars.forEach(b => b.visible = false); if (e.laser) e.laser.visible = false; snd('die'); if (e.K.boss) { feed('🏆 دمّرت الدبابة!'); explode(e.m.position.clone().setY(1), 0, 1, 'x'); } else if (e.K.bomb) explode(e.m.position.clone().setY(.5), 50, 4.5, 'e'); ui(); }
+function hurtP(d) { if (!P.alive || P.shield > 0) return; P.hp = Math.max(0, P.hp - d); P.regen = 3.5; num(P.pos.clone().setY(2.6), '-' + Math.round(d), 'p'); $('dmg').style.opacity = .85; setTimeout(() => $('dmg').style.opacity = 0, 150); ui(); if (P.hp <= 0) { P.alive = false; setTimeout(() => { if (!P.alive) lose(); }, 900); } }
+
+/* ---------------- الگير بالنص الجوة ---------------- */
+let moveTarget = null; const JOY = { id: null, x: 0, y: 0 }, JB = $('joy'), JKn = $('joyK'), GPL = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), mv = new THREE.Vector2();
+function groundAt(x, y) { mv.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); RC.setFromCamera(mv, CAM); const p = new THREE.Vector3(); return RC.ray.intersectPlane(GPL, p) ? p : null; }
+function joyMove(e) { const r = JB.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, mx = r.width / 2 - 14; let dx = e.clientX - cx, dy = e.clientY - cy; const L = Math.hypot(dx, dy); if (L > mx) { dx *= mx / L; dy *= mx / L; } JOY.x = dx / mx; JOY.y = dy / mx; JKn.style.transform = `translate(${dx}px,${dy}px)`; }
+JB.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); JOY.id = e.pointerId; try { JB.setPointerCapture(e.pointerId); } catch (x) {} joyMove(e); });
+JB.addEventListener('pointermove', e => { if (e.pointerId === JOY.id) joyMove(e); });
+const joyUp = e => { if (e.pointerId !== JOY.id) return; JOY.id = null; JOY.x = JOY.y = 0; JKn.style.transform = ''; }; JB.addEventListener('pointerup', joyUp); JB.addEventListener('pointercancel', joyUp);
+cv.addEventListener('pointerdown', e => { if (!playing) return; const p = groundAt(e.clientX, e.clientY); if (!p) return; let best = null, bd = 3; for (const en of EN) if (en.alive) { const d = en.m.position.distanceTo(p); if (d < bd) { bd = d; best = en; } } if (best) { P.target = best; feed('🎯 تركيز على ' + best.K.n); } });   // دوسة على عدو = ركّز عليه
+function gunUI() { const G = gunFor(GUN); $('gunBtn').innerHTML = `<b>${G.n}</b><small>🛒 الأسلحة</small>`; }
+$('gunBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); openShop(); }); gunUI();
+const KEY = {}; addEventListener('keydown', e => KEY[e.code] = 1); addEventListener('keyup', e => KEY[e.code] = 0);
+
+/* ---------------- المراحل والحفظ ---------------- */
+const MAXL = 100, SKEY = 'babi_arena_v2', defS = () => ({ open: 1, stars: [], coins: 0, own: ['glock'], eq: 'glock' });
+let SAVE = defS(); try { SAVE = Object.assign(defS(), JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
+const EMB = window.parent !== window; let ADM = /[?&]adm=1/.test(location.search), saveTm = 0;
+function fixS() { const d = defS(); for (const k in d) if (SAVE[k] == null) SAVE[k] = d[k]; if (!Array.isArray(SAVE.own) || !SAVE.own.length) SAVE.own = ['glock']; if (!WBY[SAVE.eq] || (!SAVE.own.includes(SAVE.eq) && !ADM)) SAVE.eq = SAVE.own[SAVE.own.length - 1]; SAVE.open = Math.max(1, Math.min(MAXL, SAVE.open | 0)); }
+fixS(); GUN = SAVE.eq; makePlayer();
+const saveS = () => { SAVE._t = Date.now(); try { localStorage.setItem(SKEY, JSON.stringify(SAVE)); } catch (e) {} if (EMB && SAVE._acct) { clearTimeout(saveTm); saveTm = setTimeout(() => { try { parent.postMessage('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }, 700); } };
+function arenaSync(m) {   /* التقدم والعملات والأسلحة تنحفظ بحساب اللاعب وترجعله من أي جهاز */
+  if (!m || !m.acct || !m.ok) return; const me = m.acct, srv = m.srv; let d = null, push = false;
+  if (SAVE._acct === me && srv && (Number(srv._t) || 0) <= (Number(SAVE._t) || 0)) push = (Number(SAVE._t) || 0) > (Number(srv._t) || 0);
+  else if (srv && (SAVE._acct !== me || (Number(srv._t) || 0) > (Number(SAVE._t) || 0))) d = srv;
+  else if (!srv && SAVE._acct && SAVE._acct !== me) d = {};
+  else push = true;
+  if (d) { SAVE = Object.assign(defS(), d); fixS(); }
+  SAVE._acct = me; try { localStorage.setItem(SKEY, JSON.stringify(SAVE)); } catch (e) {}
+  if (push || d) { try { parent.postMessage('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }
+  if (d && !playing) { GUN = SAVE.eq; makePlayer(); drawLevels(); } coinsUI();
+}
+addEventListener('message', e => { if (e.origin !== location.origin) return; const d = String(e.data || ''); if (d.indexOf('arena:gs:') === 0) { try { arenaSync(JSON.parse(d.slice(9))); } catch (x) {} } else if (d.indexOf('arena:adm:') === 0) { ADM = d.slice(-1) === '1'; fixS(); coinsUI(); drawLevels(); } else if (d === 'arena:pause') { if (playing && !paused) { paused = true; $('pz').hidden = false; } } });
+if (EMB) { try { parent.postMessage('arena:hello', location.origin); } catch (e) {} }
+const owns = id => ADM || SAVE.own.includes(id), fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : String(Math.round(n));
+function coinsUI() { document.querySelectorAll('.coinsN').forEach(e => e.textContent = ADM ? '∞ 👑' : fmt(SAVE.coins)); }
+const diff = n => Math.pow(1.05, n - 1), edmg = n => Math.pow(1.028, n - 1), killCoin = n => Math.round(4 * Math.pow(1.058, n - 1)), winCoin = n => Math.round(45 * Math.pow(1.062, n - 1));
+let playing = false, paused = false, lvT = 0, spawnQ = [], spawnT = 0, dmgTaken = 0;
+let lvPage = -1;
+function drawLevels() { const G = $('lvGrid'); G.innerHTML = ''; if (ADM) SAVE.open = MAXL; if (lvPage < 0) lvPage = Math.floor((Math.min(MAXL, SAVE.open) - 1) / 20); const from = lvPage * 20 + 1;
+  for (let n = from; n < from + 20; n++) { const b = document.createElement('button'); b.type = 'button'; const lock = n > SAVE.open, st = SAVE.stars[n - 1] || 0; b.className = 'lv' + (lock ? ' lock' : '') + (n % 5 === 0 ? ' boss' : '') + (n === SAVE.open ? ' next' : ''); b.innerHTML = `${lock ? '🔒' : n}<small>${'★'.repeat(st)}${'☆'.repeat(lock ? 0 : 3 - st)}</small>`; b.disabled = lock; b.setAttribute('aria-label', 'المرحلة ' + n); b.onclick = () => start(n); G.appendChild(b); }
+  $('lvPg').textContent = `${from}–${from + 19}`; $('lvPrev').disabled = lvPage <= 0; $('lvNext').disabled = lvPage >= 4; $('goNext').textContent = 'ابدأ المرحلة ' + Math.min(MAXL, SAVE.open); coinsUI(); gunUI(); }
+function start(n) {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); if (!NB) { NB = AC.createBuffer(1, AC.sampleRate * .8, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } } catch (e) {}
+  LVL = n; EN.forEach(e => { S.remove(e.m); e.bars.forEach(b => S.remove(b)); if (e.laser) S.remove(e.laser); }); EN = []; PROJ.forEach(p => S.remove(p.mesh)); PROJ.length = 0;
+  buildWorld(n); P.pos.set(0, 0, -22); P.max = Math.round(100 * Math.pow(1.025, n - 1)); GUN = SAVE.eq; makePlayer(); gunUI(); coinEarned = 0; P.hp = P.max; P.alive = true; P.target = null; moveTarget = null; dmgTaken = 0; for (const k in CD) CD[k] = 0;
+  spawnQ = levelPlan(n); spawnT = 1.2; lvT = 0; ['home', 'win', 'lose', 'pz'].forEach(id => $(id).hidden = true); playing = true; paused = false;
+  $('lvN').textContent = n; banner('المرحلة ' + n, THEME.n + (n % 5 === 0 ? ' • زعيم: دبابة 💀' : ''), 2200); ui();
+}
+function spawnTick(dt) { if (!spawnQ.length) return; spawnT -= dt; if (spawnT > 0) return; const alive = EN.filter(e => e.alive).length; if (alive >= 6 + Math.min(8, Math.floor(LVL / 12))) { spawnT = .6; return; } const k = spawnQ.shift(); let x, z; for (let t = 0; t < 30; t++) { x = rnd(-ARENA + 3, ARENA - 3); z = rnd(0, ARENA - 3); if (!blocked(x, z, 1.5) && Math.hypot(x - P.pos.x, z - P.pos.z) > 16) break; } spawn(k, x, z); if (k === 'boss') banner('⚠️ الدبابة وصلت!', 'اضربها بالصواريخ والقنابل', 2200); spawnT = rnd(.8, 1.8); }
+let coinEarned = 0;
+function win() { playing = false; snd('win'); const st = dmgTaken < P.max * .25 ? 3 : dmgTaken < P.max * .7 ? 2 : 1, first = !SAVE.stars[LVL - 1]; SAVE.stars[LVL - 1] = Math.max(SAVE.stars[LVL - 1] || 0, st); SAVE.open = Math.max(SAVE.open, Math.min(MAXL, LVL + 1));
+  const bonus = Math.round(winCoin(LVL) * (st === 3 ? 1.5 : st === 2 ? 1.2 : 1) * (first ? 1 : .6)); if (!ADM) SAVE.coins += bonus; coinEarned += bonus; saveS(); coinsUI();
+  $('winT').textContent = LVL === MAXL ? 'خلصت كل الـ 100 مرحلة! 🏆' : 'نصر! المرحلة ' + LVL; $('winS').textContent = '★'.repeat(st) + '☆'.repeat(3 - st); const nx = SK.find(s => s.u === LVL + 1);
+  const nxt = WEAP.find(w => !owns(w.id) && w.rec <= LVL + 4); $('winP').textContent = `خلصتها بـ ${Math.round(lvT)} ثانية • جمعت ${fmt(coinEarned)} 🪙${nx ? ` • انفتحت مهارة جديدة: ${nx.ic} ${nx.nm}` : ''}${nxt ? ` • نصيحة: ${nxt.n} يناسب المراحل الجاية` : ''}`; $('winNext').hidden = LVL >= MAXL; $('win').hidden = false; }
+function lose() { playing = false; saveS(); coinsUI(); const W = gunFor(GUN), better = WEAP.filter(w => w.i > W.i && w.rec <= LVL + 2); $('loseP').textContent = W.rec + 6 < LVL ? `سلاحك ${W.n} ضعيف على المرحلة ${LVL}. اشتري سلاح أقوى من المتجر${better.length ? ' (مثلاً ' + better[0].n + ')' : ''} وارجع.` : 'الأعداء غلبوك هالمرة. خلي مسافة، استخدم المخابئ والمهارات، وجرب مرة ثانية.'; $('lose').hidden = false; }
+$('goNext').onclick = () => start(Math.min(MAXL, SAVE.open)); $('winNext').onclick = () => start(Math.min(MAXL, LVL + 1)); $('lvPrev').onclick = () => { lvPage = Math.max(0, lvPage - 1); drawLevels(); }; $('lvNext').onclick = () => { lvPage = Math.min(4, lvPage + 1); drawLevels(); }; $('loseRe').onclick = () => start(LVL);
+['winHome', 'loseHome', 'pzHome'].forEach(id => $(id).onclick = () => { playing = false; saveS(); lvPage = -1; ['win', 'lose', 'pz'].forEach(o => $(o).hidden = true); drawLevels(); $('home').hidden = false; });
+$('pause').onclick = () => { if (!playing) return; paused = true; $('pz').hidden = false; }; $('pzGo').onclick = () => { paused = false; $('pz').hidden = true; };
+function ui() { $('hpN').textContent = Math.round(P.hp); $('hpB').style.width = (P.hp / P.max * 100) + '%'; $('left').textContent = EN.filter(e => e.alive).length + spawnQ.length; SK.forEach(s => $('sk_' + s.id).classList.toggle('lock', LVL < s.u)); }
+
+/* ---------------- متجر الأسلحة ---------------- */
+function openShop() { if (playing && !paused) { paused = true; } const G = $('shopGrid'); G.innerHTML = ''; const maxD = WEAP[WEAP.length - 1].dmg * WEAP[WEAP.length - 1].pel / WEAP[WEAP.length - 1].rate, maxR = 27;
+  WEAP.forEach(w => { const own = owns(w.id), eq = SAVE.eq === w.id, d = document.createElement('div'); d.className = 'wc' + (eq ? ' eq' : '') + (w.id === 'rpg' ? ' top' : '');
+    const bar = v => `<i><u style="width:${Math.max(4, Math.min(100, v * 100))}%"></u></i>`;
+    d.innerHTML = `<span class="rec">مرحلة ${w.rec}+</span><img alt="" src="${gunThumb(w.id)}"><b>${w.n}</b><span class="cl">${w.C.n}${w.boom ? ' • ينفجر 💥' : ''}${w.id === 'rpg' ? ' • أقوى سلاح 👑' : ''}</span>
+      <div class="st"><span>القوة</span>${bar(Math.log(w.dps) / Math.log(maxD))}<span>السرعة</span>${bar(.05 / w.rate * 1.2 + .1)}<span>المدى</span>${bar(w.range / maxR)}</div>`;
+    const b = document.createElement('button'); b.type = 'button';
+    if (eq) { b.textContent = '✔ تستخدمه هسه'; b.className = 'own'; b.disabled = true; }
+    else if (own) { b.textContent = 'استخدمه'; b.className = 'own'; b.onclick = () => { SAVE.eq = w.id; GUN = w.id; saveS(); makePlayer(); gunUI(); openShop(); snd('cast'); }; }
+    else { const can = ADM || SAVE.coins >= w.price; b.textContent = (ADM ? 'مجاناً 👑' : '🪙 ' + fmt(w.price)); b.disabled = !can; b.onclick = () => { if (!(ADM || SAVE.coins >= w.price)) return; if (!ADM) SAVE.coins -= w.price; if (!SAVE.own.includes(w.id)) SAVE.own.push(w.id); SAVE.eq = w.id; GUN = w.id; saveS(); makePlayer(); gunUI(); coinsUI(); feed('🔫 اشتريت ' + w.n); snd('win'); openShop(); }; }
+    d.appendChild(b); G.appendChild(d); });
+  coinsUI(); $('shop').hidden = false; }
+$('shopX').onclick = () => { $('shop').hidden = true; if (playing && $('pz').hidden) paused = false; drawLevels(); };
+['goShop', 'winShop', 'loseShop', 'pzShop'].forEach(id => $(id).onclick = openShop);
+
+/* ---------------- الحلقة ---------------- */
+function fit() { R.setSize(innerWidth, innerHeight, false); if (!COMP && THREE.EffectComposer) setupPost(); if (COMP) { COMP.setSize(innerWidth, innerHeight); GRADE.uniforms.res.value.set(innerWidth * R.getPixelRatio(), innerHeight * R.getPixelRatio()); } CAM.aspect = innerWidth / innerHeight; CAM.fov = innerWidth < innerHeight ? 52 : 40; CAM.updateProjectionMatrix(); } addEventListener('resize', fit); fit();
+function animS(m, t, s, dt) {   /* مشي واقعي: الحوض يلف ويتمايل، الركب تنثني بوقت رفع الرجل، الجسم يميل لكدام، وتنفس وقت الوقوف */
+  const U = m.userData; if (!U.legL) return; U.amp = (U.amp || 0) + (s - (U.amp || 0)) * Math.min(1, (dt || .016) * 9); const A = U.amp, th = Math.sin(t);
+  U.legL.rotation.x = th * .6 * A; U.legR.rotation.x = -th * .6 * A;
+  U.legL.userData.knee.rotation.x = (Math.max(0, Math.sin(t - 1.5)) * 1.1 + .05) * A + .03; U.legR.userData.knee.rotation.x = (Math.max(0, Math.sin(t - 1.5 + Math.PI)) * 1.1 + .05) * A + .03;
+  const br = Math.sin(performance.now() / 650 + (U.ph || 0)) * (1 - A); U.hip.position.y = .98 - .04 * A + Math.abs(Math.cos(t)) * .055 * A + br * .004; U.top.position.y = U.hip.position.y + br * .006;
+  U.hip.rotation.y = th * .14 * A; U.top.rotation.z = Math.sin(t) * .03 * A; U.top.rotation.x = .09 * A; U.head.rotation.x = -.06 * A;
+}
+let last = performance.now(), T = 0; buildWorld(1); drawLevels();
+const tmp = new THREE.Vector3();
+function loop(now) {
+  requestAnimationFrame(loop); let dt = Math.min(.05, (now - last) / 1000); last = now; if (paused) dt = 0; T += dt;
+  const live = playing && P.alive;
+  if (live) {
+    lvT += dt; spawnTick(dt); for (const k in CD) if (CD[k] > 0) CD[k] = Math.max(0, CD[k] - dt);
+    // الحركة
+    let dir = new THREE.Vector3(); const kx = (KEY.KeyD ? 1 : 0) - (KEY.KeyA ? 1 : 0), kz = (KEY.KeyW ? 1 : 0) - (KEY.KeyS ? 1 : 0);
+    if (kx || kz) dir.set(-kx, 0, kz); else if (JOY.id !== null && Math.hypot(JOY.x, JOY.y) > .12) dir.set(-JOY.x, 0, -JOY.y);
+    let sp = 6.2; if (P.dash > 0) { P.dash -= dt; dir.copy(P.dashDir); sp = 26; } if (P.shield > 0) P.shield -= dt;
+    const jm = JOY.id !== null ? Math.min(1, Math.hypot(JOY.x, JOY.y) * 1.15) : 1; const moving = dir.lengthSq() > .01; if (moving) { dir.normalize(); if (P.dash <= 0) sp *= jm; slide(P.pos, P.pos.x + dir.x * sp * dt, P.pos.z + dir.z * sp * dt, .45); P.yaw += Math.atan2(Math.sin(Math.atan2(dir.x, dir.z) - P.yaw), Math.cos(Math.atan2(dir.x, dir.z) - P.yaw)) * Math.min(1, dt * 14); }
+    { const spd = moving ? sp * (P.dash > 0 ? .4 : 1) : 0; const ph0 = Math.sin(P.walkT); P.walkT += dt * spd * 1.75; animS(PM, P.walkT, moving ? Math.min(1, spd / 4) : 0, dt); if (moving && Math.sign(Math.sin(P.walkT)) !== Math.sign(ph0)) snd('step'); }
+    // الرمي التلقائي على أقرب عدو بالمدى
+    if (P.target && (!P.target.alive || P.target.m.position.distanceTo(P.pos) > RANGE + 4)) P.target = null;
+    RANGE = curW().range; const tg = P.target || nearest(RANGE); P.cool -= dt;
+    if (tg) { const to = tmp.subVectors(tg.m.position, P.pos); const want = Math.atan2(to.x, to.z); P.aim += Math.atan2(Math.sin(want - P.aim), Math.cos(want - P.aim)) * Math.min(1, dt * 18);
+      if (P.cool <= 0) { const W = curW(), eye = P.pos.clone().setY(1.5), te = tg.m.position.clone().setY(tg.K.boss ? 1.6 : 1.4); P.cool = W.rate; const mz = new THREE.Vector3(); PM.userData.muzzle.getWorldPosition(mz);
+        if (W.boom) { fireProj(W, mz, tg.m.position.clone().setY(tg.K.boss ? 1.4 : 1)); }
+        else if (los(eye, te)) { for (let k = 0; k < W.pel; k++) { const sp = W.spread * (W.pel > 1 ? 1 : .6), end = te.clone().add(new THREE.Vector3(rnd(-sp, sp), rnd(-.15, .15), rnd(-sp, sp))); tracer(mz, end, W.cls === 'sniper' ? '#c8f0ff' : '#ffd08a'); let dmg = W.dmg * rnd(.9, 1.1); if (W.pel > 1) { const d2 = te.distanceTo(eye); dmg *= Math.max(.35, 1.15 - d2 / W.range * .8); } hurtE(tg, dmg); } if (W.cls !== 'shotgun' || Math.random() < .5) casing(); puff(te, '#ff6a40', W.pel > 1 ? 4 : 2, 1.5, .2, .3); }
+        else { tracer(mz, te); puff(mz.clone().lerp(te, .5), '#8a7a64', 2, 1, .4, .4, 1, 1); }
+        flash.position.copy(mz); flash.intensity = W.boom ? 4 : W.cls === 'pistol' ? 1.6 : 2.6; PM.userData.fl.material.opacity = 1; PM.userData.fl.material.rotation = rnd(0, 6); snd('shot', .7); PM.userData.gun.position.z = W.cls === 'sniper' || W.boom ? .2 : .27; if (W.cls === 'sniper' || W.boom) shake = Math.max(shake, .18); } }
+    else P.aim += Math.atan2(Math.sin(P.yaw - P.aim), Math.cos(P.yaw - P.aim)) * Math.min(1, dt * 8);
+    PM.userData.top.rotation.y = Math.atan2(Math.sin(P.aim - P.yaw), Math.cos(P.aim - P.yaw));
+    if (P.regen > 0) P.regen -= dt; else if (P.hp < P.max) { P.hp = Math.min(P.max, P.hp + dt * 4); }
+    if (!spawnQ.length && EN.length && EN.every(e => !e.alive)) win();
+  }
+  PM.position.copy(P.pos); PM.rotation.y = P.yaw; ring.position.set(P.pos.x, .05, P.pos.z); ring.rotation.z += dt; rangeRing.position.set(P.pos.x, .04, P.pos.z); rangeRing.scale.setScalar(RANGE / 16);
+  if (moveTarget) { moveMark.position.set(moveTarget.x, .06, moveTarget.z); moveMark.material.opacity = .8; moveMark.scale.setScalar(1 + Math.sin(T * 8) * .1); } else moveMark.material.opacity = 0;
+  // الأعداء
+  const eyeP = P.pos.clone().setY(1.5);
+  for (const e of EN) {
+    const m = e.m; e.bars.forEach(b => b.position.set(m.position.x, (e.K.boss ? 3.4 : 2.6), m.position.z)); e.bars[1].scale.x = e.bw * Math.max(0, e.hp / e.max); e.bars[1].material.color.set(e.hp / e.max > .5 ? '#7bd36a' : e.hp / e.max > .25 ? '#ffcf5a' : '#ff4a3a');
+    if (!e.alive) { e.dead += dt; if (!e.K.boss) { m.rotation.x = -Math.min(1, e.dead * 2.5) * Math.PI / 2 * .98; } else m.position.y = -Math.min(1, e.dead) * .6; if (e.dead > 3) { m.visible = false; } continue; }
+    if (!live) continue;
+    const to = tmp.subVectors(P.pos, m.position).setY(0), d = to.length(); to.normalize(); const want = Math.atan2(to.x, to.z);
+    const ee = m.position.clone().setY(e.K.boss ? 2 : 1.5), see = los(ee, eyeP);
+    let move = 0; const K = e.K;
+    if (K.boss) { e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * .8); m.rotation.y = e.yaw; m.userData.tur.rotation.y = Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)); if (d > 12) { slide(m.position, m.position.x + to.x * K.sp * dt, m.position.z + to.z * K.sp * dt, 2.2); } }
+    else { e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 6); m.rotation.y = e.yaw;
+      const desire = K.bomb ? 1 : d > K.range * .85 || !see ? 1 : d < K.range * .45 ? -.6 : 0; const side = new THREE.Vector3(-to.z, 0, to.x).multiplyScalar(K.bomb ? 0 : e.strafe * .7);
+      const st = to.clone().multiplyScalar(desire).add(side); if (st.lengthSq() > .01) { st.normalize().multiplyScalar(K.sp * dt); const ox = m.position.x, oz = m.position.z; slide(m.position, m.position.x + st.x, m.position.z + st.z, .45); move = Math.hypot(m.position.x - ox, m.position.z - oz) > .001 ? 1 : 0; } if (Math.random() < dt * .5) e.strafe = rnd(-1, 1);
+      e.walkT += dt * K.sp * 1.75 * move; animS(m, e.walkT, move, dt); }
+    if (K.bomb) { if (d < K.range) { e.byP = 0; killE(e); } continue; }
+    e.cool -= dt;
+    if (K.laser && see && d < K.range) { e.aimT += dt; const a = ee, b = eyeP; e.laser.geometry.setFromPoints([a, b]); e.laser.material.opacity = Math.min(.9, e.aimT); e.laser.visible = true; } else if (e.laser) { e.aimT = 0; e.laser.material.opacity = 0; }
+    if (see && d < K.range && e.cool <= 0 && (!K.laser || e.aimT > 1.2)) { e.cool = K.rate * rnd(.85, 1.2); e.aimT = 0;
+      const mz = new THREE.Vector3(); m.userData.muzzle.getWorldPosition(mz);
+      if (K.boss) { shell(mz, P.pos.clone().setY(.2), K.dmg * edmg(LVL)); snd('boom', .35); }
+      else { const hit = Math.random() < (K.laser ? .85 : Math.max(.25, .75 - d / 30)) * (P.dash > 0 ? .2 : 1); const end = hit ? eyeP.clone() : eyeP.clone().add(new THREE.Vector3(rnd(-1.5, 1.5), rnd(-.5, .8), rnd(-1.5, 1.5))); tracer(mz, end, K.laser ? '#ff6a6a' : '#ffa07a'); snd('eshot', .8); if (m.userData.fl) { m.userData.fl.material.opacity = 1; m.userData.fl.material.rotation = rnd(0, 6); } if (hit) { const dd = K.dmg * edmg(LVL); dmgTaken += dd; hurtP(dd); } } }
+  }
+  // المقذوفات
+  for (let i = PROJ.length - 1; i >= 0; i--) { const p = PROJ[i]; p.t += dt; if (p.kind !== 'rk') p.v.y -= 16 * dt; if (p.kind === 'gl') { for (const e of EN) if (e.alive && e.m.position.distanceTo(p.mesh.position) < (e.K.boss ? 2.6 : 1.1)) p.t = 99; if (blocked(p.mesh.position.x, p.mesh.position.z, .1) && p.mesh.position.y < 2.2) p.t = 99; } const np = p.mesh.position.clone().addScaledVector(p.v, dt); let boom = false;
+    if (p.kind === 'rk') { p.mesh.lookAt(np); puff(p.mesh.position, '#777', p.rpg ? 2 : 1, .3, p.rpg ? 1.4 : .8, p.rpg ? .9 : .6, 1, 1); if (p.rpg) puff(p.mesh.position, '#ffb050', 1, .2, .1, .5); for (const e of EN) if (e.alive && e.m.position.distanceTo(np) < (e.K.boss ? 2.6 : 1)) boom = true; if (blocked(np.x, np.z, .1)) boom = true; }
+    else p.mesh.rotation.x += dt * 6;
+    if (np.y <= .2) { if (p.kind === 'gl') { boom = true; } else if (p.kind === 'gr') { np.y = .2; p.v.y *= -.3; p.v.x *= .55; p.v.z *= .55; } else boom = true; }
+    if (p.kind === 'gr') { const b = blocked(np.x, np.z, .15); if (b && np.y < 2.4) { p.v.x *= -.4; p.v.z *= -.4; np.copy(p.mesh.position); } }
+    p.mesh.position.copy(np);
+    if (boom || (p.kind === 'gr' && p.t > 1.6) || (p.kind === 'gl' && p.t > 3) || p.t > 5) { if (p.kind === 'sh') { explode(np.clone().setY(.3), 0, 1, 'e'); const dp = P.pos.distanceTo(np.clone().setY(0)); if (dp < 3) { dmgTaken += p.dmg; hurtP(p.dmg * (1 - dp / 4)); } } else explode(np.clone(), p.dmg || (p.kind === 'gr' ? 95 : 150) * diff(LVL) * .6, p.boom || (p.kind === 'gr' ? 6 : 5), 'p'); S.remove(p.mesh); PROJ.splice(i, 1); } }
+  // المؤثرات
+  for (let i = FX.length - 1; i >= 0; i--) { const f = FX[i]; f.t -= dt; const u = Math.max(0, f.t / f.l);
+    if (f.k === 'line') f.o.material.opacity = u; else if (f.k === 'spr') { f.o.position.addScaledVector(f.v, dt); f.v.y += f.g * dt; f.v.multiplyScalar(1 - dt * 1.4); f.o.material.opacity = u; f.o.scale.setScalar(f.sz * (1 + (1 - u) * 1.8)); }
+    else if (f.k === 'cas') { f.v.y -= 14 * dt; f.o.position.addScaledVector(f.v, dt); if (f.o.position.y < .03) { f.o.position.y = .03; f.v.y *= -.3; f.v.x *= .5; f.v.z *= .5; } f.o.rotation.x += f.spin * dt; f.o.rotation.z += f.spin * .7 * dt; }
+    else if (f.k === 'decal') f.o.material.opacity = Math.min(.5, f.t / 3); else if (f.k === 'warn') { f.o.material.opacity = .4 + .4 * Math.sin(T * 20); } else if (f.k === 'jet') f.o.position.x = f.x0 + (f.x1 - f.x0) * (1 - u);
+    if (f.t <= 0) { S.remove(f.o); if (f.k !== 'cas' && f.k !== 'jet' && f.o.geometry) f.o.geometry.dispose(); FX.splice(i, 1); } }
+  flash.intensity = Math.max(0, flash.intensity - dt * 30); if (PM) { const U = PM.userData; U.fl.material.opacity = Math.max(0, U.fl.material.opacity - dt * 22); if (U.gun.userData.spin) U.gun.userData.spin.rotation.z += dt * (P.cool > -0.2 && P.target !== undefined ? 40 : 0); U.gun.position.z += (.32 - U.gun.position.z) * Math.min(1, dt * 20); } for (const e of EN) if (e.m.userData.fl) e.m.userData.fl.material.opacity = Math.max(0, e.m.userData.fl.material.opacity - dt * 18); if (Math.random() < dt * 3) for (const sp2 of puffSmoke) puff(sp2.clone().add(new THREE.Vector3(rnd(-.4, .4), 0, rnd(-.4, .4))), '#3a3632', 1, .6, 3, 1.4, 1.4, 1); exL.intensity = Math.max(0, exL.intensity - dt * 14);
+  // كاميرا موبا: من فوق وورا شوية، تتبع اللاعب
+  const camH = innerWidth < innerHeight ? 23 : 20, camZ = innerWidth < innerHeight ? 15 : 13, want = new THREE.Vector3(P.pos.x, camH, P.pos.z - camZ);
+  CAM.position.lerp(want, Math.min(1, dt * 7 + (playing ? 0 : 1))); if (shake > 0) { CAM.position.add(new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(shake * .5)); shake = Math.max(0, shake - dt * 2.4); }
+  CAM.lookAt(P.pos.x, 0, P.pos.z + 2); sun.position.set(P.pos.x - 25, 50, P.pos.z - 10); sun.target.position.copy(P.pos);
+  if (!playing) { P.yaw += dt * .4; }
+  // أزرار المهارات
+  SK.forEach(s => { const b = $('sk_' + s.id), c = CD[s.id]; b.querySelector('.cd').style.setProperty('--p', (c / s.cd * 100) + '%'); b.querySelector('.cdn').textContent = c > 0 ? Math.ceil(c) : ''; });
+  if (playing && (T * 4 | 0) % 2 === 0) { $('left').textContent = EN.filter(e => e.alive).length + spawnQ.length; $('hpN').textContent = Math.round(P.hp); $('hpB').style.width = (P.hp / P.max * 100) + '%'; }
+  if (COMP) { GRADE.uniforms.exposure.value = R.toneMappingExposure * .92; GRADE.uniforms.night.value = THEME.night ? 1 : 0; COMP.render(dt); } else R.render(S, CAM);
+}
+requestAnimationFrame(loop); ui();
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) { paused = true; $('pz').hidden = false; } });
+</script>
+</body>
+</html>

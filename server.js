@@ -602,7 +602,7 @@ app.post('/api/admin/grant', (req, res) => {
 
 app.get('/api/me', authMw, (req, res) => res.json(userInfo(req.key)));
 // حفظ تقدم الألعاب على الحساب (المزرعة، ركض ربش، عدّاد صيد المنتجع) — يبقى دائماً مع الحساب
-const GS_KEYS = { run: 9000, farm: 9000, rmf: 600 };
+const GS_KEYS = { run: 9000, farm: 9000, rmf: 600, arena: 6000 };
 app.get('/api/gs', authMw, (req, res) => { const u = db.users[req.key]; res.set('Cache-Control', 'no-store'); res.json({ gs: (u && u.gs) || {} }); });
 app.post('/api/gs', authMw, (req, res) => {
   const u = db.users[req.key], k = String((req.body && req.body.k) || ''), d = req.body && req.body.d;
