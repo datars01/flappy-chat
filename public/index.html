@@ -9497,11 +9497,12 @@ function rmDraw() {
   { const tn = bh < 250; if (RM.tinyC !== tn) { RM.tinyC = tn; $('rmBox').classList.toggle('rmTiny', tn); } } RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = rmInShop() ? '#2a1530' : '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; rmWxStep(); try { rmPairTick(); rmHoldTick(); } catch (e) {} const m = RM.me, st = rmUpdMe(), SH = rmInShop(), SID = rmShopId();
   rmShopMusic(SH && !RM.ambMute, SID === 5 ? 4 : SID >= 6 ? 6 : SID);
-  const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / (RMW - RMX0), bh / RMH); RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (!RM.z || RM.camSnap) RM.z = RM.zt;
+  const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / (RMW - RMX0), bh / RMH); if (RM.camSnap) { RM.free = false; RM.uz = 0; rmCamBtn(); } RM.zMin = Math.min(pAll, pClose) * 0.9; RM.zMax = pClose * 2.8; RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (RM.uz) RM.zt = RM.uz = Math.max(RM.zMin, Math.min(RM.zMax, RM.uz)); if (!RM.z || RM.camSnap || RM.uz) RM.z = RM.zt;
   RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
   const B = SH ? [rmShi().vx0, rmShi().vx1, rmShi().vy0, rmShi().vy1] : [RMX0, RMW, 0, RMH], BW = B[1] - B[0], BH = B[3] - B[2];
-  const tx = vw >= BW ? B[0] - (vw - BW) / 2 : Math.max(B[0], Math.min(B[1] - vw, m.x - vw / 2)), ty = vh >= BH ? B[2] - (vh - BH) / 2 : Math.max(B[2], Math.min(B[3] - vh, m.y - 20 - vh / 2));
-  RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (RM.zoomAll || RM.camSnap) { RM.cx = tx; RM.cy = ty; RM.camSnap = 0; } RM.v0 = Math.max(RMX0, Math.floor(RM.cx) - 30); RM.v1 = Math.min(RMW, Math.ceil(RM.cx + vw) + 30); RM.g60 = Math.floor(RM.v0 / 60) * 60; RM.vy0 = RM.cy - 20; RM.vy1 = RM.cy + vh + 20;
+  const cl = (v, b0, b1, vv, bbb) => vv >= bbb ? b0 - (vv - bbb) / 2 : Math.max(b0, Math.min(b1 - vv, v));   // الكاميرا الحرة (مثل هاي رايز): تسحب وتقرّب بكيفك والشخصية ما تتأثر
+  const tx = cl(RM.free ? RM.fx : m.x - vw / 2, B[0], B[1], vw, BW), ty = cl(RM.free ? RM.fy : m.y - 20 - vh / 2, B[2], B[3], vh, BH);
+  if (RM.free) { RM.fx = RM.cx = tx; RM.fy = RM.cy = ty; RM.camSnap = 0; } else { RM.cx += (tx - RM.cx) * 0.18; RM.cy += (ty - RM.cy) * 0.18; if (RM.zoomAll || RM.camSnap) { RM.cx = tx; RM.cy = ty; RM.camSnap = 0; } } RM.v0 = Math.max(RMX0, Math.floor(RM.cx) - 30); RM.v1 = Math.min(RMW, Math.ceil(RM.cx + vw) + 30); RM.g60 = Math.floor(RM.v0 / 60) * 60; RM.vy0 = RM.cy - 20; RM.vy1 = RM.cy + vh + 20;
   c.save(); c.scale(z, z); c.translate(-RM.cx, -RM.cy);
   if (SH) { if (SID >= 5) rmXBg(c, SID); else if (SID === 4) rmBagBg(c); else if (SID === 3) rmFashBg(c); else if (SID === 2) rmPetBg(c); else rmShopBg(c); rmTapDraw(c); } else { rmBg(c, RM.T); rmPathGround(c); try { rmXGround(c); } catch (e) {} rmSunSky(c); rmSeaLife(c, RM.T); rmRainbow(c); rmTapDraw(c); }
   const list = SH ? (SID >= 5 ? rmXList(SID) : SID === 4 ? rmBagList() : SID === 3 ? rmFashList() : SID === 2 ? rmPetShopList() : rmShopList()) : RM_DECOR.map(d => [d.y, d.f]); Object.values(RM.others).forEach(o => rmShopId(o) === SID && list.push([o.sit ? rmSortOf(o.y, true, o.x, o.y) : o.y, cc => rmDrawOther(cc, o)]));
@@ -9898,7 +9899,7 @@ $('rmSend').onclick = rmChat; $('rmChatIn').addEventListener('keydown', e => { i
 $('rmExit').onclick = () => { showToast('👋 شكراً لزيارتك منتجع بابي! نشوفك قريب 🌴'); rmLeaveRoom(); };
 function rmMemToggle(open) { const P = $('rmMem'); P.hidden = open === undefined ? !P.hidden : !open; $('rmBox').classList.toggle('memOpen', !P.hidden); $('rmMemArr').firstChild.textContent = P.hidden ? '▶' : '◀'; }
 $('rmMemArr').onclick = () => { if ($('rmMem').hidden) rmPopClose('mem'); rmMemToggle(); };
-$('rmZoom').onclick = () => { RM.zoomAll = !RM.zoomAll; rmLbl('rmZoom', RM.zoomAll ? '🔍' : '🔭', RM.zoomAll ? 'قرّب' : 'كل المكان'); };
+$('rmZoom').onclick = () => { RM.free = false; RM.uz = 0; rmCamBtn(); RM.zoomAll = !RM.zoomAll; rmLbl('rmZoom', RM.zoomAll ? '🔍' : '🔭', RM.zoomAll ? 'قرّب' : 'كل المكان'); };
 function rmLandscapeDevice() {
   try { if (screen.orientation && screen.orientation.type) return /landscape/.test(screen.orientation.type); } catch (e) {}
   if (typeof window.orientation === 'number') return Math.abs(window.orientation) === 90;
@@ -9911,12 +9912,40 @@ function rmSetFull(on, auto, soft) {
   try { if (on && !soft) { const r = $('rmStage').requestFullscreen && $('rmStage').requestFullscreen(); if (r && r.then) r.then(() => { try { if (!auto && IS_TABLET) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
   if (typeof hFitFs === 'function') hFitFs(); if (window.hFitAll) hFitAll(); window.scrollTo(0, 0);
 }
+
+/* زر «🎯 رجوع لشخصيتي» يطلع لما الكاميرا مفصولة عن اللاعب */
+function rmCamBtn() {
+  let b = document.getElementById('rmCamBack'); const box = $('rmBox'); if (!box) return;
+  if (!b) { b = document.createElement('button'); b.id = 'rmCamBack'; b.type = 'button'; b.textContent = '🎯 رجوع لشخصيتي';
+    b.style.cssText = 'position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);transform:translateX(-50%);z-index:8;padding:8px 16px;border-radius:999px;border:2px solid #fff;background:linear-gradient(135deg,#8f5cff,#ff7ab8);color:#fff;font:800 14px Cairo,system-ui;box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer;display:none';
+    b.onclick = e => { e.stopPropagation(); RM.free = false; RM.uz = 0; rmCamBtn(); }; box.appendChild(b); }
+  b.style.display = (RM.free || RM.uz) ? '' : 'none';
+}
 (function () {
   const cv = $('rmCv'); if (!cv) return;
   const pt = e => { const r = cv.getBoundingClientRect(), z = RM.z || 1; return [RM.cx + (e.clientX - r.left) / z * ((RM.bw || r.width) / r.width), RM.cy + (e.clientY - r.top) / z * ((RM.bh || r.height) / r.height)]; };
-  cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); if (RM.tpMode && RM.myAdm) { rmTpTo(x, y, true); return; } try { if (rmXHit(x, y)) return; } catch (er) {} if (rmLudoBtnHit(x, y)) { rmLudoGo(); return; } if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmTgHit(x, y)) return; if (rmGmzHit(x, y)) return; if (rmBagHit(x, y)) return; if (rmFashHit(x, y)) return; if (rmShopHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); RM.hold = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
-  cv.addEventListener('pointermove', e => { if (RM.hold) { const [x, y] = pt(e); rmWalkTo(x, y); rmTapMark(x, y); } });
-  const up = () => { RM.hold = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  const rmTapAct = e => { const [x, y] = pt(e); if (RM.tpMode && RM.myAdm) { rmTpTo(x, y, true); return; } try { if (rmXHit(x, y)) return; } catch (er) {} if (rmLudoBtnHit(x, y)) { rmLudoGo(); return; } if (rmNpcHit(x, y)) { rmNpcGreet(); return; } if (rmPetHit(x, y)) return; if (rmTgHit(x, y)) return; if (rmGmzHit(x, y)) return; if (rmBagHit(x, y)) return; if (rmFashHit(x, y)) return; if (rmShopHit(x, y)) return; if (rmVipHit(x, y)) { if (rmNearVip()) rmVipOpen(); else { rmWalkTo(RM_VIPB.x, RM_VIPB.y + 20); rmTapMark(RM_VIPB.x, RM_VIPB.y + 20); showToast('🚶 روح للوحة حتى تقدّم'); } return; } if (rmIdeaHit(x, y)) { if (rmNearIdeas()) rmIdeasOpen(); else { rmWalkTo(RM_IDB.x, RM_IDB.y + 22); rmTapMark(RM_IDB.x, RM_IDB.y + 22); showToast('🚶 روح للوحة حتى تقراها'); } return; } { const oh = rmAvHit(x, y); if (oh) { rmPcOpen(oh.name); return; } } rmPcClose(); rmWalkTo(x, y); rmTapMark(x, y); };
+  /* كاميرا حرة: دوسة وحدة = تمشي/تفتح، سحب بإصبع = تحرك الكاميرا، إصبعين (أو عجلة الماوس) = تقريب وتبعيد. الشخصية ما تتحرك من الكاميرا */
+  const P = new Map(); let drag = null, pinch = null;
+  const sc = () => { const r = cv.getBoundingClientRect(); return [r, (RM.bw || r.width) / r.width, (RM.bh || r.height) / r.height]; };
+  const goFree = () => { if (!RM.free) { RM.free = true; RM.fx = RM.cx; RM.fy = RM.cy; } if (!RM.uz) RM.uz = RM.z || 1; RM.zoomAll = false; rmCamBtn(); };
+  const zoomAt = (nz, clx, cly) => { const [r, kx, ky] = sc(), z0 = RM.z || 1; nz = Math.max(RM.zMin || 0.3, Math.min(RM.zMax || 5, nz)); const sx = (clx - r.left) * kx, sy = (cly - r.top) * ky, wx = RM.cx + sx / z0, wy = RM.cy + sy / z0; goFree(); RM.uz = RM.z = nz; RM.fx = RM.cx = wx - sx / nz; RM.fy = RM.cy = wy - sy / nz; };
+  cv.addEventListener('pointerdown', e => {
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {} P.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (P.size === 2) { const [a, b] = [...P.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: RM.z || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; drag = null; return; }
+    if (P.size === 1) drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, ev: e };
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!P.has(e.pointerId)) return; P.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && P.size >= 2) { const [a, b] = [...P.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; zoomAt(pinch.z * d / pinch.d, mx, my); const [, kx, ky] = sc(); RM.fx = RM.cx -= (mx - pinch.mx) * kx / RM.z; RM.fy = RM.cy -= (my - pinch.my) * ky / RM.z; pinch.mx = mx; pinch.my = my; return; }
+    if (!drag || drag.id !== e.pointerId) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 9) { drag.moved = true; goFree(); }
+    if (drag.moved) { const [, kx, ky] = sc(), z = RM.z || 1; RM.fx = RM.cx -= (e.clientX - drag.lx) * kx / z; RM.fy = RM.cy -= (e.clientY - drag.ly) * ky / z; }
+    drag.lx = e.clientX; drag.ly = e.clientY;
+  });
+  const up = e => { const had = P.has(e.pointerId); P.delete(e.pointerId); RM.hold = false; if (pinch) { if (P.size < 2) pinch = null; drag = null; return; } if (had && drag && drag.id === e.pointerId && !drag.moved && e.type === 'pointerup') rmTapAct(drag.ev); drag = null; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt((RM.z || 1) * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018)), e.clientX, e.clientY); }, { passive: false });
   document.addEventListener('keydown', e => { if (curPage !== 'rooms' || !RM.on || (e.target && e.target.tagName === 'INPUT')) return; const k = e.key.toLowerCase(); const dx = (k === 'arrowright' || k === 'd' ? 1 : 0) - (k === 'arrowleft' || k === 'a' ? 1 : 0), dy = (k === 'arrowdown' || k === 's' ? 1 : 0) - (k === 'arrowup' || k === 'w' ? 1 : 0); if (dx || dy) { e.preventDefault(); rmWalkTo(RM.me.x + dx * 34, RM.me.y + dy * 34); } });
 })();
 
