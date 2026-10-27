@@ -1,6 +1,6 @@
 /* بابيتو شات — عمل بدون إنترنت: الصفحة والألعاب (المزرعة وركض ربش وغيرها) والخطوط تنخزن بالجهاز.
    الـ API والشات والمنتجع أونلاين فقط. تقدم الألعاب ينحفظ بالجهاز ويتزامن مع الحساب من يرجع النت */
-const CACHE = 'babito-v18';
+const CACHE = 'babito-v19';
 const SHELL = ['/', '/index.html', '/manifest.json', '/farm.html', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/arena.html', '/vendor/three-r128.min.js', '/vendor/three-post-r128.js', '/gamebridge.js'];
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
