@@ -2151,7 +2151,7 @@ function rmOnMsg(ws, d) {
   } else if (d.t === 'rm_umb') {   // شمسية المطر
     const h = ws.rm; if (!h || now - (h.umbt || 0) < 300) return; h.umbt = now; h.umb = d.on ? 1 : 0; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_umb', n: me.name, on: h.umb }, ws);
   } else if (d.t === 'rm_emo') {   // رقصات وايماءات
-    const h = ws.rm; if (!h || now - (h.et || 0) < 250) return; h.et = now; const e = Number(d.e); h.emo = Number.isInteger(e) && e >= 0 && e <= 80 ? e : 0;
+    const h = ws.rm; if (!h || now - (h.et || 0) < 250) return; h.et = now; const e = Number(d.e); h.emo = Number.isInteger(e) && e >= 0 && e <= 120 ? e : 0;
     const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_emo', n: me.name, e: h.emo }, ws);
   } else if (d.t === 'rm_typing') {
     const h = ws.rm; if (!h || now - (h.tt || 0) < 1500) return; h.tt = now; const r = rmRooms.get(h.id); if (r) rmBcV(r, { t: 'rm_typing', n: me.name }, ws);
