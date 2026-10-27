@@ -57,6 +57,10 @@ html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
 body.pgOn #bgFx { display: none !important; } body.pgOn #hub, body.pgOn #hub *, body.pgOn #hub *::before, body.pgOn #hub *::after { animation-play-state: paused !important; }
 /* إنشاء الغرف ملغي: نخفي كل أزرار وفورمات «سوّي غرفتك» */
 #rmNew, #rmForm, #rmGoNew { display: none !important; }
+/* ما نريد تحديد نص أو قائمة Copy / Look Up لما اللاعب يضل دايس على الشاشة (آيفون/آيباد) — الكتابة بالخانات تبقى عادية */
+html, body, body * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, select, [contenteditable], [contenteditable] * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+img, canvas, svg { -webkit-user-drag: none; }
 </style>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -10060,5 +10064,14 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/resort2.js?v=2"></script>
 <script src="/resort3.js?v=2"></script>
 <script src="/resort-map.js?v=2"></script>
+<script>
+/* منع التحديد والقائمة عند الضغط المطوّل خارج خانات الكتابة */
+(function () {
+  const ok = t => t && t.closest && t.closest('input, textarea, select, [contenteditable]');
+  document.addEventListener('selectstart', e => { if (!ok(e.target)) e.preventDefault(); }, { capture: true });
+  document.addEventListener('contextmenu', e => { if (!ok(e.target)) e.preventDefault(); }, { capture: true });
+  document.addEventListener('selectionchange', () => { const a = document.activeElement; if (ok(a)) return; const s = window.getSelection && getSelection(); if (s && s.rangeCount && !s.isCollapsed) s.removeAllRanges(); });
+})();
+</script>
 </body>
 </html>
