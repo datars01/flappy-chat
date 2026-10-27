@@ -7,6 +7,8 @@
 html, body, body * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 input, textarea, select, [contenteditable], [contenteditable] * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 img, canvas, svg { -webkit-user-drag: none; }
+
+.gbTop #top { padding-left: 96px !important; }
 </style>
 <title>سباق المزرعة</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -171,6 +173,8 @@ button:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
 </div>
 <div id="ov" hidden><div id="ovBox"></div></div>
 
+<script>window.addEventListener("error",function(e){try{var d=document.getElementById("gbErr");if(!d){d=document.createElement("div");d.id="gbErr";d.style.cssText="position:fixed;z-index:2147483646;left:8px;right:8px;bottom:8px;background:rgba(150,20,20,.92);color:#fff;font:12px/1.5 system-ui;padding:8px 10px;border-radius:10px;direction:ltr;white-space:pre-wrap";(document.body||document.documentElement).appendChild(d)}d.textContent="⚠️ صوّر هاي الرسالة ودزها: "+(e.message||"")+" @"+String(e.filename||"").split("/").pop()+":"+(e.lineno||"")}catch(x){}});</script>
+<script src="/gamebridge.js?v=1" data-key="farm"></script>
 <script>
 'use strict';
 /* ===================== سباق المزرعة HD =====================
@@ -366,10 +370,10 @@ try {
   else { const old = JSON.parse(localStorage.getItem('frenzy_rbsh_v1') || 'null'); if (old) { P.open = clamp(old.open || 1, 1, 40); P.stars = (old.stars || []).slice(0, 40); } }
 } catch (e) {}
 /* الحفظ: بالجهاز، وإذا اللعبة داخل بابيتو شات ينحفظ بحساب اللاعب ويرجعله من أي جهاز */
-const EMB = window.parent !== window;
+const EMB = window.parent !== window || !!window.GB_TOP; const PMSG = (m, o) => { if (window.GB_TOP) GB.post(m); else parent.postMessage(m, o); };
 let saveT = 0;
 const saveP = () => { P._t = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
-  if (EMB && P._acct) { clearTimeout(saveT); saveT = setTimeout(() => { try { parent.postMessage('farm:save:' + JSON.stringify(P), location.origin); } catch (e) {} }, 800); } };
+  if (EMB && P._acct) { clearTimeout(saveT); saveT = setTimeout(() => { try { PMSG('farm:save:' + JSON.stringify(P), location.origin); } catch (e) {} }, 800); } };
 function fixP() { const d = defP(); for (const k in d) if (P[k] == null) P[k] = d[k]; for (const g in d.own) { if (!P.own[g] || !P.own[g].length) P.own[g] = [0]; if (P.eq[g] == null) P.eq[g] = 0; } if (!P.veh || !P.veh.length) P.veh = [0]; P.eq.bag = Math.max(...P.own.bag); }
 function farmSync(m) {
   if (!m || !m.acct || !m.ok) return; const me = m.acct, srv = m.srv; let d = null, push = false;
@@ -379,7 +383,7 @@ function farmSync(m) {
   else push = true;
   if (d) { if (G && !G.done) { settle(); G = null; } P = Object.assign(defP(), d); fixP(); }
   P._acct = me; try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
-  if (push || d) { try { parent.postMessage('farm:save:' + JSON.stringify(P), location.origin); } catch (e) {} }
+  if (push || d) { try { PMSG('farm:save:' + JSON.stringify(P), location.origin); } catch (e) {} }
   if (d) { try { closeOv(); buildBG(); hud(); setTog(); showMap(); } catch (e) {} } else { try { hud(); } catch (e) {} }
 }
 fixP();
@@ -1793,7 +1797,7 @@ function loop(now) {
   draw(); requestAnimationFrame(loop);
 }
 fit(); setTog(); hud(); splash(); requestAnimationFrame(loop);
-if (EMB) { try { parent.postMessage('farm:hello', location.origin); } catch (e) {} }
+if (EMB) { try { PMSG('farm:hello', location.origin); } catch (e) {} }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { buildBG(); });
 </script>
 

@@ -72,6 +72,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .st { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; align-items: center; } .st i { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; } .st i u { display: block; height: 100%; background: linear-gradient(90deg, var(--sand), #ff7a3a); }
 .wc button { margin-top: auto; border: 0; border-radius: 10px; padding: 8px; font: 800 13px var(--body); cursor: pointer; background: var(--sand); color: #1a1206; } .wc button.own { background: rgba(255,255,255,.14); color: var(--ink); } .wc button:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { #feed div, #nums i { animation-duration: .01s; } }
+.gbTop #top { left: 96px !important; }
 </style>
 </head>
 <body>
@@ -135,6 +136,8 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 </div></div>
 <div class="ov" id="pz" hidden><div class="box"><h2>⏸ اللعبة واكفة</h2><div class="row"><button class="btn" id="pzGo" type="button">▶ كمّل</button><button class="btn alt" id="pzOpt" type="button">⚙️ الخيارات</button><button class="btn alt" id="pzSnd" type="button">🔊</button><button class="btn alt" id="pzShop" type="button">🛒 المتجر</button><button class="btn alt" id="pzHome" type="button">المراحل</button></div></div></div>
 
+<script>window.addEventListener("error",function(e){try{var d=document.getElementById("gbErr");if(!d){d=document.createElement("div");d.id="gbErr";d.style.cssText="position:fixed;z-index:2147483646;left:8px;right:8px;bottom:8px;background:rgba(150,20,20,.92);color:#fff;font:12px/1.5 system-ui;padding:8px 10px;border-radius:10px;direction:ltr;white-space:pre-wrap";(document.body||document.documentElement).appendChild(d)}d.textContent="⚠️ صوّر هاي الرسالة ودزها: "+(e.message||"")+" @"+String(e.filename||"").split("/").pop()+":"+(e.lineno||"")}catch(x){}});</script>
+<script src="/gamebridge.js?v=1" data-key="arena"></script>
 <script src="/vendor/three-r128.min.js"></script>
 <script src="/vendor/three-post-r128.js"></script>
 <script>
@@ -555,10 +558,10 @@ const KEY = {}; addEventListener('keydown', e => KEY[e.code] = 1); addEventListe
 /* ---------------- المراحل والحفظ ---------------- */
 const MAXL = 100, SKEY = 'babi_arena_v2', defS = () => ({ open: 1, stars: [], coins: 0, own: ['glock'], eq: 'glock' });
 let SAVE = defS(); try { SAVE = Object.assign(defS(), JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
-const EMB = window.parent !== window; let ADM = /[?&]adm=1/.test(location.search), saveTm = 0;
+const EMB = window.parent !== window || !!window.GB_TOP; const PMSG = (m, o) => { if (window.GB_TOP) GB.post(m); else parent.postMessage(m, o); }; let ADM = /[?&]adm=1/.test(location.search), saveTm = 0;
 function fixS() { const d = defS(); for (const k in d) if (SAVE[k] == null) SAVE[k] = d[k]; if (!Array.isArray(SAVE.own) || !SAVE.own.length) SAVE.own = ['glock']; if (!WBY[SAVE.eq] || (!SAVE.own.includes(SAVE.eq) && !ADM)) SAVE.eq = SAVE.own[SAVE.own.length - 1]; SAVE.open = Math.max(1, Math.min(MAXL, SAVE.open | 0)); }
 fixS(); GUN = SAVE.eq; makePlayer();
-const saveS = () => { SAVE._t = Date.now(); try { localStorage.setItem(SKEY, JSON.stringify(SAVE)); } catch (e) {} if (EMB && SAVE._acct) { clearTimeout(saveTm); saveTm = setTimeout(() => { try { parent.postMessage('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }, 700); } };
+const saveS = () => { SAVE._t = Date.now(); try { localStorage.setItem(SKEY, JSON.stringify(SAVE)); } catch (e) {} if (EMB && SAVE._acct) { clearTimeout(saveTm); saveTm = setTimeout(() => { try { PMSG('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }, 700); } };
 function arenaSync(m) {   /* التقدم والعملات والأسلحة تنحفظ بحساب اللاعب وترجعله من أي جهاز */
   if (!m || !m.acct || !m.ok) return; const me = m.acct, srv = m.srv; let d = null, push = false;
   if (SAVE._acct === me && srv && (Number(srv._t) || 0) <= (Number(SAVE._t) || 0)) push = (Number(SAVE._t) || 0) > (Number(srv._t) || 0);
@@ -567,11 +570,11 @@ function arenaSync(m) {   /* التقدم والعملات والأسلحة تن
   else push = true;
   if (d) { SAVE = Object.assign(defS(), d); fixS(); }
   SAVE._acct = me; try { localStorage.setItem(SKEY, JSON.stringify(SAVE)); } catch (e) {}
-  if (push || d) { try { parent.postMessage('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }
+  if (push || d) { try { PMSG('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }
   if (d && !playing) { GUN = SAVE.eq; makePlayer(); drawLevels(); } coinsUI();
 }
 addEventListener('message', e => { if (e.origin !== location.origin) return; const d = String(e.data || ''); if (d.indexOf('arena:gs:') === 0) { try { arenaSync(JSON.parse(d.slice(9))); } catch (x) {} } else if (d.indexOf('arena:adm:') === 0) { ADM = d.slice(-1) === '1'; fixS(); coinsUI(); drawLevels(); } else if (d === 'arena:pause') { if (playing && !paused) setPause(true); } });
-if (EMB) { try { parent.postMessage('arena:hello', location.origin); } catch (e) {} }
+if (EMB) { try { PMSG('arena:hello', location.origin); } catch (e) {} }
 const owns = id => ADM || SAVE.own.includes(id), fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : String(Math.round(n));
 function coinsUI() { document.querySelectorAll('.coinsN').forEach(e => e.textContent = ADM ? '∞ 👑' : fmt(SAVE.coins)); }
 const diff = n => Math.pow(1.05, n - 1), edmg = n => Math.pow(1.028, n - 1), killCoin = n => Math.round(4 * Math.pow(1.058, n - 1)), winCoin = n => Math.round(45 * Math.pow(1.062, n - 1));
