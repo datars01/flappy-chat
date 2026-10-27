@@ -55,6 +55,8 @@ html.lowfx *, html.lowfx *::before, html.lowfx *::after { animation-iteration-co
 html.lowfx .bgFx, html.lowfx #bgFx { display: none !important; }
 /* لما تنفتح صفحة (لعبة/منتجع...) نوقف حركات الشاشة الرئيسية اللي ورا حتى الجهاز يصرف كل قوته على الصفحة المفتوحة */
 body.pgOn #bgFx { display: none !important; } body.pgOn #hub, body.pgOn #hub *, body.pgOn #hub *::before, body.pgOn #hub *::after { animation-play-state: paused !important; }
+/* إنشاء الغرف ملغي: نخفي كل أزرار وفورمات «سوّي غرفتك» */
+#rmNew, #rmForm, #rmGoNew { display: none !important; }
 </style>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
@@ -9763,7 +9765,7 @@ function rmDrawList2(L, r, MS) {
     } else { b.textContent = full && !mine ? 'ممتلئة' : 'ادخل ◀'; b.disabled = full && !mine; b.onclick = () => rmEnter(x.id, ''); go.appendChild(b); }
     card.append(av, mid, go); L.appendChild(card);
   });
-  if (!auth) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>👋</b>'; e.append('تكدر تدخل غرفة «بابي» كضيف. سجّل حساب حتى تسوي غرفتك وتدخل باقي الغرف'); L.appendChild(e); }
+  if (!auth) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>👋</b>'; e.append('تكدر تدخل غرفة «بابي» كضيف. سجّل حساب حتى تحفظ تقدمك وتلعب ويه أصدقائك'); L.appendChild(e); }
   // غرف الأعضاء ملغية: ما نعرض رسالة «ماكو غرف»
   else if (RM.lf !== 'all' && rooms.length <= r.rooms.filter(x => x.perm).length) { const e = document.createElement('div'); e.className = 'rlEmpty'; e.innerHTML = '<b>🔍</b>'; e.append('ماكو غرف بهذا النوع هسه'); L.appendChild(e); }
 }
