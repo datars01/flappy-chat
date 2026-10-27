@@ -313,7 +313,8 @@ const VEH = [
   { n: 'سيسنا الزرقاء', k: 'plane', cap: 34, tm: 9, p: 8000, u: 15, L: 50, span: 68, col: '#ffffff', ac: '#1c7ed6', eng: 0 },
   { n: 'طائرة الشحن', k: 'plane', cap: 45, tm: 8, p: 12000, u: 20, L: 68, span: 86, col: '#8a9a5b', ac: '#3b4a2a', eng: 4 },
   { n: 'الجامبو', k: 'plane', cap: 60, tm: 7, p: 20000, u: 28, L: 78, span: 88, col: '#f8f9fa', ac: '#c92a2a', eng: 4, jet: 1 },
-  { n: 'النفاثة الذهبية', k: 'plane', cap: 85, tm: 6, p: 42000, u: 34, L: 70, span: 62, col: '#f5c542', ac: '#7a4f10', eng: 2, jet: 1 }
+  { n: 'النفاثة الذهبية', k: 'plane', cap: 85, tm: 6, p: 42000, u: 34, L: 70, span: 62, col: '#f5c542', ac: '#7a4f10', eng: 2, jet: 1 },
+  { n: 'F-16 الحربية 👑', k: 'plane', cap: 999, tm: 1, p: 0, u: 1, L: 74, span: 50, col: '#8f9aa6', ac: '#4a5563', eng: 0, jet: 1, f16: 1, adm: 1 }   /* للمشرفين بس: رحلتها ثانية وحدة */
 ];
 /* مهمات تنقفل لحد ما تشتري الشي المطلوب من المتجر */
 const REQ = { 4: ['v', 1], 8: ['s', 'well', 1], 12: ['v', 2], 16: ['v', 3], 20: ['s', 'bag', 3], 25: ['v', 5], 30: ['s', 'fen', 2], 35: ['v', 6] };
@@ -390,7 +391,7 @@ const bagTop = () => Math.max(...P.own.bag);
 const bagCost = k => { let s = 0; for (let i = bagTop() + 1; i <= k; i++) s += SK.bag[i].p; return s; };
 function giveBag(k) { for (let i = 0; i <= k; i++) if (!P.own.bag.includes(i)) P.own.bag.push(i); P.eq.bag = Math.max(P.eq.bag, k); }
 const sk = g => SK[g][P.eq[g]];
-const veh = () => VEH[P.vi] || VEH[0], isCar = () => veh().k === 'car';
+const veh = () => { const v = VEH[P.vi] || VEH[0]; return v.adm && !ADM ? VEH[0] : v; }, PH = () => veh().f16 ? 0.35 : 2.4, isCar = () => veh().k === 'car';
 const vword = () => isCar() ? 'السيارة' : 'الطيارة', vemo = () => isCar() ? '🚚' : '🛫';
 const reqMet = r => !r || ADM || (r[0] === 'v' ? P.veh.some(i => i >= r[1]) : P.own[r[1]].some(i => i >= r[2]));
 const reqName = r => r[0] === 'v' ? VEH[r[1]].n : SK[r[1]][r[2]].n, reqPrice = r => r[0] === 'v' ? VEH[r[1]].p : r[1] === 'bag' ? bagCost(r[2]) : SK[r[1]][r[2]].p;
@@ -1008,7 +1009,22 @@ function drawLodge(c, x, y) {
   c.fillStyle = '#5b3a1f'; c.fillRect(27, -46, 1.6, 34); c.fillStyle = '#2f9e44'; c.beginPath(); c.moveTo(28.6, -46); c.lineTo(40, -42); c.lineTo(28.6, -38); c.closePath(); c.fill();
   c.restore();
 }
+function drawF16(c, p) {   /* F-16 من فوق: جناح دلتا، ذيل واحد، كابينة فقاعة، ونار المحرك */
+  const L = p.L, T = performance.now() / 1000; c.lineJoin = 'round';
+  const fl = 0.75 + 0.25 * Math.sin(T * 40); c.save(); const ag = c.createRadialGradient(0, L * .56, 1, 0, L * .62, L * .3); ag.addColorStop(0, 'rgba(255,255,220,.95)'); ag.addColorStop(.35, 'rgba(255,170,40,.85)'); ag.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = ag; c.beginPath(); c.moveTo(-L * .05, L * .5); c.lineTo(0, L * (.5 + .45 * fl)); c.lineTo(L * .05, L * .5); c.closePath(); c.fill(); c.restore();
+  const g = c.createLinearGradient(-L * .35, 0, L * .35, 0); g.addColorStop(0, lit(p.col, -.25)); g.addColorStop(.5, lit(p.col, .15)); g.addColorStop(1, lit(p.col, -.25)); c.fillStyle = g;
+  c.beginPath(); c.moveTo(-L * .06, -L * .08); c.lineTo(-L * .34, L * .2); c.lineTo(-L * .34, L * .26); c.lineTo(-L * .07, L * .2); c.lineTo(L * .07, L * .2); c.lineTo(L * .34, L * .26); c.lineTo(L * .34, L * .2); c.lineTo(L * .06, L * -.08); c.closePath(); c.fill(); ol(c, .7);   // الجناح
+  c.fillStyle = '#d9480f'; c.beginPath(); c.arc(-L * .34, L * .23, 1.6, 0, TAU); c.arc(L * .34, L * .23, 1.6, 0, TAU); c.fill();   // صواريخ بطرف الجناح
+  c.fillStyle = lit(p.col, -.1); c.beginPath(); c.moveTo(-L * .05, L * .38); c.lineTo(-L * .2, L * .5); c.lineTo(L * .2, L * .5); c.lineTo(L * .05, L * .38); c.closePath(); c.fill(); ol(c, .6);   // الذيل الأفقي
+  const fg = c.createLinearGradient(-L * .07, 0, L * .07, 0); fg.addColorStop(0, lit(p.col, -.35)); fg.addColorStop(.45, lit(p.col, .28)); fg.addColorStop(1, lit(p.col, -.4)); c.fillStyle = fg;
+  c.beginPath(); c.moveTo(0, -L * .55); c.quadraticCurveTo(L * .07, -L * .35, L * .07, -L * .1); c.lineTo(L * .06, L * .5); c.lineTo(-L * .06, L * .5); c.lineTo(-L * .07, -L * .1); c.quadraticCurveTo(-L * .07, -L * .35, 0, -L * .55); c.fill(); ol(c, .8);
+  c.fillStyle = p.ac; c.fillRect(-L * .012, L * .1, L * .024, L * .38);   // الذيل العمودي
+  const cg = c.createLinearGradient(0, -L * .4, 0, -L * .15); cg.addColorStop(0, '#fff7c2'); cg.addColorStop(.4, '#e0a800'); cg.addColorStop(1, '#7a5200'); c.fillStyle = cg; c.beginPath(); c.ellipse(0, -L * .27, L * .035, L * .11, 0, 0, TAU); c.fill();   // الكابينة الذهبية
+  c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.ellipse(-L * .01, -L * .31, L * .012, L * .04, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ffd43b'; c.font = 'bold ' + Math.round(L * .1) + 'px Tajawal, sans-serif'; c.textAlign = 'center'; c.fillText('👑', 0, L * .1);
+}
 function drawPlane(c, p, prop) {
+  if (p.f16) { drawF16(c, p); return; }
   const L = p.L, S = p.span, wb = L * .13, wy = -L * .05, ch = L * .2, swp = p.jet ? L * .2 : L * .03;
   c.lineJoin = 'round';
   c.beginPath(); c.moveTo(-wb * .6, wy - ch * .5); c.lineTo(-S / 2, wy + swp); c.lineTo(-S / 2, wy + swp + ch * .42); c.lineTo(-wb * .6, wy + ch * .6); c.lineTo(wb * .6, wy + ch * .6); c.lineTo(S / 2, wy + swp + ch * .42); c.lineTo(S / 2, wy + swp); c.lineTo(wb * .6, wy - ch * .5); c.closePath();
@@ -1371,9 +1387,9 @@ function updMonster(m, dt) {
 }
 function updPlanes(dt) {
   const sp = G.sp, su = G.su;
-  if (sp.st === 'to') { sp.t += dt; if (sp.t >= 2.4) { sp.st = 'away'; sp.t = 0; } }
+  if (sp.st === 'to') { sp.t += dt; if (sp.t >= PH()) { sp.st = 'away'; sp.t = 0; } }
   else if (sp.st === 'away') { sp.t += dt; if (sp.t >= veh().tm) { sp.st = 'in'; sp.t = 0; SFX.engine(false); } }
-  else if (sp.st === 'in') { sp.t += dt; if (sp.t >= 2.4) { sp.st = 'park'; sp.t = 0; earn(sp.val, PARK.x, PARK.y - 30); toast(`${vword()} رجعت وجابت ${fmt(sp.val)} 🪙`); rerollMkt(); } }
+  else if (sp.st === 'in') { sp.t += dt; if (sp.t >= PH()) { sp.st = 'park'; sp.t = 0; earn(sp.val, PARK.x, PARK.y - 30); toast(`${vword()} رجعت وجابت ${fmt(sp.val)} 🪙`); rerollMkt(); } }
   if (su.st === 'up') { su.t += dt; if (su.t >= 2.2) { su.st = 'away'; su.t = 0; } }
   else if (su.st === 'away') { su.t += dt; if (su.t >= HELI_TM) { su.st = 'down'; su.t = 0; SFX.heli(); } }
   else if (su.st === 'down') { su.t += dt; if (su.t >= 2.2) { su.st = 'park'; su.t = 0; deliverCart(); } }
@@ -1449,8 +1465,8 @@ function draw() {
   { const h = g.hu; if (h.st === 'hoist' || h.st === 'carry' || h.st === 'wait' || h.st === 'store') drawPole(c, h); if (h.net) drawFlyingNet(c, h.net); }
   const sp = g.sp, P0 = veh();
   if (sp.st !== 'away') { let x = PARK.x, u = 0;
-    if (sp.st === 'to') { u = sp.t / 2.4; x = PARK.x - (PARK.x - ROAD.x0 + 90) * u * u; }
-    if (sp.st === 'in') { u = sp.t / 2.4; x = PARK.x + (ROAD.x1 - PARK.x + 90) * (1 - u) * (1 - u); }
+    if (sp.st === 'to') { u = Math.min(1, sp.t / PH()); x = PARK.x - (PARK.x - ROAD.x0 + 90) * u * u; }
+    if (sp.st === 'in') { u = Math.min(1, sp.t / PH()); x = PARK.x + (ROAD.x1 - PARK.x + 90) * (1 - u) * (1 - u); }
     const ld = sp.st === 'park' ? IK.reduce((s, k) => s + (g.load[k] || 0), 0) : sp.st === 'to' ? 9 : 0;
     drawVeh(c, x, sp.st, u, ld);
     if (isCar() && sp.st !== 'park' && Math.random() < .35) g.par.push({ x: x + P0.L / 2 + 2, y: PARK.y + 10, vx: rnd(10, 30), vy: rnd(-14, -4), g: -6, t: .7, l: .7, c: 'rgba(160,160,160,.55)', r: rnd(1.5, 3) });
@@ -1641,7 +1657,7 @@ function openShop(t) {
       return `<div class="card ${lock ? 'lock' : ''}">${cnt ? `<span class="own">${cnt}</span>` : ''}<img class="th" src="${animURL(t)}" alt=""><b>${A.n}</b><small><img src="${iconURL(A.prod)}" alt="">${ITEMS[A.prod].n}</small><small>${ITEMS[A.prod].s} 🪙 • كل ${A.ev} ث</small>
       ${lock ? `<button class="cb dim" type="button" disabled>🔒 المرحلة ${A.u}</button>` : `<button class="cb ${can ? '' : 'dim'}" type="button" data-act="buyA" data-t="${t}" ${can ? '' : 'disabled'}>🪙 ${fmt(A.p)}</button>`}</div>`; }).join('') + '</div>'; }
   else if (shopTab === 'pl') {
-    body = `<p class="note">تبدي بسيارة صغيرة. كل ما تتقدم بالمراحل تنفتح سيارات أقوى وبعدها طيارات تشيل أكثر وترجع أسرع.</p><div class="grid">` + VEH.map((v, i) => { const own = P.veh.includes(i), eq = P.vi === i, lock = !ADM && v.u > P.open, need = reqFor('v', i);
+    body = `<p class="note">تبدي بسيارة صغيرة. كل ما تتقدم بالمراحل تنفتح سيارات أقوى وبعدها طيارات تشيل أكثر وترجع أسرع.</p><div class="grid">` + VEH.map((v, i) => { if (v.adm && !ADM) return ''; if (v.adm && ADM && !P.veh.includes(i)) P.veh.push(i); const own = P.veh.includes(i), eq = P.vi === i, lock = !ADM && v.u > P.open, need = reqFor('v', i);
       return `<div class="card ${eq ? 'eq' : ''} ${lock ? 'lock' : ''}">${need && !reqMet(REQ[need]) ? `<span class="own need">مطلوب للمرحلة ${need}</span>` : ''}<img class="th" src="${vehURL(i)}" alt=""><b>${v.k === 'car' ? '🚚' : '✈️'} ${v.n}</b><small>تشيل ${v.cap} • رحلة ${v.tm} ث</small>
       ${eq ? '<button class="cb dim" type="button" disabled>✔ مستخدمة</button>' : own ? `<button class="cb alt" type="button" data-act="eqP" data-i="${i}">استخدم</button>` : lock ? `<button class="cb dim" type="button" disabled>🔒 تنفتح بالمرحلة ${v.u}</button>` : `<button class="cb ${canPay(v.p) ? '' : 'dim'}" type="button" data-act="buyP" data-i="${i}" ${canPay(v.p) ? '' : 'disabled'}>🪙 ${fmt(v.p)}</button>`}</div>`; }).join('') + '</div>'; }
   else body = Object.keys(SK).map(g => `<div class="sec">${SKN[g]}</div><div class="grid">` + SK[g].map((s, i) => { const own = P.own[g].includes(i), eq = P.eq[g] === i, need = reqFor('s', g, i);
