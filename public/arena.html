@@ -9,7 +9,7 @@
 /* Layout: منظور علوي مثل ألعاب الموبا، HUD عسكري فوق المشهد، منطقة المشي بالنص الجوة من الشاشة */
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); --bg: #0c1014; --ink: #f4ecda; --sand: #e2b878; --olive: #7d8a4e; --alert: #ff5a3c; --good: #7bd36a; --hud: rgba(10,14,18,.66); --line: rgba(244,236,218,.26);
   --disp: "Lalezar", "Cairo", system-ui, sans-serif; --body: "Cairo", system-ui, sans-serif; color-scheme: dark; }
-html, body { height: 100%; margin: 0; } body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+html, body { height: 100%; margin: 0; } html, body { position: fixed; inset: 0; width: 100%; overflow: hidden; } /* آيباد/آيفون: نثبت الصفحة على حجم الإطار حتى ما يكبر بلا نهاية */ body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 [hidden] { display: none !important; }
 canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 .hud { position: fixed; z-index: 5; pointer-events: none; }
@@ -18,7 +18,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .chip b { font-family: var(--disp); font-weight: 400; font-size: 20px; color: var(--sand); }
 #hpc { flex-direction: column; align-items: stretch; width: min(200px, 40vw); } #hpc .bar { height: 9px; border-radius: 5px; background: rgba(255,255,255,.15); overflow: hidden; } #hpc .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--good), #d8e86a); transition: width .2s; }
 #mid { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); pointer-events: none; }
-#pause { pointer-events: auto; position: fixed; z-index: 6; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(16px, env(safe-area-inset-right, 0px)); width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--hud); color: var(--ink); font-size: 16px; cursor: pointer; }
+#pause { pointer-events: auto; position: fixed; z-index: 11; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(16px, env(safe-area-inset-right, 0px)); width: 48px; height: 48px; font-size: 20px !important; border-color: var(--sand) !important; border-radius: 12px; border: 1px solid var(--line); background: var(--hud); color: var(--ink); font-size: 16px; cursor: pointer; }
 #joy { position: fixed; z-index: 6; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); width: 150px; height: 150px; margin-left: -75px; border-radius: 50%; background: radial-gradient(circle, rgba(10,14,18,.25) 40%, rgba(10,14,18,.55)); border: 2px solid rgba(244,236,218,.35); box-shadow: 0 0 0 6px rgba(244,236,218,.06), inset 0 0 24px rgba(0,0,0,.4); touch-action: none; }
 #joyK { position: absolute; left: 45px; top: 45px; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8e8, var(--sand) 55%, #9a7440); box-shadow: 0 4px 12px rgba(0,0,0,.5); will-change: transform; }
 #joy span { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-size: 11px; opacity: .6; pointer-events: none; }
@@ -58,6 +58,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .lv.lock { opacity: .35; cursor: not-allowed; } .lv.next { border-color: var(--sand); box-shadow: 0 0 0 2px var(--sand) inset; }
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; width: 100%; font-size: 12px; } .legend span { background: var(--hud); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
 .stars { font-size: 34px; letter-spacing: 6px; }
+.mcol { display: flex; flex-direction: column; gap: 10px; width: min(340px, 100%); } .btn.big { font-size: 32px; padding: 14px 30px; } .mHint { font-size: 13px; opacity: .75; }
 .btn.sm { font-size: 16px; padding: 8px 14px; } .row.pg { align-items: center; } .btn:disabled { opacity: .35; }
 .box.wide { width: min(960px, 100%); }
 .shTop { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: space-between; flex-wrap: wrap; } .shTop h2 { font-size: 32px; }
@@ -88,7 +89,29 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 <div id="banner"><b id="bnT"></b><small id="bnS"></small></div>
 <div id="skills"></div>
 
-<div class="ov" id="home"><div class="box">
+<div class="ov" id="menu"><div class="box">
+  <div class="tag">موبا حربية • 3D HD • 100 مرحلة • 30 سلاح</div>
+  <h1>ساحة بابي الحربية</h1>
+  <div class="mcol">
+    <button class="btn big" id="mStart" type="button">▶ ابدأ</button>
+    <button class="btn alt" id="mShop" type="button">🛒 متجر الأسلحة • <span class="coinsN">0</span> 🪙</button>
+    <button class="btn alt" id="mOpt" type="button">⚙️ الخيارات</button>
+    <button class="btn alt" id="mSnd" type="button">🔊 الصوت: شغال</button>
+  </div>
+  <p class="mHint">🕹️ الگير بالنص الجوة • 🔫 الرمي تلقائي • 💣 المهارات يمين</p>
+</div></div>
+<div class="ov" id="opt" hidden><div class="box">
+  <h2>⚙️ الخيارات</h2>
+  <div class="mcol">
+    <button class="btn alt" id="oMus" type="button"></button>
+    <button class="btn alt" id="oSfx" type="button"></button>
+    <button class="btn alt" id="oCam" type="button"></button>
+    <button class="btn alt" id="oRing" type="button"></button>
+  </div>
+  <button class="btn" id="oBack" type="button">✔ تمام</button>
+</div></div>
+<div class="ov" id="home" hidden><div class="box">
+  <div class="row"><button class="btn alt sm" id="hMenu" type="button">→ القائمة</button></div>
   <div class="tag">موبا حربية • 3D HD • 100 مرحلة • 30 سلاح</div>
   <h1>ساحة بابي الحربية</h1>
   <p>حرّك جنديك بالگير اللي بالنص الجوة، وهو يطلق النار وحده على أقرب عدو. كل ما تتقدم الأعداء يصيرون أقوى، فاجمع عملات واشتري أسلحة أقوى من المتجر لحد RPG-7. استخدم القنابل والصواريخ والضربة الجوية وخلّص كل المراحل.</p>
@@ -110,12 +133,13 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
   <p class="shNote">كل سلاح أقوى من اللي قبله. إذا علكت بمرحلة وما تكدر تعبرها، اشتري السلاح اللي يناسبها. الرقم الأصفر يكلك من يا مرحلة يصير السلاح مناسب.</p>
   <div id="shopGrid"></div>
 </div></div>
-<div class="ov" id="pz" hidden><div class="box"><h2>توقف</h2><div class="row"><button class="btn" id="pzGo" type="button">كمّل</button><button class="btn alt" id="pzShop" type="button">🛒 المتجر</button><button class="btn alt" id="pzHome" type="button">المراحل</button></div></div></div>
+<div class="ov" id="pz" hidden><div class="box"><h2>⏸ اللعبة واكفة</h2><div class="row"><button class="btn" id="pzGo" type="button">▶ كمّل</button><button class="btn alt" id="pzOpt" type="button">⚙️ الخيارات</button><button class="btn alt" id="pzSnd" type="button">🔊</button><button class="btn alt" id="pzShop" type="button">🛒 المتجر</button><button class="btn alt" id="pzHome" type="button">المراحل</button></div></div></div>
 
 <script src="/vendor/three-r128.min.js"></script>
 <script src="/vendor/three-post-r128.js"></script>
 <script>
 'use strict';
+const vw = () => document.documentElement.clientWidth || window.innerWidth, vh = () => document.documentElement.clientHeight || window.innerHeight;
 const $ = id => document.getElementById(id), rnd = (a, b) => a + Math.random() * (b - a), TAU = Math.PI * 2;
 /* ---------------- المشهد HD ---------------- */
 const cv = $('gl'), R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
@@ -139,9 +163,9 @@ let ENV_OK = null;   // نتأكد إن الجهاز يدعم انعكاسات �
 function envCheck() { if (ENV_OK !== null || !S.environment) return; try { const gl = R.getContext(), env = S.environment, px = new Uint8Array(4), W2 = gl.drawingBufferWidth, H2 = gl.drawingBufferHeight;
   const probe = () => { R.setRenderTarget(null); R.render(S, CAM); let t = 0; for (let i = 1; i <= 4; i++) for (let j = 1; j <= 4; j++) { gl.readPixels(Math.floor(W2 * i / 5), Math.floor(H2 * j / 5), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); t += px[0] + px[1] + px[2]; } return t; };
   S.environment = null; const a0 = probe(); S.environment = env; const a1 = probe(); ENV_OK = a1 > a0 * .6; if (!ENV_OK) S.environment = null; } catch (e) { ENV_OK = false; S.environment = null; } }
-function setupPost() { try { const pr = R.getPixelRatio(), w = Math.round(innerWidth * pr), h = Math.round(innerHeight * pr);
+function setupPost() { try { const pr = R.getPixelRatio(), w = Math.round(vw() * pr), h = Math.round(vh() * pr);
   const rt = R.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget ? new THREE.WebGLMultisampleRenderTarget(w, h, { format: THREE.RGBAFormat }) : new THREE.WebGLRenderTarget(w, h, { format: THREE.RGBAFormat });
-  COMP = new THREE.EffectComposer(R, rt); COMP.addPass(new THREE.RenderPass(S, CAM)); BLOOM = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .3, .4, .985); COMP.addPass(BLOOM); GRADE = new THREE.ShaderPass(GRADE_SH); COMP.addPass(GRADE); } catch (e) { COMP = null; } }
+  COMP = new THREE.EffectComposer(R, rt); COMP.addPass(new THREE.RenderPass(S, CAM)); BLOOM = new THREE.UnrealBloomPass(new THREE.Vector2(vw() / 2, vh() / 2), .3, .4, .985); COMP.addPass(BLOOM); GRADE = new THREE.ShaderPass(GRADE_SH); COMP.addPass(GRADE); } catch (e) { COMP = null; } }
 const hemi = new THREE.HemisphereLight('#fff2d8', '#7a6040', .72); S.add(hemi);
 const sun = new THREE.DirectionalLight('#ffe2b0', 1.25); sun.castShadow = true; sun.shadow.mapSize.set(R.capabilities.maxTextureSize >= 8192 ? 4096 : 2048, R.capabilities.maxTextureSize >= 8192 ? 4096 : 2048); Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 160 }); sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; S.add(sun, sun.target);
 function tex(w, h, draw, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; if (rep) t.repeat.set(rep[0], rep[1]); t.anisotropy = R.capabilities.getMaxAnisotropy(); return t; }
@@ -433,13 +457,32 @@ function explode(p, dmg, rad, byPlayer) {
 }
 function barrelHit(b, d) { const B = b.userData.barrel; if (!b.visible) return; B.hp -= d; if (B.hp > 0) return; b.visible = false; const i = HITTABLE.indexOf(b); if (i >= 0) HITTABLE.splice(i, 1); explode(b.position.clone(), 120, 6.5, 'b'); }
 const nums = $('nums');
-function num(p, txt, cls) { const v = p.clone().project(CAM); if (v.z > 1) return; const i = document.createElement('i'); i.textContent = txt; if (cls) i.className = cls; i.style.left = ((v.x + 1) / 2 * innerWidth + rnd(-12, 12)) + 'px'; i.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; nums.appendChild(i); setTimeout(() => i.remove(), 800); }
+function num(p, txt, cls) { const v = p.clone().project(CAM); if (v.z > 1) return; const i = document.createElement('i'); i.textContent = txt; if (cls) i.className = cls; i.style.left = ((v.x + 1) / 2 * vw() + rnd(-12, 12)) + 'px'; i.style.top = ((1 - v.y) / 2 * vh()) + 'px'; nums.appendChild(i); setTimeout(() => i.remove(), 800); }
 function feed(t) { const f = $('feed'), d = document.createElement('div'); d.textContent = t; f.prepend(d); setTimeout(() => d.remove(), 3100); while (f.children.length > 4) f.lastChild.remove(); }
 function banner(t, s, ms) { $('bnT').textContent = t; $('bnS').textContent = s || ''; $('banner').style.opacity = 1; clearTimeout(banner.t); banner.t = setTimeout(() => $('banner').style.opacity = 0, ms || 1600); }
 
 /* ---------------- الصوت ---------------- */
-let AC = null, NB = null;
-function snd(k, vol) { if (!AC) return; vol = vol == null ? 1 : vol; const t = AC.currentTime, out = AC.createGain(); out.gain.value = .8; out.connect(AC.destination);
+let AC = null, NB = null, SFXG = null, MUSG = null;
+let OPT = { mus: 1, sfx: 1, cam: 1, ring: 1 }; try { OPT = Object.assign(OPT, JSON.parse(localStorage.getItem('babi_arena_opt') || '{}')); } catch (e) {}
+const saveOpt = () => { try { localStorage.setItem('babi_arena_opt', JSON.stringify(OPT)); } catch (e) {} };
+function ensureAudio() { try { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); SFXG = AC.createGain(); SFXG.connect(AC.destination); MUSG = AC.createGain(); MUSG.connect(AC.destination); NB = AC.createBuffer(1, AC.sampleRate * .8, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } if (AC.state !== 'running') AC.resume(); applyVol(); } catch (e) {} }
+function applyVol() { if (!AC) return; SFXG.gain.value = OPT.sfx ? 1 : 0; MUSG.gain.value = OPT.mus ? .32 : 0; }
+addEventListener('pointerdown', ensureAudio, { capture: true });
+/* موسيقى حربية خفيفة: طبل هادي ورولة خفيفة، كوردات ناعمة، وبوق بعيد كل فترة — هادية وما تزعج */
+const MUS = { next: 0, step: 0, bpm: 72 };
+const CHORDS = [[146.8, 174.6, 220], [116.5, 146.8, 174.6], [130.8, 164.8, 196], [110, 130.8, 164.8]];
+function musPad(t, ch, dur) { const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700; f.connect(MUSG); const g = AC.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + 1.2); g.gain.linearRampToValueAtTime(.045, t + dur - 1); g.gain.linearRampToValueAtTime(0, t + dur + .4); g.connect(f); ch.forEach((fr, i) => [-4, 4].forEach(dt => { const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr; o.detune.value = dt; o.connect(g); o.start(t); o.stop(t + dur + .5); })); }
+function musDrum(t, kind, v) { if (kind === 'k') { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(38, t + .25); g.gain.setValueAtTime(.22 * v, t); g.gain.exponentialRampToValueAtTime(.001, t + .35); o.connect(g).connect(MUSG); o.start(t); o.stop(t + .4); }
+  else { const s = AC.createBufferSource(); s.buffer = NB; const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1900; f.Q.value = .8; const g = AC.createGain(); g.gain.setValueAtTime(.08 * v, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); s.connect(f).connect(g).connect(MUSG); s.start(t, Math.random() * .5); s.stop(t + .1); } }
+function musHorn(t) { const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 650; f.connect(MUSG); [[220, 0, .6], [293.7, .6, .6], [261.6, 1.2, 1.4]].forEach(([fr, d, l]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = fr; g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(.018, t + d + .15); g.gain.linearRampToValueAtTime(0, t + d + l); o.connect(g).connect(f); o.start(t + d); o.stop(t + d + l + .1); }); }
+setInterval(() => { if (!AC || AC.state !== 'running' || !OPT.mus || paused) return; const sp = 60 / MUS.bpm / 4; if (MUS.next < AC.currentTime) MUS.next = AC.currentTime + .05;
+  while (MUS.next < AC.currentTime + .4) { const t = MUS.next, st = MUS.step % 16, bar = Math.floor(MUS.step / 16);
+    if (st === 0) { musPad(t, CHORDS[bar % 4], sp * 16); if (bar % 8 === 6) musHorn(t + sp * 4); }
+    if (st === 0 || st === 8) musDrum(t, 'k', 1); if (st === 4 || st === 12) musDrum(t, 's', 1); if (bar % 2 === 1 && st >= 13) musDrum(t, 's', .45); if (st % 2 === 1 && Math.random() < .25) musDrum(t, 's', .2);
+    MUS.next += sp; MUS.step++; } }, 100);
+function optUI() { $('oMus').textContent = '🎵 الموسيقى: ' + (OPT.mus ? 'شغالة' : 'طافية'); $('oSfx').textContent = '🔊 أصوات اللعب: ' + (OPT.sfx ? 'شغالة' : 'طافية'); $('oCam').textContent = '📷 الكاميرا: ' + ['قريبة', 'عادية', 'بعيدة'][OPT.cam]; $('oRing').textContent = '⭕ دائرة المدى: ' + (OPT.ring ? 'تبين' : 'مخفية');
+  const on = OPT.mus || OPT.sfx; $('mSnd').textContent = on ? '🔊 الصوت: شغال' : '🔇 الصوت: طافي'; $('pzSnd').textContent = on ? '🔊 الصوت' : '🔇 الصوت'; applyVol(); }
+function snd(k, vol) { if (!AC) return; vol = vol == null ? 1 : vol; const t = AC.currentTime, out = AC.createGain(); out.gain.value = .8; out.connect(SFXG || AC.destination);
   const noise = (dur, f, q, v, type) => { const s = AC.createBufferSource(); s.buffer = NB; const fl = AC.createBiquadFilter(); fl.type = type || 'lowpass'; fl.frequency.value = f; fl.Q.value = q || 1; const g = AC.createGain(); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(fl).connect(g).connect(out); s.start(t); s.stop(t + dur); };
   const tone = (f0, f1, dur, v, type) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(out); o.start(t); o.stop(t + dur); };
   ({ step: () => noise(.06, THEME === THEMES[2] ? 900 : 500, 1.4, .05, 'bandpass'), shot: () => { const W = curW(); const G = W.C.snd; if (W.boom) { noise(.5, 700, 1, .5, 'bandpass'); tone(260, 60, .4, .25, 'sawtooth'); return; } if (W.cls === 'sniper') { noise(.45, 2200, .5, .6); tone(200, 45, .3, .35, 'sawtooth'); return; } if (W.cls === 'shotgun') { noise(.3, 1600, .7, .6); tone(110, 40, .2, .4, 'square'); return; } noise(.11, G[0], .8, .36); tone(G[1], 55, .08, .26, 'square'); noise(.05, 6000, 1, .08, 'highpass'); }, eshot: () => noise(.09, 2000, .8, .16), boom: () => { noise(1.3, 420, .6, .9); tone(70, 25, .9, .7); }, cast: () => tone(500, 1200, .2, .15, 'triangle'), heal: () => { tone(660, 990, .3, .15, 'sine'); tone(880, 1320, .3, .1, 'sine'); }, dash: () => noise(.25, 1500, 2, .3, 'bandpass'), win: () => [523, 659, 784, 1047].forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i * .12); g.gain.exponentialRampToValueAtTime(.2, t + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .4); o.connect(g).connect(out); o.start(t + i * .12); o.stop(t + i * .12 + .45); }), jet: () => { noise(1.6, 900, .7, .5, 'bandpass'); tone(400, 120, 1.4, .2, 'sawtooth'); }, die: () => tone(300, 90, .35, .12, 'triangle') })[k]?.();
@@ -499,7 +542,7 @@ function hurtP(d) { if (!P.alive || P.shield > 0) return; P.hp = Math.max(0, P.h
 
 /* ---------------- الگير بالنص الجوة ---------------- */
 let moveTarget = null; const JOY = { id: null, x: 0, y: 0 }, JB = $('joy'), JKn = $('joyK'), GPL = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), mv = new THREE.Vector2();
-function groundAt(x, y) { mv.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); RC.setFromCamera(mv, CAM); const p = new THREE.Vector3(); return RC.ray.intersectPlane(GPL, p) ? p : null; }
+function groundAt(x, y) { mv.set(x / vw() * 2 - 1, -(y / vh()) * 2 + 1); RC.setFromCamera(mv, CAM); const p = new THREE.Vector3(); return RC.ray.intersectPlane(GPL, p) ? p : null; }
 function joyMove(e) { const r = JB.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, mx = r.width / 2 - 14; let dx = e.clientX - cx, dy = e.clientY - cy; const L = Math.hypot(dx, dy); if (L > mx) { dx *= mx / L; dy *= mx / L; } JOY.x = dx / mx; JOY.y = dy / mx; JKn.style.transform = `translate(${dx}px,${dy}px)`; }
 JB.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); JOY.id = e.pointerId; try { JB.setPointerCapture(e.pointerId); } catch (x) {} joyMove(e); });
 JB.addEventListener('pointermove', e => { if (e.pointerId === JOY.id) joyMove(e); });
@@ -527,7 +570,7 @@ function arenaSync(m) {   /* التقدم والعملات والأسلحة تن
   if (push || d) { try { parent.postMessage('arena:save:' + JSON.stringify(SAVE), location.origin); } catch (e) {} }
   if (d && !playing) { GUN = SAVE.eq; makePlayer(); drawLevels(); } coinsUI();
 }
-addEventListener('message', e => { if (e.origin !== location.origin) return; const d = String(e.data || ''); if (d.indexOf('arena:gs:') === 0) { try { arenaSync(JSON.parse(d.slice(9))); } catch (x) {} } else if (d.indexOf('arena:adm:') === 0) { ADM = d.slice(-1) === '1'; fixS(); coinsUI(); drawLevels(); } else if (d === 'arena:pause') { if (playing && !paused) { paused = true; $('pz').hidden = false; } } });
+addEventListener('message', e => { if (e.origin !== location.origin) return; const d = String(e.data || ''); if (d.indexOf('arena:gs:') === 0) { try { arenaSync(JSON.parse(d.slice(9))); } catch (x) {} } else if (d.indexOf('arena:adm:') === 0) { ADM = d.slice(-1) === '1'; fixS(); coinsUI(); drawLevels(); } else if (d === 'arena:pause') { if (playing && !paused) setPause(true); } });
 if (EMB) { try { parent.postMessage('arena:hello', location.origin); } catch (e) {} }
 const owns = id => ADM || SAVE.own.includes(id), fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : String(Math.round(n));
 function coinsUI() { document.querySelectorAll('.coinsN').forEach(e => e.textContent = ADM ? '∞ 👑' : fmt(SAVE.coins)); }
@@ -538,10 +581,10 @@ function drawLevels() { const G = $('lvGrid'); G.innerHTML = ''; if (ADM) SAVE.o
   for (let n = from; n < from + 20; n++) { const b = document.createElement('button'); b.type = 'button'; const lock = n > SAVE.open, st = SAVE.stars[n - 1] || 0; b.className = 'lv' + (lock ? ' lock' : '') + (n % 5 === 0 ? ' boss' : '') + (n === SAVE.open ? ' next' : ''); b.innerHTML = `${lock ? '🔒' : n}<small>${'★'.repeat(st)}${'☆'.repeat(lock ? 0 : 3 - st)}</small>`; b.disabled = lock; b.setAttribute('aria-label', 'المرحلة ' + n); b.onclick = () => start(n); G.appendChild(b); }
   $('lvPg').textContent = `${from}–${from + 19}`; $('lvPrev').disabled = lvPage <= 0; $('lvNext').disabled = lvPage >= 4; $('goNext').textContent = 'ابدأ المرحلة ' + Math.min(MAXL, SAVE.open); coinsUI(); gunUI(); }
 function start(n) {
-  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); if (!NB) { NB = AC.createBuffer(1, AC.sampleRate * .8, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } } catch (e) {}
+  ensureAudio(); $('menu').hidden = true; $('opt').hidden = true;
   LVL = n; EN.forEach(e => { S.remove(e.m); e.bars.forEach(b => S.remove(b)); if (e.laser) S.remove(e.laser); }); EN = []; PROJ.forEach(p => S.remove(p.mesh)); PROJ.length = 0;
   buildWorld(n); P.pos.set(0, 0, -22); P.max = Math.round(100 * Math.pow(1.025, n - 1)); GUN = SAVE.eq; makePlayer(); gunUI(); coinEarned = 0; P.hp = P.max; P.alive = true; P.target = null; moveTarget = null; dmgTaken = 0; for (const k in CD) CD[k] = 0;
-  spawnQ = levelPlan(n); spawnT = 1.2; lvT = 0; ['home', 'win', 'lose', 'pz'].forEach(id => $(id).hidden = true); playing = true; paused = false;
+  spawnQ = levelPlan(n); spawnT = 1.2; lvT = 0; ['home', 'win', 'lose', 'pz', 'menu', 'opt'].forEach(id => $(id).hidden = true); playing = true; paused = false; $('pause').textContent = '⏸';
   $('lvN').textContent = n; banner('المرحلة ' + n, THEME.n + (n % 5 === 0 ? ' • زعيم: دبابة 💀' : ''), 2200); ui();
 }
 function spawnTick(dt) { if (!spawnQ.length) return; spawnT -= dt; if (spawnT > 0) return; const alive = EN.filter(e => e.alive).length; if (alive >= 6 + Math.min(8, Math.floor(LVL / 12))) { spawnT = .6; return; } const k = spawnQ.shift(); let x, z; for (let t = 0; t < 30; t++) { x = rnd(-ARENA + 3, ARENA - 3); z = rnd(0, ARENA - 3); if (!blocked(x, z, 1.5) && Math.hypot(x - P.pos.x, z - P.pos.z) > 16) break; } spawn(k, x, z); if (k === 'boss') banner('⚠️ الدبابة وصلت!', 'اضربها بالصواريخ والقنابل', 2200); spawnT = rnd(.8, 1.8); }
@@ -552,8 +595,15 @@ function win() { playing = false; snd('win'); const st = dmgTaken < P.max * .25 
   const nxt = WEAP.find(w => !owns(w.id) && w.rec <= LVL + 4); $('winP').textContent = `خلصتها بـ ${Math.round(lvT)} ثانية • جمعت ${fmt(coinEarned)} 🪙${nx ? ` • انفتحت مهارة جديدة: ${nx.ic} ${nx.nm}` : ''}${nxt ? ` • نصيحة: ${nxt.n} يناسب المراحل الجاية` : ''}`; $('winNext').hidden = LVL >= MAXL; $('win').hidden = false; }
 function lose() { playing = false; saveS(); coinsUI(); const W = gunFor(GUN), better = WEAP.filter(w => w.i > W.i && w.rec <= LVL + 2); $('loseP').textContent = W.rec + 6 < LVL ? `سلاحك ${W.n} ضعيف على المرحلة ${LVL}. اشتري سلاح أقوى من المتجر${better.length ? ' (مثلاً ' + better[0].n + ')' : ''} وارجع.` : 'الأعداء غلبوك هالمرة. خلي مسافة، استخدم المخابئ والمهارات، وجرب مرة ثانية.'; $('lose').hidden = false; }
 $('goNext').onclick = () => start(Math.min(MAXL, SAVE.open)); $('winNext').onclick = () => start(Math.min(MAXL, LVL + 1)); $('lvPrev').onclick = () => { lvPage = Math.max(0, lvPage - 1); drawLevels(); }; $('lvNext').onclick = () => { lvPage = Math.min(4, lvPage + 1); drawLevels(); }; $('loseRe').onclick = () => start(LVL);
-['winHome', 'loseHome', 'pzHome'].forEach(id => $(id).onclick = () => { playing = false; saveS(); lvPage = -1; ['win', 'lose', 'pz'].forEach(o => $(o).hidden = true); drawLevels(); $('home').hidden = false; });
-$('pause').onclick = () => { if (!playing) return; paused = true; $('pz').hidden = false; }; $('pzGo').onclick = () => { paused = false; $('pz').hidden = true; };
+['winHome', 'loseHome', 'pzHome'].forEach(id => $(id).onclick = () => { playing = false; saveS(); lvPage = -1; ['win', 'lose', 'pz'].forEach(o => $(o).hidden = true); $('pause').textContent = '⏸'; paused = false; drawLevels(); $('home').hidden = false; });
+function setPause(on) { if (!playing) return; paused = on; $('pz').hidden = !on; $('pause').textContent = on ? '▶' : '⏸'; $('pause').setAttribute('aria-label', on ? 'كمّل اللعب' : 'وقّف اللعبة'); }
+$('pause').onclick = () => setPause(!paused); $('pzGo').onclick = () => setPause(false);
+let optFrom = 'menu'; const openOpt = from => { optFrom = from; optUI(); $(from).hidden = true; $('opt').hidden = false; };
+$('mStart').onclick = () => { ensureAudio(); $('menu').hidden = true; lvPage = -1; drawLevels(); $('home').hidden = false; }; $('mShop').onclick = () => { ensureAudio(); openShop(); }; $('mOpt').onclick = () => openOpt('menu'); $('pzOpt').onclick = () => openOpt('pz');
+$('oBack').onclick = () => { $('opt').hidden = true; $(optFrom).hidden = false; };
+const toggleAll = () => { const on = !(OPT.mus || OPT.sfx); OPT.mus = OPT.sfx = on ? 1 : 0; saveOpt(); optUI(); }; $('mSnd').onclick = toggleAll; $('pzSnd').onclick = toggleAll;
+$('oMus').onclick = () => { OPT.mus = OPT.mus ? 0 : 1; saveOpt(); optUI(); }; $('oSfx').onclick = () => { OPT.sfx = OPT.sfx ? 0 : 1; saveOpt(); optUI(); }; $('oCam').onclick = () => { OPT.cam = (OPT.cam + 1) % 3; saveOpt(); optUI(); }; $('oRing').onclick = () => { OPT.ring = OPT.ring ? 0 : 1; saveOpt(); optUI(); };
+$('hMenu').onclick = () => { $('home').hidden = true; $('menu').hidden = false; coinsUI(); }; optUI();
 function ui() { $('hpN').textContent = Math.round(P.hp); $('hpB').style.width = (P.hp / P.max * 100) + '%'; $('left').textContent = EN.filter(e => e.alive).length + spawnQ.length; SK.forEach(s => $('sk_' + s.id).classList.toggle('lock', LVL < s.u)); }
 
 /* ---------------- متجر الأسلحة ---------------- */
@@ -572,7 +622,7 @@ $('shopX').onclick = () => { $('shop').hidden = true; if (playing && $('pz').hid
 ['goShop', 'winShop', 'loseShop', 'pzShop'].forEach(id => $(id).onclick = openShop);
 
 /* ---------------- الحلقة ---------------- */
-function fit() { R.setSize(innerWidth, innerHeight, false); if (!COMP && THREE.EffectComposer) setupPost(); if (COMP) { COMP.setSize(innerWidth, innerHeight); GRADE.uniforms.res.value.set(innerWidth * R.getPixelRatio(), innerHeight * R.getPixelRatio()); } CAM.aspect = innerWidth / innerHeight; CAM.fov = innerWidth < innerHeight ? 52 : 40; CAM.updateProjectionMatrix(); } addEventListener('resize', fit); fit();
+function fit() { R.setSize(vw(), vh(), false); if (!COMP && THREE.EffectComposer) setupPost(); if (COMP) { COMP.setSize(vw(), vh()); GRADE.uniforms.res.value.set(vw() * R.getPixelRatio(), vh() * R.getPixelRatio()); } CAM.aspect = vw() / vh(); CAM.fov = vw() < vh() ? 52 : 40; CAM.updateProjectionMatrix(); } addEventListener('resize', fit); fit();
 function animS(m, t, s, dt) {   /* مشي واقعي: الحوض يلف ويتمايل، الركب تنثني بوقت رفع الرجل، الجسم يميل لكدام، وتنفس وقت الوقوف */
   const U = m.userData; if (!U.legL) return; U.amp = (U.amp || 0) + (s - (U.amp || 0)) * Math.min(1, (dt || .016) * 9); const A = U.amp, th = Math.sin(t);
   U.legL.rotation.x = th * .6 * A; U.legR.rotation.x = -th * .6 * A;
@@ -607,7 +657,7 @@ function loop(now) {
     if (P.regen > 0) P.regen -= dt; else if (P.hp < P.max) { P.hp = Math.min(P.max, P.hp + dt * 4); }
     if (!spawnQ.length && EN.length && EN.every(e => !e.alive)) win();
   }
-  PM.position.copy(P.pos); PM.rotation.y = P.yaw; ring.position.set(P.pos.x, .05, P.pos.z); ring.rotation.z += dt; rangeRing.position.set(P.pos.x, .04, P.pos.z); rangeRing.scale.setScalar(RANGE / 16);
+  PM.position.copy(P.pos); PM.rotation.y = P.yaw; ring.position.set(P.pos.x, .05, P.pos.z); ring.rotation.z += dt; rangeRing.position.set(P.pos.x, .04, P.pos.z); rangeRing.scale.setScalar(RANGE / 16); rangeRing.visible = !!OPT.ring;
   if (moveTarget) { moveMark.position.set(moveTarget.x, .06, moveTarget.z); moveMark.material.opacity = .8; moveMark.scale.setScalar(1 + Math.sin(T * 8) * .1); } else moveMark.material.opacity = 0;
   // الأعداء
   const eyeP = P.pos.clone().setY(1.5);
@@ -647,7 +697,7 @@ function loop(now) {
     if (f.t <= 0) { S.remove(f.o); if (f.k !== 'cas' && f.k !== 'jet' && f.o.geometry) f.o.geometry.dispose(); FX.splice(i, 1); } }
   flash.intensity = Math.max(0, flash.intensity - dt * 30); if (PM) { const U = PM.userData; U.fl.material.opacity = Math.max(0, U.fl.material.opacity - dt * 22); if (U.gun.userData.spin) U.gun.userData.spin.rotation.z += dt * (P.cool > -0.2 && P.target !== undefined ? 40 : 0); U.gun.position.z += (.32 - U.gun.position.z) * Math.min(1, dt * 20); } for (const e of EN) if (e.m.userData.fl) e.m.userData.fl.material.opacity = Math.max(0, e.m.userData.fl.material.opacity - dt * 18); if (Math.random() < dt * 3) for (const sp2 of puffSmoke) puff(sp2.clone().add(new THREE.Vector3(rnd(-.4, .4), 0, rnd(-.4, .4))), '#3a3632', 1, .6, 3, 1.4, 1.4, 1); exL.intensity = Math.max(0, exL.intensity - dt * 14);
   // كاميرا موبا: من فوق وورا شوية، تتبع اللاعب
-  const camH = innerWidth < innerHeight ? 23 : 20, camZ = innerWidth < innerHeight ? 15 : 13, want = new THREE.Vector3(P.pos.x, camH, P.pos.z - camZ);
+  const ck = [.8, 1, 1.25][OPT.cam] || 1, camH = (vw() < vh() ? 23 : 20) * ck, camZ = (vw() < vh() ? 15 : 13) * ck, want = new THREE.Vector3(P.pos.x, camH, P.pos.z - camZ);
   CAM.position.lerp(want, Math.min(1, dt * 7 + (playing ? 0 : 1))); if (shake > 0) { CAM.position.add(new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(shake * .5)); shake = Math.max(0, shake - dt * 2.4); }
   CAM.lookAt(P.pos.x, 0, P.pos.z + 2); sun.position.set(P.pos.x - 25, 50, P.pos.z - 10); sun.target.position.copy(P.pos);
   if (!playing) { P.yaw += dt * .4; }
@@ -657,7 +707,7 @@ function loop(now) {
   if (COMP) { GRADE.uniforms.exposure.value = R.toneMappingExposure * .92; GRADE.uniforms.night.value = THEME.night ? 1 : 0; COMP.render(dt); } else R.render(S, CAM);
 }
 requestAnimationFrame(loop); ui();
-document.addEventListener('visibilitychange', () => { if (document.hidden && playing) { paused = true; $('pz').hidden = false; } });
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) setPause(true); });
 </script>
 </body>
 </html>
