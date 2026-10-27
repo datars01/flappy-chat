@@ -1077,6 +1077,47 @@ app.use('/uploads', express.static(UP_DIR, {
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
+/* رابط تثبيت الآيفون: /ios ينزّل ملف تعريف (Web Clip) — الآيفون يطلع زر «تثبيت» ويحط أيقونة بابيتو شات بالشاشة الرئيسية وتنفتح شاشة كاملة.
+   ما يحتاج App Store، والتحديثات توصل وحدها لأن الأيقونة تفتح نفس السيرفر. */
+app.get(['/ios', '/ios.mobileconfig', '/install-ios'], (req, res) => {
+  let icon = ''; try { icon = fs.readFileSync(path.join(__dirname, 'public', 'apple-touch-icon.png')).toString('base64').replace(/(.{68})/g, '$1\n'); } catch (e) {}
+  const host = req.get('host') || 'flappychats.onrender.com';
+  const url = 'https://' + host + '/';
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>FullScreen</key><true/>
+      <key>IgnoreManifestScope</key><true/>
+      <key>IsRemovable</key><true/>
+      <key>Precomposed</key><true/>
+      <key>Label</key><string>بابيتو شات</string>
+      <key>URL</key><string>${url}</string>
+      ${icon ? `<key>Icon</key><data>\n${icon}\n</data>` : ''}
+      <key>PayloadType</key><string>com.apple.webClip.managed</string>
+      <key>PayloadIdentifier</key><string>com.babito.chat.webclip</string>
+      <key>PayloadUUID</key><string>6B1E2C4A-9F3D-4E7B-8A21-5C0D9E7F1A01</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>PayloadDisplayName</key><string>بابيتو شات</string>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key><string>بابيتو شات 🎮</string>
+  <key>PayloadDescription</key><string>يثبّت لعبة بابيتو شات على الشاشة الرئيسية. التحديثات توصل تلقائياً.</string>
+  <key>PayloadOrganization</key><string>بابيتو شات — Daklot</string>
+  <key>PayloadIdentifier</key><string>com.babito.chat</string>
+  <key>PayloadUUID</key><string>3D7A9B12-4C5E-4F60-9A8B-7E1F2D3C4B02</string>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadVersion</key><integer>1</integer>
+  <key>PayloadRemovalDisallowed</key><false/>
+</dict>
+</plist>`;
+  res.set({ 'Content-Type': 'application/x-apple-aspen-config; charset=utf-8', 'Content-Disposition': 'attachment; filename="babito-chat.mobileconfig"', 'Cache-Control': 'no-store' });
+  res.send(xml);
+});
+
 /* ضغط ملفات اللعبة (gzip) حتى تنزل أسرع: نضغط الملف مرة وحدة ونخزنه بالذاكرة لين يتغير */
 const GZC = new Map();
 app.use((req, res, next) => {

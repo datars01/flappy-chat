@@ -6010,7 +6010,8 @@ $('installBtn').onclick = async () => {
       + '<div style="' + st + '">' + num(2) + '<div>' + T.s2 + '</div></div>'
       + '<div style="' + st + '">' + num(3) + '<div>' + T.s3 + '</div></div>'
       + '<div style="font-size:12.5px;opacity:.75;margin:8px 2px 12px">✨ ' + T.n + '</div>'
-      + '<button type="button" style="width:100%;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font:700 16px Cairo,system-ui">' + T.ok + '</button></div>';
+      + '<a href="/ios" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:12px;border-radius:12px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font:700 16px Cairo,system-ui">' + (en() ? '⬇️ Direct install (profile)' : '⬇️ تثبيت مباشر (Install)') + '</a>'
+      + '<button type="button" style="width:100%;padding:12px;border:0;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font:700 16px Cairo,system-ui">' + T.ok + '</button></div>';
     o.querySelector('button').onclick = () => { o.style.display = 'none'; };
     o.onclick = e => { if (e.target === o) o.style.display = 'none'; };
     document.body.appendChild(o);
