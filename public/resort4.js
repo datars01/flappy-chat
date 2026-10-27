@@ -381,6 +381,13 @@
   const holesOld = rmXHoles; rmXHoles = function (hole, fl) { try { holesOld(hole, fl); } catch (e) {} hole(RM_FER.x, RM_FER.cy, 150, 0.85); hole(RM_CAR.x, RM_CAR.y - 50, 120, 0.85); hole(RM_POOL.x + RM_POOL.w / 2, RM_POOL.y + RM_POOL.h / 2, 200, 0.7); hole(PIR.x, PIR.py + 40, 140, 0.85); hole(CST.x, CST.y - 30, 210, 0.8); };
   const glowOld = rmXGlow; rmXGlow = function (c, d, fl) { try { glowOld(c, d, fl); } catch (e) {} rmGlow(c, RM_FER.x, RM_FER.cy, 120, 0.2 * d, '255,120,200'); rmGlow(c, RM_CAR.x, RM_CAR.y - 70, 90, 0.22 * d, '255,210,120'); rmGlow(c, RM_POOL.x + RM_POOL.w / 2, RM_POOL.y + RM_POOL.h / 2, 170, 0.16 * d, '120,220,255'); rmGlow(c, PIR.x, PIR.py + 70, 100, 0.18 * d, '255,170,90'); rmGlow(c, CST.x, CST.y - 40, 170, 0.15 * d, '140,200,255'); };
 
+  /* ---------- زر خروج واضح فوك يسار جنب دولار المنتجع ---------- */
+  (function () {
+    const st = document.createElement('style'); st.textContent = '#rmExitTop{position:absolute;top:44px;left:8px;z-index:9;display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:16px;border:2px solid #fff;background:linear-gradient(135deg,#ff3b5c,#c81e3a);color:#fff;font:900 13px Cairo,system-ui;box-shadow:0 3px 12px rgba(0,0,0,.4),0 0 12px rgba(255,59,92,.5);cursor:pointer;direction:rtl}#rmExitTop:active{transform:scale(.95)}#rmBox #rmUsd{left:94px !important}';
+    document.head.appendChild(st);
+    setInterval(() => { const B = document.getElementById('rmBox'); if (!B || document.getElementById('rmExitTop')) return; const b = document.createElement('button'); b.id = 'rmExitTop'; b.type = 'button'; b.innerHTML = '🚪 خروج';
+      b.onclick = e => { e.stopPropagation(); const x = document.getElementById('rmExit'); if (x) x.click(); }; b.addEventListener('pointerdown', e => e.stopPropagation()); B.appendChild(b); }, 1000);
+  })();
   /* ---------- نضيفها للمنتجع ---------- */
   RM_DECOR.push({ y: PIR.y, f: pirDraw });
   RM_DECOR.push({ y: CST.y + CST.ry, f: cstDraw });
