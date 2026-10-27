@@ -1077,6 +1077,13 @@ app.use('/uploads', express.static(UP_DIR, {
   setHeaders: r => r.setHeader('X-Content-Type-Options', 'nosniff')
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
+/* رابط تثبيت الأندرويد: /android صفحة بيها زر Install يثبت اللعبة كتطبيق. و /app رابط واحد للكل: الآيفون يروح لـ /ios والباقي لـ /android */
+app.get(['/android', '/install-android'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'public', 'android.html')); });
+app.get(['/app', '/install', '/download'], (req, res) => {
+  const ua = req.get('user-agent') || '';
+  res.redirect(302, /iPad|iPhone|iPod/i.test(ua) ? '/ios' : '/android');
+});
+
 /* رابط تثبيت الآيفون: /ios ينزّل ملف تعريف (Web Clip) — الآيفون يطلع زر «تثبيت» ويحط أيقونة بابيتو شات بالشاشة الرئيسية وتنفتح شاشة كاملة.
    ما يحتاج App Store، والتحديثات توصل وحدها لأن الأيقونة تفتح نفس السيرفر. */
 app.get(['/ios', '/ios.mobileconfig', '/install-ios'], (req, res) => {

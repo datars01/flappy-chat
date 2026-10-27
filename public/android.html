@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16232d">
+<title>تثبيت بابيتو شات</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; font-family: Cairo, system-ui, sans-serif; color: #fff;
+    background: linear-gradient(180deg, #3b1d8f 0%, #a83c8f 45%, #f0679a 70%, #16232d 100%);
+    display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { width: 100%; max-width: 400px; background: rgba(22,35,45,.88); border-radius: 26px; padding: 26px 20px;
+    text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.12); }
+  .ic { width: 116px; height: 116px; border-radius: 26px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  h1 { margin: 14px 0 2px; font-size: 26px; }
+  .sub { opacity: .75; font-size: 14px; margin-bottom: 18px; }
+  .btn { display: block; width: 100%; padding: 15px; border: 0; border-radius: 16px; font: 700 19px Cairo, system-ui;
+    color: #fff; background: linear-gradient(135deg, #22c55e, #16a34a); cursor: pointer; text-decoration: none;
+    box-shadow: 0 8px 22px rgba(34,197,94,.35); }
+  .btn:active { transform: scale(.98); }
+  .btn.alt { background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 8px 22px rgba(168,85,247,.35); margin-top: 10px; }
+  .btn.ghost { background: rgba(255,255,255,.1); box-shadow: none; font-size: 15px; margin-top: 10px; }
+  .steps { text-align: right; margin-top: 16px; display: none; }
+  .st { display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,.07); border-radius: 12px;
+    padding: 10px 12px; margin: 8px 0; font-size: 14.5px; line-height: 1.6; }
+  .n { flex: 0 0 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#ec4899);
+    display: grid; place-items: center; font-weight: 700; }
+  .warn { background: #7c2d12; border-radius: 12px; padding: 10px; font-size: 14px; margin-bottom: 12px; display: none; }
+  .ok { background: #14532d; border-radius: 12px; padding: 10px; font-size: 15px; margin-top: 12px; display: none; }
+  .note { font-size: 12.5px; opacity: .7; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="ic" src="/icon-512.png" alt="">
+  <h1>بابيتو شات</h1>
+  <div class="sub">العب، دردش، وابني بيتك 🎮💜</div>
+
+  <div class="warn" id="warn">⚠️ انت فاتح الرابط من داخل تطبيق ثاني. دوس النقاط <b>⋮</b> فوق واختار <b>«فتح في Chrome»</b> حتى يطلعلك زر التثبيت.</div>
+
+  <button class="btn" id="inst" type="button">⬇️ Install — تثبيت</button>
+  <a class="btn alt" id="apk" href="/babito.apk" style="display:none">📦 تنزيل ملف APK</a>
+  <a class="btn ghost" href="/">▶️ العب من المتصفح</a>
+
+  <div class="ok" id="ok">✅ تم التثبيت! تلگى أيقونة بابيتو شات بقائمة التطبيقات.</div>
+
+  <div class="steps" id="steps">
+    <div class="st"><span class="n">1</span><div>دوس النقاط <b>⋮</b> فوق يمين بـ Chrome</div></div>
+    <div class="st"><span class="n">2</span><div>اختار <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b></div></div>
+    <div class="st"><span class="n">3</span><div>دوس <b>تثبيت</b> — تطلع الأيقونة بقائمة التطبيقات 🎉</div></div>
+  </div>
+
+  <div class="note">✨ التحديثات توصل وحدها، ما تحتاج تعيد التثبيت.</div>
+</div>
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) { location.replace('/ios'); return; }
+  var standalone = window.matchMedia && matchMedia('(display-mode: standalone)').matches;
+  if (standalone) { location.replace('/'); return; }
+  var inApp = /Telegram|Instagram|FBAN|FBAV|; wv\)|Snapchat|TikTok|Line\//i.test(ua);
+  var $ = function (id) { return document.getElementById(id); };
+  if (inApp) $('warn').style.display = 'block';
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function () {});
+
+  // إذا رفعنا ملف APK للسيرفر (public/babito.apk) يطلع زر تنزيله هم
+  fetch('/babito.apk', { method: 'HEAD' }).then(function (r) { if (r.ok) $('apk').style.display = 'block'; }).catch(function () {});
+
+  var ev = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); ev = e; });
+  window.addEventListener('appinstalled', function () {
+    $('ok').style.display = 'block'; $('inst').style.display = 'none'; $('steps').style.display = 'none';
+  });
+  $('inst').onclick = function () {
+    if (ev) {
+      ev.prompt();
+      ev.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { $('ok').style.display = 'block'; $('inst').style.display = 'none'; } }).catch(function () {});
+      ev = null;
+    } else {
+      $('steps').style.display = 'block';
+    }
+  };
+})();
+</script>
+</body>
+</html>
