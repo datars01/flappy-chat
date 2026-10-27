@@ -1,6 +1,6 @@
 /* بابيتو شات — عمل بدون إنترنت: الصفحة والألعاب (المزرعة وركض ربش وغيرها) والخطوط تنخزن بالجهاز.
    الـ API والشات والمنتجع أونلاين فقط. تقدم الألعاب ينحفظ بالجهاز ويتزامن مع الحساب من يرجع النت */
-const CACHE = 'babito-v4';
+const CACHE = 'babito-v5';
 const SHELL = ['/', '/index.html', '/manifest.json', '/farm.html', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
@@ -23,7 +23,7 @@ const fromCache = r => caches.match(r).then(m => m || caches.match(r, { ignoreSe
 self.addEventListener('fetch', e => {
   const r = e.request; if (r.method !== 'GET') return;
   const u = new URL(r.url);
-  if (u.origin === location.origin && (u.pathname.startsWith('/api/') || u.pathname.startsWith('/ws') || u.pathname.startsWith('/uploads'))) return;   // دايماً من السيرفر
+  if (u.origin === location.origin && (u.pathname.startsWith('/api/') || u.pathname.startsWith('/ws') || u.pathname.startsWith('/uploads') || /^\/(app|install|download|android|install-android|ios|ios\.mobileconfig|install-ios|babito\.apk)\/?$/.test(u.pathname))) return;   // دايماً من السيرفر
   if (r.mode === 'navigate' && (u.pathname === '/' || u.pathname === '/index.html' || u.pathname === '/farm.html')) {   // الصفحات: الأحدث أول، وإذا ماكو نت من الكاش
     const key = u.pathname === '/farm.html' ? '/farm.html' : '/index.html';
     e.respondWith(fetch(r).then(res => { if (res && res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(key, cp)); } return res; }).catch(() => caches.match(key).then(m => m || caches.match('/'))));

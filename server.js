@@ -1078,15 +1078,15 @@ app.use('/uploads', express.static(UP_DIR, {
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
 /* رابط تثبيت الأندرويد: /android صفحة بيها زر Install يثبت اللعبة كتطبيق. و /app رابط واحد للكل: الآيفون يروح لـ /ios والباقي لـ /android */
-app.get(['/android', '/install-android'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'public', 'android.html')); });
-app.get(['/app', '/install', '/download'], (req, res) => {
+app.get(['/android', '/android/', '/install-android', '/Android'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'public', 'android.html')); });
+app.get(['/app', '/app/', '/App', '/APP', '/install', '/download'], (req, res) => {
   const ua = req.get('user-agent') || '';
   res.redirect(302, /iPad|iPhone|iPod/i.test(ua) ? '/ios' : '/android');
 });
 
 /* رابط تثبيت الآيفون: /ios ينزّل ملف تعريف (Web Clip) — الآيفون يطلع زر «تثبيت» ويحط أيقونة بابيتو شات بالشاشة الرئيسية وتنفتح شاشة كاملة.
    ما يحتاج App Store، والتحديثات توصل وحدها لأن الأيقونة تفتح نفس السيرفر. */
-app.get(['/ios', '/ios.mobileconfig', '/install-ios'], (req, res) => {
+app.get(['/ios', '/ios/', '/iOS', '/IOS', '/ios.mobileconfig', '/install-ios'], (req, res) => {
   let icon = ''; try { icon = fs.readFileSync(path.join(__dirname, 'public', 'apple-touch-icon.png')).toString('base64').replace(/(.{68})/g, '$1\n'); } catch (e) {}
   const host = req.get('host') || 'flappychats.onrender.com';
   const url = 'https://' + host + '/';
