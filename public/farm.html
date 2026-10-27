@@ -358,7 +358,7 @@ const IMK = Object.keys(IMP), HELI_CAP = 4, HELI_TM = 16, MAXGR = 20, MAXAN = 30
 
 /* ---------- الحفظ ---------- */
 const KEY = 'farm_race_hd_v2';
-const defP = () => ({ open: 1, stars: [], coins: 600, veh: [0], vi: 0, own: { well: [0], bag: [0], grd: [0], fen: [0] }, eq: { well: 0, bag: 0, grd: 0, fen: 0 }, inv: {}, snd: 1, mus: 1 });
+const defP = () => ({ open: 1, stars: [], coins: 600, veh: [0], vi: 0, own: { well: [0], bag: [0], grd: [0], fen: [0] }, eq: { well: 0, bag: 0, grd: 0, fen: 0 }, inv: {}, cats: [], snd: 1, mus: 1 });
 let P = defP();
 try {
   const o = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -1296,7 +1296,7 @@ function startLevel(n) {
   G = { n, L, t: 0, an: [], gr: [], pr: [], mo: [], par: [], ft: [], fly: [], bag: {}, col: {}, caught: 0, earned: 0, load: {}, cart: {},
     water: wellCap(), wr: 0, fx: {}, trap: 0, mi: 0, ambT: 1.5, ambLast: null, sp: { st: 'park', t: 0, val: 0 }, su: { st: 'park', t: 0, cart: {} },
     hu: mkHunters(), door: 0, done: false, hudT: 0, gchk: 0, tip: 0, spinA: 0, propA: 0 };
-  rerollMkt();
+  rerollMkt(); G.cats = []; try { spawnCats(); } catch (e) {}
   const need = 250 + n * 40; if (!ADM && P.coins < need) { P.coins = need; saveP(); setTimeout(() => toast(`منحة المزرعة: رصيدك صار ${fmt(need)} 🪙`), 900); }
   let d = 0; for (const t in L.start) for (let i = 0; i < L.start[t]; i++) addAnimal(t, d += .35);
   for (let i = 0; i < 4; i++) G.gr.push(mkPatch(rnd(F.x0 + 40, F.x1 - 40), rnd(F.y0 + 40, F.y1 - 30), sk('grd').gm));
@@ -1334,7 +1334,7 @@ function update(dt) {
   for (const p of G.gr) p.age += dt;
   const live = G.mo.filter(m => !m.stun && m.drop <= 0); G.door = Math.max(0, (G.door || 0) - dt * 1.6);
   for (const a of G.an.slice()) updAnimal(a, dt, live);
-  for (const m of G.mo) updMonster(m, dt);
+  for (const m of G.mo) updMonster(m, dt); try { updCats(dt); } catch (e) {}
   for (const p of G.pr) { p.age += dt; p.life -= dt; if (fxOn('magnet') && p.age > .5 && !p.gone) collect(p, 1); }
   G.pr = G.pr.filter(p => { if (p.gone) return false; if (p.life <= 0) { burst(p.x, p.y - 6, '#e9ecef', 6, 20, 30, .5); return false; } return true; });
   G.gr = G.gr.filter(p => p.a > .06);
@@ -1451,10 +1451,10 @@ function draw() {
   if (!g) { c.save(); c.translate(PAD.x, PAD.y); c.rotate(-.5); drawHeli(c, 0, .4); c.restore(); drawVeh(c, PARK.x, 'park', 0, 0); return; }
   for (const p of g.gr) drawPatch(c, p);
   const ents = [];
-  for (const p of g.pr) ents.push([p.y, 0, p]); for (const a of g.an) ents.push([a.y - a.drop * 0, 1, a]); for (const m of g.mo) ents.push([m.y, 2, m]);
+  for (const p of g.pr) ents.push([p.y, 0, p]); for (const a of g.an) ents.push([a.y - a.drop * 0, 1, a]); for (const m of g.mo) ents.push([m.y, 2, m]); for (const k of (g.cats || [])) ents.push([k.y, 7, k]);
   ents.push([Math.min(g.hu.a.y, g.hu.b.y), 3, g.hu]);
   ents.sort((p, q) => p[0] - q[0]);
-  for (const [, ty, e] of ents) {
+  for (const [, ty, e] of ents) { if (ty === 7) { drawCat(c, e); continue; }
     if (ty === 0) { const bounce = e.age < .35 ? Math.sin(e.age / .35 * Math.PI) * 10 : 0, blink = e.life < 3.5 && Math.floor(e.life * 6) % 2;
       c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(e.x, e.y + 1, 8, 2.6, 0, 0, TAU); c.fill(); c.globalAlpha = blink ? .35 : 1;
       c.drawImage(itemSpr(e.k), e.x - 13, e.y - 24 - bounce, 26, 26); c.globalAlpha = 1; }
@@ -1495,6 +1495,69 @@ function draw() {
   if (g.L.mons.length && g.mi < g.L.mons.length) { const left = g.L.mons[g.mi][0] - g.t; if (left < 6) chip(c, (F.x0 + F.x1) / 2, F.y0 + 34, `⚠️ وحش ينزل بعد ${Math.ceil(left)} ث`, 'rgba(201,42,42,.9)', '#ffffff'); }
 }
 
+
+/* ================= القطط المساعدة 🐱: تجمع البيض والحليب وكل المنتجات بدالك (للمشرفين أسرع 3 مرات) ================= */
+const CATS = [
+  { id: 'candy', n: 'قطة الحلوى', d: 'وردية وبنفسجية • تجمع المنتجات وحدها', p: 1200, sp: 55, c1: '#ff9ad5', c2: '#b98cff', eye: '#2fd27a' },
+  { id: 'sky', n: 'قطة الغيمة', d: 'زرقاء وتركوازية • أسرع', p: 3500, sp: 80, c1: '#7fd3ff', c2: '#55e6c0', eye: '#ffc61a' },
+  { id: 'sun', n: 'قطة الشمس', d: 'ذهبية وبرتقالية • سريعة كلش', p: 8000, sp: 110, c1: '#ffd23f', c2: '#ff7a3a', eye: '#3a8adf' },
+  { id: 'rainbow', n: 'قطة قوس قزح', d: 'كل الألوان • أسرع شي', p: 15000, sp: 135, rb: 1, c1: '#ff4d6d', c2: '#3da5ff', eye: '#ff4fd8' }
+];
+const catSpeed = C => C.sp * (ADM ? 3 : 1);
+function spawnCats() {
+  if (!G) return; G.cats = G.cats || []; for (const id of (P.cats || [])) { const C = CATS.find(q => q.id === id); if (!C || G.cats.some(k => k.id === id)) continue;
+    G.cats.push({ id, C, x: clamp(BAG.x + rnd(-30, 30), F.x0 + 14, F.x1 - 14), y: F.y0 + 18 + rnd(0, 20), tx: 0, ty: 0, tgt: null, dir: 1, ph: Math.random() * TAU, mv: 0, sit: 0, full: 0, hop: 0, bl: rnd(2, 5) }); }
+}
+function updCats(dt) {
+  if (!G.cats || !G.cats.length) return; const taken = new Set(G.cats.map(k => k.tgt).filter(Boolean));
+  for (const k of G.cats) {
+    k.bl -= dt; if (k.bl < -0.15) k.bl = rnd(2, 5); k.hop = Math.max(0, k.hop - dt * 3); if (k.full > 0) k.full -= dt;
+    if (k.tgt && (k.tgt.gone || G.pr.indexOf(k.tgt) < 0)) k.tgt = null;
+    if (!k.tgt && k.full <= 0) { let best = null, bd = 1e9; for (const p of G.pr) { if (p.gone || taken.has(p) || p.age < .4) continue; const d = Math.hypot(p.x - k.x, p.y - k.y); if (d < bd) { bd = d; best = p; } } if (best) { k.tgt = best; taken.add(best); k.sit = 0; } }
+    let tx, ty, sp = catSpeed(k.C);
+    if (k.tgt) { tx = k.tgt.x; ty = k.tgt.y; }
+    else { if (!k.tx || Math.hypot(k.tx - k.x, k.ty - k.y) < 4) { if (k.sit <= 0 && Math.random() < .5) k.sit = rnd(1.5, 4); k.tx = rnd(F.x0 + 20, F.x1 - 20); k.ty = rnd(F.y0 + 20, F.y1 - 8); } if (k.sit > 0) { k.sit -= dt; k.mv = 0; continue; } tx = k.tx; ty = k.ty; sp *= .35; }
+    const dx = tx - k.x, dy = ty - k.y, d = Math.hypot(dx, dy);
+    if (d < 5) { if (k.tgt) { const p = k.tgt; k.tgt = null; if (collect(p, true)) { k.hop = 1; burst(k.x, k.y - 16, k.C.c1, 8, 30, 40, .5); } else { k.full = 2.5; } } k.mv = 0; continue; }
+    const st = Math.min(d, sp * dt); k.x += dx / d * st; k.y += dy / d * st; if (Math.abs(dx) > .5) k.dir = dx > 0 ? 1 : -1; k.mv = 1; k.ph += dt * (6 + sp / 20);
+  }
+}
+function drawCat(c, k, thumb) {
+  const C = k.C, T = performance.now() / 1000, w = k.mv ? Math.sin(k.ph) : 0, hop = Math.sin(k.hop * Math.PI) * 6;
+  c.save(); c.translate(k.x, k.y);
+  c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 1, 13, 3.4, 0, 0, TAU); c.fill();
+  c.translate(0, -hop); c.scale(k.dir, 1); c.lineCap = 'round'; c.lineJoin = 'round';
+  const grad = () => { const g = c.createLinearGradient(-13, -16, 13, -2); if (C.rb) ['#ff4d6d', '#ff9f1c', '#ffd23f', '#3ddc84', '#3da5ff', '#b36bff'].forEach((q, i) => g.addColorStop(i / 5, q)); else { g.addColorStop(0, C.c1); g.addColorStop(1, C.c2); } return g; };
+  const tw = Math.sin(T * 3 + k.ph * .2) * .35; c.strokeStyle = C.c2; c.lineWidth = 3.6; c.beginPath(); c.moveTo(-10, -9); c.bezierCurveTo(-18, -12, -16 + tw * 6, -24, -11 + tw * 8, -27); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-16 + tw * 6, -21); c.lineTo(-13 + tw * 7, -24); c.stroke();   // ذيل يتمرجح
+  const leg = (x, a, col) => { c.fillStyle = col; c.beginPath(); if (c.roundRect) c.roundRect(x - 1.8 + a * 2.2, -6, 3.6, 7, 1.8); else c.rect(x - 1.8 + a * 2.2, -6, 3.6, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.ellipse(x + a * 2.2, 0.6, 2.2, 1.3, 0, 0, TAU); c.fill(); };
+  leg(-7, -w, C.c2); leg(6, w, C.c2);
+  c.fillStyle = grad(); c.beginPath(); c.ellipse(0, -9.5, 11.5, 6.8, 0, 0, TAU); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1.4; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(-5 + i * 4, -15.5, 2.6, Math.PI * .15, Math.PI * .85); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(1, -6.6, 7, 2.4, 0, 0, TAU); c.fill();   // بطن
+  leg(-4, w, C.c1); leg(9, -w, C.c1);
+  const hx = 10.5, hy = -15.5;
+  c.fillStyle = C.c1; [[-4.5, -1], [3.2, 1]].forEach(([ex, s]) => { c.beginPath(); c.moveTo(hx + ex - 2.6, hy - 3.5); c.lineTo(hx + ex + s * .6, hy - 11.5); c.lineTo(hx + ex + 3, hy - 3); c.closePath(); c.fill(); });
+  c.fillStyle = '#ffb6d9'; [[-4.5], [3.2]].forEach(([ex]) => { c.beginPath(); c.moveTo(hx + ex - 1.2, hy - 4.2); c.lineTo(hx + ex + .3, hy - 9); c.lineTo(hx + ex + 1.8, hy - 4); c.closePath(); c.fill(); });
+  const hg = c.createRadialGradient(hx - 2, hy - 2, 1, hx, hy, 8); hg.addColorStop(0, '#ffffff'); hg.addColorStop(.25, C.c1); hg.addColorStop(1, C.c2); c.fillStyle = hg; c.beginPath(); c.arc(hx, hy, 7, 0, TAU); c.fill();
+  const blink = k.bl < 0;
+  [[-2.6], [2.8]].forEach(([ex]) => { if (blink) { c.strokeStyle = '#2a1a3a'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(hx + ex - 1.6, hy - .6); c.quadraticCurveTo(hx + ex, hy + .6, hx + ex + 1.6, hy - .6); c.stroke(); return; }
+    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(hx + ex, hy - .8, 2.2, 2.6, 0, 0, TAU); c.fill(); c.fillStyle = C.eye; c.beginPath(); c.ellipse(hx + ex + .3, hy - .5, 1.6, 2.1, 0, 0, TAU); c.fill(); c.fillStyle = '#1a1020'; c.beginPath(); c.ellipse(hx + ex + .4, hy - .4, .7, 1.5, 0, 0, TAU); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(hx + ex - .3, hy - 1.6, .7, 0, TAU); c.fill(); });
+  c.fillStyle = 'rgba(255,90,150,.45)'; c.beginPath(); c.ellipse(hx - 4.4, hy + 2.6, 1.6, 1, 0, 0, TAU); c.ellipse(hx + 5, hy + 2.6, 1.6, 1, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ff5c9a'; c.beginPath(); c.moveTo(hx - .1, hy + 1.6); c.lineTo(hx + 1.4, hy + 1.6); c.lineTo(hx + .65, hy + 2.6); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(60,40,70,.6)'; c.lineWidth = .5; c.beginPath(); c.moveTo(hx + 3, hy + 2.2); c.lineTo(hx + 9, hy + 1.2); c.moveTo(hx + 3, hy + 2.8); c.lineTo(hx + 9, hy + 3.4); c.moveTo(hx - 2, hy + 2.2); c.lineTo(hx - 7.5, hy + 1.2); c.stroke();
+  c.strokeStyle = '#e8364f'; c.lineWidth = 1.8; c.beginPath(); c.arc(hx - 1, hy + 4.2, 4.6, Math.PI * .15, Math.PI * .9); c.stroke(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(hx - 1.4, hy + 8.6, 1.7, 0, TAU); c.fill();   // طوق وجرس
+  if (ADM && !thumb) { c.fillStyle = '#ffd43b'; c.font = '7px sans-serif'; c.textAlign = 'center'; c.fillText('👑', hx, hy - 10); }
+  c.restore();
+  if (!thumb && k.full > 0) { c.save(); c.font = '900 9px Tajawal, sans-serif'; c.textAlign = 'center'; c.fillStyle = 'rgba(201,42,42,.92)'; const tx = k.x, ty = k.y - 36; c.beginPath(); if (c.roundRect) c.roundRect(tx - 28, ty - 8, 56, 13, 6); else c.rect(tx - 28, ty - 8, 56, 13); c.fill(); c.fillStyle = '#fff'; c.fillText('📦 المخزن مليان', tx, ty + 2); c.restore(); }
+  else if (!thumb && ADM && k.mv && Math.random() < .3) G.par.push({ x: k.x - k.dir * 10, y: k.y - 4, vx: -k.dir * rnd(10, 30), vy: rnd(-10, -2), g: 0, t: .4, l: .4, c: 'rgba(255,220,90,.8)', r: rnd(1, 2) });
+}
+const CATURL = {};
+function catURL(C) { if (CATURL[C.id]) return CATURL[C.id]; const s = document.createElement('canvas'); s.width = 240; s.height = 140; const c = s.getContext('2d'); c.translate(120, 108); c.scale(3.6, 3.6); drawCat(c, { C, x: 0, y: 0, dir: 1, ph: 0, mv: 0, hop: 0, bl: 3 }, true); return CATURL[C.id] = s.toDataURL(); }
+function catShopBody() {
+  return `<p class="note">🐱 القطط المساعدة تمشي بالمزرعة وتجمع البيض والحليب وكل المنتجات وتوديها للمخزن بدالك. تشتريها مرة وحدة وتبقى وياك بكل المراحل.${ADM ? ' <b>👑 للمشرفين: سرعتها 3 أضعاف!</b>' : ''}</p><div class="grid">` + CATS.map(C => { const own = P.cats.includes(C.id), can = canPay(C.p);
+    return `<div class="card ${own ? 'eq' : ''}">${own ? '<span class="own">✔</span>' : ''}<img class="th" src="${catURL(C)}" alt=""><b>${C.n}</b><small>${C.d} • سرعة ${catSpeed(C)}</small>${own ? '<button class="cb dim" type="button" disabled>✔ تشتغل وياك</button>' : `<button class="cb ${can ? '' : 'dim'}" type="button" data-act="buyC" data-k="${C.id}" ${can ? '' : 'disabled'}>🪙 ${ADM ? 'مجاناً 👑' : fmt(C.p)}</button>`}</div>`; }).join('') + '</div>';
+}
 /* ---------- اللمس ---------- */
 function collect(p, auto) {
   const s = isz(p.k); if (bagFree() < s) { if (!auto) { SFX.err(); toast(`المخزن مليان! بيع ب${vword()} أو طوّر المخزن`); } return false; }
@@ -1650,12 +1713,13 @@ function useTool(k) {
 let shopTab = 'an';
 function openShop(t) {
   if (t) shopTab = t; if (!G && shopTab === 'an') shopTab = 'pl';
-  const tabs = `<div class="tabs"><button type="button" class="${shopTab === 'an' ? 'on' : ''}" data-act="tab" data-t="an">🐄 حيوانات</button><button type="button" class="${shopTab === 'pl' ? 'on' : ''}" data-act="tab" data-t="pl">🚚 سيارات</button><button type="button" class="${shopTab === 'sk' ? 'on' : ''}" data-act="tab" data-t="sk">🏡 تحسينات</button></div>`;
+  const tabs = `<div class="tabs"><button type="button" class="${shopTab === 'an' ? 'on' : ''}" data-act="tab" data-t="an">🐄 حيوانات</button><button type="button" class="${shopTab === 'pl' ? 'on' : ''}" data-act="tab" data-t="pl">🚚 سيارات</button><button type="button" class="${shopTab === 'sk' ? 'on' : ''}" data-act="tab" data-t="sk">🏡 تحسينات</button><button type="button" class="${shopTab === 'hp' ? 'on' : ''}" data-act="tab" data-t="hp">🐱 مساعدين</button></div>`;
   let body = '';
   if (shopTab === 'an') { const lvl = G ? G.n : P.open;
     body = `<p class="note">الحيوان ينزل بالمزرعة فوراً • عندك ${G ? G.an.length : 0}/${MAXAN} حيوان</p><div class="grid">` + ANK.map(t => { const A = AN[t], lock = !ADM && A.u > lvl, cnt = G ? G.an.filter(a => a.t === t).length : 0, can = !lock && G && canPay(A.p) && G.an.length < MAXAN;
       return `<div class="card ${lock ? 'lock' : ''}">${cnt ? `<span class="own">${cnt}</span>` : ''}<img class="th" src="${animURL(t)}" alt=""><b>${A.n}</b><small><img src="${iconURL(A.prod)}" alt="">${ITEMS[A.prod].n}</small><small>${ITEMS[A.prod].s} 🪙 • كل ${A.ev} ث</small>
       ${lock ? `<button class="cb dim" type="button" disabled>🔒 المرحلة ${A.u}</button>` : `<button class="cb ${can ? '' : 'dim'}" type="button" data-act="buyA" data-t="${t}" ${can ? '' : 'disabled'}>🪙 ${fmt(A.p)}</button>`}</div>`; }).join('') + '</div>'; }
+  else if (shopTab === 'hp') { body = catShopBody(); }
   else if (shopTab === 'pl') {
     body = `<p class="note">تبدي بسيارة صغيرة. كل ما تتقدم بالمراحل تنفتح سيارات أقوى وبعدها طيارات تشيل أكثر وترجع أسرع.</p><div class="grid">` + VEH.map((v, i) => { if (v.adm && !ADM) return ''; if (v.adm && ADM && !P.veh.includes(i)) P.veh.push(i); const own = P.veh.includes(i), eq = P.vi === i, lock = !ADM && v.u > P.open, need = reqFor('v', i);
       return `<div class="card ${eq ? 'eq' : ''} ${lock ? 'lock' : ''}">${need && !reqMet(REQ[need]) ? `<span class="own need">مطلوب للمرحلة ${need}</span>` : ''}<img class="th" src="${vehURL(i)}" alt=""><b>${v.k === 'car' ? '🚚' : '✈️'} ${v.n}</b><small>تشيل ${v.cap} • رحلة ${v.tm} ث</small>
@@ -1688,6 +1752,7 @@ box.addEventListener('click', e => {
   else if (a === 'ct') { const k = d.k, cur = G.cart[k] || 0, n = IMK.reduce((s, q) => s + (G.cart[q] || 0), 0); if (d.d === '1') { if (n < HELI_CAP) G.cart[k] = cur + 1; else SFX.err(); } else G.cart[k] = Math.max(0, cur - 1); tone('sine', 700, 900, .04, .04); const st = box.scrollTop; openImport(); box.scrollTop = st; }
   else if (a === 'order') { const cost = IMK.reduce((s, k) => s + (G.cart[k] || 0) * IMP[k].p, 0); if (!canPay(cost)) return; pay(cost); saveP(); G.su = { st: 'up', t: 0, cart: G.cart }; G.cart = {}; SFX.heli(); hud(); closeOv(); toast('الهليكوبتر طارت تجيب البضاعة 🚁'); }
   else if (a === 'use') useTool(d.k);
+  else if (a === 'buyC') { const C = CATS.find(q => q.id === d.k); if (!C || P.cats.includes(C.id) || !canPay(C.p)) return; pay(C.p); P.cats.push(C.id); saveP(); hud(); if (G) spawnCats(); try { SFX.cash(); } catch (e) {} openShop('hp'); toast(`${C.n} صارت وياك! تجمع المنتجات بدالك 🐱✨`); }
   else if (a === 'buyA') { const t = d.t, A = AN[t]; if (!G || !canPay(A.p)) return; if (!addAnimal(t, .2)) { toast('المزرعة مليانة حيوانات'); return; } pay(A.p); saveP(); hud(); openShop(); toast(`${A.n} راح تنزل بالمزرعة 🪂`); }
   else if (a === 'buyP') { const i = +d.i, v = VEH[i]; if (!canPay(v.p) || (!ADM && v.u > P.open)) return; pay(v.p); if (!P.veh.includes(i)) P.veh.push(i); if (!G || G.sp.st === 'park') P.vi = i; saveP(); buildBG(); SFX.cash(); hud(); openShop(); toast(`اشتريت ${v.n}! ${v.k === 'car' ? '🚚' : '✈️'}`); }
   else if (a === 'eqP') { if (G && G.sp.st !== 'park') { toast(`انتظر ${vword()} ترجع أول`); return; } P.vi = +d.i; saveP(); buildBG(); openShop(); }

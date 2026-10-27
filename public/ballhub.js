@@ -4,12 +4,13 @@
   'use strict';
   const card = document.getElementById('gameCard'); if (!card) return;
   const css = document.createElement('style'); css.textContent = `
-  .tileBalls { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 36px 14px 14px; min-height: 86px; margin: 4px 0 8px; border-radius: 20px; border: 2px solid #8ff0c0; color: #fff; text-align: right; position: relative; overflow: hidden; cursor: pointer;
+  .gqRow > .tileBalls, .tileBalls { flex: 1 !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; background: linear-gradient(120deg, #0b5a3e 0%, #12925f 55%, #2ee48d 120%) !important; height: auto !important; }
+  .tileBalls { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 14px 14px 18px !important; min-height: 92px; margin: 4px 0 8px; border-radius: 20px; border: 2px solid #8ff0c0; color: #fff; text-align: right; position: relative; overflow: hidden; cursor: pointer;
     background: linear-gradient(120deg, #0b5a3e 0%, #12925f 55%, #2ee48d 120%); box-shadow: 0 8px 24px rgba(30,200,130,.38), inset 0 1px 0 rgba(255,255,255,.35); font-family: inherit; }
-  .tileBalls .bxNew { position: absolute; top: 7px; right: 10px; display: flex; gap: 6px; } .tileBalls .bxNew i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: #ffd166; color: #3a2200; } .tileBalls .bxNew i.b { background: rgba(0,0,0,.35); color: #bfffe0; }
+  .tileBalls .bxNew { position: static !important; display: flex !important; flex-wrap: wrap; gap: 6px; margin-bottom: 3px; } .tileBalls .bxNew i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: #ffd166; color: #3a2200; } .tileBalls .bxNew i.b { background: rgba(0,0,0,.35); color: #bfffe0; }
   .tileBalls .bxEm { font-size: 34px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); animation: bxBob 2s ease-in-out infinite; }
-  .tileBalls .bxTx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .tileBalls .bxTx .tl { font-size: 17px; font-weight: 800; } .tileBalls .bxTx small { font-size: 12px; opacity: .9; }
-  .tileBalls .bxGo { background: #fff; color: #0b5a3e; font-weight: 800; font-size: 15px; padding: 10px 14px; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.2); white-space: nowrap; }
+  .tileBalls .bxTx { flex: 1; min-width: 0; display: flex !important; flex-direction: column !important; align-items: flex-start; gap: 3px; } .tileBalls .bxTx .tl { font-size: 17px; font-weight: 800; line-height: 1.35; white-space: normal; position: static !important; } .tileBalls .bxTx small { line-height: 1.5; position: static !important; } .tileBalls .bxTx small { font-size: 12px; opacity: .9; }
+  .tileBalls .bxGo { flex-shrink: 0; position: static !important;  background: #fff; color: #0b5a3e; font-weight: 800; font-size: 15px; padding: 10px 14px; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.2); white-space: nowrap; }
   .tileBalls .bxBalls { position: absolute; left: 0; right: 0; bottom: 4px; height: 14px; pointer-events: none; opacity: .9; }
   .tileBalls .bxBalls b { position: absolute; width: 12px; height: 12px; border-radius: 50%; bottom: 0; animation: bxRoll 9s linear infinite; box-shadow: inset -2px -3px 4px rgba(0,0,0,.35), inset 2px 2px 3px rgba(255,255,255,.7); }
   @keyframes bxRoll { from { transform: translateX(-30px); } to { transform: translateX(110vw); } } @keyframes bxBob { 50% { transform: translateY(-4px) rotate(-6deg); } }
@@ -32,7 +33,7 @@
 
   // البطاقة الصغيرة بالشاشة الرئيسية
   const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'tile tileBalls'; tile.id = 'ballTile';
-  tile.innerHTML = '<span class="bxNew"><i>✨ HD</i><i class="b">👥 فردي وزوجي</i></span><span class="bxEm">🎯</span><span class="bxTx"><span class="tl">فجّر الكرات الملونة</span><small>كوّن ثلاث متشابهة وفجّرها قبل الحفرة 💥</small></span><span class="bxGo">العب ◀</span><span class="bxBalls"></span>';
+  tile.innerHTML = '<span class="bxEm">🎯</span><span class="bxTx"><span class="bxNew"><i>✨ HD</i><i class="b">👥 فردي وزوجي</i></span><span class="tl">فجّر الكرات الملونة</span><small>كوّن ثلاث متشابهة وفجّرها قبل الحفرة 💥</small></span><span class="bxGo">العب ◀</span><span class="bxBalls"></span>';
   const cols = ['#ff4d6d', '#ffd23f', '#3ddc84', '#3da5ff', '#b36bff', '#ff9f1c']; const bb = tile.querySelector('.bxBalls');
   for (let i = 0; i < 9; i++) { const b = document.createElement('b'); b.style.background = cols[i % 6]; b.style.animationDelay = (-i * 0.75) + 's'; bb.appendChild(b); }
   card.parentNode.insertBefore(tile, card);
