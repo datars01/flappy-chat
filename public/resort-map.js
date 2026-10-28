@@ -4,22 +4,27 @@
    - سحب بالإصبع، تكبير بإصبعين أو بالأزرار، ودوس على أي مكان: «امشي هناك»
    ===================================================================== */
 const MP = { img: null, s: 0.28, at: 0, k: 0, ox: 0, oy: 0, raf: 0, sel: null, ptrs: new Map(), pinch: null, drag: null, moved: 0 };
-const mpNew = () => { try { return rmShopId() === 8; } catch (e) { return false; } };   // إنت بالمنتجع الجديد؟ الخريطة تتبدل
+const mpNew = () => { try { return rmShopId() === 8; } catch (e) { return false; } };   // إنت بالشمال؟ الخريطة تتبدل
 const MP_X0 = () => mpNew() ? R3_NHI.vx0 : RMX0, MP_W = () => mpNew() ? R3_NHI.vx1 - R3_NHI.vx0 : RMW - RMX0, MP_H = () => mpNew() ? 1040 : RMH;
 const mpWorld = () => mpNew() ? 'new' : 'main';
 /* [المستوى، الإيموجي، الاسم، x، y، الوصف، المجموعة] — المستوى 1 يبين دائماً، 2 و3 كلما قرّبت */
 function mpPlaces() {
   const P = [];
   const add = (lv, e, n, x, y, d, g) => P.push({ lv, e, n, x, y, d, g });
-  if (mpNew()) {   // خريطة المنتجع الجديد 🏝️
+  if (mpNew()) {   // خريطة الشمال 🏝️
     const X = R3_N.x0;
-    add(1, '🛬', 'مطار المنتجع الجديد', X + 510, 700, 'هنا تنزل طيارة بابيت إيرلاينز', 'n');
+    add(1, '🛬', 'مطار الشمال', X + 510, 700, 'هنا تنزل طيارة بابيت إيرلاينز', 'n');
     add(1, '✈️', 'طيارة BT-101', X + 440, 640, 'الطيارة اللي جابتك من منتجع بابيت', 'n');
     add(1, '👨‍✈️', 'القبطان — رحلة الرجعة', R3_CAP2.x, R3_CAP2.y, 'احچي وياه وترجع لمنتجع بابيت مجاناً', 'n');
     add(2, '🛫', 'المدرج', X + 820, 695, '', 'n');
-    add(1, '🏗️', 'المنتجع الجديد — قريباً', X + 900, 520, 'هنا راح تنبني أشياء حلوة قريباً ✨', 'w');
-    add(2, '🏖️', 'الشاطئ الجديد', X + 1200, 300, 'رمل ناعم وبحر صافي', 'w');
-    add(2, '🌊', 'البحر', X + 800, 140, '', 'w');
+    add(1, '❄️', 'لوحة الشمال', X + 620, 560, 'أهلاً بيك بالوادي الثلجي', 'w');
+    add(2, '🏠', 'أكواخ الخشب', X + 470, 410, 'أكواخ دافية تطلع دخان', 'w');
+    add(2, '⛸️', 'البحيرة المتجمدة', X + 1130, 600, 'ناس يتزلجون على الجليد', 'w');
+    add(2, '🚡', 'تلفريك الجبل', X + 1250, 360, 'يصعد للقمة', 'w');
+    add(2, '🔥', 'نار المخيم والكاكاو', X + 700, 880, 'اكعد ودفّي', 'w');
+    add(3, '⛄', 'رجل الثلج', X + 760, 470, '', 'w');
+    add(3, '🧊', 'الإيغلو', X + 1020, 920, '', 'w');
+    add(3, '🦌', 'غزلان الرنة', X + 1000, 410, '', 'w');
     add(3, '🌴', 'أرض للبناء', X + 1300, 860, 'مساحة فاضية للمشاريع الجاية', 'w');
     return P;
   }
@@ -70,7 +75,7 @@ function mpPlaces() {
   add(3, '☕', 'جلسات السوالف', 960, 1840, 'طاولات وكراسي', 'g');
   return P;
 }
-const MP_ZONES = () => mpNew() ? [['🏝️ المنتجع الجديد', R3_N.x0 + 800, 420], ['منطقة الوصول ✈️', R3_N.x0 + 470, 790], ['🏗️ مشاريع قادمة', R3_N.x0 + 1250, 620], ['البحر 🌊', R3_N.x0 + 1100, 120]] : [['الشاطئ 🏖️', 420, 560], ['البحيرة والشلال', -930, 820], ['منطقة الألعاب', 1010, 600], ['صف المحلات 🛍️', 2380, 330], ['ساحة الفندق', 4120, 1000], ['مطار بابيت الدولي ✈️', 6300, 1020], ['الشارع الرئيسي 🚗', 2900, 1330], ['حديقة الأمل 🌿', 1300, 2460], ['المرج الأخضر 🌳', 4300, 2000]];
+const MP_ZONES = () => mpNew() ? [['❄️ الشمال', R3_N.x0 + 800, 420], ['منطقة الوصول ✈️', R3_N.x0 + 470, 790], ['⛸️ البحيرة المتجمدة', R3_N.x0 + 1130, 680], ['🏔️ الجبال', R3_N.x0 + 800, 140]] : [['الشاطئ 🏖️', 420, 560], ['البحيرة والشلال', -930, 820], ['منطقة الألعاب', 1010, 600], ['صف المحلات 🛍️', 2380, 330], ['ساحة الفندق', 4120, 1000], ['مطار بابيت الدولي ✈️', 6300, 1020], ['الشارع الرئيسي 🚗', 2900, 1330], ['حديقة الأمل 🌿', 1300, 2460], ['المرج الأخضر 🌳', 4300, 2000]];
 const MP_GC = { n: '#7a2ad8', w: '#e8a21a', b: '#ff9f1c', l: '#18b6d8', s: '#ff4f9a', h: '#7a2ad8', a: '#2a6ad8', g: '#2ea84a' };
 const MP_GN = { b: '🏖️ الشاطئ', l: '💦 البحيرة', s: '🛍️ المحلات', h: '🏨 الفندق', a: '✈️ المطار', g: '🌿 الحديقة' }, MP_GN2 = { n: '🛬 المطار والرجعة', w: '🏗️ قريباً' };
 
@@ -125,7 +130,7 @@ function mpOpen() {
   mpCss(); const box = $('rmBox'); if (!box || $('mpOv')) return; MP.sel = null;
   const ov = document.createElement('div'); ov.id = 'mpOv';
   const NW = mpNew(); MP.w = mpWorld(); if (NW) ov.classList.add('nw');
-  ov.innerHTML = '<div class="mpH"><div class="ic">' + (NW ? '🏝️' : '🗺️') + '</div><div><b>' + (NW ? 'خريطة المنتجع الجديد' : 'خريطة المنتجع') + '</b><small>اسحب للتنقل • قرّب بإصبعين • دوس على أي مكان</small></div><button type="button" class="x">✕</button></div><div class="mpC"><canvas></canvas><div class="mpLoad">⏳ دا نرسم الخريطة...</div><div class="mpZ"><button type="button" data-z="in">＋</button><button type="button" data-z="out">－</button><button type="button" data-z="me">📍</button><button type="button" data-z="all">🌐</button></div></div><div class="mpL"></div>';
+  ov.innerHTML = '<div class="mpH"><div class="ic">' + (NW ? '❄️' : '🗺️') + '</div><div><b>' + (NW ? 'خريطة الشمال' : 'خريطة المنتجع') + '</b><small>اسحب للتنقل • قرّب بإصبعين • دوس على أي مكان</small></div><button type="button" class="x">✕</button></div><div class="mpC"><canvas></canvas><div class="mpLoad">⏳ دا نرسم الخريطة...</div><div class="mpZ"><button type="button" data-z="in">＋</button><button type="button" data-z="out">－</button><button type="button" data-z="me">📍</button><button type="button" data-z="all">🌐</button></div></div><div class="mpL"></div>';
   box.appendChild(ov); ov.querySelector('.x').onclick = mpClose;
   const C = ov.querySelector('.mpC'), cv = ov.querySelector('canvas');
   const Lg = ov.querySelector('.mpL'); const GN = NW ? MP_GN2 : MP_GN; Object.keys(GN).forEach(k => { const b = document.createElement('button'); b.type = 'button'; b.textContent = GN[k]; b.style.background = MP_GC[k]; b.onclick = () => { const ps = mpPlaces().filter(p => p.g === k); const x = ps.reduce((a, p) => a + p.x, 0) / ps.length, y = ps.reduce((a, p) => a + p.y, 0) / ps.length; mpFly(x, y, Math.max(MP.k, mpFit() * 3.2)); }; Lg.appendChild(b); }); if (NW) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '✈️ ارجع لمنتجع بابيت'; b.style.background = '#2a6ad8'; b.onclick = () => { mpClose(); try { r3FlyBack(); } catch (e) {} }; Lg.appendChild(b); }
@@ -162,7 +167,7 @@ function mpCard() {
   const ov = $('mpOv'); if (!ov) return; const C = ov.querySelector('.mpC'); let K = C.querySelector('.mpCard'); if (K) K.remove(); const p = MP.sel; if (!p) return;
   K = document.createElement('div'); K.className = 'mpCard'; const e = document.createElement('div'); e.className = 'e'; e.textContent = p.e; const t = document.createElement('div'); t.className = 't'; const b = document.createElement('b'); b.textContent = p.n; const sm = document.createElement('small'); sm.textContent = p.d || ''; t.append(b, sm); K.append(e, t);
   const NW = MP.w === 'new', tx = NW ? Math.max(R3_N.x0 + 24, Math.min(R3_N.x1 - 24, p.x)) : Math.max(RMX0 + 24, Math.min(RMW - 24, p.x)), ty = NW ? Math.max(240, Math.min(980, p.y + 24)) : Math.max(214, Math.min(RM_WALK, p.y + 24));
-  const w = document.createElement('button'); w.type = 'button'; w.textContent = '🚶 امشي هناك'; w.onclick = () => { if (NW ? rmShopId() !== 8 : rmShopId() !== 0) { showToast(rmShopId() === 8 ? '✈️ إنت بالمنتجع الجديد — ارجع بالطيارة أول' : '🚪 اطلع من المكان أول حتى تمشي'); return; } mpClose(); rmWalkTo(tx, ty); try { rmTapMark(RM.me.tx, RM.me.ty); } catch (er) {} showToast('🚶 دا تمشي لـ ' + p.n); }; K.appendChild(w);
+  const w = document.createElement('button'); w.type = 'button'; w.textContent = '🚶 امشي هناك'; w.onclick = () => { if (NW ? rmShopId() !== 8 : rmShopId() !== 0) { showToast(rmShopId() === 8 ? '✈️ إنت بالشمال — ارجع بالطيارة أول' : '🚪 اطلع من المكان أول حتى تمشي'); return; } mpClose(); rmWalkTo(tx, ty); try { rmTapMark(RM.me.tx, RM.me.ty); } catch (er) {} showToast('🚶 دا تمشي لـ ' + p.n); }; K.appendChild(w);
   if (RM.myAdm || (auth && auth.admin)) { const q = document.createElement('button'); q.type = 'button'; q.className = 'tp'; q.textContent = '📍 انتقل'; q.onclick = () => { mpClose(); try { rmTpTo(tx, ty); } catch (er) {} }; K.appendChild(q); }
   const x = document.createElement('button'); x.type = 'button'; x.className = 'cx'; x.textContent = '✕'; x.onclick = () => { MP.sel = null; K.remove(); }; K.appendChild(x);
   C.appendChild(K);
@@ -192,7 +197,7 @@ function mpDraw(cv, C) {
   const me = mpMePos(), mx = X(me.x), my = Y(me.y), pu = (T * 1.2) % 1;
   g.strokeStyle = 'rgba(255,59,107,' + (1 - pu) + ')'; g.lineWidth = 3; g.beginPath(); g.arc(mx, my - 4, 8 + pu * 22, 0, 7); g.stroke();
   g.fillStyle = '#ff3b6b'; g.strokeStyle = '#fff'; g.lineWidth = 2.5; g.beginPath(); g.arc(mx, my - 4, 7, 0, 7); g.fill(); g.stroke();
-  g.save(); try { g.direction = 'rtl'; } catch (e) {} g.font = 'bold 11.5px Cairo, Arial'; g.textAlign = 'center'; const lab = me.far ? '✈️ إنت بالمنتجع الجديد' : me.out ? '📍 إنت هنا' : '📍 إنت جوّه'; const tw = g.measureText(lab).width + 16; g.fillStyle = '#ff3b6b'; g.beginPath(); g.roundRect ? g.roundRect(mx - tw / 2, my + 8, tw, 20, 10) : g.rect(mx - tw / 2, my + 8, tw, 20); g.fill(); g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.fillText(lab, mx, my + 18.5); g.restore();
+  g.save(); try { g.direction = 'rtl'; } catch (e) {} g.font = 'bold 11.5px Cairo, Arial'; g.textAlign = 'center'; const lab = me.far ? '✈️ إنت بالشمال' : me.out ? '📍 إنت هنا' : '📍 إنت جوّه'; const tw = g.measureText(lab).width + 16; g.fillStyle = '#ff3b6b'; g.beginPath(); g.roundRect ? g.roundRect(mx - tw / 2, my + 8, tw, 20, 10) : g.rect(mx - tw / 2, my + 8, tw, 20); g.fill(); g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.fillText(lab, mx, my + 18.5); g.restore();
   // بوصلة
   g.save(); g.translate(28, 30); g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.arc(0, 0, 19, 0, 7); g.fill(); g.strokeStyle = '#c9a24a'; g.lineWidth = 2; g.stroke(); g.fillStyle = '#e0344a'; g.beginPath(); g.moveTo(0, -15); g.lineTo(5, 0); g.lineTo(-5, 0); g.fill(); g.fillStyle = '#2a3a55'; g.beginPath(); g.moveTo(0, 15); g.lineTo(5, 0); g.lineTo(-5, 0); g.fill(); g.font = 'bold 8px Arial'; g.textAlign = 'center'; g.fillStyle = '#e0344a'; g.fillText('ش', 0, -6); g.restore();
   // مقياس صغير

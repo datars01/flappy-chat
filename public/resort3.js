@@ -19,7 +19,7 @@ const R3_TWR = { x: 5930, y: 640 };
 const R3_TKT = { x: 5360, y: 830 };      // مركز حجز التذاكر (الموظفة ورا الكاونتر)
 const R3_PLANE = { x: 6560, y: 724 };    // الطيارة اللي تطير للمنتجع الجديد
 const R3_CAP = { x: 6520, y: 760 };      // القبطان يم الدرج
-const R3_N = { x0: 75000, x1: 76600 };   // المنتجع الجديد (فاضي حالياً)
+const R3_N = { x0: 75000, x1: 76600 };   // الشمال (فاضي حالياً)
 const R3_NHI = { x0: R3_N.x0, x1: R3_N.x1, dx: R3_N.x0 + 400, vx0: R3_N.x0 - 15, vx1: R3_N.x1 + 15, vy0: 0, vy1: 1040 };
 const R3_CAP2 = { x: R3_N.x0 + 330, y: 620 };
 const r3VisY = (y0, y1) => y1 > RM.vy0 && y0 < RM.vy1;
@@ -27,7 +27,7 @@ const r3Vis = (x0, x1, y0, y1) => rxVis(x0, x1) && r3VisY(y0, y1);
 const r3InG = (x, y) => x > R3_G.x0 + 10 && x < R3_G.x1 - 10 && y > R3_G.y0 && y < R3_G.y1 - 6;
 const r3InPond = (x, y, k) => { const dx = (x - R3_POND.x) / R3_POND.rx, dy = (y - R3_POND.y) / R3_POND.ry; return dx * dx + dy * dy < (k || 1); };
 const r3Night = () => (RM.dn && RM.dn.d) || 0;
-Object.assign(RM_SHOP_NM, { 8: 'المنتجع الجديد ✈️' });
+Object.assign(RM_SHOP_NM, { 8: 'الشمال ❄️' });
 
 /* ===================== صور جاهزة (تنرسم مرة وحدة) ===================== */
 function r3Spr(w, h, ox, oy, fn) { const cv = document.createElement('canvas'), s = 2; cv.width = w * s; cv.height = h * s; const g = cv.getContext('2d'); g.scale(s, s); g.translate(ox, oy); try { fn(g); } catch (e) {} return { cv, w, h, ox, oy }; }
@@ -311,7 +311,7 @@ function r3TicketBooth(c, T) {
   c.fillStyle = '#ffffff'; for (let i = 0; i < 5; i++) { c.globalAlpha = 0.35 + 0.35 * Math.sin(T / 20 + i); c.beginPath(); c.arc(x - 80 + i * 40, y - 160, 2.2, 0, 7); c.fill(); } c.globalAlpha = 1;
 }
 function r3TicketCounter(c) { const x = R3_TKT.x, y = R3_TKT.y; if (!rxVis(x - 160, x + 160)) return; let g = c.createLinearGradient(0, y - 38, 0, y + 4); g.addColorStop(0, '#f4f6fa'); g.addColorStop(1, '#c8d0dc'); rxRect(c, x - 116, y - 40, 232, 44, 6, g); c.fillStyle = '#2a6ad8'; c.fillRect(x - 116, y - 40, 232, 6); rxTxt(c, 'رحلات يومية للمنتجع الجديد ✈️ • 5💵', x, y - 16, 'bold 11px Cairo, Arial', '#1a2a5a'); if (r3NearTkt()) { c.globalAlpha = 0.6 + 0.4 * Math.sin(RM.T / 8); c.font = '15px system-ui'; c.textAlign = 'center'; c.fillText('👆', x + 128, y - 40); c.globalAlpha = 1; } }
-function r3Board(c, x, y, T) { if (!rxVis(x - 90, x + 90)) return; c.fillStyle = '#3a3f4a'; c.fillRect(x - 3, y - 70, 6, 70); rxRect(c, x - 80, y - 126, 160, 62, 6, '#141820'); rxTxt(c, 'المغادرة • DEPARTURES', x, y - 116, 'bold 8.5px Cairo, Arial', '#ffd23f'); const rows = [['BT-101', 'المنتجع الجديد', Math.floor(T / 30) % 2 ? 'صعود ✈️' : 'BOARDING'], ['BT-202', 'قريباً', '⏳']]; rows.forEach((r, i) => { const yy = y - 98 + i * 16; rxTxt(c, r[0], x - 56, yy, 'bold 8px Arial', '#7affb0'); rxTxt(c, r[1], x - 2, yy, 'bold 8px Cairo, Arial', '#fff'); rxTxt(c, r[2], x + 54, yy, 'bold 7.5px Cairo, Arial', i ? '#aab' : '#ffd23f'); }); }
+function r3Board(c, x, y, T) { if (!rxVis(x - 90, x + 90)) return; c.fillStyle = '#3a3f4a'; c.fillRect(x - 3, y - 70, 6, 70); rxRect(c, x - 80, y - 126, 160, 62, 6, '#141820'); rxTxt(c, 'المغادرة • DEPARTURES', x, y - 116, 'bold 8.5px Cairo, Arial', '#ffd23f'); const rows = [['BT-101', 'الشمال', Math.floor(T / 30) % 2 ? 'صعود ✈️' : 'BOARDING'], ['BT-202', 'قريباً', '⏳']]; rows.forEach((r, i) => { const yy = y - 98 + i * 16; rxTxt(c, r[0], x - 56, yy, 'bold 8px Arial', '#7affb0'); rxTxt(c, r[1], x - 2, yy, 'bold 8px Cairo, Arial', '#fff'); rxTxt(c, r[2], x + 54, yy, 'bold 7.5px Cairo, Arial', i ? '#aab' : '#ffd23f'); }); }
 function r3Sign(c, x, y) { c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 20, 4, 0, 0, 7); c.fill(); c.fillStyle = '#4a4f5a'; c.fillRect(x - 2, y - 96, 4, 96); rxRect(c, x - 58, y - 128, 116, 36, 8, '#1a4aa8'); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.strokeRect(x - 54, y - 124, 108, 28); rxTxt(c, '✈️ المطار ←', x, y - 110, 'bold 13px Cairo, Arial', '#fff'); }
 function r3Windsock(c, x, y, T) { c.fillStyle = '#9aa0ab'; c.fillRect(x - 1.5, y - 80, 3, 80); c.save(); c.translate(x, y - 76); c.rotate(0.15 + Math.sin(T / 40) * 0.08); for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? '#fff' : '#ff5a1a'; c.beginPath(); c.moveTo(i * 9, -6 + i * 1); c.lineTo(i * 9 + 9, -5 + i * 1); c.lineTo(i * 9 + 9, 5 - i * 1); c.lineTo(i * 9, 6 - i * 1); c.fill(); } c.restore(); }
 function r3Carts(c, x, y) { if (!rxVis(x - 60, x + 60)) return; for (let i = 0; i < 2; i++) { const cx = x + i * 46; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(cx, y, 22, 4, 0, 0, 7); c.fill(); c.fillStyle = '#5a6a80'; c.fillRect(cx - 20, y - 12, 40, 6); ['#ff7ab8', '#ffd23f', '#4aa8ff', '#7a2ad8'].forEach((col, k) => rxRect(c, cx - 18 + k * 9, y - 26 + (k % 2) * 4, 8, 14 - (k % 2) * 4, 2, col)); c.fillStyle = '#1d1d24'; c.beginPath(); c.arc(cx - 14, y - 3, 3, 0, 7); c.arc(cx + 14, y - 3, 3, 0, 7); c.fill(); } }
@@ -341,7 +341,7 @@ function r3PlaneStairs(c) { const x = R3_PLANE.x + 130, y = R3_PLANE.y; if (!rxV
 /* طيارة تقلع وتنزل على المدرج */
 function r3RunwayPlane(c, T) { const P = 1400, u = (T % P) / P; if (u > 0.5) return; const k = u / 0.5, x = 5200 + k * 2700, lift = k > 0.45 ? (k - 0.45) * 380 : 0, s = 0.42 + lift / 900; if (!rxVis(x - 120, x + 120)) return; c.save(); c.globalAlpha = Math.max(0, 1 - Math.max(0, k - 0.85) * 6); if (lift) { c.fillStyle = 'rgba(0,0,0,' + Math.max(0, 0.2 - lift / 700) + ')'; c.beginPath(); c.ellipse(x, 300, 70 * s, 6, 0, 0, 7); c.fill(); } c.translate(0, -lift); r3Plane(c, x, 300, s, 1, '#e8572a', 'BT-303'); c.restore(); }
 
-/* ===================== المنتجع الجديد (فاضي حالياً) ===================== */
+/* ===================== الشمال (فاضي حالياً) ===================== */
 function r3NewBg(c) {
   const X0 = R3_NHI.vx0, X1 = R3_NHI.vx1, W = X1 - X0, T = RM.T;
   let g = c.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, '#5ab8ff'); g.addColorStop(1, '#d6f3ff'); c.fillStyle = g; c.fillRect(X0, 0, W, 100);
@@ -359,7 +359,7 @@ function r3NewList() {
   L.push([700, c => r3Plane(c, R3_N.x0 + 440, 700, 1, 1, '#7a2ad8', 'BT-101', true)]);
   L.push([702, c => { const x = R3_N.x0 + 440 + 130, y = 700; c.fillStyle = '#e8ecf2'; c.beginPath(); c.moveTo(x - 6, y - 58); c.lineTo(x - 120, y - 2); c.lineTo(x - 104, y - 2); c.lineTo(x + 6, y - 50); c.fill(); for (let i = 1; i < 8; i++) { c.fillStyle = '#c8d0dc'; c.fillRect(x - 6 - i * 14, y - 58 + i * 7, 14, 2); } }]);
   L.push([R3_CAP2.y, c => r3Captain(c, R3_CAP2.x, R3_CAP2.y, R3.cap2)]);
-  L.push([520, c => { const x = R3_N.x0 + 900, y = 520; c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 40, 6, 0, 0, 7); c.fill(); c.fillStyle = '#7a4a22'; c.fillRect(x - 40, y - 70, 6, 70); c.fillRect(x + 34, y - 70, 6, 70); rxRect(c, x - 90, y - 130, 180, 66, 10, '#fff6ea'); c.strokeStyle = '#7a2ad8'; c.lineWidth = 3; c.beginPath(); c.roundRect ? c.roundRect(x - 90, y - 130, 180, 66, 10) : c.rect(x - 90, y - 130, 180, 66); c.stroke(); rxTxt(c, '🏝️ المنتجع الجديد', x, y - 110, 'bold 16px Lalezar, Cairo, Arial', '#5a1aa8'); rxTxt(c, '🏗️ قريباً تنبني هنا أشياء حلوة', x, y - 84, 'bold 11px Cairo, Arial', '#7a4a22'); }]);
+  L.push([520, c => { const x = R3_N.x0 + 900, y = 520; c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 40, 6, 0, 0, 7); c.fill(); c.fillStyle = '#7a4a22'; c.fillRect(x - 40, y - 70, 6, 70); c.fillRect(x + 34, y - 70, 6, 70); rxRect(c, x - 90, y - 130, 180, 66, 10, '#fff6ea'); c.strokeStyle = '#7a2ad8'; c.lineWidth = 3; c.beginPath(); c.roundRect ? c.roundRect(x - 90, y - 130, 180, 66, 10) : c.rect(x - 90, y - 130, 180, 66); c.stroke(); rxTxt(c, '❄️ الشمال', x, y - 110, 'bold 16px Lalezar, Cairo, Arial', '#5a1aa8'); rxTxt(c, '🏗️ قريباً تنبني هنا أشياء حلوة', x, y - 84, 'bold 11px Cairo, Arial', '#7a4a22'); }]);
   return L;
 }
 
@@ -501,7 +501,7 @@ function r3TktClose() { const P = $('apShop'); if (P) P.style.display = 'none'; 
 function r3TktRender() {
   const P = $('apShop'); if (!P || P.style.display === 'none') return; P.querySelector('.spCo').textContent = auth ? '💵 ' + usdTxt() : 'ضيف';
   const B = P.querySelector('.apB'); B.innerHTML = '';
-  const t = document.createElement('div'); t.className = 'apTk' + (R3.tk ? ' on' : ''); t.innerHTML = '<div class="l"><small>بابيت إيرلاينز ✈️</small><div class="rt"><span><b>منتجع بابيت</b><i>BBT</i></span><em>✈</em><span><b>المنتجع الجديد</b><i>NEW</i></span></div><div class="mt"><span>رحلة <b>BT-101</b></span><span>البوابة <b>1</b></span><span>المقعد <b>VIP</b></span></div></div><div class="r"><small>السعر</small><b></b><span class="st"></span></div>';
+  const t = document.createElement('div'); t.className = 'apTk' + (R3.tk ? ' on' : ''); t.innerHTML = '<div class="l"><small>بابيت إيرلاينز ✈️</small><div class="rt"><span><b>منتجع بابيت</b><i>BBT</i></span><em>✈</em><span><b>الشمال</b><i>NTH</i></span></div><div class="mt"><span>رحلة <b>BT-101</b></span><span>البوابة <b>1</b></span><span>المقعد <b>VIP</b></span></div></div><div class="r"><small>السعر</small><b></b><span class="st"></span></div>';
   t.querySelector('.r b').textContent = rmBalAdm() ? 'مجاناً 👑' : R3.price + ' 💵'; t.querySelector('.r .st').textContent = R3.tk ? '✅ محجوزة' : '';
   const n = document.createElement('div'); n.className = 'apN'; n.textContent = R3.tk ? '🎫 تذكرتك جاهزة! روح للقبطان يم الطيارة وسلّمه التذكرة حتى تطير مباشرة ✈️' : '💡 بعد ما تحجز، شخصيتك تمشي للقبطان وتنطيه التذكرة وتطير مباشرة ✈️ — الرجعة مجانية';
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'htBtn ' + (R3.tk ? 'g' : ''); btn.textContent = R3.tk ? '🚶 روح للقبطان هسه' : '🎫 احجز التذكرة';
@@ -526,7 +526,7 @@ function r3FlyBack() { if (R3.flying) return; rxSay(R3.cap2, 'يلا نرجع ل
 function r3Fly(back) {
   if (R3.flying) return; const box = $('rmBox'); if (!box) return; r3Css(); R3.path = []; R3.autoFly = false;
   const ov = document.createElement('div'); ov.id = 'apFly'; ov.innerHTML = '<canvas></canvas><div class="afT"><b>✈️ رحلة BT-101</b><span></span></div><div class="afR"><i class="a"></i><div class="ln"><em></em></div><i class="b"></i></div><div class="afL"><span></span><span></span></div>';
-  const lb = ov.querySelectorAll('.afL span'); lb[0].textContent = back ? 'المنتجع الجديد' : 'منتجع بابيت'; lb[1].textContent = back ? 'منتجع بابيت' : 'المنتجع الجديد'; ov.querySelector('.afT span').textContent = back ? 'راجعين لمنتجع بابيت 🏝️' : 'في الطريق للمنتجع الجديد 🏝️';
+  const lb = ov.querySelectorAll('.afL span'); lb[0].textContent = back ? 'الشمال' : 'منتجع بابيت'; lb[1].textContent = back ? 'منتجع بابيت' : 'الشمال'; ov.querySelector('.afT span').textContent = back ? 'راجعين لمنتجع بابيت 🏝️' : 'في الطريق للمنتجع الجديد 🏝️';
   box.appendChild(ov); const cv = ov.querySelector('canvas'), g = cv.getContext('2d'), dur = 7600, t0 = performance.now(); R3.flying = { t0, back };
   const CL = []; for (let l = 0; l < 3; l++) for (let i = 0; i < 7; i++) CL.push({ l, x: Math.random(), y: 0.08 + Math.random() * 0.8, s: 0.6 + Math.random() * 0.8 });
   let snd = null; try { if (!RM.ambMute) { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const n = actx.createBufferSource(), buf = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate), D = buf.getChannelData(0); for (let i = 0; i < D.length; i++) D[i] = Math.random() * 2 - 1; n.buffer = buf; n.loop = true; const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420; const gn = actx.createGain(); gn.gain.setValueAtTime(0.0001, actx.currentTime); gn.gain.exponentialRampToValueAtTime(0.09, actx.currentTime + 1.2); gn.gain.setValueAtTime(0.09, actx.currentTime + dur / 1000 - 1.4); gn.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur / 1000); n.connect(f); f.connect(gn); gn.connect(actx.destination); n.start(); n.stop(actx.currentTime + dur / 1000 + 0.1); snd = n; } } catch (e) {}
@@ -553,7 +553,7 @@ function r3Fly(back) {
 }
 function r3Arrive(back) {
   const m = RM.me; try { if (m.sit) { m.sit = false; m.seat = null; } } catch (e) {}
-  if (back) { m.x = m.tx = R3_CAP.x + 60; m.y = m.ty = R3_CAP.y + 30; } else { m.x = m.tx = R3_CAP2.x + 60; m.y = m.ty = R3_CAP2.y + 30; R3.cap2.wave = 60; setTimeout(() => rxSay(R3.cap2, 'وصلنا! 🏝️ هذا المنتجع الجديد — إذا تريد ترجع تعال يمي ✈️', 260), 1200); }
+  if (back) { m.x = m.tx = R3_CAP.x + 60; m.y = m.ty = R3_CAP.y + 30; } else { m.x = m.tx = R3_CAP2.x + 60; m.y = m.ty = R3_CAP2.y + 30; R3.cap2.wave = 60; setTimeout(() => rxSay(R3.cap2, 'وصلنا! ❄️ هذا الشمال — إذا تريد ترجع تعال يمي ✈️', 260), 1200); }
   m.dir = 1; m.goal = false; RM.tapMk = null; RM.sent = ''; RM.sentP = 0; RM.camSnap = 1; R3.path = [];
 }
 
