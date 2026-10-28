@@ -13,6 +13,8 @@
   const bulb = (c, x, y, r, col, on) => { c.fillStyle = on ? col : 'rgba(255,255,255,.25)'; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); if (on) { c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .35, 0, TAU); c.fill(); } };
   const sign = (c, txt, x, y, col, nd) => { c.save(); c.font = 'bold 13px Cairo, system-ui'; const w = c.measureText(txt).width + 26; c.fillStyle = 'rgba(30,14,48,.88)'; rr(c, x - w / 2, y - 13, w, 24, 12); c.fill(); c.lineWidth = 2; c.strokeStyle = col; c.shadowColor = col; c.shadowBlur = 6 + nd * 10; rr(c, x - w / 2, y - 13, w, 24, 12); c.stroke(); c.shadowBlur = 0; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore(); };
   const COLS = ['#ff4d6d', '#ffd23f', '#3ddc84', '#3da5ff', '#b36bff', '#ff9f1c', '#ff7ab8', '#20c9b8', '#ffffff', '#7a5cff', '#ff6a3a', '#9ad84a'];
+  // راكب كاعد صح: الورك على المقعد، والاسم فوك الراس بالضبط
+  function sitR(c, R, x, hipY, s, arms) { const fy = hipY + AV_H * .21 * s; c.save(); c.translate(x, fy); c.scale((R.o.dir || 1) * s, s); AVT.drawAt(c, R.o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, sit: 1, dance: arms ? 1 : 0, dt: RM.T }); c.restore(); c.save(); c.translate(x, fy - AV_H * .72 * s - 2); c.scale(.74, .74); rmTag(c, R.nm, 0, -13, { me: R.me, adm: R.o.adm || (R.me ? RM.myAdm : 0) }); c.restore(); }
   function rider(c, R, x, y, s, tagY) { c.save(); c.translate(x, y); c.scale((R.o.dir || 1) * s, s); AVT.drawAt(c, R.o.av || AVT.DEF, 0, 0, AV_H, { t: RM.T, sit: 1, dance: 1, dt: RM.T }); c.restore(); c.save(); c.translate(x, tagY); c.scale(.74, .74); rmTag(c, R.nm, 0, -13, { me: R.me, adm: R.o.adm || (R.me ? RM.myAdm : 0) }); c.restore(); }
 
   /* ---------- الأكواد ---------- */
@@ -40,7 +42,11 @@
     const bg = c.createLinearGradient(0, Y - 18, 0, Y + 6); bg.addColorStop(0, '#e8e2f4'); bg.addColorStop(1, '#9a8cc0'); c.fillStyle = bg; ell(c, X, Y - 4, 62, 16); c.fill(); c.fillStyle = '#7a6aa8'; c.fillRect(X - 62, Y - 6, 124, 8); ell(c, X, Y + 2, 62, 14); c.fill();
     for (let k = 0; k < 14; k++) { const a = k / 14 * TAU; if (Math.sin(a) < 0) continue; bulb(c, X + Math.cos(a) * 60, Y + Math.sin(a) * 14, 1.8, k % 2 ? '#ffd23f' : '#ff4d6d', Math.sin(k - t * 6) > 0); }
     const riders = rmRiders('drop'), seats = []; for (let i = 0; i < DROP.n; i++) seats.push([dropSeat(i), i]);
-    const seat = ([p, i]) => { const col = COLS[i]; riders.filter(R => R.i === i).forEach(R => rider(c, R, p[0], p[1] + 22, .5, p[1] - 22)); c.fillStyle = col; rr(c, p[0] - 9, p[1] - 6, 18, 20, 5); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(p[0] - 6, p[1] - 3, 12, 2); c.strokeStyle = '#ffd23f'; c.lineWidth = 2; c.beginPath(); c.moveTo(p[0] - 9, p[1] - 2); c.quadraticCurveTo(p[0], p[1] + 6, p[0] + 9, p[1] - 2); c.stroke(); };
+    const seat = ([p, i]) => { const col = COLS[i], fall = D.st === 'fall' || D.st === 'top';
+      c.fillStyle = hexL(col, -.25); rr(c, p[0] - 9, p[1] - 16, 18, 20, 5); c.fill(); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(p[0] - 6, p[1] - 13, 12, 2);   // ظهر المقعد
+      riders.filter(R => R.i === i).forEach(R => sitR(c, R, p[0], p[1] + 1, .5, fall));
+      c.fillStyle = col; rr(c, p[0] - 10, p[1], 20, 6, 3); c.fill(); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(p[0] - 9, p[1] + 5, 18, 2);   // القاعدة
+      c.strokeStyle = '#ffd23f'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(p[0] - 8, p[1] - 15); c.quadraticCurveTo(p[0] - 9, p[1] - 4, p[0] - 4, p[1] + 1); c.moveTo(p[0] + 8, p[1] - 15); c.quadraticCurveTo(p[0] + 9, p[1] - 4, p[0] + 4, p[1] + 1); c.stroke(); };   // حزام الأمان على الكتوف
     seats.filter(s => s[0][2] < 0).forEach(seat);
     // العمود: هيكل حديد بشبكة وخطوط نيون
     const cg = c.createLinearGradient(X - 16, 0, X + 16, 0); cg.addColorStop(0, '#3a2a6a'); cg.addColorStop(.5, '#8a7ad8'); cg.addColorStop(1, '#2a1a5a'); c.fillStyle = cg; c.fillRect(X - 14, top + 30, 28, DROP.H - 36);
@@ -81,11 +87,14 @@
       c.fillStyle = '#1a1a1a'; rr(c, -26, -6, 52, 18, 9); c.fill();   // مصد مطاط
       const cg = c.createLinearGradient(0, -14, 0, 8); cg.addColorStop(0, hexL(col, .35)); cg.addColorStop(1, hexL(col, -.25)); c.fillStyle = cg; rr(c, -22, -14, 44, 22, 10); c.fill();
       c.fillStyle = 'rgba(255,255,255,.45)'; rr(c, -16, -12, 26, 4, 2); c.fill(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(18, -4, 2.5, 0, TAU); c.fill();
-      c.fillStyle = '#222'; rr(c, -14, -18, 16, 8, 3); c.fill();   // المقعد
+      c.fillStyle = '#222'; rr(c, -13, -24, 16, 14, 4); c.fill(); c.fillStyle = '#3a3a3a'; rr(c, -11, -22, 12, 4, 2); c.fill();   // ظهر المقعد
       c.restore();
-      riders.filter(R => R.i === i).forEach(R => rider(c, R, -2, -4, .44, -42));
-      c.strokeStyle = '#9aa2b0'; c.lineWidth = 2; c.beginPath(); c.moveTo(-12, -14); c.lineTo(-12, -54); c.stroke();   // عمود الكهرباء
-      if (Math.random() < .12) { c.strokeStyle = '#bfe8ff'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-12, -54); c.lineTo(-12 + (Math.random() - .5) * 10, -60); c.lineTo(-12 + (Math.random() - .5) * 8, -64); c.stroke(); }
+      { const px = -19 * fl; c.strokeStyle = '#9aa2b0'; c.lineWidth = 2; c.beginPath(); c.moveTo(px, -14); c.lineTo(px, -56); c.stroke();   // عمود الكهرباء ورا الكرسي
+        if (Math.random() < .12) { c.strokeStyle = '#bfe8ff'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(px, -56); c.lineTo(px + (Math.random() - .5) * 10, -62); c.lineTo(px + (Math.random() - .5) * 8, -66); c.stroke(); } }
+      riders.filter(R => R.i === i).forEach(R => sitR(c, R, -5 * fl, -9, .44));
+      c.save(); c.rotate(Math.cos(a) * .06); c.scale(fl, 1); const cf = c.createLinearGradient(0, -8, 0, 8); cf.addColorStop(0, hexL(col, .2)); cf.addColorStop(1, hexL(col, -.3)); c.fillStyle = cf; rr(c, -22, -8, 44, 16, 8); c.fill();   // جسم السيارة الأمامي يغطي الرجلين
+      c.fillStyle = 'rgba(255,255,255,.35)'; rr(c, -18, -7, 30, 3, 2); c.fill(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(18, -1, 2.5, 0, TAU); c.fill();
+      c.strokeStyle = '#1a1a1a'; c.lineWidth = 2; c.beginPath(); c.moveTo(4, -8); c.lineTo(8, -14); c.stroke(); c.beginPath(); c.ellipse(8, -15, 4.5, 2, 0, 0, TAU); c.stroke(); c.restore();   // السكان
       c.restore(); });
     for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) { const a = cars[i][0], b = cars[j][0]; if (Math.hypot(a[0] - b[0], (a[1] - b[1]) * 1.6) < 46 && Math.random() < .25) { RM.sparks.push({ x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 - 6, vx: (Math.random() - .5) * 3, vy: -2, t: 12, dust: 1 }); if ((rmRideOf(RM.me) || {}).k === 'bump' && now() - R5.last > .6) { R5.last = now(); snd([['square', 160, 70, .12, .05], ['triangle', 300, 120, .1, .04]]); } } }
     sign(c, '🚗 سيارات التصادم', B.x, y0 + B.h + 30, '#ffd23f', nd); c.restore();
@@ -100,7 +109,10 @@
     c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.4; for (let k = 0; k < 3; k++) { c.beginPath(); for (let a = 0; a <= TAU + .01; a += .2) { const r = 40 + k * 22 + Math.sin(a * 5 + t * 2) * 3; c.lineTo(O.x + Math.cos(a) * r, O.y - 2 + Math.sin(a) * r * .32); } c.stroke(); }
     const riders = rmRiders('oct'), items = []; for (let i = 0; i < O.n; i++) items.push([octSeat(i), i]);
     const armDraw = arm => { const a = octA() + arm / 4 * TAU, up = Math.sin(t * 1.3 + arm * 1.6) * 26, ax = O.x + Math.cos(a) * O.R, ay = O.y + Math.sin(a) * O.R * .36 - 30 - up; c.strokeStyle = '#9a3ad8'; c.lineWidth = 9; c.lineCap = 'round'; c.beginPath(); c.moveTo(O.x, O.y - 48); c.quadraticCurveTo((O.x + ax) / 2, Math.min(ay, O.y - 48) - 20, ax, ay); c.stroke(); c.strokeStyle = '#d88aff'; c.lineWidth = 3; c.stroke(); for (let k = 1; k < 5; k++) { const u = k / 5, px = O.x + (ax - O.x) * u, py = O.y - 48 + (ay - O.y + 48) * u - Math.sin(u * Math.PI) * 18; c.fillStyle = '#ffd0ff'; c.beginPath(); c.arc(px, py + 4, 2.2, 0, TAU); c.fill(); } };
-    const cup = ([p, i]) => { const col = COLS[i + 2]; riders.filter(R => R.i === i).forEach(R => rider(c, R, p[0], p[1] + 14, .44, p[1] - 26)); c.fillStyle = col; c.beginPath(); c.moveTo(p[0] - 15, p[1] - 4); c.quadraticCurveTo(p[0] - 14, p[1] + 14, p[0], p[1] + 15); c.quadraticCurveTo(p[0] + 14, p[1] + 14, p[0] + 15, p[1] - 4); c.closePath(); c.fill(); c.fillStyle = hexL(col, .4); ell(c, p[0], p[1] - 4, 15, 4.5); c.fill(); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(p[0] - 9, p[1] + 2, 3, 8); };
+    const cup = ([p, i]) => { const col = COLS[i + 2]; c.fillStyle = hexL(col, -.45); ell(c, p[0], p[1] - 4, 15, 4.5); c.fill();   // داخل الكاسة
+      riders.filter(R => R.i === i).forEach(R => sitR(c, R, p[0], p[1] - 1, .44));
+      c.fillStyle = col; c.beginPath(); c.moveTo(p[0] - 15, p[1] - 4); c.quadraticCurveTo(p[0] - 14, p[1] + 14, p[0], p[1] + 15); c.quadraticCurveTo(p[0] + 14, p[1] + 14, p[0] + 15, p[1] - 4); c.ellipse(p[0], p[1] - 4, 15, 4.5, 0, 0, Math.PI); c.closePath(); c.fill();
+      c.strokeStyle = hexL(col, .45); c.lineWidth = 2; c.beginPath(); c.ellipse(p[0], p[1] - 4, 15, 4.5, 0, 0, Math.PI); c.stroke(); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(p[0] - 9, p[1] + 2, 3, 8); };
     const back = items.filter(it => it[0][2] < 0), front = items.filter(it => it[0][2] >= 0);
     [0, 1, 2, 3].filter(k => Math.sin(octA() + k / 4 * TAU) < 0).forEach(armDraw); back.forEach(cup);
     // راس الأخطبوط
@@ -122,8 +134,10 @@
     const X = SWG.x, Y = SWG.y, t = now(), nd = nightD(), S = swgState(), topY = Y - 150; c.save();
     c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, X, Y + 4, 140, 30); c.fill(); c.fillStyle = '#e8d2a8'; ell(c, X, Y, 120, 26); c.fill(); c.strokeStyle = '#b08a5a'; c.lineWidth = 3; c.stroke();
     const riders = rmRiders('swg'), items = []; for (let i = 0; i < SWG.n; i++) items.push([swgSeat(i), i]); items.sort((a, b) => a[0][1] - b[0][1]);
-    const chair = ([p, i]) => { c.strokeStyle = 'rgba(80,80,90,.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(p[3] - 3, p[4]); c.lineTo(p[0] - 6, p[1] - 8); c.moveTo(p[3] + 3, p[4]); c.lineTo(p[0] + 6, p[1] - 8); c.stroke();
-      riders.filter(R => R.i === i).forEach(R => rider(c, R, p[0], p[1] + 12, .42, p[1] - 28)); const col = COLS[i]; c.fillStyle = col; rr(c, p[0] - 8, p[1] - 8, 16, 14, 4); c.fill(); c.fillStyle = hexL(col, -.3); c.fillRect(p[0] - 8, p[1] + 4, 16, 3); };
+    const chair = ([p, i]) => { c.strokeStyle = 'rgba(80,80,90,.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(p[3] - 3, p[4]); c.lineTo(p[0] - 8, p[1] - 10); c.moveTo(p[3] + 3, p[4]); c.lineTo(p[0] + 8, p[1] - 10); c.stroke();
+      const col = COLS[i]; c.fillStyle = hexL(col, -.3); rr(c, p[0] - 8, p[1] - 12, 16, 13, 4); c.fill();   // ظهر الكرسي
+      riders.filter(R => R.i === i).forEach(R => sitR(c, R, p[0], p[1], .42, S.sp > .9));
+      c.fillStyle = col; rr(c, p[0] - 9, p[1] - 1, 18, 6, 3); c.fill(); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(p[0] - 8, p[1] + 4, 16, 2); c.strokeStyle = '#c0c0c8'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(p[0] - 9, p[1] - 6); c.lineTo(p[0] + 9, p[1] - 6); c.stroke(); };   // القاعدة وعمود الأمان
     items.filter(it => it[0][2] < 0).forEach(chair);
     const cg = c.createLinearGradient(X - 12, 0, X + 12, 0); cg.addColorStop(0, '#b07a10'); cg.addColorStop(.5, '#ffe9a0'); cg.addColorStop(1, '#b07a10'); c.fillStyle = cg; c.fillRect(X - 10, topY + 20, 20, 130);
     for (let k = 0; k < 5; k++) bulb(c, X, topY + 34 + k * 22, 2, '#ff7ab8', Math.sin(k * 1.4 - t * 5) > 0);
@@ -161,7 +175,8 @@
     c.restore(); }
   function flowers(c, x, y) { c.save(); c.fillStyle = '#b06a3a'; c.beginPath(); c.moveTo(x - 12, y - 14); c.lineTo(x + 12, y - 14); c.lineTo(x + 9, y); c.lineTo(x - 9, y); c.closePath(); c.fill(); for (let k = 0; k < 7; k++) { const fx = x - 9 + k * 3, fy = y - 18 - (k % 3) * 4; c.strokeStyle = '#2f7a2a'; c.lineWidth = 1; c.beginPath(); c.moveTo(fx, y - 14); c.lineTo(fx, fy); c.stroke(); c.fillStyle = COLS[k % 6]; c.beginPath(); c.arc(fx, fy, 2.6, 0, TAU); c.fill(); } c.restore(); }
   /* ---------- مواقع المقاعد + الكاميرا ويا الراكب + أصوات ---------- */
-  function seatOf(r) { if (r.k === 'drop') { const p = dropSeat(r.i); return [p[0], p[1] + 22]; } if (r.k === 'bump') { const p = bumpPos(r.i); return [p[0], p[1]]; } if (r.k === 'oct') { const p = octSeat(r.i); return [p[0], p[1] + 14]; } if (r.k === 'swg') { const p = swgSeat(r.i); return [p[0], p[1] + 12]; } return null; }
+  const EXIT = { drop: [DROP.x + 70, DROP.y + 44], bump: [BUMP.x + 60, BUMP.y + BUMP.h / 2 + 56], oct: [OCT.x + 70, OCT.y + 76], swg: [SWG.x + 80, SWG.y + 66] };   // تنزل بمكان فاضي كدام اللعبة، مو فوك السياج أو بنص الأغراض
+  function seatOf(r) { if (r.k === 'drop') { const p = dropSeat(r.i); return [p[0], p[1] + 9]; } if (r.k === 'bump') { const p = bumpPos(r.i); return [p[0], p[1]]; } if (r.k === 'oct') { const p = octSeat(r.i); return [p[0], p[1] + 6]; } if (r.k === 'swg') { const p = swgSeat(r.i); return [p[0], p[1] + 7]; } return null; }
   function rideSounds(r) { const t = now(); if (t < R5.nt) return;
     if (r.k === 'drop') { const D = dropH(); if (D.st === 'up') { snd([['square', 140, 140, .03, .012]]); R5.nt = t + .22; return; } if (D.st === 'fall' && t - R5.last > 1.5) { R5.last = t; snd([['sawtooth', 500, 90, .8, .02], ['sine', 1300, 500, .7, .025]]); } R5.nt = t + .1; return; }
     if (r.k === 'oct') { const n = [659, 784, 988, 784][Math.floor(t * 2) % 4]; snd([['triangle', n, n, .2, .02]]); R5.nt = t + .5; return; }
@@ -169,7 +184,7 @@
     R5.nt = t + .5; }
   const updOld = rmUpdMe; rmUpdMe = function () {
     const m = RM.me, r = rmRideOf(m), mine = r && KINDS[r.k], key = mine ? r.k + r.i : '';
-    if (key !== R5.prev) { if (R5.prev && !mine && R5.from) { m.x = m.tx = R5.from.x; m.y = m.ty = R5.from.y; RM.camSnap = 1; snd([['sine', 784, 523, .25, .04]]); } if (mine && !R5.prev && !R5.from) R5.from = { x: m.x, y: m.y }; if (!mine) R5.from = null; R5.prev = key; }
+    if (key !== R5.prev) { if (R5.prev && !mine && R5.from) { const X = EXIT[R5.prev.replace(/\d+$/, '')] || [R5.from.x, R5.from.y]; m.x = m.tx = X[0]; m.y = m.ty = X[1]; RM.camSnap = 1; snd([['sine', 784, 523, .25, .04]]); } if (mine && !R5.prev && !R5.from) R5.from = { x: m.x, y: m.y }; if (!mine) R5.from = null; R5.prev = key; }
     if (mine) { const s = seatOf(r); if (s) { m.x = m.tx = s[0]; m.y = m.ty = s[1]; rideSounds(r); return { mv: false, air: 0, jp: 0 }; } }
     return updOld();
   };
