@@ -8,6 +8,9 @@
    ===================================================================== */
 const R3 = { path: [], swanN: null, swanMe: 0, swanAsk: 0, swanFx: [], tk: 0, apAsk: 0, price: 5, autoFly: false, flying: null, cap: { say: null, wave: 0 }, cap2: { say: null, wave: 0 }, agt: { say: null, wave: 0 }, hand: null };
 const R3_BR = { x0: 1262, x1: 1338, cx: 1300, yN: 1196, yS: 1488, bandA: 1228, bandB: 1462 };   // جسر المشاة
+const R3_BR2 = { x0: 3232, x1: 3308, cx: 3270, yN: 1196, yS: 1488, bandA: 1228, bandB: 1462, nm: '🌳 جسر المرج الأخضر' };   // جسر ثاني ياخذك للمرج
+const R3_BRS = [R3_BR, R3_BR2], r3BrAt = x => R3_BRS.find(B => x >= B.x0 + 6 && x <= B.x1 - 6), r3BrNear = x => R3_BRS.reduce((a, b) => Math.abs(b.cx - x) < Math.abs(a.cx - x) ? b : a);
+const R3_G2 = { y: 2060 };   // باب الحديقة الثاني (يمين) يطلعك للمرج
 const R3_G = { x0: 300, x1: 2300, y0: 1540, y1: 2500, gx: 1300, gw: 56 };                           // حديقة الأمل
 const R3_POND = { x: 1300, y: 2010, rx: 168, ry: 76 };                                               // البركة وبنصها البجعة
 const R3_AP = { x0: 4760, x1: 7800 };                                                                // المطار
@@ -94,12 +97,12 @@ function r3Ground(c) {
     // رصيف الجهة الثانية + المرج
     c.fillStyle = '#d9b877'; c.fillRect(a, 1464, b - a, 4); const y0 = Math.max(1468, RM.vy0 - 4), y1 = Math.min(RMH, RM.vy1 + 4);
     if (y1 > y0) { c.fillStyle = R3P.m; c.fillRect(a, y0, b - a, y1 - y0); }
-    for (let x = 60 + Math.floor((a - 60) / 240) * 240; x < b; x += 240) { if (Math.abs(x - R3_BR.cx) < 70) continue; c.fillStyle = '#4a4f5a'; c.fillRect(x - 2, 1426, 4, 40); c.fillStyle = '#fff3b0'; c.beginPath(); c.arc(x, 1424, 4, 0, 7); c.fill(); }
+    for (let x = 60 + Math.floor((a - 60) / 240) * 240; x < b; x += 240) { if (R3_BRS.some(B => Math.abs(x - B.cx) < 70)) continue; c.fillStyle = '#4a4f5a'; c.fillRect(x - 2, 1426, 4, 40); c.fillStyle = '#fff3b0'; c.beginPath(); c.arc(x, 1424, 4, 0, 7); c.fill(); }
     // زهور برية صغيرة بالمرج
     if (y1 > y0) { const s0 = Math.floor(a / 70), s1 = Math.ceil(b / 70); for (let s = s0; s < s1; s++) for (let r = Math.floor(y0 / 70); r < Math.ceil(y1 / 70); r++) { const h = rxH(s * 131 + r * 977); if (h > 0.45) continue; const x = s * 70 + h * 140, y = r * 70 + rxH(s + r * 3) * 70; if (r3InG(x, y) || y < 1474) continue; c.fillStyle = ['#ffffff', '#ffd23f', '#ff8ac0', '#b48af0'][(s + r) & 3]; c.beginPath(); c.arc(x, y, 2.2, 0, 7); c.fill(); } }
     r3GardenGround(c, T);
   }
-  r3Bridge(c, T);
+  R3_BRS.forEach(B => r3Bridge(c, T, B));
   if (rxVis(R3_AP.x0 - 10, R3_AP.x1)) r3AirGround(c, T);
 }
 function r3GardenGround(c, T) {
@@ -125,15 +128,15 @@ function r3GardenGround(c, T) {
   // أحواض الزرع
   R3_BEDS.forEach(B => { if (!r3Vis(B.x - 80, B.x + 80, B.y - 40, B.y + 40)) return; c.fillStyle = '#8a5a34'; c.beginPath(); c.ellipse(B.x, B.y, 72, 30, 0, 0, 7); c.fill(); c.fillStyle = '#5a3a1e'; c.beginPath(); c.ellipse(B.x, B.y - 2, 66, 26, 0, 0, 7); c.fill(); const cols = [['#ff5a8a', '#ffd23f'], ['#c06aff', '#fff'], ['#ff8a3a', '#ff5a8a'], ['#4aa8ff', '#ffd23f']][B.i % 4]; for (let k = 0; k < 22; k++) { const an = rxH(B.i * 50 + k) * 7, rr = rxH(B.i * 70 + k) * 0.92; const x = B.x + Math.cos(an) * 60 * rr, y = B.y - 2 + Math.sin(an) * 22 * rr; c.fillStyle = '#2f8a3a'; c.fillRect(x - 0.8, y - 7, 1.6, 7); c.fillStyle = cols[k % 2]; c.beginPath(); c.arc(x, y - 8, 3.4, 0, 7); c.fill(); c.fillStyle = '#fff6b0'; c.beginPath(); c.arc(x, y - 8, 1.1, 0, 7); c.fill(); } });
   // سياج يمين ويسار (عمودي)
-  [G.x0, G.x1].forEach(x => { if (!rxVis(x - 10, x + 10)) return; c.fillStyle = '#2f6b3a'; c.fillRect(x - 6, G.y0, 12, G.y1 - G.y0); c.fillStyle = '#3f8a4a'; for (let y = G.y0 + 6; y < G.y1; y += 12) { c.beginPath(); c.arc(x, y, 7, 0, 7); c.fill(); } });
+  [G.x0, G.x1].forEach(x => { if (!rxVis(x - 10, x + 10)) return; const gap = x === G.x1 ? [R3_G2.y - 34, R3_G2.y + 30] : null; c.fillStyle = '#2f6b3a'; if (gap) { c.fillRect(x - 6, G.y0, 12, gap[0] - G.y0); c.fillRect(x - 6, gap[1], 12, G.y1 - gap[1]); } else c.fillRect(x - 6, G.y0, 12, G.y1 - G.y0); c.fillStyle = '#3f8a4a'; for (let y = G.y0 + 6; y < G.y1; y += 12) { if (gap && y > gap[0] - 4 && y < gap[1] + 4) continue; c.beginPath(); c.arc(x, y, 7, 0, 7); c.fill(); } });
 }
 /* جسر المشاة فوق الشارعين */
-function r3Bridge(c, T) {
-  const B = R3_BR; if (!r3Vis(B.x0 - 40, B.x1 + 40, B.yN - 60, B.yS + 30)) return; const w = B.x1 - B.x0;
+function r3Bridge(c, T, B) {
+  B = B || R3_BR; if (!r3Vis(B.x0 - 40, B.x1 + 40, B.yN - 60, B.yS + 30)) return; const w = B.x1 - B.x0;
   // ظل الجسر على الشارع
   c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(B.x0 + 10, 1244, w, 178);
   // أعمدة
-  [[1250, 1330], [1350, 1330]].forEach(() => {}); [1258, 1342].forEach(x => [1330].forEach(y => { c.fillStyle = '#9aa0ab'; c.fillRect(x - 5, y - 6, 10, 20); }));
+  [[1250, 1330], [1350, 1330]].forEach(() => {}); [B.x0 - 4, B.x1 + 4].forEach(x => [1330].forEach(y => { c.fillStyle = '#9aa0ab'; c.fillRect(x - 5, y - 6, 10, 20); }));
   // سلالم الجهتين
   const stairs = (y0, y1, up) => { const n = 7; for (let i = 0; i < n; i++) { const y = y0 + (y1 - y0) * i / n, hh = (y1 - y0) / n; c.fillStyle = i % 2 ? '#c4c9d2' : '#d6dbe3'; c.fillRect(B.x0, y, w, hh + 0.5); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(B.x0, up ? y + hh - 1.5 : y, w, 1.5); } };
   stairs(B.yN, 1236, true); stairs(1424, B.yS, false);
@@ -144,7 +147,7 @@ function r3Bridge(c, T) {
   [B.x0 - 4, B.x1 + 1].forEach(x => { c.fillStyle = '#5a6a8a'; c.fillRect(x, B.yN - 4, 3, B.yS - B.yN + 6); c.fillStyle = '#e8ecf4'; c.fillRect(x - 1, B.yN - 10, 5, 4); for (let y = B.yN + 6; y < B.yS; y += 22) { c.fillStyle = '#5a6a8a'; c.fillRect(x - 1, y, 5, 3); } });
   for (let y = B.yN + 20; y < B.yS - 10; y += 44) [B.x0 - 3, B.x1 + 2].forEach(x => { c.fillStyle = r3Night() > 0.3 ? '#fff2a8' : '#ffd166'; c.beginPath(); c.arc(x + 0.5, y, 2.4, 0, 7); c.fill(); });
   // لافتة فوق مدخل الجسر
-  rxRect(c, B.cx - 54, B.yN - 46, 108, 24, 8, '#1f7a4a'); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.strokeRect(B.cx - 50, B.yN - 42, 100, 16); rxTxt(c, '🌉 جسر المشاة', B.cx, B.yN - 34, 'bold 11px Cairo, Arial', '#fff');
+  { const sw = B.nm ? 136 : 108; rxRect(c, B.cx - sw / 2, B.yN - 46, sw, 24, 8, '#1f7a4a'); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.strokeRect(B.cx - sw / 2 + 4, B.yN - 42, sw - 8, 16); rxTxt(c, B.nm || '🌉 جسر المشاة', B.cx, B.yN - 34, 'bold 11px Cairo, Arial', '#fff'); }
   c.fillStyle = '#4a4f5a'; c.fillRect(B.cx - 50, B.yN - 22, 3, 20); c.fillRect(B.cx + 47, B.yN - 22, 3, 20);
 }
 
@@ -383,8 +386,13 @@ function r3Solid(m, px, py) {
 /* ===================== الحركة: الجسر، باب الحديقة، البركة ===================== */
 function r3Region(x, y) { if (y <= R3_BR.bandA + 8) return 'N'; if (y < R3_BR.bandB) return 'B'; return r3InG(x, y) ? 'G' : 'S'; }
 function r3Plan(x, y) {   // يرجّع نقاط الطريق من مكانك للمكان المطلوب
-  const m = RM.me, a = r3Region(m.x, m.y), b = r3Region(x, y), cx = R3_BR.cx, gx = R3_G.gx;
-  const nN = [cx, R3_BR.bandA - 10], nS = [cx, R3_BR.bandB + 22], gO = [gx, R3_G.y0 - 22], gI = [gx, R3_G.y0 + 26];
+  const m = RM.me, a = r3Region(m.x, m.y), b = r3Region(x, y), gx = R3_G.gx;
+  const BB = a === 'B' ? (r3BrAt(m.x) || r3BrNear(m.x)) : R3_BRS.reduce((p, q) => (Math.abs(q.cx - m.x) + Math.abs(q.cx - x) < Math.abs(p.cx - m.x) + Math.abs(p.cx - x) ? q : p)), cx = BB.cx;
+  const nN = [cx, R3_BR.bandA - 10], nS = [cx, R3_BR.bandB + 22];
+  // نختار باب الحديقة الأقرب: الفوكاني أو اليمين (اللي يطلع للمرج)
+  const oP = a === 'G' ? (b === 'S' ? [x, y] : nS) : (a === 'S' ? [m.x, m.y] : nS), iP = a === 'G' ? [m.x, m.y] : [x, y];
+  const right = Math.hypot(oP[0] - R3_G.x1, oP[1] - R3_G2.y) + Math.hypot(iP[0] - R3_G.x1, iP[1] - R3_G2.y) < Math.hypot(oP[0] - gx, oP[1] - R3_G.y0) + Math.hypot(iP[0] - gx, iP[1] - R3_G.y0);
+  const gO = right ? [R3_G.x1 + 26, R3_G2.y] : [gx, R3_G.y0 - 22], gI = right ? [R3_G.x1 - 30, R3_G2.y] : [gx, R3_G.y0 + 26];
   const seq = { N: 0, B: 1, S: 2, G: 3 }, A = seq[a], Bq = seq[b]; if (A === Bq) return [];
   const pts = []; if (A < Bq) { if (A < 1) pts.push(nN); if (A < 2 && Bq >= 2) pts.push(nS); if (Bq === 3) { pts.push(gO, gI); } else if (Bq === 1) {} }
   else { if (A === 3) pts.push(gI, gO); if (A >= 2 && Bq <= 1) pts.push(nS); if (Bq === 0) pts.push(nN); }
@@ -392,8 +400,8 @@ function r3Plan(x, y) {   // يرجّع نقاط الطريق من مكانك ل
   return pts.filter((p, i) => i > 0 || Math.hypot(p[0] - m.x, p[1] - m.y) > 4);
 }
 function r3FixTarget(x, y) {
-  if (y > R3_BR.bandA && y < R3_BR.bandB && (x < R3_BR.x0 + 12 || x > R3_BR.x1 - 12)) { if (Math.abs(x - R3_BR.cx) < 160) x = R3_BR.cx; else y = y < 1345 ? R3_BR.bandA : R3_BR.bandB + 4; }
-  if (y > R3_BR.bandA && y < R3_BR.bandB) x = Math.max(R3_BR.x0 + 12, Math.min(R3_BR.x1 - 12, x));
+  { const B = r3BrNear(x); if (y > B.bandA && y < B.bandB && (x < B.x0 + 12 || x > B.x1 - 12)) { if (Math.abs(x - B.cx) < 160) x = B.cx; else y = y < 1345 ? B.bandA : B.bandB + 4; }
+    if (y > B.bandA && y < B.bandB) x = Math.max(B.x0 + 12, Math.min(B.x1 - 12, x)); }
   if (r3InPond(x, y, 1.06)) { const an = Math.atan2((y - R3_POND.y) / R3_POND.ry, (x - R3_POND.x) / R3_POND.rx); x = R3_POND.x + Math.cos(an) * R3_POND.rx * 1.1; y = R3_POND.y + Math.sin(an) * R3_POND.ry * 1.14; }
   { const r = r3SolidAt(x, y); if (r) y = r.y1 + 6; }
   return [x, y];
@@ -410,10 +418,11 @@ const r3UpdO = rmUpdMe; rmUpdMe = function () {
   const st = r3UpdO();
   try {
     if (!rmInShop()) {
-      const inB = (x, y) => y > R3_BR.bandA + 2 && y < R3_BR.bandB - 2 && (x < R3_BR.x0 + 6 || x > R3_BR.x1 - 6);
+      const inB = (x, y) => y > R3_BR.bandA + 2 && y < R3_BR.bandB - 2 && !R3_BRS.some(B => x >= B.x0 + 6 && x <= B.x1 - 6);
       if (inB(m.x, m.y)) { if (!inB(px, py)) { m.x = px; m.y = py; } else { m.y = m.y < 1345 ? R3_BR.bandA : R3_BR.bandB; } m.tx = m.x; m.ty = m.y; R3.path = []; }
-      const gi0 = r3InG(px, py), gi1 = r3InG(m.x, m.y); if (gi0 !== gi1 && Math.abs(m.x - R3_G.gx) > R3_G.gw / 2 + 4 && Math.abs(py - R3_G.y0) < 60) { m.x = px; m.y = py; m.tx = m.x; m.ty = m.y; R3.path = []; }
-      if (gi0 !== gi1 && Math.abs(py - R3_G.y0) >= 60) { m.x = px; m.y = py; m.tx = px; m.ty = py; R3.path = []; }
+      const gi0 = r3InG(px, py), gi1 = r3InG(m.x, m.y), atG2 = Math.abs(py - R3_G2.y) < 22 && Math.abs(m.x - R3_G.x1) < 40;
+      if (!atG2 && gi0 !== gi1 && Math.abs(m.x - R3_G.gx) > R3_G.gw / 2 + 4 && Math.abs(py - R3_G.y0) < 60) { m.x = px; m.y = py; m.tx = m.x; m.ty = m.y; R3.path = []; }
+      if (!atG2 && gi0 !== gi1 && Math.abs(py - R3_G.y0) >= 60) { m.x = px; m.y = py; m.tx = px; m.ty = py; R3.path = []; }
       if (r3InPond(m.x, m.y, 1.04)) { const an = Math.atan2((m.y - R3_POND.y) / R3_POND.ry, (m.x - R3_POND.x) / R3_POND.rx); m.x = R3_POND.x + Math.cos(an) * R3_POND.rx * 1.06; m.y = R3_POND.y + Math.sin(an) * R3_POND.ry * 1.08; m.tx = m.x; m.ty = m.y; }
       r3Solid(m, px, py);
       if (R3.path.length && !m.sit && !m.goal && Math.hypot(m.x - m.tx, m.y - m.ty) < 2.5) { const n = R3.path.shift(); m.tx = n[0]; m.ty = n[1]; }
