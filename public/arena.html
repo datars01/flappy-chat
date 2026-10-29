@@ -73,6 +73,11 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .wc button { margin-top: auto; border: 0; border-radius: 10px; padding: 8px; font: 800 13px var(--body); cursor: pointer; background: var(--sand); color: #1a1206; } .wc button.own { background: rgba(255,255,255,.14); color: var(--ink); } .wc button:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { #feed div, #nums i { animation-duration: .01s; } }
 .gbTop #top { left: 96px !important; }
+/* زر السكّر: جوة على اليسار بالأسفل، بعيد عن زر الرجوع اللي فوق */
+.foot { position: sticky; bottom: 0; width: 100%; display: flex; direction: ltr; justify-content: flex-start; padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 4px); background: linear-gradient(180deg, transparent, rgba(12,16,20,.92) 40%); z-index: 2; }
+.xBtn { display: inline-flex; align-items: center; gap: 8px; background: var(--hud); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 10px 20px; font: 400 20px var(--disp); cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.xBtn span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--alert); color: #fff; font: 800 14px var(--body); }
+.xBtn:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -109,7 +114,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
     <button class="btn alt" id="oCam" type="button"></button>
     <button class="btn alt" id="oRing" type="button"></button>
   </div>
-  <button class="btn" id="oBack" type="button">✔ تمام</button>
+  <div class="foot"><button class="xBtn" id="oBack" type="button"><span>✕</span>سكّر</button></div>
 </div></div>
 <div class="ov" id="home" hidden><div class="box">
   <div class="row"><button class="btn alt sm" id="hMenu" type="button">→ القائمة</button></div>
@@ -130,9 +135,10 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
   <div class="row"><button class="btn" id="loseRe" type="button">أعد المرحلة</button><button class="btn alt" id="loseShop" type="button">🛒 اشتري سلاح أقوى</button><button class="btn alt" id="loseHome" type="button">المراحل</button></div>
 </div></div>
 <div class="ov" id="shop" hidden><div class="box wide">
-  <div class="shTop"><h2>🛒 متجر الأسلحة</h2><div class="chip">🪙 <b class="coinsN">0</b></div><button class="btn alt sm" id="shopX" type="button">✕ سكّر</button></div>
+  <div class="shTop"><h2>🛒 متجر الأسلحة</h2><div class="chip">🪙 <b class="coinsN">0</b></div></div>
   <p class="shNote">كل سلاح أقوى من اللي قبله. إذا علكت بمرحلة وما تكدر تعبرها، اشتري السلاح اللي يناسبها. الرقم الأصفر يكلك من يا مرحلة يصير السلاح مناسب.</p>
   <div id="shopGrid"></div>
+  <div class="foot"><button class="xBtn" id="shopX" type="button"><span>✕</span>سكّر</button></div>
 </div></div>
 <div class="ov" id="pz" hidden><div class="box"><h2>⏸ اللعبة واكفة</h2><div class="row"><button class="btn" id="pzGo" type="button">▶ كمّل</button><button class="btn alt" id="pzOpt" type="button">⚙️ الخيارات</button><button class="btn alt" id="pzSnd" type="button">🔊</button><button class="btn alt" id="pzShop" type="button">🛒 المتجر</button><button class="btn alt" id="pzHome" type="button">المراحل</button></div></div></div>
 
@@ -195,51 +201,6 @@ const GUNS = {};
 const MAT = {};
 const mat = (k, c, r, m, map) => MAT[k] || (MAT[k] = new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .7 : r, metalness: m || 0, map: map || null }));
 const woodT = tex(128, 32, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#a5592a'); gr.addColorStop(.5, '#8a4520'); gr.addColorStop(1, '#6a3216'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(40,15,5,.35)'; for (let i = 0; i < 14; i++) { g.lineWidth = rnd(.5, 1.5); g.beginPath(); const y = rnd(0, h); g.moveTo(0, y); g.bezierCurveTo(w * .3, y + rnd(-4, 4), w * .6, y + rnd(-4, 4), w, y + rnd(-3, 3)); g.stroke(); } });
-function buildGun(type) {
-  const g = new THREE.Group(), BK = mat('gunB', '#1c1e21', .38, .78), DK = mat('gunD', '#2b2e32', .45, .7), PL = mat('gunP', '#141516', .7, .1), WD = mat('gunW', '#ffffff', .6, 0, woodT), GL = mat('gunG', '#ff3030', .2, .2);
-  const p = (geo, m, x, y, z, rx, ry, rz) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx || 0, ry || 0, rz || 0); o.castShadow = true; g.add(o); return o; };
-  const cyl = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10);
-  if (type === 'm4') {
-    p(new THREE.BoxGeometry(.075, .1, .42), BK, 0, 0, .02);                     // جسم السلاح العلوي
-    p(new THREE.BoxGeometry(.07, .075, .3), DK, 0, -.075, -.02);               // الجسم السفلي
-    p(new THREE.BoxGeometry(.05, .03, .5), BK, 0, .065, .1);                     // سكة بيكاتيني
-    for (let i = 0; i < 9; i++) p(new THREE.BoxGeometry(.056, .012, .022), DK, 0, .085, -.12 + i * .055);
-    p(cyl(.045, .045, .34, 8), DK, 0, .005, .38, Math.PI / 2);                  // الواقي الأمامي
-    for (let i = 0; i < 4; i++) p(new THREE.BoxGeometry(.018, .018, .32), BK, Math.cos(i * Math.PI / 2) * .048, .005 + Math.sin(i * Math.PI / 2) * .048, .38);
-    p(cyl(.014, .014, .2, 8), BK, 0, .005, .64, Math.PI / 2);                   // السبطانة
-    p(cyl(.02, .02, .06, 6), BK, 0, .005, .76, Math.PI / 2);                     // مانع الوهج
-    p(new THREE.BoxGeometry(.012, .07, .02), BK, 0, .1, .5);                     // نيشان أمامي
-    p(new THREE.BoxGeometry(.04, .15, .075), BK, 0, -.17, .1, .22);             // مخزن مستقيم
-    p(new THREE.BoxGeometry(.04, .13, .06), PL, 0, -.13, -.14, -.35);           // المقبض
-    p(new THREE.BoxGeometry(.012, .04, .05), BK, 0, -.11, -.05);                 // الزناد
-    p(cyl(.017, .017, .22, 8), BK, 0, -.01, -.27, Math.PI / 2);                 // أنبوب الأخمص
-    p(new THREE.BoxGeometry(.06, .09, .16), PL, 0, -.03, -.41);                  // الأخمص القابل للطي
-    // منظار ريد دوت
-    p(cyl(.032, .032, .1, 12), BK, 0, .125, -.02, Math.PI / 2); p(new THREE.BoxGeometry(.045, .03, .07), BK, 0, .09, -.02);
-    p(new THREE.CircleGeometry(.024, 12), GL, 0, .125, .031).material = mat('gunLens', '#3a6aff', .05, .9);
-    p(new THREE.SphereGeometry(.006, 6, 4), GL, 0, .125, .02);
-    p(new THREE.BoxGeometry(.03, .05, .08), PL, 0, -.06, .28);                  // مقبض أمامي
-  } else {
-    p(new THREE.BoxGeometry(.07, .095, .4), BK, 0, 0, 0);                        // الجسم
-    p(new THREE.BoxGeometry(.068, .04, .38), DK, 0, .062, -.01);                // الغطاء
-    p(new THREE.BoxGeometry(.062, .075, .24), WD, 0, -.005, .32);               // واقي خشب سفلي
-    p(new THREE.BoxGeometry(.05, .035, .2), WD, 0, .05, .31);                    // واقي خشب علوي
-    p(cyl(.017, .017, .22, 8), DK, 0, .055, .36, Math.PI / 2);                  // أنبوب الغاز
-    p(cyl(.015, .015, .38, 8), BK, 0, .005, .55, Math.PI / 2);                  // السبطانة
-    p(new THREE.BoxGeometry(.05, .06, .03), BK, 0, .03, .64);                    // قاعدة النيشان
-    p(new THREE.BoxGeometry(.012, .06, .012), BK, 0, .08, .64);
-    p(new THREE.BoxGeometry(.035, .035, .06), BK, 0, .005, .76, 0, 0, .1);    // مانع الارتداد المائل
-    const mag = new THREE.Group(); mag.position.set(0, -.07, .07); g.add(mag);  // مخزن مقوس
-    for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(.042, .05, .07), mat('gunMag', '#5a3a1e', .55, .25)); const a = i * .16; s.position.set(0, -i * .045, Math.sin(a) * .1 + i * .012); s.rotation.x = a * .9; s.castShadow = true; mag.add(s); }
-    p(new THREE.BoxGeometry(.045, .12, .055), WD, 0, -.1, -.14, -.35);          // المقبض
-    p(new THREE.BoxGeometry(.012, .04, .05), BK, 0, -.08, -.05);
-    const st = p(new THREE.BoxGeometry(.055, .1, .34), WD, 0, -.045, -.38, .14); // أخمص خشب
-    p(new THREE.BoxGeometry(.058, .12, .02), BK, 0, -.07, -.55, .14);
-  }
-  const muzzle = new THREE.Object3D(); muzzle.position.set(0, .005, .8); g.add(muzzle);
-  const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); fl.scale.set(.7, .7, .7); fl.position.copy(muzzle.position).add(new THREE.Vector3(0, 0, .12)); g.add(fl);
-  g.userData = { muzzle, fl }; return g;
-}
 const flashTex = tex(64, 64, g => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,230,1)'); r.addColorStop(.25, 'rgba(255,200,90,.95)'); r.addColorStop(1, 'rgba(255,110,20,0)'); g.fillStyle = r; g.beginPath(); for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, rr = i % 2 ? 12 : 32; g.lineTo(32 + Math.cos(a) * rr, 32 + Math.sin(a) * rr); } g.fill(); });
 const camoCache = {}; const blobM = new THREE.MeshBasicMaterial({ map: tex(64, 64, g => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(0,0,0,.55)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }), transparent: true, depthWrite: false });
 function camo(base, c2, c3) { const k = base + c2 + c3; if (camoCache[k]) return camoCache[k]; return camoCache[k] = tex(128, 128, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); [c2, c3, c2].forEach((c, j) => { g.fillStyle = c; for (let i = 0; i < 14; i++) { g.beginPath(); const x = rnd(0, w), y = rnd(0, h); for (let k2 = 0; k2 < 7; k2++) { const a = k2 / 7 * TAU, r = rnd(5, 14 - j * 3); g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * .7); } g.fill(); } }); }); }
@@ -272,36 +233,351 @@ const WEAP = [
   return { id: w[0], n: w[1], cls: w[2], o: w[3], i, C: C0, rate: C0.rate, pel: C0.pel, range: C0.range, spread: C0.spread, boom: C0.boom || 0, dmg, dps, price: i === 0 ? 0 : Math.round(260 * Math.pow(1.282, i - 1) / 10) * 10, rec: 1 + Math.round(i * 3.4) }; });
 const WBY = {}; WEAP.forEach(w => WBY[w.id] = w);
 function gunFor(id) { return WBY[id] || WEAP[0]; }
-function buildGunAny(id) {
-  if (id === 'm4' || id === 'akm') return buildGun(id);
-  const W = gunFor(id), o = W.o, g = new THREE.Group(), L = o.L || 1;
-  const BK = new THREE.MeshStandardMaterial({ color: o.c || '#222', roughness: .38, metalness: o.m || .75 }), DK = mat('gunD', '#2b2e32', .45, .7), PL = mat('gunP', '#141516', .7, .1), WD = mat('gunW', '#ffffff', .6, 0, woodT), MET = mat('gunMet', '#8a9096', .3, .9);
-  const p = (geo, m, x, y, z, rx) => { const k = new THREE.Mesh(geo, m); k.position.set(x, y, z); if (rx) k.rotation.x = rx; k.castShadow = true; g.add(k); return k; };
-  const cyl = (r1, r2, l, s) => new THREE.CylinderGeometry(r1, r2, l, s || 10); let tip = .8;
-  if (W.cls === 'pistol') { p(new THREE.BoxGeometry(.05, .07, .26), BK, 0, .02, .12); p(new THREE.BoxGeometry(.045, .12, .06), PL, 0, -.06, .03, -.25); p(cyl(.012, .012, .06, 8), DK, 0, .02, .27, Math.PI / 2); tip = .3; }
-  else if (W.cls === 'smg') { p(new THREE.BoxGeometry(.065, .09, .36 * L), BK, 0, 0, .05); p(cyl(.02, .02, .18, 8), DK, 0, .01, .32, Math.PI / 2); p(new THREE.BoxGeometry(.035, .16, .05), DK, 0, -.13, .12); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.06, -.3); p(new THREE.BoxGeometry(.04, .06, .18), PL, 0, -.01, -.22); if (W.id === 'p90') p(new THREE.BoxGeometry(.06, .03, .3), mat('p90m', '#c8b070', .3, .1), 0, .07, .05); tip = .43; }
-  else if (W.cls === 'rifle') { const bull = o.bull; p(new THREE.BoxGeometry(.075, .1, .44 * L), BK, 0, 0, bull ? -.12 : .02); p(cyl(.04, .04, .3, 8), DK, 0, 0, .36 * L, Math.PI / 2); p(cyl(.014, .014, .2, 8), BK, 0, 0, .6 * L, Math.PI / 2); p(new THREE.BoxGeometry(.04, .15, .07), BK, 0, -.16, bull ? -.25 : .1, .2); p(new THREE.BoxGeometry(.04, .12, .055), PL, 0, -.12, bull ? .05 : -.13, -.35); if (!bull) p(new THREE.BoxGeometry(.06, .09, .18), PL, 0, -.03, -.36); p(new THREE.BoxGeometry(.05, .025, .4), BK, 0, .065, .05); tip = .72 * L; }
-  else if (W.cls === 'shotgun') { p(new THREE.BoxGeometry(.07, .1, .32), BK, 0, 0, 0); p(cyl(.02, .02, .55, 10), DK, 0, .03, .42, Math.PI / 2); p(cyl(.022, .022, .4, 10), MET, 0, -.03, .36, Math.PI / 2); p(new THREE.BoxGeometry(.06, .06, .14), o.wood ? WD : PL, 0, -.03, .3); p(new THREE.BoxGeometry(.06, .1, .26), o.wood ? WD : PL, 0, -.04, -.26, .12); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.08, -.3); if (o.drum) p(cyl(.09, .09, .07, 16), DK, 0, -.13, .08); tip = .72; }
-  else if (W.cls === 'dmr' || W.cls === 'sniper') { const sn = W.cls === 'sniper'; p(new THREE.BoxGeometry(.075, .1, .5 * L), BK, 0, 0, 0); p(cyl(sn ? .022 : .016, sn ? .02 : .016, .55 * L, 10), BK, 0, .01, .5 * L, Math.PI / 2); if (W.id === 'barrett') p(new THREE.BoxGeometry(.07, .05, .08), BK, 0, .01, .8 * L); p(new THREE.BoxGeometry(.04, .14, .07), BK, 0, -.14, .05); p(new THREE.BoxGeometry(.065, .11, .3), o.wood ? WD : PL, 0, -.03, -.38, .1); p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.1, -.12, -.3);
-    [-1, 1].forEach(s => { const b = p(cyl(.008, .008, .26, 6), DK, s * .04, -.12, .42 * L); b.rotation.z = s * .35; }); tip = .78 * L + .1; }
-  else if (W.cls === 'lmg') { p(new THREE.BoxGeometry(.09, .12, .5 * L), BK, 0, 0, 0); p(cyl(.02, .02, .45 * L, 10), DK, 0, .01, .46 * L, Math.PI / 2); for (let k = 0; k < 6; k++) p(cyl(.026, .026, .03, 8), DK, 0, .01, .3 + k * .04, Math.PI / 2); p(new THREE.BoxGeometry(.1, .13, .13), mat('box', '#4a4e36', .7, .2), .02, -.13, .05); p(new THREE.BoxGeometry(.07, .11, .26), o.wood ? WD : PL, 0, -.03, -.36, .1); p(new THREE.BoxGeometry(.04, .12, .05), PL, 0, -.11, -.12, -.3); p(new THREE.BoxGeometry(.06, .06, .14), BK, 0, .08, .08); tip = .7 * L; }
-  else if (W.cls === 'mini') { const bar = new THREE.Group(); bar.position.set(0, 0, .3); g.add(bar); for (let k = 0; k < 6; k++) { const a = k / 6 * TAU, b = new THREE.Mesh(cyl(.014, .014, .7, 8), MET); b.rotation.x = Math.PI / 2; b.position.set(Math.cos(a) * .045, Math.sin(a) * .045, .2); b.castShadow = true; bar.add(b); } const hb = new THREE.Mesh(cyl(.06, .06, .08, 14), DK); hb.rotation.x = Math.PI / 2; hb.position.z = .5; bar.add(hb); p(new THREE.BoxGeometry(.16, .15, .3), BK, 0, 0, -.05); p(new THREE.BoxGeometry(.06, .08, .14), PL, 0, .12, -.1); p(new THREE.BoxGeometry(.14, .16, .16), mat('box', '#4a4e36', .7, .2), .12, -.12, -.05); g.userData.spin = bar; tip = .95; }
-  else if (W.cls === 'gl') { p(new THREE.BoxGeometry(.08, .1, .3), BK, 0, 0, 0); p(cyl(.045, .045, .3, 12), DK, 0, .01, .3, Math.PI / 2); if (o.drum) { const d = p(cyl(.1, .1, .2, 6), BK, 0, -.02, .02, Math.PI / 2); } p(new THREE.BoxGeometry(.04, .11, .05), PL, 0, -.11, -.08, -.3); p(new THREE.BoxGeometry(.06, .09, .2), PL, 0, -.02, -.25); tip = .5; }
-  else if (W.cls === 'rpg') {   // RPG-7: أنبوب، رأس صاروخ ظاهر، ونيشان بصري
-    p(cyl(.042, .042, .95, 14), mat('rpgT', '#3a3e30', .55, .35), 0, 0, 0, Math.PI / 2); p(cyl(.05, .05, .2, 14), WD, 0, 0, .06, Math.PI / 2); p(cyl(.06, .045, .16, 14), DK, 0, 0, -.52, Math.PI / 2);
-    p(cyl(.05, .05, .06, 14), DK, 0, 0, .48, Math.PI / 2); const wh = p(new THREE.ConeGeometry(.07, .26, 14), mat('rpgW', '#5a6a3a', .5, .4), 0, 0, .66, Math.PI / 2); p(cyl(.07, .05, .12, 14), mat('rpgW', '#5a6a3a', .5, .4), 0, 0, .52, Math.PI / 2);
-    p(new THREE.BoxGeometry(.03, .1, .04), PL, 0, -.08, .02); p(new THREE.BoxGeometry(.03, .1, .04), PL, 0, -.08, .2); p(new THREE.BoxGeometry(.03, .07, .12), BK, .04, .07, .12); p(cyl(.015, .015, .1, 8), mat('lens2', '#3a6aff', .05, .9), .04, .07, .19, Math.PI / 2); g.userData.warhead = wh; tip = .8; }
-  if (o.scope) { p(cyl(.03, .03, .22, 12), BK, 0, .1, .02, Math.PI / 2); p(cyl(.036, .036, .03, 12), BK, 0, .1, .13, Math.PI / 2); p(new THREE.CircleGeometry(.03, 12), mat('lens', '#20304a', .1, .8), 0, .1, .146); p(new THREE.BoxGeometry(.03, .05, .06), BK, 0, .06, .02); }
-  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0, tip); g.add(muzzle);
-  const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); const fs = W.cls === 'pistol' ? .4 : W.cls === 'mini' ? .8 : W.boom ? .9 : .65; fl.scale.set(fs, fs, fs); fl.position.copy(muzzle.position).add(new THREE.Vector3(0, 0, .1)); g.add(fl);
-  if (W.cls === 'pistol' || W.cls === 'smg') g.scale.setScalar(1.15);
-  g.userData.muzzle = muzzle; g.userData.fl = fl; return g;
+/* ================= أسلحة حقيقية HD =================
+   كل سلاح مرسوم بالسنتيمتر من مقطعه الجانبي الحقيقي ومبثوق بحواف مدوّرة، مواد PBR مع خدوش وتحبيب وعروق خشب،
+   وانعكاسات بيئة حتى المعدن يلمع. القطع تندمج حسب المادة حتى الأداء يبقى خفيف حتى ويا جنود كثار. */
+const GUN_CM = .0112, GUN_GEO = {};
+function makeGunEnv(rr) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#6c7a8e'); gr.addColorStop(.4, '#b8ad98'); gr.addColorStop(.5, '#5e5040'); gr.addColorStop(.62, '#2e261e'); gr.addColorStop(1, '#0e0b08');
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 256);
+  g.filter = 'blur(6px)'; g.fillStyle = 'rgba(255,255,250,.95)'; g.fillRect(70, 30, 110, 40); g.fillRect(300, 46, 70, 26); g.fillStyle = 'rgba(255,220,170,.6)'; g.fillRect(420, 90, 60, 30); g.filter = 'none';
+  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping;
+  const pm = new THREE.PMREMGenerator(rr), out = pm.fromEquirectangular(t).texture; pm.dispose(); t.dispose(); return out;
 }
+const GUN_ENV = makeGunEnv(R);
+const gT = (s, draw, rep) => tex(s, s, draw, rep || [.07, .07]);
+function grain(g, w, h, amt) { const id = g.getImageData(0, 0, w, h), d = id.data; for (let i = 0; i < d.length; i += 4) { const v = (Math.random() - .5) * amt; d[i] += v; d[i + 1] += v; d[i + 2] += v; } g.putImageData(id, 0, 0); }
+function scratches(g, w, h, n, col, a) { g.globalAlpha = a; g.strokeStyle = col; for (let i = 0; i < n; i++) { g.lineWidth = rnd(.3, 1.1); g.beginPath(); const x = rnd(0, w), y = rnd(0, h), an = rnd(-.4, .4) + (Math.random() < .5 ? 0 : Math.PI / 2), l = rnd(6, 40); g.moveTo(x, y); g.lineTo(x + Math.cos(an) * l, y + Math.sin(an) * l); g.stroke(); } g.globalAlpha = 1; }
+const MT_MAP = gT(512, (g, w, h) => { g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, w, h); grain(g, w, h, 26); scratches(g, w, h, 160, '#ffffff', .22); scratches(g, w, h, 60, '#7a7a7a', .2); });
+const MT_RGH = gT(512, (g, w, h) => { g.fillStyle = '#8c8c8c'; g.fillRect(0, 0, w, h); grain(g, w, h, 40); scratches(g, w, h, 200, '#3a3a3a', .4); for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(200,200,200,${rnd(.05, .18)})`; g.beginPath(); g.arc(rnd(0, w), rnd(0, h), rnd(8, 40), 0, TAU); g.fill(); } });
+const PL_MAP = gT(256, (g, w, h) => { g.fillStyle = '#d0d0d0'; g.fillRect(0, 0, w, h); grain(g, w, h, 18); }, [.12, .12]);
+const PL_BMP = gT(256, (g, w, h) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, h); for (let i = 0; i < 5000; i++) { g.fillStyle = Math.random() < .5 ? '#a8a8a8' : '#5a5a5a'; g.beginPath(); g.arc(rnd(0, w), rnd(0, h), rnd(.8, 2.2), 0, TAU); g.fill(); } }, [.25, .25]);
+const WD_MAP = tex(1024, 256, (g, w, h) => {
+  g.fillStyle = '#7a3518'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 130; i++) { const y0 = rnd(-20, h + 20), a = rnd(2, 9), f = rnd(.004, .012), ph = rnd(0, 6), dark = Math.random() < .55; g.strokeStyle = dark ? `rgba(45,14,4,${rnd(.12, .38)})` : `rgba(190,96,46,${rnd(.08, .25)})`; g.lineWidth = rnd(.6, 3.2); g.beginPath(); for (let x = 0; x <= w; x += 8) { const y = y0 + Math.sin(x * f + ph) * a + Math.sin(x * f * 3.1 + ph) * a * .25; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+  for (let k = 0; k < 3; k++) { const x = rnd(80, w - 80), y = rnd(40, h - 40); for (let r = 22; r > 2; r -= 3) { g.strokeStyle = `rgba(40,12,4,${.08 + (22 - r) / 120})`; g.lineWidth = 1.4; g.beginPath(); g.ellipse(x, y, r * 2.4, r * .7, 0, 0, TAU); g.stroke(); } }
+  grain(g, w, h, 14);
+}, [.035, .07]);
+const BK_MAP = gT(256, (g, w, h) => { g.fillStyle = '#c06a3a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 260; i++) { g.fillStyle = Math.random() < .5 ? `rgba(70,20,6,${rnd(.08, .3)})` : `rgba(230,140,80,${rnd(.05, .18)})`; g.beginPath(); g.ellipse(rnd(0, w), rnd(0, h), rnd(4, 26), rnd(2, 10), rnd(0, 3), 0, TAU); g.fill(); } grain(g, w, h, 16); }, [.09, .09]);
+const GM = {};
+function gmat(k) {
+  if (GM[k]) return GM[k];
+  const metal = (c, m, r) => ({ color: c, metalness: m, roughness: r, map: MT_MAP, roughnessMap: MT_RGH });
+  const poly = c => ({ color: c, metalness: 0, roughness: .8, map: PL_MAP, bumpMap: PL_BMP, bumpScale: .03 });
+  const D = {
+    anod: metal('#1d1f21', .5, .95), park: metal('#2c2e2f', .65, 1), steel: metal('#6a6d70', .92, .55), blue: metal('#1b1e23', .8, .8), blue2: metal('#23262a', .78, .75),
+    mag: metal('#3a3c39', .5, .9), silv: metal('#c4c8cc', .95, .42), tanM: metal('#a8916a', .35, .85), odM: metal('#4b5538', .3, .9), gun: metal('#2a2c2e', .6, .9),
+    poly: poly('#1d1e20'), tanP: poly('#a08a62'), odP: poly('#4b5438'), whiteP: poly('#d6d0be'), greyP: poly('#3c3f42'),
+    rubber: { color: '#151515', metalness: 0, roughness: .96, bumpMap: PL_BMP, bumpScale: .04 },
+    wood: { phys: 1, color: '#6a3e2c', map: WD_MAP, roughness: .52, clearcoat: .45, clearcoatRoughness: .35 },
+    bake: { phys: 1, color: '#6e3018', map: BK_MAP, roughness: .42, clearcoat: .5, clearcoatRoughness: .3 },
+    grip: { phys: 1, color: '#4e2414', map: BK_MAP, roughness: .5, clearcoat: .35, bumpMap: PL_BMP, bumpScale: .02 },
+    brass: metal('#c8a040', .95, .35), canvas: { color: '#5a5e40', metalness: 0, roughness: 1, bumpMap: PL_BMP, bumpScale: .05 },
+    tint: { phys: 1, color: '#c8b070', roughness: .25, transparent: true, opacity: .72, clearcoat: 1 },
+    glass: { color: '#1c3460', metalness: 1, roughness: .04 }, dot: { basic: 1, color: '#ff2b2b' }, bore: { basic: 1, color: '#050506' }
+  }[k] || metal('#2a2c2e', .6, .9);
+  let M;
+  if (D.basic) M = new THREE.MeshBasicMaterial({ color: D.color });
+  else { const { phys, ...o } = D; M = new (phys ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial)(o); M.envMap = GUN_ENV; M.envMapIntensity = .75; }
+  M.side = THREE.DoubleSide; return GM[k] = M;
+}
+/* أدوات البناء بالسنتيمتر: مقطع جانبي (z للأمام، y للأعلى) يُبثق بالعرض x */
+function gunKit() {
+  const B = {}, add = (k, geo) => { (B[k] || (B[k] = [])).push(geo); return geo; };
+  const M4x = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
+  const put = (k, geo, x, y, z, rx, ry, rz) => add(k, geo.applyMatrix4(M4x.compose(V.set(x || 0, y || 0, z || 0), Q.setFromEuler(E.set(rx || 0, ry || 0, rz || 0)), ONE)));
+  const shape = pts => { const s = new THREE.Shape(); pts.forEach((p, i) => { if (!i) s.moveTo(p[0], p[1]); else if (p[0] === 'q') s.quadraticCurveTo(p[1], p[2], p[3], p[4]); else s.lineTo(p[0], p[1]); }); return s; };
+  const prof = (k, pts, th, cx, bev, holes) => {
+    bev = bev == null ? .15 : bev; const s = shape(pts); if (holes) holes.forEach(h => s.holes.push(shape(h)));
+    const d = Math.max(.01, th - 2 * bev), g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev * .8, bevelSegments: 3, curveSegments: 10 });
+    g.rotateY(-Math.PI / 2); g.translate(d / 2 + (cx || 0), 0, 0); return add(k, g);
+  };
+  const tube = (k, zr, x, y, seg) => { const g = new THREE.LatheGeometry(zr.map(p => new THREE.Vector2(p[1], p[0])), seg || 22); g.rotateX(Math.PI / 2); g.translate(x || 0, y || 0, 0); return add(k, g); };
+  const box = (k, w, h, l, x, y, z, rx, ry, rz) => put(k, new THREE.BoxGeometry(w, h, l), x, y, z, rx, ry, rz);
+  const cylZ = (k, r, l, x, y, z, seg) => put(k, new THREE.CylinderGeometry(r, r, l, seg || 16), x, y, z, Math.PI / 2);
+  const cylX = (k, r, l, x, y, z, seg) => put(k, new THREE.CylinderGeometry(r, r, l, seg || 16), x, y, z, 0, 0, Math.PI / 2);
+  const cylY = (k, r1, r2, l, x, y, z, seg) => put(k, new THREE.CylinderGeometry(r1, r2, l, seg || 18), x, y, z);
+  const rail = (k, z0, z1, ang, r, cy) => {   // سكة بيكاتيني: أسنان كل 1 سم
+    const s = Math.sin(ang), c = Math.cos(ang), at = h => [s * (r + h), cy + c * (r + h)];
+    let p = at(.28); box(k, 2.1, .56, z1 - z0, p[0], p[1], (z0 + z1) / 2, 0, 0, -ang);
+    p = at(.76); for (let z = z0 + .55; z < z1 - .3; z += 1) box(k, 2.1, .4, .52, p[0], p[1], z, 0, 0, -ang);
+  };
+  const K = { B, put, prof, tube, box, cylZ, cylX, cylY, rail };
+  const sh = (pts, dz, dy) => pts.map(p => p[0] === 'q' ? ['q', p[1] + dz, p[2] + dy, p[3] + dz, p[4] + dy] : [p[0] + dz, p[1] + dy]);
+  // قطع مشتركة حقيقية
+  K.grip = (k, z, y, th) => prof(k, sh([[0, 0], [-4, 0], [-3.6, -.9], [-4.2, -3.7], [-5.2, -8.5], [-5, -9.3], [-2.6, -9.5], [-2.2, -8.9], [-1, -4.3], [-.2, -3.3], [-.5, -2.3]], z, y), th || 2.9, 0, .5);
+  K.guard = (k, z, y, len) => { len = len || 6.4; box(k, 1.1, .45, len, 0, y - 2.1, z + len / 2 - 1.2); box(k, 1.1, 2.0, .5, 0, y - 1.1, z + len - 1.2); prof('steel', sh([[-1, 0], [-.4, 0], [-.7, -1], [-1.4, -1.7], [-1.75, -1.5], [-1.1, -.9]], z + 2.2, y), .45, 0, .05); };
+  K.stanag = (k, z, y, n) => { const L = n || 1; prof(k, sh([[0, 0], [6.1, 0], [6.1, -3.6], ['q', 6.6, -11.4 * L, 7.8, -17.2 * L], [1.4, -18 * L], ['q', .2, -11 * L, 0, -3.6]], z, y), 2.25, 0, .15); prof(k, sh([[1.1, -18.4 * L], [8.2, -17.6 * L], [8.3, -19.1 * L], [1.1, -19.9 * L]], z, y), 2.6, 0, .18); };
+  K.akMag = (k, z, y) => { prof(k, sh([[0, 0], [6.3, 0], [6.3, -2.4], ['q', 7.8, -10.6, 12, -17.2], [11.2, -18.8], [4.8, -19.8], ['q', 1.4, -10.8, 0, -2.8]], z, y), 2.45, 0, .22); prof(k, sh([[2, -1.6], [3.1, -1.6], ['q', 5, -10.6, 8.6, -17.8], [7.4, -18.1], ['q', 3.8, -10.6, 2, -1.6]], z, y), 2.75, 0, .06); };
+  K.boxMag = (k, z, y, w, h, th) => prof(k, sh([[0, 0], [w, 0], [w + .4, -h], [-.2, -h]], z, y), th || 2.3, 0, .2);
+  K.flash = (k, z, by, r) => { r = r || 1.05; tube(k, [[z, r * .4], [z, r], [z + 4.7, r], [z + 4.7, r * .4]], 0, by, 22); [0, .95, -.95, 1.9, -1.9].forEach(a => box('bore', .24, .26, 3, Math.sin(a) * r * .95, by + Math.cos(a) * r * .95, z + 2.7, 0, 0, -a)); put('bore', new THREE.CircleGeometry(r * .42, 14), 0, by, z + 4.6); };
+  K.brake = (k, z, by, r, L) => { L = L || 6; box(k, r * 2.6, r * 2, L, 0, by, z + L / 2); [.3, .62].forEach(f => [-1, 1].forEach(s => box('bore', .1, r * 1.5, L * .2, s * r * 1.31, by, z + L * f))); put('bore', new THREE.CircleGeometry(r * .5, 14), 0, by, z + L + .01); };
+  K.barrel = (k, z0, z1, r0, r1, by) => tube(k, [[z0, .01], [z0, r0], [z1, r1], [z1, .01]], 0, by);
+  K.post = (k, z, by, h) => { prof(k, sh([[0, .25], [2.8, .25], [2.8, 2.5], [2, h || 4.4], [.7, h || 4.4], [0, 2.5]], z, by - 1.4), 2.4, 0, .2); box(k, .28, 2.2, .28, 0, by - 1.4 + (h || 4.4) + .9, z + 1.35); };
+  K.dot = (z, y) => { prof('anod', sh([[0, 0], [7.2, 0], [6.4, 2.3], [.8, 2.3]], z, y), 2.5, 0, .2); const cy = y + 4.4; tube('anod', [[z - 1.4, 1.35], [z - 1.4, 2], [z - .6, 2.15], [z + 7.8, 2.15], [z + 8.6, 2], [z + 8.6, 1.35]], 0, cy, 28); put('glass', new THREE.CircleGeometry(1.5, 24), 0, cy, z + 8.1); put('glass', new THREE.CircleGeometry(1.5, 24), 0, cy, z - .9, 0, Math.PI); put('dot', new THREE.SphereGeometry(.13, 8, 6), 0, cy, z - .7); cylY('anod', .85, .85, 1.3, 0, cy + 2.3, z + 3.8); cylX('anod', .85, 1.3, -2.7, cy, z + 3.8); };
+  K.acog = (z, y) => { prof('anod', sh([[0, 0], [8, 0], [7.4, 1.6], [.6, 1.6]], z, y), 2.6, 0, .2); prof('anod', sh([[-.5, 1.4], [9.5, 1.4], [10.5, 3.2], [10.5, 6.6], [8.5, 7.4], [1, 7.4], [-1.2, 6.2], [-1.2, 3.6]], z, y), 4.2, 0, .6); put('glass', new THREE.CircleGeometry(1.7, 22), 0, y + 4.6, z + 10.55); put('glass', new THREE.CircleGeometry(1.1, 18), 0, y + 4.6, z - 1.25, 0, Math.PI); cylY('anod', .9, .9, 1, 0, y + 7.9, z + 4.6); box('tint', 1, .5, 5, 0, y + 7.6, z + 4.4); };
+  K.scope = (z0, z1, y, ro, rt, k) => { k = k || 'anod'; const L = z1 - z0; tube('rubber', [[z0 - 2.4, rt * .7], [z0 - 2.4, rt * 1.35], [z0, rt * 1.35], [z0, rt * .7]], 0, y, 26); tube(k, [[z0, rt * .8], [z0, rt * 1.25], [z0 + L * .2, rt * 1.25], [z0 + L * .27, rt], [z0 + L * .68, rt], [z0 + L * .8, ro], [z1, ro], [z1, ro * .85]], 0, y, 30);
+    put('glass', new THREE.CircleGeometry(ro * .84, 26), 0, y, z1 - .3); put('glass', new THREE.CircleGeometry(rt * .75, 20), 0, y, z0 - 2.2, 0, Math.PI);
+    cylY(k, rt * .75, rt * .75, 1.8, 0, y + rt + .8, z0 + L * .46, 20); cylX(k, rt * .75, 1.8, rt + .8, y, z0 + L * .46, 20); [z0 + L * .3, z0 + L * .63].forEach(z => { tube(k, [[z - .9, rt * .98], [z - .9, rt + .45], [z + .9, rt + .45], [z + .9, rt * .98]], 0, y, 22); }); };
+  K.mount = (zs, y0, y1, k) => zs.forEach(z => box(k || 'anod', 2.1, y1 - y0, 1.8, 0, (y0 + y1) / 2, z));
+  K.bipod = (k, z, y) => { box(k, 2.4, 1.2, 2.2, 0, y - .6, z); [-1, 1].forEach(s => { cylZ(k, .45, 18, s * 1.1, y - 1.4, z - 9.5, 10); box('rubber', .9, .9, 1.4, s * 1.1, y - 1.4, z - 19); }); };
+  K.carry = (k, z0, z1, y) => { box(k, 1.6, 1.6, z1 - z0, 0, y + 3.6, (z0 + z1) / 2); [z0 + .8, z1 - .8].forEach(z => box(k, 1.6, 3, 1.6, 0, y + 1.8, z)); };
+  K.butt = (k, z, y, h, th) => prof(k, sh([[0, 0], [1.1, 0], [1.1, -h], [0, -h]], z, y), th || 4.2, 0, .35);
+  return K;
+}
+const sh2 = (pts, dz, dy) => pts.map(p => p[0] === 'q' ? ['q', p[1] + dz, p[2] + dy, p[3] + dz, p[4] + dy] : [p[0] + dz, p[1] + dy]);
+
+/* ---------- الموديلات: كل سلاح يرجع { muz, yOff, stock, grip, fore, mount } بالسنتيمتر ---------- */
+const MODELS = {
+  m4(K, o) {   // M4A1: سكة علوية، رباعية السكك، ريد دوت، مقبض أمامي، ستاناغ
+    const { prof, tube, box, cylZ, cylX, cylY, rail, put } = K, BY = 1.6, A = o.body || 'anod', L = o.L || 1, bz = 35.8 + (o.L ? 14 : 0);
+    prof(A, [[-8.6, 0], [13.9, 0], [13.9, 3.35], [-8.6, 3.35]], 2.6, 0, .22); rail(A, -8.4, 13.7, 0, 1.75, BY);
+    box('park', .12, 1.7, 6.2, -1.33, 1.75, 3.6); prof(A, [[-2.7, 1.1], [-.9, 1.1], [-.9, 3.3], [-2.2, 3.3]], 1, -1.6, .25); cylZ(A, .62, 3, -1.6, 2.3, -6); cylZ('steel', .7, .5, -1.6, 2.3, -7.7); box(A, 2.9, .55, 1.3, 0, 3, -9.1);
+    if (o.a2) { tube('poly', [[14, .2], [14, 2.5], [16, 2.6], [bz - 2, 2.6], [bz - .6, 2.2], [bz - .6, .2]], 0, BY, 16); for (let z = 16; z < bz - 2; z += 1.6) box('bore', 4.6, .35, .5, 0, BY + 2.4, z); }
+    else { tube(A, [[14, .2], [14, 2.55], [15, 2.55], [15, .2]], 0, BY); put(A, new THREE.CylinderGeometry(2.05, 2.05, bz - 15.4, 8, 1, false, Math.PI / 8), 0, BY, (15 + bz - .6) / 2, Math.PI / 2); [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach(a => rail(A, 15.4, bz - .8, a, 1.9, BY)); }
+    K.barrel('park', bz, bz + 8.8, .95, .85, BY); K.post(A, bz + .2, BY); K.flash(A, bz + 8.7, BY);
+    prof(A, [[-8.5, 0], [8.4, 0], [8.4, -.8], [7.6, -1.6], [7.6, -5.6], [8, -6.3], [.8, -6.3], [1, -5.6], [1, -2.4], [-6, -2.4], [-7.2, -2.6], [-9.8, -1.4], [-10.6, .6], [-10.6, 3.3], [-8.5, 3.3]], 2.5, 0, .2);
+    K.guard(A, -4.6, -.2); K.grip('poly', -3.4, -2.3); cylX(A, .55, .3, 1.38, -1.3, -5.4); cylX('steel', .42, .5, -1.4, -1.6, 1.8, 12);
+    K.stanag(o.mag || 'mag', 1.2, -2.6);
+    if (o.fixed) { tube(A, [[-11.8, .2], [-11.8, 1.9], [-10.6, 1.9], [-10.6, .2]], 0, BY); prof('poly', [[-10.6, 3.2], [-37, 3.4], [-37.4, -6.4], [-35, -6.4], ['q', -24, -3, -10.6, -1.4]], 3.8, 0, .55); K.butt('rubber', -38.4, 3.6, 10.2, 4.2); }
+    else { tube(A, [[-27.6, .01], [-27.6, 1.45], [-10.6, 1.45], [-10.6, .01]], 0, BY); tube('steel', [[-11.8, .2], [-11.8, 1.9], [-10.6, 1.9], [-10.6, .2]], 0, BY);
+      prof(o.stockK || 'poly', [[-20.8, 3.45], [-34.6, 3.7], [-34.8, -5.8], [-33, -5.8], ['q', -31, -1.2, -27, -.3], [-20.8, -.2]], 4, 0, .45, [[[-33.9, -1.6], [-33, -1.6], [-32.4, -4.6], [-33.4, -4.6]]]); K.butt('rubber', -35.7, 3.9, 9.9, 4.4); }
+    if (o.carry) { K.carry(A, -4, 10, 3.6); box(A, .4, 2, .4, 0, 8.6, -2); } else if (o.acog) K.acog(-2, 4.3); else if (o.scope) { K.mount([-1, 7], 4.3, 7.4); K.scope(-6, 14, 9.2, 2.3, 1.5); } else K.dot(.2, 4.3);
+    if (!o.a2) { cylY(o.vfgK || 'poly', 1.35, 1.5, 7.6, 0, -4.6, 27.4); box(o.vfgK || 'poly', 2.6, 1, 3.4, 0, -1.4, 27.4); }
+    return { muz: bz + 13.5, yOff: -1.3, stock: o.fixed ? -38.4 : -35.7, grip: [-5.8, -6.8], fore: [17.5, -2.3] };
+  },
+  akm(K, o) {   // AKM: جسم مختوم بمسامير، غطاء مضلّع، خشب، مخزن باكلايت مقوّس
+    const { prof, tube, box, cylZ, cylX, cylY, put } = K, BY = 1;
+    prof('blue', [[-14.2, -2.2], [12.4, -2.2], [12.4, 2.4], [-14.2, 2.4]], 3, 0, .14);
+    prof('blue2', [[-15, 2.3], [11.8, 2.3], [11.8, 3.3], ['q', 11.6, 4.1, 10.6, 4.1], [-13.6, 4.1], ['q', -14.9, 4, -15, 3.2]], 3.05, 0, .55);
+    [-11, -7, -3, 1, 5].forEach(z => box('blue2', 2.6, .28, .5, 0, 4.58, z)); box('steel', 1, .8, .8, 0, 2.9, -15.4);
+    [[9.8, -1.4], [11.4, -1.4], [9.8, .6], [11.4, .6], [1.6, -1.3], [2.6, -1.3], [-3, -1.4], [-6.2, -1.4], [-12.6, -1.4], [-13.4, .4]].forEach(p => [-1, 1].forEach(s => put('steel', new THREE.SphereGeometry(.26, 8, 6), s * 1.52, p[1], p[0])));
+    prof('blue', [[12.2, 1.6], [16, 1.6], [16, 3], [14.2, 3.1], [12.2, 3.7]], 2.7, 0, .2); prof('blue', [[12.4, 3.6], [16.8, 3.1], [16.8, 3.45], [12.4, 4]], 1.9, 0, .04); box('blue', 3.9, 5, .6, 0, 1, 16.1);
+    prof('wood', [[16.4, 2.6], [25.4, 2.6], [25.4, 3.8], ['q', 25.3, 4.7, 24.4, 4.7], [17.2, 4.7], ['q', 16.4, 4.6, 16.4, 3.6]], 3.2, 0, .75);
+    prof('wood', [[16.4, 2.3], [25.4, 2.3], [25.4, -.6], ['q', 25, -1.9, 23.6, -2], [18.2, -2.3], ['q', 16.4, -2.4, 16.4, -1.2]], 4.3, 0, .7); prof('wood', [[18, 1.2], [23.4, 1.2], [23.2, -1.5], [18.2, -1.8]], 4.9, 0, .6);
+    box('blue', 4.9, 3.2, .9, 0, .4, 25.9); cylZ('blue', .95, 1.8, 0, 3.6, 26.2); prof('blue', [[26.9, -.1], [29.3, -.1], [29.3, 2], [28, 4.5], [26.9, 4.5]], 2.3, 0, .3);
+    tube('blue', [[26, .01], [26, .85], [44, .82], [45.8, .78], [45.8, .01]], 0, BY); prof('blue', [[41.4, -.5], [45.8, -.5], [45.8, 2.2], [45.2, 2.7], [41.9, 2.7], [41.4, 1.9]], 2.2, 0, .25);
+    prof('blue', [[43.2, 2.5], [45, 2.5], [44.8, 4.3], [43.4, 4.3]], 1.6, 0, .15); [-1, 1].forEach(s => prof('blue', [[42.9, 2.6], [45.3, 2.6], [45, 5.9], [43.2, 5.9]], .3, s, .04));
+    cylZ('steel', .3, 17.8, 0, -.75, 34.5, 10); prof('blue', [[45.6, 0], [50, 0], [49, 2], [45.6, 2]], 2, 0, .35); put('bore', new THREE.CircleGeometry(.4, 16), 0, 1, 49.87, -.4636);
+    K.akMag('bake', 3.6, -1.8); prof('blue', [[8.2, -21.1], [15.2, -20], [14.9, -21.3], [8.2, -22.3]], 2.75, 0, .12);
+    box('blue', 1.3, .35, 7.2, 0, -4.5, -.3); box('blue', 1.3, 2.4, .35, 0, -3.3, 3.1); prof('steel', [[-1, -2.2], [-.4, -2.2], [-.8, -3.4], [-1.5, -4], [-1.8, -3.7], [-1.1, -3.1]], .5, 0, .05);
+    prof('grip', [[-4.4, -2.2], [-8.6, -2.2], [-8.9, -2.9], ['q', -10.4, -8.4, -11.4, -11.8], [-8.6, -12.2], ['q', -6.8, -7.2, -4.4, -2.2]], 2.9, 0, .55);
+    prof('blue', [[-12.4, 1.7], [-2.8, 1.2], ['q', -2, .6, -2.8, .1], [-12.2, .7]], .28, -1.66, .05); cylX('steel', .4, 1.4, -2.1, 1.8, 8.2, 10); put('steel', new THREE.SphereGeometry(.6, 14, 10), -2.9, 1.8, 8.2); box('bore', .06, 1.1, 5.4, -1.53, 1.5, 4);
+    prof('wood', [[-14.2, 2], [-14.2, -2.2], [-15.8, -3.6], ['q', -28, -6.6, -37.8, -11], [-38.8, -11], [-38.8, -1.4], ['q', -26.5, .6, -14.2, 2]], 3.6, 0, .6);
+    prof('blue', [[-39.6, -1.3], [-38.7, -1.3], [-38.7, -11.1], [-39.6, -11.1]], 4, 0, .2); put('steel', new THREE.TorusGeometry(.6, .1, 8, 16), 1.95, -3, -27, 0, Math.PI / 2);
+    return { muz: 50.2, yOff: -.7, stock: -39.6, grip: [-8.2, -6.6], fore: [18.5, -1.4] };
+  },
+  svd(K) {   // SVD: أخمص هيكلي بفتحة إبهام، منظار PSO-1، واقي خشب بفتحات، سبطانة طويلة
+    const { prof, tube, box, cylZ, cylX, cylY, put } = K, BY = 1;
+    prof('blue', [[-12, -2.2], [13, -2.2], [13, 2.4], [-12, 2.4]], 3, 0, .14); prof('blue2', [[-12.6, 2.3], [12.4, 2.3], [12.4, 3.2], ['q', 12.2, 4, 11.2, 4], [-11.4, 4], ['q', -12.6, 3.9, -12.6, 3.1]], 3.05, 0, .5);
+    [-9, -5, -1, 3, 7].forEach(z => box('blue2', 2.6, .26, .5, 0, 4.42, z)); prof('blue', [[12.8, 1.6], [16.4, 1.6], [16.4, 3], [14.4, 3.2], [12.8, 3.8]], 2.7, 0, .2);
+    box('blue', .5, 4.4, 12, -1.75, 1.4, 1); prof('blue', [[-4, 3.6], [6, 3.6], [5.2, 6.2], [-3.2, 6.2]], 2, -1.1, .2);
+    const SX = -1.1, SY = 8; tube('rubber', [[-19, 1.05], [-19, 1.95], [-16.6, 1.95], [-15.6, 1.6], [-15.6, 1.05]], SX, SY, 26); tube('anod', [[-15.8, .9], [-15.8, 1.75], [-11, 1.75], [-10, 1.35], [6, 1.35], [7.4, 1.95], [13, 1.95], [13, 1.6]], SX, SY, 30); tube('anod', [[12.8, 1.7], [12.8, 2.05], [17, 2.05], [17, 1.75]], SX, SY, 30);
+    put('glass', new THREE.CircleGeometry(1.55, 26), SX, SY, 12.6); put('glass', new THREE.CircleGeometry(1, 22), SX, SY, -15.4, 0, Math.PI); cylY('anod', 1, 1, 1.8, SX, SY + 1.9, -2); cylX('anod', 1, 1.6, SX + 1.7, SY, -2); box('anod', 1.8, 3, 4, SX, SY - 2.4, 1);
+    prof('wood', [[16.8, 2.4], [34, 2.4], [34, 3.6], ['q', 33.8, 4.5, 32.8, 4.5], [17.6, 4.5], ['q', 16.8, 4.4, 16.8, 3.5]], 3.1, 0, .7); prof('wood', [[16.8, 2.2], [34, 2.2], [34, -.8], ['q', 33.6, -2, 32.4, -2], [18.4, -2.2], ['q', 16.8, -2.3, 16.8, -1]], 4, 0, .7);
+    [20, 23, 26, 29].forEach(z => [-1, 1].forEach(s => box('bore', .1, 1.3, 1.9, s * 1.98, .1, z))); box('blue', 4.2, 2.8, .7, 0, .9, 16.4); box('blue', 4.2, 3, .8, 0, 1, 34.4);
+    cylZ('blue', .9, 2.4, 0, 3.5, 35.8); prof('blue', [[35, -.2], [38.6, -.2], [38.6, 2], [37.2, 4.4], [35, 4.4]], 2.3, 0, .3);
+    tube('blue', [[34.5, .01], [34.5, .9], [56, .84], [66, .78], [70.4, .76], [70.4, .01]], 0, BY); prof('blue', [[66.4, -.6], [70.4, -.6], [70.4, 2.1], [69.8, 2.6], [66.9, 2.6], [66.4, 1.8]], 2, 0, .25);
+    K.flash('blue', 70.2, BY, 1.12);
+    prof('blue2', [[2.6, -1.9], [9.8, -1.9], [9.8, -3.6], ['q', 10.4, -7, 11, -9.6], [4.2, -10.8], ['q', 3.2, -7.2, 2.6, -3.6]], 2.3, 0, .16); prof('blue', [[3.9, -10.4], [11.2, -9.3], [11.1, -10.2], [3.9, -11.4]], 2.5, 0, .1);
+    box('blue', 1.3, .35, 7, 0, -4.4, -7); box('blue', 1.3, 2.3, .35, 0, -3.2, -3.6); prof('steel', [[-8.4, -2.2], [-7.8, -2.2], [-8.2, -3.4], [-8.9, -4], [-9.2, -3.7], [-8.5, -3.1]], .5, 0, .05);
+    cylX('steel', .4, 1.4, -2.1, 1.8, 9.2, 10); put('steel', new THREE.SphereGeometry(.58, 14, 10), -2.9, 1.8, 9.2);
+    prof('wood', [[-12, 2.2], [-12, -2.2], [-14, -3], ['q', -17, -11, -21, -12.5], [-25, -11], [-46, -11.5], [-47, -10.8], [-47, 1.6], [-36, 2.4], [-22, 2.8]], 3.4, 0, .6,
+      [[[-15, -.6], [-25, -1], ['q', -23.5, -6.5, -20.5, -8.6], [-17.4, -5.4], ['q', -15.6, -2.8, -15, -.6]], [[-29, 1], [-43, .4], [-43, -8.2], [-31, -8.6], ['q', -28.5, -5, -29, 1]]]);
+    prof('poly', [[-23, 2.6], [-36, 2.3], [-36.2, 4.4], ['q', -30, 5.4, -24, 4.4]], 2.8, 0, .5); K.butt('rubber', -47.9, 1.8, 13.5, 3.8);
+    return { muz: 76.7, yOff: -1, stock: -47.9, grip: [-18.6, -8.4], fore: [19, -1.6] };
+  },
+  pistol(K, o) {   // Glock / Beretta M9 / Desert Eagle
+    const { prof, box, cylZ, cylX, put, tube } = K, s = o.s || 1, SL = o.slide || 'gun', FR = o.frame || 'poly', BY = 1.5 * s;
+    const L = (o.len || 18.6) * s, z0 = -L * .4, z1 = L * .6;
+    prof(SL, [[z0, 0], [z1 - .4, 0], [z1, .5], [z1, 2.6 * s], [z1 - .6, 3.1 * s], [z0 + .4, 3.1 * s], [z0, 2.4 * s]], (o.wide || 2.55) * s, 0, .3);
+    for (let i = 0; i < 7; i++) box('bore', (o.wide || 2.55) * s + .02, 1.8 * s, .22, 0, 1.6 * s, z0 + .8 + i * .55);
+    if (o.open) { box('bore', 1.6 * s, .5, L * .45, 0, 3.05 * s, z1 - L * .3); K.barrel('steel', z0 + 3, z1 + .1, .72 * s, .72 * s, BY); }
+    else { box('bore', .1, 1, 4.8 * s, -(o.wide || 2.55) * s / 2 - .01, 2.1 * s, z0 + L * .45); put('bore', new THREE.CircleGeometry(.45 * s, 12), 0, BY, z1 + .02); }
+    if (o.deagle) { prof(SL, [[z0 + 7, 2.9], [z1 + 1.5, 2.9], [z1 + 1.5, 4.6], [z0 + 7, 4.6]], 2.3, 0, .2); for (let i = 0; i < 4; i++) box('bore', 2.32, .3, 3.2, 0, 3.6, z0 + 9 + i * 3.6); box('bore', .3, .3, .3, 0, 3.7, z1 + 1.6); }
+    box(SL, .5, .7, .6, 0, 3.4 * s + (o.deagle ? 1.5 : 0), z1 - 1); box(SL, 1.4, .7, .7, 0, 3.4 * s, z0 + 1);
+    prof(FR, [[z0 + 1, 0], [z1 - 1.2, 0], [z1 - 1.2, -1.2 * s], [z0 + 4.4, -1.6 * s], [z0 + 3.4, -1.2 * s]], (o.wide || 2.55) * s - .2, 0, .2);
+    const gz = z0 + 2.4; prof(FR, [[gz + 1.2, -1], [gz - 3.4, -1], ['q', -6 * s + gz, -7 * s, -5.4 * s + gz, -11 * s], [gz - 4.8 * s, -12 * s], [gz + .6, -12 * s], [gz + 1.4, -11 * s], ['q', gz, -6 * s, gz + 1.2, -1]], (o.wide || 2.55) * s + .5, 0, .6);
+    if (o.panel) prof(o.panel, [[gz + .6, -2.4], [gz - 3, -2.4], ['q', -5.4 * s + gz, -7 * s, -5 * s + gz, -10.6 * s], [gz + .4, -10.6 * s], ['q', gz - .4, -6 * s, gz + .6, -2.4]], (o.wide || 2.55) * s + .9, 0, .3);
+    box('mag', (o.wide || 2.55) * s + .4, .8, 4.6 * s, 0, -12.3 * s, gz - 2.2 * s);
+    box(FR, 1, .5, 3.6 * s, 0, -2.9 * s, gz + 3.2 * s); box(FR, 1, 2.1, .5, 0, -2 * s, gz + 5 * s); prof('steel', sh2([[0, 0], [.6, 0], [.3, -1], [-.4, -1.7], [-.75, -1.5], [-.1, -.9]], gz + 3.6 * s, -1), .45, 0, .05);
+    if (o.hammer) prof('steel', [[z0 + .2, 2], [z0 - .9, 2.8], [z0 - 1.1, 2.2], [z0 + .2, 1.4]], .9, 0, .1);
+    return { muz: z1 + (o.deagle ? 1.6 : .2), yOff: -1, mount: 'pistol', grip: [gz - 2.4 * s, -6.5 * s], fore: [gz - 2 * s, -7.4 * s] };
+  },
+  uzi(K) { const { prof, box, cylZ, put } = K, BY = 2.2;
+    prof('blue', [[-14, 0], [14, 0], [14, 4.6], [-14, 4.6]], 3.6, 0, .3); for (let z = -12; z < 12; z += 2) box('blue2', 3.8, .3, 1, 0, 4.7, z); box('blue2', 1.2, .6, 3, 1.3, 5, -4);
+    K.barrel('blue', 14, 19, .95, .9, BY); tube2(K, 'blue', 13.2, 15, 1.5, BY); [-1, 1].forEach(s => prof('blue', [[11, 4.4], [13.4, 4.4], [13.2, 7.2], [11.4, 7.2]], .3, s * 1.1, .04));
+    prof('poly', [[2.6, 0], [-1.6, 0], [-1.8, -10.6], [3.2, -10.6]], 3, 0, .55); box('mag', 2.4, 4, 2.8, 0, -12.4, .6); box('blue', 3.2, .6, 2.6, 0, -.3, -3); K.guard('blue', 3.6, -.1, 6.4);
+    [-1, 1].forEach(s => cylZ('steel', .3, 22, s * 1.9, 2.4, -25, 8)); box('steel', 4.2, 9, .6, 0, -1.8, -36.2); box('rubber', 4.2, 9, .8, 0, -1.8, -36.8);
+    return { muz: 19.2, yOff: -2.2, stock: -36.8, grip: [.4, -5.2], fore: [6, -4.2] }; },
+  mp5(K, o) { const { prof, tube, box, cylZ, cylY, put } = K, BY = 1.6;
+    tube('blue', [[-11, .01], [-11, 2.1], [17, 2.1], [17, .01]], 0, BY + .4, 20); prof('blue', [[-11, -1.4], [9, -1.4], [9, 1.5], [-11, 1.5]], 3.6, 0, .25); cylZ('blue', 1, 15, 0, 3.2, 21); cylZ('blue', .25, 2.6, -1.5, 3.2, 26.2);
+    tube('poly', [[10, .1], [10, 2.3], [11, 2.6], [20, 2.6], [21, 2.2], [21, .1]], 0, BY - .4, 14); for (let z = 12; z < 20; z += 1.4) box('bore', 5.4, .25, .4, 0, BY - 2.5, z);
+    K.barrel('blue', 21, 25.6, .9, .85, BY); tube('blue', [[24, .9], [24, 1.6], [25.8, 1.6], [25.8, .9]], 0, BY); tube('blue', [[23.6, 1.6], [23.6, 2.1], [25.2, 2.1], [25.2, 1.6]], 0, BY + 3.4, 18); box('blue', 1.2, 2, 1.4, 0, BY + 2.2, 24.4); box('blue', 2.6, 2.2, 2.2, 0, 5, -7);
+    prof('blue2', [[1.2, -1.4], [6.6, -1.4], [6.6, -3.6], ['q', 8.4, -9.4, 12, -15], [10.8, -16.6], [5.4, -17], ['q', 3, -9.6, 1.2, -3.4]], 2.2, 0, .16);
+    prof('poly', [[-1, -1.4], [-10.6, -1.4], [-10.6, -3.2], [-6.6, -3.4], ['q', -5.6, -8, -6, -10.6], [-2.4, -10.8], ['q', -2, -6, -1, -1.4]], 3, 0, .55); box('poly', 1, .5, 5, 0, -3.8, -2.8);
+    if (o.fixed) prof('poly', [[-11, 2.8], [-33, 2.6], [-33.4, -6.4], [-30, -6.4], ['q', -20, -4, -11, -1.2]], 3.8, 0, .5);
+    else { [-1, 1].forEach(s => cylZ('steel', .35, 20, s * 1.7, 1.8, -21, 8)); box('steel', 4, 9, .7, 0, -1.2, -31.2); box('rubber', 4.4, 9.6, .9, 0, -1.2, -31.9); }
+    return { muz: 25.8, yOff: -1.6, stock: o.fixed ? -33.4 : -31.9, grip: [-4.2, -5.6], fore: [15, -1.2] }; },
+  ump(K) { const { prof, box, rail, put } = K, BY = 1.8;
+    prof('poly', [[-12, -2.4], [16, -2.4], [18, -.4], [18, 3.6], [-12, 3.6]], 3.8, 0, .55); rail('anod', -10, 6, 0, 2.6, BY - .6); [-1, 1].forEach(s => rail('anod', 11, 16, s * Math.PI / 2, 1.7, BY));
+    K.barrel('blue', 18, 23, .95, .9, BY); tube2(K, 'blue', 21, 23.4, 1.4, BY); K.post('poly', 15, BY + 1.2, 4);
+    K.boxMag('poly', 3, -2.4, 6, 17, 2.4); prof('poly', [[0, -2.4], [-4.6, -2.4], ['q', -6.2, -8, -5.4, -11.6], [-1.6, -11.6], ['q', -1.4, -6, 1, -4.4], [3, -4.4], [3, -2.4]], 3.4, 0, .55);
+    prof('poly', [[-12, 3.2], [-34, 2.6], [-34, -6.6], [-31, -6.6], [-31, -1], [-12, -1.4]], 3.4, 0, .4, [[[-14, 1.6], [-29, 1.2], [-29, .2], [-14, .2]]]); K.butt('rubber', -35, 2.8, 9.6, 3.6);
+    return { muz: 23.6, yOff: -1.8, stock: -35, grip: [-3.2, -6.6], fore: [12, -1.2] }; },
+  vector(K) { const { prof, box, rail, put } = K, BY = 3.2;
+    prof('whiteP', [[-10, -1], [10, -1], [10, -4], ['q', 15, -6, 17, -2], [17, 4.6], [-10, 4.6]], 4, 0, .6); prof('poly', [[-2, -1], [-7, -1], ['q', -8.4, -6, -7.6, -10.4], [-3.4, -10.4], ['q', -3.2, -5, -2, -1]], 3.4, 0, .55);
+    rail('anod', -9, 16, 0, 2.6, BY - .6); K.barrel('blue', 17, 22, 1, .95, BY); tube2(K, 'blue', 20, 22.6, 1.5, BY); K.boxMag('poly', 10.6, -4.4, 3.4, 13, 2.4); box('poly', 3, .8, 4.2, 0, -17.6, 12.4);
+    K.dot(-3, 6.2); prof('whiteP', [[-10, 4], [-30, 3.4], [-30.4, -5.6], [-27.4, -5.6], ['q', -20, -2, -10, -1]], 3.6, 0, .5, [[[-14, 2], [-26, 1.4], [-26, -1.2], [-15, -.6]]]); K.butt('rubber', -31.4, 3.6, 9.4, 3.8); K.guard('poly', -2.6, -.6, 5.6);
+    return { muz: 22.8, yOff: -3.2, stock: -31.4, grip: [-5, -5.4], fore: [12, -10] }; },
+  p90(K) { const { prof, box, put } = K, BY = 2.4;
+    prof('poly', [[-22, -7], [-22, 3.8], [12, 3.8], ['q', 18, 3, 18, -1], [18, -5.5], [11, -6.5], ['q', 7, -7, 4, -4.4], [-3, -4.4], ['q', -6, -8.4, -12, -7.2], [-22, -7]], 5, 0, 1.1, [[[-14, -2], [-7, -2], ['q', -6.4, -4.6, -9, -5], [-14, -4.8]]]);
+    box('tint', 4.6, 1.8, 28, 0, 4.8, -4); box('poly', 4.8, .9, 3, 0, 5, 9.6); box('poly', 3.6, 3, 6, 0, 7.4, -2); put('glass', new THREE.CircleGeometry(1.1, 16), 0, 7.6, 1.02);
+    K.barrel('blue', 18, 23, .8, .75, BY); tube2(K, 'poly', 18, 21, 1.6, BY); K.butt('rubber', -23, 3.8, 10.8, 5.2);
+    return { muz: 23.2, yOff: -2.4, stock: -23, grip: [-10.4, -5.6], fore: [8, -5.6] }; },
+  famas(K) { const { prof, box, put, rail } = K, BY = 1.4;
+    prof('greyP', [[-34, -9], [-34, 3.4], [16, 3.4], [16, -2.6], [8, -2.6], [6, -4.6], [-4, -4.6], ['q', -6, -10.6, -10, -9.6], [-34, -9]], 4.4, 0, .7);
+    prof('greyP', [[-26, 3.4], [14, 3.4], [14, 6.4], [10, 9.2], [-24, 9.2], [-27, 6]], 2.8, 0, .6, [[[-22, 4.8], [8, 4.8], [8, 7.6], [-22, 7.6]]]);
+    K.barrel('park', 16, 32, 1, .9, BY); K.flash('park', 31.8, BY, 1.05); K.boxMag('mag', -23, -9, 6, 11, 2.2); K.grip('poly', 2.4, -4.4); K.guard('greyP', -3.8, -2.4, 6);
+    [-1, 1].forEach(s => K.cylZ('anod', .4, 18, s * 1.2, -1.4, 22, 8)); K.butt('rubber', -35, 3.4, 12.4, 4.6);
+    return { muz: 36.6, yOff: -1.4, stock: -35, grip: [-.6, -9], fore: [12, -3] }; },
+  aug(K) { const { prof, box, put, tube, cylY } = K, BY = 1.6;
+    prof('odP', [[-38, -8.4], [-38, 3.2], [-6, 3.2], [6, 2.4], [6, -2.6], [-12, -2.6], ['q', -14, -9, -16, -9.2], [-38, -8.4]], 5, 0, 1.2); K.grip('odP', -1.6, -2.6, 3.4); K.guard('odP', -6.4, -.4, 10);
+    box('tint', 2.4, 10, 6.4, 0, -8, -24); tube('odP', [[-10, .1], [-10, 1.8], [6, 1.8], [6, .1]], 0, 6.4, 20); tube('odP', [[-12, 1.5], [-12, 2.2], [-9, 2.2], [-9, 1.5]], 0, 6.4, 20); tube('odP', [[5, 1.8], [5, 2.4], [8, 2.4], [8, 1.8]], 0, 6.4, 20);
+    put('glass', new THREE.CircleGeometry(2.2, 22), 0, 6.4, 7.95); prof('odP', [[-8, 2.8], [4, 2.8], [4, 4.8], [-8, 4.8]], 2, 0, .4);
+    K.barrel('park', 6, 24, 1.1, .95, BY); tube('park', [[14, 1.1], [14, 1.7], [16, 1.7], [16, 1.1]], 0, BY); K.flash('park', 23.8, BY); cylY('odP', 1.1, 1.3, 7, 0, -2.6, 12); K.butt('rubber', -39, 3.2, 11.8, 5);
+    return { muz: 28.6, yOff: -1.6, stock: -39, grip: [-3.6, -7.4], fore: [12, -4.4] }; },
+  g36(K) { const { prof, box, put, tube } = K, BY = 1.6;
+    prof('odP', [[-10, -2.2], [14, -2.2], [16, -.4], [16, 3.4], [-10, 3.4]], 3.8, 0, .5); prof('odP', [[-8, 3.4], [10, 3.4], [10, 7.4], [-6, 8], [-8, 6.4]], 2.8, 0, .5, [[[-5, 4.4], [7, 4.4], [7, 6.4], [-5, 6.6]]]);
+    put('glass', new THREE.CircleGeometry(1.1, 16), 0, 6.2, 10.05); tube('odP', [[16, .2], [16, 2.4], [26, 2.4], [26.6, 1.6], [26.6, .2]], 0, BY - .2, 12); for (let z = 17.6; z < 25; z += 1.8) [-1, 1].forEach(s => box('bore', .1, 1, 1, s * 2.4, BY - .6, z));
+    K.barrel('park', 26.6, 32, .95, .9, BY); K.flash('park', 31.8, BY); prof('odP', [[1, -2.2], [7.8, -2.2], [7.8, -4.6], ['q', 8.4, -11, 10.6, -17], [4.4, -17.8], ['q', 2.4, -10, 1, -4]], 2.4, 0, .2, [[[3, -6], [6, -6], [6.6, -14], [4.6, -14.4]]]);
+    prof('odP', [[-2, -2.2], [-6.4, -2.2], ['q', -8, -8, -7.2, -11], [-3.4, -11], ['q', -3, -6, -2, -2.2]], 3.2, 0, .55); K.guard('odP', -2, -.2, 5);
+    prof('odP', [[-10, 3], [-33, 2.4], [-33, -6.8], [-30.4, -6.8], [-30.4, -1], [-10, -1.4]], 3.4, 0, .4, [[[-12.6, 1.4], [-28.4, .8], [-28.4, -.2], [-12.6, -.2]]]); K.butt('rubber', -34, 2.6, 9.6, 3.6);
+    return { muz: 36.6, yOff: -1.6, stock: -34, grip: [-4.4, -6.6], fore: [21, -1.6] }; },
+  scar(K) { const { prof, box, rail, put, tube, cylZ } = K, BY = 1.8;
+    prof('tanM', [[-9, -.4], [33, -.4], [33, 3.8], [-9, 3.8]], 3.8, 0, .4); rail('anod', -9, 32.6, 0, 2.2, BY); [-1, 1].forEach(s => rail('tanM', 18, 30, s * Math.PI / 2, 2, BY)); box('anod', 1.2, 1.6, 2, 2.4, 2.8, 4);
+    prof('tanP', [[-8, -.4], [9, -.4], [9, -1.6], [8, -2.4], [8, -6.6], [1, -6.6], [1, -2.6], [-6, -2.6], [-8, -1.4]], 3.4, 0, .4); K.grip('poly', -2.8, -2.4); K.guard('tanP', -4.2, -.4);
+    K.boxMag('blue', 1.4, -2.6, 6, 13.6, 2.4); box('blue', 2.6, .8, 6.8, 0, -16.4, 4.6);
+    K.barrel('park', 33, 45, 1.05, .95, BY); K.flash('park', 44.8, BY, 1.1); K.dot(4, 5);
+    prof('tanP', [[-9, 3.6], [-32, 3.4], [-32.4, -6.4], [-29.6, -6.4], ['q', -20, -3, -9, -1.8]], 3.8, 0, .5, [[[-12, 2], [-26, 1.8], ['q', -20, -1.4, -12, .2]]]); prof('poly', [[-18, 3.6], [-29, 3.5], [-29, 5.2], [-18, 4.8]], 3, 0, .4); K.butt('rubber', -33.4, 3.6, 10, 4.2);
+    return { muz: 49.6, yOff: -1.8, stock: -33.4, grip: [-5.2, -6.8], fore: [24, -1.2] }; },
+  shotgun(K, o) {   // Remington 870 / SPAS-12 / AA-12
+    const { prof, box, tube, cylZ, put } = K, BY = 1.6, F = o.wood ? 'wood' : 'poly';
+    if (o.aa12) { prof('odM', [[-10, -3], [22, -3], [22, 5], [-10, 5]], 4.6, 0, .6); K.carry('odM', -6, 16, 5); K.barrel('park', 22, 36, 1.1, 1.05, BY); K.brake('park', 35, BY, 1.3, 4); tube('odM', [[2, .1], [2, 8], [8, 8], [8, .1]], 0, -7, 24); box('odM', 3, 3, 6, 0, -4, 5);
+      K.grip('poly', -2.4, -3); K.guard('odM', -3.8, -.8); prof('poly', [[-10, 4.6], [-34, 4], [-34, -6.4], [-31, -6.4], ['q', -20, -3, -10, -2]], 4.2, 0, .55); K.butt('rubber', -35, 4.2, 10.6, 4.4);
+      return { muz: 39.4, yOff: -1.6, stock: -35, grip: [-4.8, -7.2], fore: [26, -1] }; }
+    prof('gun', [[-11, -1.6], [11, -1.6], [11, 4], [-11, 4]], 3.4, 0, .4); box('bore', .1, 2.2, 7, -1.71, 1.8, 3);
+    K.barrel('gun', 11, o.spas ? 46 : 58, 1.15, 1.1, BY + 1.2); K.barrel('gun', 11, o.spas ? 44 : 52, 1.05, 1.05, BY - 1.4);
+    if (o.spas) { tube('gun', [[11, 1.8], [11, 2.3], [40, 2.3], [40, 1.8]], 0, BY + 1.2, 18); for (let z = 13; z < 38; z += 2.6) [-1, 1].forEach(s => put('bore', new THREE.CircleGeometry(.6, 10), s * 2.31, BY + 1.6, z, 0, s * Math.PI / 2)); }
+    box('bore', .1, .1, .1, 0, BY + 2.6, 57); box('steel', .5, .6, .6, 0, BY + 2.6, o.spas ? 45 : 57);
+    prof(F, [[22, -.4], [36, -.4], [36, 3.8], ['q', 35.6, 4.4, 34.6, 4.4], [23.4, 4.4], ['q', 22, 4.2, 22, 3]], 4.4, 0, .9); for (let z = 23.6; z < 34.8; z += 1.2) box('bore', 4.5, .2, .4, 0, -.1, z);
+    K.guard('gun', -2, -1.2, 6.8);
+    if (o.spas) { K.grip('poly', -1.4, -1.6); cylZ('steel', .4, 22, 0, 4.8, -20, 8); box('steel', 4.6, 9, .7, 0, .4, -31); box('steel', 1, 4, 3.6, 0, -3.4, -29.6); return { muz: 46.2, yOff: -1.6, stock: -31.4, grip: [-3.8, -5.8], fore: [29, .4] }; }
+    prof(F, [[-11, 3.8], [-11, -1.6], [-13.6, -3], ['q', -26, -6, -36, -9.4], [-37, -9.4], [-37, 1.2], ['q', -24, 2.6, -11, 3.8]], 3.8, 0, .7); K.butt('rubber', -38.2, 1.4, 10.8, 4);
+    return { muz: 58.2, yOff: -1.6, stock: -38.2, grip: [-14, -4.2], fore: [29, .4] };
+  },
+  m14(K) { const { prof, box, rail, put } = K, BY = 1.6;
+    prof('blue', [[-10, -1.4], [12, -1.4], [12, 3.4], [-10, 3.4]], 3.2, 0, .3); prof('tanM', [[-12, -2.6], [30, -2.6], [30, 4.4], [12, 4.6], [-12, 4.6]], 4.4, 0, .5); rail('anod', -10, 28, 0, 3, BY); [-1, 1].forEach(s => rail('anod', 16, 28, s * Math.PI / 2, 2.6, BY));
+    K.barrel('blue', 30, 56, 1, .9, BY); K.brake('blue', 55.6, BY, 1.1, 4.6); K.boxMag('blue', 2, -2.6, 6.6, 11.6, 2.4); K.grip('poly', -2.4, -2.6); K.guard('tanM', -3.8, -.6);
+    K.mount([-1, 9], 5.5, 8.4); K.scope(-6, 18, 10.4, 2.6, 1.6); cylZTube(K, 'tanM', -12, -30, 1.6, BY);
+    prof('poly', [[-28, 4], [-36, 4], [-36.4, -7.2], [-33.6, -7.2], ['q', -31, -1, -28, 0]], 4, 0, .5); prof('poly', [[-26, 4], [-35, 4], [-35, 6.4], [-26, 6]], 3, 0, .4); K.butt('rubber', -37.4, 4.2, 11.6, 4.2); K.bipod('anod', 28, -2.6);
+    return { muz: 60.4, yOff: -1.6, stock: -37.4, grip: [-4.8, -7], fore: [20, -2.4] }; },
+  lmg(K, o) {   // PKM / M249 / M60
+    const { prof, box, rail, put, tube, cylZ } = K, BY = 1.8, A = o.pkm ? 'blue' : 'anod', L = o.m60 ? 1.15 : 1;
+    prof(A, [[-14, -2.4], [16, -2.4], [16, 4.2], [-14, 4.2]], 4.4, 0, .4); prof(A, [[-12, 4.2], [12, 4.2], [12, 5.6], [-10, 5.8]], 4.6, 0, .3);
+    if (!o.pkm) rail('anod', -10, 11, 0, 4.2, BY);
+    tube(A, [[16, .2], [16, 2.6], [32 * L, 2.6], [32 * L, .2]], 0, BY - .6, 14); K.barrel('park', 16, 62 * L, 1.15, 1, BY + .2); for (let z = 40 * L; z < 56 * L; z += 2) tube('park', [[z, 1], [z, 1.35], [z + .9, 1.35], [z + .9, 1]], 0, BY + .2, 16);
+    K.flash('park', 61.8 * L, BY + .2, 1.15); cylZ(A, .9, 26 * L, 0, BY - 2.6, 26 * L, 12); box(A, 2.6, 3, 3, 0, BY - 2, 40 * L);
+    K.carry(A, 28 * L, 34 * L, BY + 1.6); K.bipod(A, 52 * L, BY - .8);
+    box(o.pkm ? 'odM' : 'canvas', 8, 11, 10, 2.6, -8.6, 3); box('brass', .8, 1.4, 6, -2.4, -2, 3); for (let i = 0; i < 6; i++) box('brass', 1.6, .7, .7, -2.9, -1 - i * .4, 1 + i * .8);
+    K.grip('poly', -2.4, -2.4); K.guard(A, -3.8, -.4);
+    if (o.pkm) prof('wood', [[-14, 3.6], [-40, 2.4], [-40, -9], [-37.6, -9], [-37.6, -1.6], [-16, -2.4], [-14, -2.4]], 3.8, 0, .6, [[[-17, 1.8], [-35.6, 1.2], [-35.6, -.6], [-17, -.4]]]);
+    else prof('poly', [[-14, 3.8], [-38, 3.4], [-38.4, -6.8], [-35.4, -6.8], ['q', -24, -4, -14, -2.4]], 4.2, 0, .6);
+    K.butt('rubber', -41, o.pkm ? 2.6 : 3.6, 11.4, 4.2);
+    return { muz: 66.6 * L, yOff: -1.8, stock: -41, grip: [-4.8, -6.8], fore: [24 * L, -1] };
+  },
+  sniper(K, o) {   // Barrett M82 / AWM
+    const { prof, box, rail, put, tube, cylZ, cylX } = K, BY = 1.8;
+    if (o.barrett) { prof('gun', [[-30, -3], [22, -3], [22, 4.6], [-26, 4.6], [-30, 2]], 5.4, 0, .6); rail('anod', -16, 20, 0, 3.6, BY); K.barrel('park', 22, 74, 1.5, 1.35, BY); for (let z = 24; z < 40; z += 2.4) tube('park', [[z, 1.4], [z, 1.9], [z + 1, 1.9], [z + 1, 1.4]], 0, BY, 16);
+      K.brake('steel', 74, BY, 2.2, 9); K.boxMag('gun', 2, -3, 8.6, 9, 3.4); K.grip('poly', -6, -3, 3.2); K.guard('gun', -7.4, -1); K.mount([-6, 6], 6, 9.6); K.scope(-14, 16, 11.6, 3, 1.7);
+      K.bipod('gun', 30, BY - 1.4); prof('gun', [[-30, 2.8], [-48, 2.4], [-48, -9.6], [-44, -9.6], ['q', -38, -3, -30, -3]], 4.6, 0, .6); K.butt('rubber', -50, 2.6, 12.4, 5); cylY2(K, 'gun', 1, 8, -38, -12);
+      return { muz: 83.2, yOff: -1.8, stock: -50, grip: [-8.4, -7.6], fore: [18, -2] }; }
+    prof('odP', [[-14, -3], [26, -3], [26, 1.6], [-14, 1.6]], 4.6, 0, .6); prof('anod', [[-10, -1], [14, -1], [14, 4.2], [-10, 4.2]], 3.4, 0, .4); rail('anod', -10, 12, 0, 2.6, BY + .2);
+    K.barrel('blue', 14, 66, 1.25, 1, BY); [0, 1, 2, 3, 4, 5].forEach(i => { const a = i / 6 * TAU; box('bore', .2, .2, 26, Math.cos(a) * 1.08, BY + Math.sin(a) * 1.08, 46, 0, 0, a); });
+    K.brake('blue', 66, BY, 1.4, 5); K.boxMag('anod', 1, -3, 7, 6, 3); K.mount([-2, 8], 5.5, 8.6); K.scope(-8, 18, 10.9, 2.8, 1.7);
+    cylX('steel', .35, 3.6, -3.6, 2.6, -6, 10); put('steel', new THREE.SphereGeometry(.8, 14, 10), -5.6, 2.6, -6);
+    prof('odP', [[-14, 1.6], [-14, -3], [-17, -4], ['q', -18, -11, -22, -12], [-26, -9.6], [-44, -9.6], [-46, -8], [-46, 2.4], [-30, 3.6], [-20, 3.6]], 4.4, 0, .8, [[[-19, .4], [-27, 0], ['q', -25.6, -5.4, -22.4, -7.8], [-19.6, -4.4]]]); K.butt('rubber', -47.2, 2.6, 12.2, 4.6); K.guard('odP', -11, -1.4, 5);
+    K.bipod('anod', 20, -3);
+    return { muz: 71.2, yOff: -1.8, stock: -47.2, grip: [-21, -6.6], fore: [18, -3.4] };
+  },
+  minigun(K, G) {   // M134: ست سبطانات تدور، محرك، مقابض، صندوق ذخيرة
+    const { box, tube, cylZ, prof, put } = K, BY = 0; const sub = gunKit();
+    for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; sub.barrel('park', 4, 62, .9, .85, 0); sub.B.park[sub.B.park.length - 1].translate(Math.cos(a) * 2.6, Math.sin(a) * 2.6, 0); }
+    [18, 40, 58].forEach(z => sub.tube('anod', [[z, .1], [z, 4.2], [z + 1.4, 4.2], [z + 1.4, .1]], 0, 0, 24)); sub.tube('anod', [[0, .1], [0, 4.6], [6, 4.6], [6, .1]], 0, 0, 24);
+    tube('gun', [[-14, .1], [-14, 5.4], [0, 5.4], [0, .1]], 0, BY, 28); box('gun', 6, 6, 8, 0, 6, -8); cylZ('steel', 2.2, 8, 3, 5.6, -10, 16);
+    [-1, 1].forEach(s => { cylY2(K, 'rubber', 1.2, 9, -18, 0, s * 4); box('gun', 2, 2, 6, s * 4, 4.4, -16); box('gun', 2, 2, 6, s * 4, -4.4, -16); }); box('gun', 10, 1.6, 1.6, 0, 4.4, -19); box('gun', 10, 1.6, 1.6, 0, -4.4, -19);
+    box('odM', 12, 12, 16, 8, -12, -6); box('canvas', 3, 9, 3, 5, -3, -2); box('brass', 1.2, 1.2, 12, 4, -2.6, -2);
+    return { muz: 62, yOff: 0, mount: 'hip', grip: [-18, -4], fore: [-6, 8.4], sub };
+  },
+  m32(K) { const { prof, box, rail, put, tube, cylZ } = K, BY = 1.6;
+    const cyl = 0; tube('odM', [[-4, .1], [-4, 6.4], [12, 6.4], [12, .1]], 0, BY - 2.4, 6); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + .52; put('bore', new THREE.CircleGeometry(2.1, 18), Math.cos(a) * 3.9, BY - 2.4 + Math.sin(a) * 3.9, 12.02); }
+    cylZ('anod', .7, 24, 0, BY + 4.4, 10, 10); [-1, 1].forEach(s => cylZ('anod', .7, 24, s * 4.4, BY - 2.4, 10, 10)); tube('odM', [[12, .1], [12, 2.4], [26, 2.4], [26, .1]], 0, BY + 1, 18); rail('anod', 14, 26, 0, 2.4, BY + 1);
+    box('odM', 4, 5, 6, 0, 3, -6); K.grip('poly', -4.6, .4); K.guard('odM', -6, 2.6); K.dot(-6, 5.5); prof('odM', [[-9, 5], [-30, 4.4], [-30, -6], [-27, -6], ['q', -18, -2, -9, -1]], 3.6, 0, .5); K.butt('rubber', -31, 4.6, 10.8, 4);
+    put('poly', new THREE.CylinderGeometry(1.3, 1.5, 8, 16), 0, -4, 20);
+    return { muz: 26.4, yOff: 1, stock: -31, grip: [-7, -4.6], fore: [20, -5.6] }; },
+  xm25(K) { const { prof, box, put } = K, BY = 2;
+    prof('tanP', [[-30, -9], [-30, 6], [10, 6], [16, 2], [16, -4], [6, -4], [4, -6], [-2, -6], ['q', -4, -11, -9, -10], [-30, -9]], 6.4, 0, 1.2, [[[-4, -3], [2, -3], ['q', 2, -5, 0, -5.6], [-4, -5.4]]]);
+    prof('poly', [[-14, 6], [4, 6], [6, 11], [-12, 12]], 6, 0, 1.2); put('glass', new THREE.CircleGeometry(2.2, 20), 0, 9, 5.4); put('glass', new THREE.CircleGeometry(1.4, 16), 0, 9.4, -13.9, 0, Math.PI);
+    K.barrel('park', 16, 22, 1.8, 1.7, BY); K.brake('park', 21.6, BY, 1.9, 3); K.boxMag('poly', -20, -9, 5, 7, 4.4); K.butt('rubber', -31, 6, 15, 6.4);
+    return { muz: 25, yOff: -2, stock: -31, grip: [-.6, -8.8], fore: [10, -5] }; },
+  rpg(K) { const { tube, box, prof, put, cylZ } = K, BY = 0;
+    tube('odM', [[-50, .1], [-50, 4.4], [-44, 3.2], [-36, 2.6], [36, 2.6], [36, .1]], 0, BY, 24); tube('wood', [[-14, 2.5], [-14, 3.6], [14, 3.6], [14, 2.5]], 0, BY, 24);
+    [-15, 15].forEach(z => tube('odM', [[z - .6, 2.5], [z - .6, 3.9], [z + .6, 3.9], [z + .6, 2.5]], 0, BY, 24)); put('bore', new THREE.CircleGeometry(2.4, 20), 0, BY, -49.9, 0, Math.PI);
+    tube('odP', [[36, .1], [36, 4], [42, 4.2], [50, 3.6], [60, 1.2], [62, .1]], 0, BY, 24); tube('odM', [[30, .1], [30, 2.3], [36, 2.3], [36, .1]], 0, BY, 18); cylZ('steel', .3, 3, 0, BY, 62.8, 8);
+    prof('poly', [[-2, -2.4], [2, -2.4], [1.6, -11], [-1.6, -11]], 2.6, 0, .6); prof('poly', [[18, -2.4], [21, -2.4], [20.4, -10], [17.8, -10]], 2.6, 0, .6); K.guard('odM', -.4, -2.6, 5);
+    box('odM', 2, 4, 9, 3.4, 4.4, 8); cylZ('odM', 1.5, 12, 3.4, 7, 8, 16); put('glass', new THREE.CircleGeometry(1.4, 16), 3.4, 7, 14.02); box('rubber', 3.2, 3.2, 2.4, 3.4, 7, 1);
+    return { muz: 62, yOff: 0, mount: 'rpg', grip: [0, -6.6], fore: [19.4, -6.2] }; }
+};
+function tube2(K, k, z0, z1, r, by) { K.tube(k, [[z0, r * .5], [z0, r], [z1, r], [z1, r * .5]], 0, by, 18); K.put('bore', new THREE.CircleGeometry(r * .5, 12), 0, by, z1 + .01); }
+function cylZTube(K, k, z0, z1, r, by) { K.tube(k, [[z1, .01], [z1, r], [z0, r], [z0, .01]], 0, by, 16); }
+function cylY2(K, k, r, l, z, y, x) { K.put(k, new THREE.CylinderGeometry(r, r, l, 14), x || 0, y, z); }
+const MODEL_OF = {
+  glock: ['pistol', { len: 18.6 }], m9: ['pistol', { len: 21.7, slide: 'gun', frame: 'blue2', panel: 'poly', open: 1, hammer: 1 }], deagle: ['pistol', { len: 26.9, s: 1.05, wide: 2.8, slide: 'silv', frame: 'silv', panel: 'rubber', deagle: 1, hammer: 1 }],
+  uzi: ['uzi', {}], mp5: ['mp5', {}], ump: ['ump', {}], vector: ['vector', {}], p90: ['p90', {}],
+  akm: ['akm', {}], m4: ['m4', {}], m16: ['m4', { L: 1, a2: 1, fixed: 1, carry: 1 }], famas: ['famas', {}], aug: ['aug', {}],
+  g36: ['g36', {}], scar: ['scar', {}], hk416: ['m4', { body: 'tanM', stockK: 'tanP', vfgK: 'tanP', acog: 1, mag: 'tanP' }],
+  r870: ['shotgun', { wood: 1 }], spas: ['shotgun', { spas: 1 }], aa12: ['shotgun', { aa12: 1 }],
+  svd: ['svd', {}], m14: ['m14', {}], pkm: ['lmg', { pkm: 1 }], m249: ['lmg', {}], m60: ['lmg', { m60: 1 }],
+  barrett: ['sniper', { barrett: 1 }], awm: ['sniper', {}], minigun: ['minigun', {}], m32: ['m32', {}], xm25: ['xm25', {}], rpg: ['rpg', {}]
+};
+function mergeGeos(list) {
+  const gs = list.map(g => g.index ? g.toNonIndexed() : g); let n = 0; gs.forEach(g => n += g.attributes.position.count);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
+  gs.forEach(g => { const c = g.attributes.position.count; pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); if (g.attributes.uv) uv.set(g.attributes.uv.array, o * 2); o += c; });
+  const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); m.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); m.computeBoundingSphere(); m.computeBoundingBox(); return m;
+}
+function bakeKit(K, yOff) { const parts = []; for (const k in K.B) { K.B[k].forEach(g => { g.translate(0, yOff, 0); g.scale(GUN_CM, GUN_CM, GUN_CM); }); parts.push({ k, geo: mergeGeos(K.B[k]) }); } return parts; }
+function gunGeo(id) {
+  if (GUN_GEO[id]) return GUN_GEO[id];
+  const [mk, opt] = MODEL_OF[id] || MODEL_OF.akm, K = gunKit(), info = MODELS[mk](K, opt);
+  const pt = a => new THREE.Vector3(0, (a[1] + info.yOff) * GUN_CM, a[0] * GUN_CM);
+  return GUN_GEO[id] = { parts: bakeKit(K, info.yOff), sub: info.sub ? bakeKit(info.sub, info.yOff) : null, muz: info.muz * GUN_CM, stock: (info.stock || 0) * GUN_CM, mount: info.mount || 'shoulder', grip: pt(info.grip), fore: pt(info.fore) };
+}
+function buildGunAny(id) {
+  const W = gunFor(id), D = gunGeo(W.id), g = new THREE.Group();
+  D.parts.forEach(p => { const m = new THREE.Mesh(p.geo, gmat(p.k)); m.castShadow = p.k !== 'dot'; g.add(m); });
+  if (D.sub) { const sp = new THREE.Group(); sp.position.y = 0; D.sub.forEach(p => { const m = new THREE.Mesh(p.geo, gmat(p.k)); m.castShadow = true; sp.add(m); }); g.add(sp); g.userData.spin = sp; }
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, .002, D.muz); g.add(muzzle);
+  const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); const fs = W.cls === 'pistol' ? .3 : W.cls === 'mini' ? .6 : W.boom ? .7 : .45; fl.scale.set(fs, fs, fs); fl.position.copy(muzzle.position).add(new THREE.Vector3(0, 0, .08)); g.add(fl);
+  g.userData.muzzle = muzzle; g.userData.fl = fl; g.userData.D = D; return g;
+}
+
 /* صور المتجر: نرسم كل سلاح مرة وحدة */
 const THUMB = {}; let thumbR = null;
 function gunThumb(id) {
   if (THUMB[id]) return THUMB[id];
-  try { if (!thumbR) { thumbR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); thumbR.setSize(240, 120); thumbR.toneMapping = THREE.ACESFilmicToneMapping; }
+  try { if (!thumbR) { thumbR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); thumbR.setPixelRatio(2); thumbR.setSize(240, 120); thumbR.toneMapping = THREE.ACESFilmicToneMapping; }
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#ffffff', '#444444', 1.1)); const dl = new THREE.DirectionalLight('#fff', 1.2); dl.position.set(2, 3, 2); sc.add(dl); if (S.environment) sc.environment = S.environment;
     const gn = buildGunAny(id); gn.rotation.y = -Math.PI / 2; const bb = new THREE.Box3().setFromObject(gn), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()); gn.position.sub(c); sc.add(gn);
     const cam = new THREE.OrthographicCamera(-1, 1, .5, -.5, .1, 10), k = Math.max(sz.x, sz.z) * .58; cam.left = -k; cam.right = k; cam.top = k / 2; cam.bottom = -k / 2; cam.position.set(0, .25, 3); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
@@ -336,11 +612,21 @@ function soldier(o) {
   P2(new THREE.BoxGeometry(.2, .05, .04), lens, 0, .08, .13, head, -.25); P2(C(.155, .155, .03, 16, 1), blk, 0, .08, 0, head).scale.z = 1.04;   // نظارة على الخوذة
   P2(new THREE.BoxGeometry(.05, .04, .04), blk, 0, .14, .15, head);
   // الإيدين ماسكة السلاح
-  const gun = buildGunAny(o.gun || 'akm'); gun.position.set(.06, .38, .32); top.add(gun);
-  const arm = (side, rx, ry, rz, ex) => { const A = new THREE.Group(); A.position.set(side * .25, .5, 0); top.add(A); A.rotation.set(rx, ry, rz); P2(SP(.07), uni, 0, 0, 0, A); P2(C(.06, .055, .26, 9), uni, 0, -.13, 0, A); const E = new THREE.Group(); E.position.y = -.26; A.add(E); E.rotation.x = ex; P2(C(.055, .045, .25, 9), uni, 0, -.12, 0, E); P2(SP(.048), mat('glove', '#262624', .8), 0, -.26, 0, E); return A; };
-  arm(1, -.55, 0, .25, -1.0); arm(-1, -1.05, -.35, -.55, -.75);
+  // السلاح بمقاس حقيقي: الأخمص بجيب الكتف والنيشان قدام العين (المسدس بالإيدين قدام، الدوّار على الورك، RPG على الكتف)، والإيدين ماسكة المقبض والواقي (IK بعظمتين)
+  const rig = new THREE.Group(); top.add(rig); const gun = buildGunAny(o.gun || 'akm'), GD = gun.userData.D, gp = new THREE.Vector3();
+  if (GD.mount === 'pistol') gp.set(.05, .47, .42).sub(GD.grip); else if (GD.mount === 'hip') gp.set(.12, .16, .2).sub(GD.grip); else if (GD.mount === 'rpg') gp.set(.15, .66, .3 - GD.grip.z); else gp.set(.07, .585, .06 - GD.stock);
+  gun.position.copy(gp); rig.add(gun); if (GD.mount !== 'hip') { head.position.z = .035; head.rotation.x = .14; head.rotation.y = .1; }
+  const glove = mat('glove', '#262624', .8), UPV = new THREE.Vector3(0, 1, 0);
+  const seg = (p0, p1, r0, r1) => { const v = p1.clone().sub(p0), L = v.length(); const k = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, L, 9), uni); k.position.copy(p0).addScaledVector(v, .5); k.quaternion.setFromUnitVectors(UPV, v.normalize()); k.castShadow = true; rig.add(k); };
+  const limb = (Sv, Tv, pole) => { const a = .31, b = .3, D = Tv.clone().sub(Sv), dir = D.clone().normalize(), d = Math.min(D.length(), (a + b) * .995);
+    const x = (a * a - b * b + d * d) / (2 * d), h = Math.sqrt(Math.max(0, a * a - x * x)), pp = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize();
+    const E = Sv.clone().addScaledVector(dir, x).addScaledVector(pp, h), Wr = Sv.clone().addScaledVector(dir, d);
+    P2(SP(.072), uni, Sv.x, Sv.y, Sv.z, rig); seg(Sv, E, .064, .054); P2(SP(.056), uni, E.x, E.y, E.z, rig); seg(E, Wr, .052, .043); P2(SP(.048, 10, 8), glove, Wr.x, Wr.y, Wr.z, rig).scale.set(.8, .9, 1.25); };
+  const tF = gp.clone().add(GD.fore); if (GD.mount === 'pistol') tF.x -= .035;
+  limb(new THREE.Vector3(.22, .5, .02), gp.clone().add(GD.grip), new THREE.Vector3(1, -1.2, -.5));
+  limb(new THREE.Vector3(-.19, .5, .13), tF, new THREE.Vector3(-1, -1.4, -.1));
   const cs = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), blobM); cs.rotation.x = -Math.PI / 2; cs.position.y = .025; cs.renderOrder = 1; g.add(cs);
-  g.scale.setScalar(sc); g.userData = { ph: Math.random() * 6, legL: legs[0], legR: legs[1], top, head, muzzle: gun.userData.muzzle, fl: gun.userData.fl, hip, gun };
+  g.scale.setScalar(sc); g.userData = { ph: Math.random() * 6, legL: legs[0], legR: legs[1], top, head, muzzle: gun.userData.muzzle, fl: gun.userData.fl, hip, gun, rig };
   return g;
 }
 
@@ -654,7 +940,7 @@ function loop(now) {
         if (W.boom) { fireProj(W, mz, tg.m.position.clone().setY(tg.K.boss ? 1.4 : 1)); }
         else if (los(eye, te)) { for (let k = 0; k < W.pel; k++) { const sp = W.spread * (W.pel > 1 ? 1 : .6), end = te.clone().add(new THREE.Vector3(rnd(-sp, sp), rnd(-.15, .15), rnd(-sp, sp))); tracer(mz, end, W.cls === 'sniper' ? '#c8f0ff' : '#ffd08a'); let dmg = W.dmg * rnd(.9, 1.1); if (W.pel > 1) { const d2 = te.distanceTo(eye); dmg *= Math.max(.35, 1.15 - d2 / W.range * .8); } hurtE(tg, dmg); } if (W.cls !== 'shotgun' || Math.random() < .5) casing(); puff(te, '#ff6a40', W.pel > 1 ? 4 : 2, 1.5, .2, .3); }
         else { tracer(mz, te); puff(mz.clone().lerp(te, .5), '#8a7a64', 2, 1, .4, .4, 1, 1); }
-        flash.position.copy(mz); flash.intensity = W.boom ? 4 : W.cls === 'pistol' ? 1.6 : 2.6; PM.userData.fl.material.opacity = 1; PM.userData.fl.material.rotation = rnd(0, 6); snd('shot', .7); PM.userData.gun.position.z = W.cls === 'sniper' || W.boom ? .2 : .27; if (W.cls === 'sniper' || W.boom) shake = Math.max(shake, .18); } }
+        flash.position.copy(mz); flash.intensity = W.boom ? 4 : W.cls === 'pistol' ? 1.6 : 2.6; PM.userData.fl.material.opacity = 1; PM.userData.fl.material.rotation = rnd(0, 6); snd('shot', .7); PM.userData.rig.position.z = W.cls === 'sniper' || W.boom ? -.09 : W.cls === 'shotgun' ? -.07 : -.035; if (W.cls === 'sniper' || W.boom) shake = Math.max(shake, .18); } }
     else P.aim += Math.atan2(Math.sin(P.yaw - P.aim), Math.cos(P.yaw - P.aim)) * Math.min(1, dt * 8);
     PM.userData.top.rotation.y = Math.atan2(Math.sin(P.aim - P.yaw), Math.cos(P.aim - P.yaw));
     if (P.regen > 0) P.regen -= dt; else if (P.hp < P.max) { P.hp = Math.min(P.max, P.hp + dt * 4); }
@@ -698,7 +984,7 @@ function loop(now) {
     else if (f.k === 'cas') { f.v.y -= 14 * dt; f.o.position.addScaledVector(f.v, dt); if (f.o.position.y < .03) { f.o.position.y = .03; f.v.y *= -.3; f.v.x *= .5; f.v.z *= .5; } f.o.rotation.x += f.spin * dt; f.o.rotation.z += f.spin * .7 * dt; }
     else if (f.k === 'decal') f.o.material.opacity = Math.min(.5, f.t / 3); else if (f.k === 'warn') { f.o.material.opacity = .4 + .4 * Math.sin(T * 20); } else if (f.k === 'jet') f.o.position.x = f.x0 + (f.x1 - f.x0) * (1 - u);
     if (f.t <= 0) { S.remove(f.o); if (f.k !== 'cas' && f.k !== 'jet' && f.o.geometry) f.o.geometry.dispose(); FX.splice(i, 1); } }
-  flash.intensity = Math.max(0, flash.intensity - dt * 30); if (PM) { const U = PM.userData; U.fl.material.opacity = Math.max(0, U.fl.material.opacity - dt * 22); if (U.gun.userData.spin) U.gun.userData.spin.rotation.z += dt * (P.cool > -0.2 && P.target !== undefined ? 40 : 0); U.gun.position.z += (.32 - U.gun.position.z) * Math.min(1, dt * 20); } for (const e of EN) if (e.m.userData.fl) e.m.userData.fl.material.opacity = Math.max(0, e.m.userData.fl.material.opacity - dt * 18); if (Math.random() < dt * 3) for (const sp2 of puffSmoke) puff(sp2.clone().add(new THREE.Vector3(rnd(-.4, .4), 0, rnd(-.4, .4))), '#3a3632', 1, .6, 3, 1.4, 1.4, 1); exL.intensity = Math.max(0, exL.intensity - dt * 14);
+  flash.intensity = Math.max(0, flash.intensity - dt * 30); if (PM) { const U = PM.userData; U.fl.material.opacity = Math.max(0, U.fl.material.opacity - dt * 22); if (U.gun.userData.spin) U.gun.userData.spin.rotation.z += dt * (P.cool > -0.2 && P.target !== undefined ? 40 : 0); U.rig.position.z += (0 - U.rig.position.z) * Math.min(1, dt * 16); } for (const e of EN) if (e.m.userData.fl) e.m.userData.fl.material.opacity = Math.max(0, e.m.userData.fl.material.opacity - dt * 18); if (Math.random() < dt * 3) for (const sp2 of puffSmoke) puff(sp2.clone().add(new THREE.Vector3(rnd(-.4, .4), 0, rnd(-.4, .4))), '#3a3632', 1, .6, 3, 1.4, 1.4, 1); exL.intensity = Math.max(0, exL.intensity - dt * 14);
   // كاميرا موبا: من فوق وورا شوية، تتبع اللاعب
   const ck = [.8, 1, 1.25][OPT.cam] || 1, camH = (vw() < vh() ? 23 : 20) * ck, camZ = (vw() < vh() ? 15 : 13) * ck, want = new THREE.Vector3(P.pos.x, camH, P.pos.z - camZ);
   CAM.position.lerp(want, Math.min(1, dt * 7 + (playing ? 0 : 1))); if (shake > 0) { CAM.position.add(new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(shake * .5)); shake = Math.max(0, shake - dt * 2.4); }
