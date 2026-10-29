@@ -7595,7 +7595,7 @@ function rmPetOk(d) {
 }
 
 /* ================= محل ربشاتي للأزياء (المحل رقم 4) ================= */
-const RM_FSHOP = { x: 2380, y: 560 };
+const RM_FSHOP = { x: 2390, y: 560 };
 const RM_FHI = { x0: 47000, x1: 47440, dx: 47220, vx0: 46985, vx1: 47455, vy0: 120, vy1: 632 };
 const RM_RBS = { x: 47352, y: 396, say: null, wave: 0, idleT: 0, near: false };
 const RM_RBS_PAL = { fur: '#e9d6ff', bel: '#fff6ff', ap: '#8a3dff', bow: '#ffd23f', ol: '#4a2a5c', ic: '👗', glass: 1 };
@@ -7833,7 +7833,7 @@ function rmWearOk(d) {
 }
 
 /* ===================== محل «روح للحقائب» 👜 — حقائب كيوت للبنات بس ===================== */
-const RM_BSHOP = { x: 2730, y: 560 };
+const RM_BSHOP = { x: 2760, y: 560 };
 const RM_BHI = { x0: 48000, x1: 48440, dx: 48220, vx0: 47985, vx1: 48455, vy0: 120, vy1: 632 };
 const RM_RUH = { x: 48352, y: 396, say: null, wave: 0, idleT: 0, near: false };
 const RM_RUH_PAL = { fur: '#ffe0ef', bel: '#fff6fb', ap: '#ff5ca8', bow: '#ff2d7a', ol: '#7a2350', ic: '👜', glass: 1 };
@@ -8886,7 +8886,7 @@ function rmOrderMenu() {   // قائمة الطلب: تختار المشروب �
   const r2 = document.createElement('div'); r2.className = 'r'; r2.append(ok, no); c.append(h, g, r2); o.appendChild(c); o.addEventListener('pointerdown', e => { if (e.target === o) o.remove(); }); $('rmBox').appendChild(o);
 }
 function rmGiftShow(d) {
-  const txt = '🎁 هدية زيارتك اليوم: +' + d.coins + ' عملة' + (d.streak > 1 ? ' (' + d.streak + ' أيام متتالية 🔥)' : '') + (d.away > 1 ? ' — اشتقنا لك!' : ''); setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt, by: 'جربوع' }); rmNpcSay('أهلاً بعودتك ' + rmMe() + '! جبتلك هدية ' + d.coins + ' عملة 🎁', 300); try { loadMe(); } catch (e) {} }, 1200);
+  const txt = '🎁 هدية زيارتك اليوم: +' + d.coins + ' عملة' + (d.streak > 1 ? ' (' + d.streak + ' أيام متتالية 🔥)' : '') + (d.away > 1 ? ' — اشتقنا لك!' : ''); setTimeout(() => { if (!RM.on) return; rmNpcSay('أهلاً بعودتك ' + rmMe() + '! جبتلك هدية ' + d.coins + ' عملة 🎁' + (d.streak > 1 ? ' (' + d.streak + ' أيام ورا بعض 🔥)' : ''), 320); try { loadMe(); } catch (e) {} }, 1200);
 }
 /* ---------- نهار/ليل + حيوانات + صيد + قلعة رمل + ألعاب نارية ---------- */
 function rmDayCalc() {
@@ -9566,14 +9566,14 @@ function rmInvRender() {
 RM.signFx = [];
 function rmSignNight(c) {
   const d = RM.dn ? RM.dn.d : 0, k = Math.max(0, Math.min(1, (d - 0.25) / 0.35)); if (k <= 0.01) { RM.signFx.length = 0; return; } const T = RM.T;
-  [{ x: RM_SHOP.x - 128, y: 316, w: 256, h: 50, e: ['🎈', '💖', '✨', '🎉'], hue: 330 }, { x: RM_PSHOP.x - 132, y: 314, w: 264, h: 52, e: ['🐾', '💚', '🐱', '🐶', '✨'], hue: 170 }, { x: RM_FSHOP.x - 136, y: 314, w: 272, h: 52, e: ['👗', '✨', '👑', '🎀', '💜'], hue: 275 }, { x: RM_BSHOP.x - 140, y: 310, w: 280, h: 56, e: ['👜', '💖', '🎀', '🌸', '✨'], hue: 330 }].forEach((S, si) => {
+  [{ x: RM_SHOP.x - 128, y: 316, w: 256, h: 50, e: ['🎈', '💖', '✨', '🎉'], hue: 330 }, { x: RM_PSHOP.x - 132, y: 314, w: 264, h: 52, e: ['🐾', '💚', '🐱', '🐶', '✨'], hue: 170 }, { x: RM_FSHOP.x - 136, y: 314, w: 272, h: 52, e: ['👗', '✨', '👑', '🎀', '💜'], hue: 275 }, { x: RM_BSHOP.x - 140, y: 310, w: 280, h: 56, e: ['👜', '💖', '🎀', '🌸', '✨'], hue: 330 }].concat(typeof RX_SAL !== 'undefined' ? [{ x: RX_SAL.x - 145, y: 306, w: 290, h: 60, e: ['💄', '💅', '💖', '🌸', '✨'], hue: 320 }] : []).forEach((S, si) => {
     c.save(); c.globalCompositeOperation = 'lighter';
     const g = c.createRadialGradient(S.x + S.w / 2, S.y + S.h / 2, 10, S.x + S.w / 2, S.y + S.h / 2, S.w * 0.75); g.addColorStop(0, 'hsla(' + S.hue + ',100%,65%,' + 0.28 * k + ')'); g.addColorStop(1, 'hsla(' + S.hue + ',100%,65%,0)'); c.fillStyle = g; c.fillRect(S.x - S.w * 0.4, S.y - S.w * 0.4, S.w * 1.8, S.h + S.w * 0.8);
     const per = 2 * (S.w + S.h), n = 46; for (let i = 0; i < n; i++) { let dd = i / n * per, px, py; if (dd < S.w) { px = S.x + dd; py = S.y; } else if ((dd -= S.w) < S.h) { px = S.x + S.w; py = S.y + dd; } else if ((dd -= S.h) < S.w) { px = S.x + S.w - dd; py = S.y + S.h; } else { dd -= S.w; px = S.x; py = S.y + S.h - dd; }
       const ph = (i - T / 3) / 6, on = 0.35 + 0.65 * Math.max(0, Math.sin(ph * Math.PI)), hue = (i * 360 / n + T * 2 + si * 90) % 360;
       c.fillStyle = 'hsla(' + hue + ',100%,62%,' + 0.35 * on * k + ')'; c.beginPath(); c.arc(px, py, 7, 0, 7); c.fill(); c.fillStyle = 'hsla(' + hue + ',100%,80%,' + on * k + ')'; c.beginPath(); c.arc(px, py, 2.6, 0, 7); c.fill(); }
     c.restore();
-    if (T % 44 === si * 11 && RM.signFx.length < 24) RM.signFx.push({ x: S.x + 10 + Math.random() * (S.w - 20), y: S.y - 4, vy: -0.45 - Math.random() * 0.35, vx: (Math.random() - .5) * 0.4, t: 0, life: 90, e: S.e[Math.floor(Math.random() * S.e.length)] });
+    if (T % 44 === (si * 11) % 44 && RM.signFx.length < 24) RM.signFx.push({ x: S.x + 10 + Math.random() * (S.w - 20), y: S.y - 4, vy: -0.45 - Math.random() * 0.35, vx: (Math.random() - .5) * 0.4, t: 0, life: 90, e: S.e[Math.floor(Math.random() * S.e.length)] });
     [[S.x - 10, S.y - 8], [S.x + S.w + 10, S.y + 8], [S.x + S.w * 0.5, S.y - 16], [S.x + 18, S.y + S.h + 12], [S.x + S.w - 20, S.y + S.h + 10]].forEach((q, j) => { const tw = Math.max(0, Math.sin(T / 13 + j * 1.7 + si)); if (tw < 0.1) return; c.globalAlpha = tw * k; rmStar(c, q[0], q[1], 2 + tw * 4, '#fff8c4', 4, 0); c.globalAlpha = 1; });
   });
   c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '13px sans-serif';
@@ -9656,7 +9656,7 @@ function rmOnMsg(d) {
     RM.LT = d.lt || null; RM.name = d.name; RM.owner = d.owner; RM.isOwner = !!d.isOwner; RM.bans = d.bans || []; RM.myAdm = d.myAdm || 0; RM.isMod = !!d.isMod; RM.mods = d.mods || []; RM.canMod = RM.isOwner || RM.isMod; RM.cap = d.cap || 15; RM.perm = !!d.perm; RM.others = {}; RM.log = d.log || []; RM.bubs = {};
     (d.members || []).forEach(x => { if (x.n === rmMe()) return; RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, bal: x.bal || '', pet: x.pet || '', wear: x.wear || {}, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; RM.camSnap = 1; } RM.me.bal = d.myBal || ''; RM.myBals = d.myBals || []; RM.me.pet = d.myPet || ''; RM.myPets = d.myPets || []; RM.petSt = {}; RM.me.wear = d.myWear || {}; RM.myWears = d.myWears || []; RM.usd = d.myUsd || 0; setTimeout(rmUsdHud, 30); RM.fish.bag = d.myFish || { n: 0, k: {} }; if (!RM.fish.bag.k) RM.fish.bag.k = {}; RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
-    RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; rmMuteSet(d.mutedMin ? Date.now() + d.mutedMin * 60000 : 0); RM.vipCnt = d.vipCnt || 0; RM.repCnt = d.repCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); rmRepBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true); if (!RM.petAnn) { RM.petAnn = 1; setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '📢 وفّرنا محل للحيوانات! محل غمازة يمين المنتجع 🐶🐱 كل حيوان صغير بـ 40 دولار 💵، والدولارات من الصيد 🎣', by: 'جربوع' }); rmNpcSay('عندي خبر حلو! وفّرنا محل للحيوانات، روحوا لمحل غمازة 🐾', 320); }, 5500); setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '👗 جديد! محل ربشاتي للأزياء انفتح يمين المنتجع: قبعات، نظارات وأجنحة تلبسها والكل يشوفها ✨', by: 'جربوع' }); }, 16000); }
+    RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; rmMuteSet(d.mutedMin ? Date.now() + d.mutedMin * 60000 : 0); RM.vipCnt = d.vipCnt || 0; RM.repCnt = d.repCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); rmRepBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true); if (!RM.petAnn) { RM.petAnn = 1; setTimeout(() => { if (!RM.on) return; rmNpcSay('عندي خبر حلو! وفّرنا محل للحيوانات، روحوا لمحل غمازة 🐾 كل حيوان بـ 40 دولار 💵 من الصيد 🎣', 340); }, 7500); setTimeout(() => { if (!RM.on) return; rmNpcSay('وجديد! محل ربشاتي للأزياء انفتح يمين المنتجع 👗 قبعات ونظارات وأجنحة والكل يشوفها ✨', 340); }, 14000); }   // إعلانات بداية المنتجع: بس جربوع يحجيها (بدون لافتة 📢)
   } else if (T === 'rm_join' && d.re) { const x = d.m; if (!x || x.n === rmMe()) return; const o = RM.others[x.n] || (RM.others[x.n] = { name: x.n, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, dt: 0, ph: 0 });   /* تحديث صامت (رجوع بعد انقطاع / بيانات ناقصة): التاج + لون الببل + الملابس ترجع صح */
     Object.assign(o, { skin: x.skin, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : o.av || null, umbOn: x.umb !== 0, bal: x.bal || '', pet: x.pet || '', wear: x.wear || {}, hid: !!x.hid, full: 1 }); if (o.dance === undefined) o.dance = x.emo | 0; rmRenderMem();
   } else if (T === 'rm_join') { if (d.m.n === rmMe()) return; if (!d.m.hid) rmJoinBanner(d.m.n); if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, bal: d.m.bal || '', pet: d.m.pet || '', wear: d.m.wear || {}, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
@@ -10203,7 +10203,7 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/run.js?v=13"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
-<script src="/resort2.js?v=6"></script>
+<script src="/resort2.js?v=7"></script>
 <script src="/resort3.js?v=5"></script>
 <script src="/resort4.js?v=4"></script>
 <script src="/resort5.js?v=3"></script>

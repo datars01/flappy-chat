@@ -71,6 +71,11 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .wc .rec { position: absolute; top: 8px; left: 8px; background: var(--sand); color: #1a1206; font: 800 10px var(--body); padding: 2px 7px; border-radius: 10px; }
 .st { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; align-items: center; } .st i { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; } .st i u { display: block; height: 100%; background: linear-gradient(90deg, var(--sand), #ff7a3a); }
 .wc button { margin-top: auto; border: 0; border-radius: 10px; padding: 8px; font: 800 13px var(--body); cursor: pointer; background: var(--sand); color: #1a1206; } .wc button.own { background: rgba(255,255,255,.14); color: var(--ink); } .wc button:disabled { opacity: .45; cursor: default; }
+/* الخريطة الحية: يسار جوة، دوسة تكبرها */
+#mm { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); width: 132px; height: 132px; border-radius: 14px; border: 2px solid var(--line); background: rgba(10,14,18,.78); box-shadow: 0 6px 18px rgba(0,0,0,.45); cursor: pointer; touch-action: none; transition: width .2s, height .2s; }
+#mm.big { width: min(300px, 72vw); height: min(300px, 72vw); border-color: var(--sand); }
+#mmT { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 164px); font-size: 10px; opacity: .65; pointer-events: none; }
+@media (max-width: 420px) { #mm { width: 104px; height: 104px; } #mmT { bottom: calc(env(safe-area-inset-bottom, 0px) + 136px); } }
 @media (prefers-reduced-motion: reduce) { #feed div, #nums i { animation-duration: .01s; } }
 .gbTop #top { left: 96px !important; }
 /* زر السكّر: جوة على اليسار بالأسفل، بعيد عن زر الرجوع اللي فوق */
@@ -94,6 +99,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 <div class="hud" id="dmg"></div>
 <div id="banner"><b id="bnT"></b><small id="bnS"></small></div>
 <div id="skills"></div>
+<canvas id="mm" aria-label="الخريطة الحية"></canvas><div id="mmT">🗺️ دوس تكبّر</div>
 
 <div class="ov" id="menu"><div class="box">
   <div class="tag">موبا حربية • 3D HD • 100 مرحلة • 30 سلاح</div>
@@ -771,10 +777,44 @@ setInterval(() => { if (!AC || AC.state !== 'running' || !OPT.mus || paused) ret
     MUS.next += sp; MUS.step++; } }, 100);
 function optUI() { $('oMus').textContent = '🎵 الموسيقى: ' + (OPT.mus ? 'شغالة' : 'طافية'); $('oSfx').textContent = '🔊 أصوات اللعب: ' + (OPT.sfx ? 'شغالة' : 'طافية'); $('oCam').textContent = '📷 الكاميرا: ' + ['قريبة', 'عادية', 'بعيدة'][OPT.cam]; $('oRing').textContent = '⭕ دائرة المدى: ' + (OPT.ring ? 'تبين' : 'مخفية');
   const on = OPT.mus || OPT.sfx; $('mSnd').textContent = on ? '🔊 الصوت: شغال' : '🔇 الصوت: طافي'; $('pzSnd').textContent = on ? '🔊 الصوت' : '🔇 الصوت'; applyVol(); }
+/* ---------------- أصوات الأسلحة الواقعية: طقة البارود + ضربة الصوت + الجسم + حركة الترباس + صدى المكان ---------------- */
+let GBUS = null;
+function gunBus() { if (GBUS) return GBUS; const ac = AC;
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -12; comp.knee.value = 6; comp.ratio.value = 6; comp.attack.value = .001; comp.release.value = .15; comp.connect(SFXG || ac.destination);
+  const dry = ac.createGain(); dry.gain.value = .9; dry.connect(comp);
+  // صدى خارجي: ارتدادات من البنايات والتلال (يعطي إحساس الساحة الحقيقية)
+  const L = ac.sampleRate * 1.6 | 0, ir = ac.createBuffer(2, L, ac.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 3.2) * .35;
+    [.07, .15, .24, .38, .55].forEach((sec, j) => { const p0 = (sec + c * .013) * ac.sampleRate | 0; for (let q = 0; q < 600; q++) if (p0 + q < L) d[p0 + q] += (Math.random() * 2 - 1) * (.55 / (j + 1)) * (1 - q / 600); }); }
+  const rev = ac.createConvolver(); rev.buffer = ir; const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400; const wet = ac.createGain(); wet.gain.value = .5;
+  dry.connect(lp); lp.connect(rev); rev.connect(wet).connect(comp);
+  // تشبع خفيف يعطي الطلقة "طقة" قوية بدل ما تكون ناعمة
+  const ws = ac.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cv[i] = Math.tanh(x * 2.6); } ws.curve = cv; ws.oversample = '2x'; ws.connect(dry);
+  return GBUS = { dry, ws }; }
+// كل سلاح إله بصمة: M4 حادة وسريعة وعالية النبرة (5.56)، AKM أثقل وأعمق ومعها طقطقة ترباس حديدية (7.62×39)، SVD انفجار طويل
+const GSFX = {
+  m4:  { crk: 3200, crkV: .9, crkD: .04, body: 1500, bodyTo: 520, bodyV: 1, bodyD: .11, thump: 165, thumpV: .85, thumpD: .085, tail: 950, tailV: .24, tailD: .3, bolt: 4300, boltV: .17, boltT: .03, ring: 3400, ringV: .045 },
+  akm: { crk: 2100, crkV: .85, crkD: .05, body: 880, bodyTo: 280, bodyV: 1.2, bodyD: .17, thump: 118, thumpV: 1.15, thumpD: .16, tail: 680, tailV: .36, tailD: .46, bolt: 1750, boltV: .32, boltT: .046, ring: 1220, ringV: .07, buzz: 1 },
+  svd: { crk: 2600, crkV: 1, crkD: .06, body: 760, bodyTo: 200, bodyV: 1.35, bodyD: .26, thump: 90, thumpV: 1.3, thumpD: .3, tail: 600, tailV: .45, tailD: .9, bolt: 1500, boltV: .2, boltT: .09, ring: 1000, ringV: .05, buzz: 1 }
+};
+function gunSfx(k, vol) { if (!AC || !NB) return; const P0 = GSFX[k] || GSFX.m4, B = gunBus(), ac = AC, t = ac.currentTime + .004, v = (vol == null ? 1 : vol), pv = 1 + (Math.random() - .5) * .09;
+  const nz = (t0, dur, type, f, q, peak, att, dest, f1) => { const s = ac.createBufferSource(); s.buffer = NB; s.playbackRate.value = pv; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.setValueAtTime(f * pv, t0); if (f1) fl.frequency.exponentialRampToValueAtTime(f1, t0 + dur); fl.Q.value = q; const g = ac.createGain(); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(.0002, peak * v), t0 + (att || .001)); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur); s.connect(fl).connect(g).connect(dest || B.dry); s.start(t0, Math.random() * Math.max(0, .78 - dur * pv)); s.stop(t0 + dur + .02); };
+  const os = (t0, dur, type, f0, f1, peak, dest) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f0 * pv, t0); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur); g.gain.setValueAtTime(Math.max(.0002, peak * v), t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur); o.connect(g).connect(dest || B.dry); o.start(t0); o.stop(t0 + dur + .02); };
+  nz(t, P0.crkD, 'highpass', P0.crk, .7, P0.crkV, .0004, B.ws);                       // طقة الطلقة الأسرع من الصوت
+  nz(t, P0.bodyD, 'bandpass', P0.body, .85, P0.bodyV, .001, B.ws, P0.bodyTo);         // انفجار البارود
+  os(t, P0.thumpD, 'sine', P0.thump, 38, P0.thumpV);                                  // ضربة بالصدر
+  if (P0.buzz) os(t, .05, 'square', P0.thump * 1.8, P0.thump * .8, .1);               // خشونة الـ 7.62
+  nz(t + .012, P0.tailD, 'lowpass', P0.tail, .7, P0.tailV, .012, B.dry, 160);          // ذيل الصوت
+  nz(t + P0.boltT, .03, 'bandpass', P0.bolt, 7, P0.boltV);                            // الترباس يرجع (طقطقة حديد)
+  os(t + P0.boltT, .06, 'triangle', P0.ring, P0.ring * .93, P0.ringV);                 // رنة الحديد
+  if (Math.random() < .3) os(t + .22 + Math.random() * .15, .05, 'sine', 5800 + Math.random() * 900, 5500, .025); } // الظرف يطيح بالگاع
+
+// نفس البصمة للبنادق الشبيهة
+const GSFX_MAP = { akm: 'akm', m4: 'm4', m16: 'm4', hk416: 'm4', svd: 'svd' };
 function snd(k, vol) { if (!AC) return; vol = vol == null ? 1 : vol; const t = AC.currentTime, out = AC.createGain(); out.gain.value = .8; out.connect(SFXG || AC.destination);
   const noise = (dur, f, q, v, type) => { const s = AC.createBufferSource(); s.buffer = NB; const fl = AC.createBiquadFilter(); fl.type = type || 'lowpass'; fl.frequency.value = f; fl.Q.value = q || 1; const g = AC.createGain(); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(fl).connect(g).connect(out); s.start(t); s.stop(t + dur); };
   const tone = (f0, f1, dur, v, type) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(out); o.start(t); o.stop(t + dur); };
-  ({ step: () => noise(.06, THEME === THEMES[2] ? 900 : 500, 1.4, .05, 'bandpass'), shot: () => { const W = curW(); const G = W.C.snd; if (W.boom) { noise(.5, 700, 1, .5, 'bandpass'); tone(260, 60, .4, .25, 'sawtooth'); return; } if (W.cls === 'sniper') { noise(.45, 2200, .5, .6); tone(200, 45, .3, .35, 'sawtooth'); return; } if (W.cls === 'shotgun') { noise(.3, 1600, .7, .6); tone(110, 40, .2, .4, 'square'); return; } noise(.11, G[0], .8, .36); tone(G[1], 55, .08, .26, 'square'); noise(.05, 6000, 1, .08, 'highpass'); }, eshot: () => noise(.09, 2000, .8, .16), boom: () => { noise(1.3, 420, .6, .9); tone(70, 25, .9, .7); }, cast: () => tone(500, 1200, .2, .15, 'triangle'), heal: () => { tone(660, 990, .3, .15, 'sine'); tone(880, 1320, .3, .1, 'sine'); }, dash: () => noise(.25, 1500, 2, .3, 'bandpass'), win: () => [523, 659, 784, 1047].forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i * .12); g.gain.exponentialRampToValueAtTime(.2, t + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .4); o.connect(g).connect(out); o.start(t + i * .12); o.stop(t + i * .12 + .45); }), jet: () => { noise(1.6, 900, .7, .5, 'bandpass'); tone(400, 120, 1.4, .2, 'sawtooth'); }, die: () => tone(300, 90, .35, .12, 'triangle') })[k]?.();
+  ({ step: () => noise(.06, THEME === THEMES[2] ? 900 : 500, 1.4, .05, 'bandpass'), shot: () => { if (GSFX_MAP[GUN]) return gunSfx(GSFX_MAP[GUN], vol); const W = curW(); const G = W.C.snd; if (W.boom) { noise(.5, 700, 1, .5, 'bandpass'); tone(260, 60, .4, .25, 'sawtooth'); return; } if (W.cls === 'sniper') { noise(.45, 2200, .5, .6); tone(200, 45, .3, .35, 'sawtooth'); return; } if (W.cls === 'shotgun') { noise(.3, 1600, .7, .6); tone(110, 40, .2, .4, 'square'); return; } noise(.11, G[0], .8, .36); tone(G[1], 55, .08, .26, 'square'); noise(.05, 6000, 1, .08, 'highpass'); }, eshot: () => noise(.09, 2000, .8, .16), boom: () => { noise(1.3, 420, .6, .9); tone(70, 25, .9, .7); }, cast: () => tone(500, 1200, .2, .15, 'triangle'), heal: () => { tone(660, 990, .3, .15, 'sine'); tone(880, 1320, .3, .1, 'sine'); }, dash: () => noise(.25, 1500, 2, .3, 'bandpass'), win: () => [523, 659, 784, 1047].forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i * .12); g.gain.exponentialRampToValueAtTime(.2, t + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .4); o.connect(g).connect(out); o.start(t + i * .12); o.stop(t + i * .12 + .45); }), jet: () => { noise(1.6, 900, .7, .5, 'bandpass'); tone(400, 120, 1.4, .2, 'sawtooth'); }, die: () => tone(300, 90, .35, .12, 'triangle') })[k]?.();
 }
 
 /* ---------------- المهارات ---------------- */
@@ -921,6 +961,31 @@ function animS(m, t, s, dt) {   /* مشي واقعي: الحوض يلف ويتم
 }
 let last = performance.now(), T = 0; buildWorld(1); drawLevels();
 const tmp = new THREE.Vector3();
+/* ---------------- الخريطة الحية: إنت السهم الأصفر، الأعداء نقاط حمر، الدبابة مربع، الهدف والمنطقة ملونة ---------------- */
+const MM = { c: $('mm'), bg: null, sol: null, n: -1, W: 0, f: 0, vis: null };
+MM.c.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); MM.c.classList.toggle('big'); $('mmT').textContent = MM.c.classList.contains('big') ? '🗺️ دوس تصغّر' : '🗺️ دوس تكبّر'; });
+function mmDraw() { const c = MM.c, r = c.getBoundingClientRect(), pr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(r.width * pr), H = Math.round(r.height * pr); if (!W || !H) return;
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; MM.n = -1; }
+  const A = ARENA + 1, sx = x => (A - x) / (2 * A) * W, sy = z => (A - z) / (2 * A) * H, k = W / (2 * A), g = c.getContext('2d');
+  if (MM.sol !== SOLID || MM.n !== SOLID.length || MM.W !== W) { MM.sol = SOLID; MM.n = SOLID.length; MM.W = W;
+    const b = MM.bg || (MM.bg = document.createElement('canvas')); b.width = W; b.height = H; const q = b.getContext('2d');
+    q.fillStyle = (THEME && THEME.g && THEME.g[0]) || '#4a4a3a'; q.fillRect(0, 0, W, H); q.fillStyle = 'rgba(8,10,14,.55)'; q.fillRect(0, 0, W, H);
+    q.strokeStyle = 'rgba(244,236,218,.07)'; q.lineWidth = 1; for (let i = -30; i <= 30; i += 10) { q.beginPath(); q.moveTo(sx(i), 0); q.lineTo(sx(i), H); q.stroke(); q.beginPath(); q.moveTo(0, sy(i)); q.lineTo(W, sy(i)); q.stroke(); }
+    q.fillStyle = 'rgba(214,200,172,.62)'; for (const s of SOLID) { if (s.barrel) continue; const x0 = sx(s.x1), y0 = sy(s.z1); q.fillRect(x0, y0, Math.max(1.5, (s.x1 - s.x0) * k), Math.max(1.5, (s.z1 - s.z0) * k)); }
+    q.strokeStyle = 'rgba(226,184,120,.5)'; q.lineWidth = 1.5 * pr; q.strokeRect(sx(ARENA), sy(ARENA), 2 * ARENA * k, 2 * ARENA * k); }
+  g.clearRect(0, 0, W, H); g.drawImage(MM.bg, 0, 0);
+  if (typeof ZONE !== 'undefined' && ZONE) { g.beginPath(); g.arc(sx(ZONE.x), sy(ZONE.z), ZONE.r * k, 0, TAU); g.fillStyle = ZONE.cont ? 'rgba(255,90,60,.3)' : 'rgba(255,210,58,.28)'; g.fill(); g.strokeStyle = '#ffd23a'; g.lineWidth = 1.5 * pr; g.stroke(); g.font = `${10 * pr}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🚩', sx(ZONE.x), sy(ZONE.z)); }
+  if (typeof OBJ !== 'undefined' && OBJ && OBJ.hp > 0) { const s = 6 * pr; g.fillStyle = '#5ec8ff'; g.fillRect(sx(OBJ.pos.x) - s / 2, sy(OBJ.pos.z) - s / 2, s, s); g.strokeStyle = '#fff'; g.lineWidth = pr; g.strokeRect(sx(OBJ.pos.x) - s / 2, sy(OBJ.pos.z) - s / 2, s, s); }
+  // مدى سلاحك
+  g.beginPath(); g.arc(sx(P.pos.x), sy(P.pos.z), (typeof RANGE !== 'undefined' && RANGE ? RANGE : 16) * k, 0, TAU); g.setLineDash([3 * pr, 3 * pr]); g.strokeStyle = 'rgba(244,236,218,.28)'; g.lineWidth = pr; g.stroke(); g.setLineDash([]);
+  const pulse = 1 + Math.sin(T * 7) * .18;
+  for (const e of EN) { if (!e.alive) continue; const x = Math.max(2, Math.min(W - 2, sx(e.m.position.x))), y = Math.max(2, Math.min(H - 2, sy(e.m.position.z)));
+    if (e.K.boss) { const s = 8 * pr * pulse; g.fillStyle = '#ff2a1a'; g.fillRect(x - s / 2, y - s / 2, s, s); g.strokeStyle = '#ffe0d8'; g.lineWidth = pr; g.strokeRect(x - s / 2, y - s / 2, s, s); }
+    else { g.beginPath(); g.arc(x, y, (e === P.target ? 3.6 : 2.8) * pr * pulse, 0, TAU); g.fillStyle = e.K.bomb ? '#ff9a2a' : e.K.laser ? '#ff5ad0' : '#ff3b2a'; g.fill(); if (e === P.target) { g.strokeStyle = '#fff'; g.lineWidth = pr; g.stroke(); } } }
+  // اللاعب: سهم يأشر لوين ماشي
+  const px = sx(P.pos.x), py = sy(P.pos.z), fx = -Math.sin(P.yaw), fy = -Math.cos(P.yaw), s = 6.5 * pr;
+  g.beginPath(); g.moveTo(px + fx * s, py + fy * s); g.lineTo(px - fx * s * .7 - fy * s * .65, py - fy * s * .7 + fx * s * .65); g.lineTo(px - fx * s * .3, py - fy * s * .3); g.lineTo(px - fx * s * .7 + fy * s * .65, py - fy * s * .7 - fx * s * .65); g.closePath();
+  g.fillStyle = '#ffe08a'; g.fill(); g.strokeStyle = '#1a1206'; g.lineWidth = pr; g.stroke(); }
 function loop(now) {
   requestAnimationFrame(loop); let dt = Math.min(.05, (now - last) / 1000); last = now; if (paused) dt = 0; T += dt;
   const live = playing && P.alive;
@@ -993,6 +1058,7 @@ function loop(now) {
   // أزرار المهارات
   SK.forEach(s => { const b = $('sk_' + s.id), c = CD[s.id]; b.querySelector('.cd').style.setProperty('--p', (c / s.cd * 100) + '%'); b.querySelector('.cdn').textContent = c > 0 ? Math.ceil(c) : ''; });
   if (playing && (T * 4 | 0) % 2 === 0) { $('left').textContent = EN.filter(e => e.alive).length + spawnQ.length; $('hpN').textContent = Math.round(P.hp); $('hpB').style.width = (P.hp / P.max * 100) + '%'; }
+  const mmOn = !!playing; if (MM.vis !== mmOn) { MM.vis = mmOn; MM.c.style.visibility = $('mmT').style.visibility = mmOn ? 'visible' : 'hidden'; } if (mmOn && ++MM.f % 3 === 0) mmDraw();
   if (COMP) { GRADE.uniforms.exposure.value = R.toneMappingExposure * .92; GRADE.uniforms.night.value = THEME.night ? 1 : 0; COMP.render(dt); } else R.render(S, CAM);
 }
 requestAnimationFrame(loop); ui();

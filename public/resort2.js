@@ -208,7 +208,7 @@ function rxBollards(L) { if (!rxVis(RX_ST.x0 - 20, RX_ST.x1 + 20)) return; for (
 /* =====================================================================
    صالون ملاذ 💇‍♀️ — للبنات، مكياج احترافي وكلشي يخص الصالون
    ===================================================================== */
-const RX_SAL = { x: 3100, y: 560 }, RX_SALHI = { x0: 49000, x1: 49440, dx: 49220, vx0: 48985, vx1: 49455, vy0: 120, vy1: 632 };
+const RX_SAL = { x: 3130, y: 560 }, RX_SALHI = { x0: 49000, x1: 49440, dx: 49220, vx0: 48985, vx1: 49455, vy0: 120, vy1: 632 };
 const RX_MLZ_AV = (() => { try { return AVT.norm(Object.assign({}, AVT.DEF, { g: 'f', hs: 'wavys', hc: 'burgundy', sk: 'fair', ey: 3, mk: [11, 13, 3, 3, 3, 1], o: 'f_par1' })); } catch (e) { return AVT.DEF; } })();
 const RX_SALPAL = { wall: '#fde8f1', wall2: '#f6cfe0', rg: '#d8a48f', rg2: '#b97a68', deep: '#8a3a6a', neon: '#ff5ca8' };
 function rxBulbs(c, x, y, w, h, T, n) { const per = 2 * (w + h), k = n || 14; for (let i = 0; i < k; i++) { let d = i / k * per, px, py; if (d < w) { px = x + d; py = y; } else if (d < w + h) { px = x + w; py = y + d - w; } else if (d < 2 * w + h) { px = x + w - (d - w - h); py = y + h; } else { px = x; py = y + h - (d - 2 * w - h); } const on = (Math.floor(T / 10) + i) % 4 !== 0; c.fillStyle = on ? '#fffbe6' : '#f0d8a0'; c.beginPath(); c.arc(px, py, 2.4, 0, 7); c.fill(); if (on) { c.fillStyle = 'rgba(255,240,180,.35)'; c.beginPath(); c.arc(px, py, 4.6, 0, 7); c.fill(); } } }
@@ -793,7 +793,7 @@ function rmXMsg(T, d) {
 /* ---- إضاءة الليل ---- */
 function rmXHoles(hole, fl) {
   if (rxVis(RX_HT.x0 - 100, RX_HT.x1 + 100)) { hole(RX_HT.x, 540, 230, 0.95); hole(3820, 320, 280, 0.6); hole(4420, 320, 280, 0.6); hole(RX_HT.x, 150, 300, 0.6); hole(RX_HT.x, 70, 260, 0.85); hole(RX_HBOARD.x, 600, 90, 0.85); hole(4120, 850, 150, 0.85); RX_PLAZA_LAMPS.forEach(L => hole(L[0], L[1] - 74, 110, 0.9)); }
-  if (rxVis(RX_SAL.x - 200, RX_SAL.x + 200)) { hole(RX_SAL.x, RX_SAL.y - 70, 175, 0.8); hole(RX_SAL.x - 70, 494, 95, 0.9); hole(RX_SAL.x + 70, 494, 95, 0.9); hole(RX_SAL.x, 330, 150, 0.8); }
+  if (rxVis(RX_SAL.x - 200, RX_SAL.x + 200)) { hole(RX_SAL.x, RX_SAL.y - 70, 175, 0.8); hole(RX_SAL.x - 70, 341, 95, 0.9); hole(RX_SAL.x + 70, 341, 95, 0.9); hole(RX_SAL.x - 70, 494, 95, 0.9); hole(RX_SAL.x + 70, 494, 95, 0.9); }
   if (rxVis(RMX0, 40)) { hole(RX_JUI.x, RX_JUI.y - 60, 150 * fl, 0.9); RX_TORCH.forEach(t => hole(t[0], t[1] - 70, 95 * fl, 0.9)); hole(RX_FALL.x, 380, 160, 0.55); hole(RX_CAT.x, RX_CAT.y - 20, 50, 0.5); }
 }
 function rmXGlow(c, d, fl) {
