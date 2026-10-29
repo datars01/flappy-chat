@@ -8142,7 +8142,8 @@ function rmWrap(c, txt, maxW) {
 }
 function rmBub(c, name, x, y, adm) {
   const b = RM.bubs[name]; if (!b) return; if (b.until) { b.t = Math.max(0, (b.until - performance.now()) / 16.7); if (b.t <= 0) { delete RM.bubs[name]; return; } } else { if (b.t <= 0) return; b.t--; } if (!b.st) b.st = ++RM.bubN;
-  (RM.bubQ || (RM.bubQ = [])).push({ b, x, y, adm });
+  const Q = RM.bubQ || (RM.bubQ = []); Q.push({ b, x, y, adm, g: b.st, r: 0 });
+  if (b.old && b.old.length) b.old.forEach((o, i) => { o.t = b.t; Q.push({ b: o, x, y, adm, g: b.st, r: i + 1 }); });   /* الرسايل القديمة تصعد فوك الجديدة (أقصى شي 3 ببل) */
 }
 RM.bubN = 0;
 function rmAdmBub(c, it, b, bx, by, w, h, LH) {
@@ -8193,7 +8194,7 @@ function rmNpcBub(c, it, b, bx, by, w, h, LH) {
 function rmBubFlush(c) {
   let Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = []; { const seen = new Set(); Q = Q.reverse().filter(it => { if (seen.has(it.b)) return false; seen.add(it.b); return true; }).reverse(); } /* نفس الببل ما ينرسم مرتين */
   c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; try { c.direction = 'rtl'; } catch (e) {} const LH = 14, placed = [];
-  Q.sort((p, q) => p.b.st - q.b.st).forEach(it => {
+  Q.sort((p, q) => ((p.g || p.b.st) - (q.g || q.b.st)) || ((p.r || 0) - (q.r || 0))).forEach(it => {
     const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
     for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = hit.y - h - 4; }
@@ -9708,7 +9709,7 @@ function rmOnMsg(d) {
   else if (T === 'rm_emo') { const o = RM.others[d.n]; if (o) { o.dance = d.e | 0; o.dt = 0; } }
   else if (T === 'rm_typing') { RM.typ[d.n] = performance.now() + 3200; }
   else if (T === 'rm_clr') { RM.log = []; RM.bubs = {}; RM.typ = {}; rmRenderLog(); showToast('🧹 ' + (d.by || 'المشرف') + ' حذف الشات بالكامل'); }
-  else if (T === 'rm_chat') { if (d.m.sys) { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); showToast(d.m.txt); return; } delete RM.typ[d.m.n]; RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); { const ob = RM.bubs[d.m.n], live = ob && ob.until && ob.until > performance.now(); RM.bubs[d.m.n] = { txt: d.m.txt, t: 240, until: performance.now() + (d.m.adm ? 7000 : 4000), st: live ? ob.st : 0 }; } /* الببل: عضو 4 ثواني، مشرف 7 ثواني، والرسالة الجديدة تاخذ مكان القديمة */ rmRenderLog(); rmTr(d.m); if (d.m.n !== rmMe()) { try { ding(); } catch (e) {} } }
+  else if (T === 'rm_chat') { if (d.m.sys) { RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); rmRenderLog(); showToast(d.m.txt); return; } delete RM.typ[d.m.n]; RM.log.push(d.m); if (RM.log.length > 80) RM.log.shift(); { const ob = RM.bubs[d.m.n], live = ob && ob.until && ob.until > performance.now(), un = performance.now() + (d.m.adm ? 7000 : 4000); const old = live ? [{ txt: ob.txt, lines: ob.lines, w: ob.w, t: 240 }].concat(ob.old || []).slice(0, 2) : []; RM.bubs[d.m.n] = { txt: d.m.txt, t: 240, until: un, st: live ? ob.st : 0, old }; } /* الببل: تتكدس وحدة فوك الثانية (الجديدة تحت قرب الراس)، أقصى شي 3، الرابعة تحذف الأقدم؛ تختفي كلها بعد 4 ثواني (مشرف 7) من آخر رسالة */ rmRenderLog(); rmTr(d.m); if (d.m.n !== rmMe()) { try { ding(); } catch (e) {} } }
   else if (T === 'rm_warn') { rmModal('⚠️', 'تحذير من صاحب الغرفة (' + d.from + ')', d.txt); try { sfx('warn'); } catch (e) {} }
   else if (T === 'rm_kicked') { const b = !!d.banned; rmLeaveRoom(true); rmModal(b ? '⛔' : '👢', b ? 'تم حظرك من الغرفة' : 'تم طردك من الغرفة', d.txt || (b ? 'صاحب الغرفة منعك من الدخول' : 'صاحب الغرفة طردك')); }
   else if (T === 'rm_closed') { rmLeaveRoom(true); rmModal('🚪', 'انسكّرت الغرفة', d.txt || ''); }
@@ -9922,7 +9923,7 @@ function rmTr(m) {
   if (m.trTo === to || m.trq === to || !rmNeedTr(m.txt, to)) return; m.trq = to;
   fetch('/api/tr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txt: m.txt, to }) }).then(r => r.json()).then(j => {
     m.trq = 0; if (!j || !j.txt || j.src === to || j.txt === m.txt) return; m.tr = j.txt; m.trTo = to;
-    const bb = RM.bubs[m.n]; if (bb && bb.txt === m.txt && bb.until > performance.now()) bb.txt = j.txt;   // الفقاعة فوق اللاعب هم تتترجم
+    const bb = RM.bubs[m.n]; if (bb && bb.until > performance.now()) [bb].concat(bb.old || []).forEach(o => { if (o.txt === m.txt) { o.txt = j.txt; o.lines = null; } });   // الفقاعة فوق اللاعب هم تتترجم
     rmRenderLog();
   }).catch(() => { m.trq = 0; });
 }
