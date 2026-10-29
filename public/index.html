@@ -6808,11 +6808,11 @@ var AVT = (function () {
     const W = [14.6, 14, 14.6, 14.2, 15.6][O.fs];
     [-1, 1].forEach(k => { if (O.er === 2) { Q(c, [[k * (W - 1), -104], [k * (W + 6), -110], [k * (W + 1), -98.6]]); P(c, SK[0], 1); } else { const s = O.er === 1 ? .75 : 1; E(c, k * W, -102, 2 * s, 3.2 * s); P(c, SK[0], 1); } });
     headP(c, O.fs); P(c, SK[0], 1.3);
-    const bl = BLUSHC[O.mk[2]]; c.save(); if (bl && !male) { c.fillStyle = bl; c.globalAlpha = .5; } else { c.fillStyle = 'rgba(255,110,130,.28)'; } [-1, 1].forEach(k => { E(c, k * 10.4, -94.4, 3, 1.8); c.fill(); }); c.restore();
+    const bl = BLUSHC[O.mk[2]]; c.save(); headP(c, O.fs); c.clip(); if (bl && !male) { c.fillStyle = bl; c.globalAlpha = .5; } else { c.fillStyle = 'rgba(255,110,130,.28)'; } [-1, 1].forEach(k => { E(c, k * 10.4, -94.4, 3, 1.8); c.fill(); }); c.restore();
     const bear = O.bear; if (male && bear) { c.save(); c.fillStyle = typeof H[0] === 'string' ? H[0] : '#2a2430'; if (bear === 1 || bear === 2) { c.globalAlpha = bear === 2 ? .9 : .35; Q(c, [[-W + .2, -98], [-W + .6, -90, -8, -86.4, 0, -86.2], [8, -86.4, W - .6, -90, W - .2, -98], [12, -93], [8, -93.4], [5, -92.6], [0, -95], [-5, -92.6], [-8, -93.4], [-12, -93]]); c.fill(); } if (bear === 3) { E(c, 0, -87.4, 3.6, 2.8); c.fill(); } if (bear === 3 || bear === 4) { c.globalAlpha = .95; Q(c, [[-4.8, -92.2], [-2, -93.6], [0, -92.8], [2, -93.6], [4.8, -92.2], [2.4, -91], [0, -91.8], [-2.4, -91]]); c.fill(); } c.restore(); }
     const fz = EW[O.ew] / 15 * (male ? .94 : 1), mS = SHADOWS[O.mk[1]], ex = [5.8, 6.6, 7.6][O.esp];
     eye(c, -ex, -102, fz, 1, iris, O, male, male ? null : mS); eye(c, ex, -102, fz, -1, iris, O, male, male ? null : mS);
-    brows(c, O, H, ex, male); nose(c, O, SK); mouth(c, O); deco(c, O, SK, 0); if (window.AVT_SL && window.rmSalonFace) { try { rmSalonFace(c, O, ex, ES[O.es][1] * fz, ES[O.es][2] * fz, t || 0, male, KLW); } catch (e) {} }
+    brows(c, O, H, ex, male); nose(c, O, SK); mouth(c, O); deco(c, O, SK, 0); if (window.AVT_SL && window.rmSalonFace) { try { window.AVT_HEADCLIP = () => { headP(c, O.fs); c.clip(); }; rmSalonFace(c, O, ex, ES[O.es][1] * fz, ES[O.es][2] * fz, t || 0, male, KLW); } catch (e) {} }
     hairFront(c, S, H, O.g); deco(c, O, SK, 1);
     if (O.cr) crownAdm(c, O.cr, t);
     else if (OF && OF.crown) { Q(c, [[-9, -124], [-10.5, -135], [-5, -129.5], [0, -138], [5, -129.5], [10.5, -135], [9, -124]]); P(c, '#ffd24a', 1.2); E(c, 0, -128, 1.5, 1.5); P(c, '#e8284a', .7); [-5.6, 5.6].forEach(x => { E(c, x, -127.4, 1, 1); P(c, '#3a9aff', .6); }); }
@@ -7670,7 +7670,7 @@ function rmWearItem(c, k, x, y, T) {
 }
 function rmHatLift(o) { const h = o && o.wear && o.wear.hat; return !h ? 0 : ({ h_witch: 20, h_party: 16, h_chef: 12, h_crown: 9, h_cowboy: 8, h_flower: 4, h_cap: 5, h_beanie: 7, h_bunny: 18, h_catears: 6, h_devil: 6, h_bow: 6, h_phones: 3, h_santa: 10, h_grad: 8, h_top: 15 })[h] || 0; }
 function rmWearBack(c, o) { const W = o && o.wear; if (!W || !W.back) return; if (o.hid && o !== RM.me && !(RM.myAdm || RM.isMod)) return; rmWearItem(c, W.back, o.x, o.y + (o.sit ? 12 : 0), RM.T); }
-function rmWearFront(c, o) { const W = o && o.wear; if (!W) return; if (o.hid && o !== RM.me && !(RM.myAdm || RM.isMod)) return; const dy = o.sit ? 12 : 0; if (W.bag) rmWearItem(c, W.bag, o.x, o.y + dy, RM.T); if (W.neck) rmWearItem(c, W.neck, o.x, o.y + dy, RM.T); if (W.eye) rmWearItem(c, W.eye, o.x, o.y + dy, RM.T); if (W.hat) rmWearItem(c, W.hat, o.x, o.y + dy, RM.T); }
+function rmWearFront(c, o) { const W = o && o.wear; if (!W) return; if (o.hid && o !== RM.me && !(RM.myAdm || RM.isMod)) return; const dy = o.sit ? 12 : 0; if (W.bag) { c.save(); c.translate(o.x, o.y + dy); c.scale(o.dir || 1, 1); rmWearItem(c, W.bag, 0, 0, RM.T); c.restore(); } if (W.neck) rmWearItem(c, W.neck, o.x, o.y + dy, RM.T); if (W.eye) rmWearItem(c, W.eye, o.x, o.y + dy, RM.T); if (W.hat) rmWearItem(c, W.hat, o.x, o.y + dy, RM.T); }
 // مانيكان صغير لعرض الأزياء (للشبابيك واللوحة)
 function rmManq(c, x, y, s, wear) {
   c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = 'rgba(0,0,0,.15)'; c.beginPath(); c.ellipse(0, 0, 9, 2.4, 0, 0, 7); c.fill();
@@ -7788,7 +7788,7 @@ function rmWearOn(k) { const W = RM.me.wear || {}, w = RM_WEARD[k]; return !!w &
 function rmWearCard(w, selKey, onSel) {
   const own = rmWearOwned(w.k), on = rmWearOn(w.k), it = document.createElement('div'); it.className = 'spI' + (on ? ' on' : '') + (own ? ' own' : '') + (selKey === w.k ? ' sel' : ''); it.setAttribute('role', 'button');
   const cv = document.createElement('canvas'); cv.width = 108; cv.height = 132; it.appendChild(cv); const g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0);
-  if (w.s === 'bag') { g.save(); g.translate(27, 36); g.scale(2.3, 2.3); rmBagItem(g, w.k, -13, 30, RM.T); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') rmSalonCard(g, w.k); else if (w.s === 'back' || w.s === 'neck') { const ww = {}; ww[w.s] = w.k; if (w.s === 'neck') { g.save(); g.translate(27, 112); g.scale(1.75, 1.75); rmManq(g, 0, 0, 1, ww); g.restore(); } else rmManq(g, 27, 64, 0.95, ww); } else { g.save(); g.translate(27, w.s === 'hat' ? 44 : 40); g.scale(1.9, 1.9); g.fillStyle = '#f7e9d8'; g.strokeStyle = 'rgba(80,50,90,.35)'; g.lineWidth = 0.6; g.beginPath(); g.ellipse(0, -59 + 59, 6.6, 7.6, 0, 0, 7); g.fill(); g.stroke(); rmWearItem(g, w.k, 0, 59, RM.T); g.restore(); }
+  if (w.s === 'bag') { g.save(); g.translate(27, 36); g.scale(2.3, 2.3); rmBagItem(g, w.k, -RM_BAGP[0], -RM_BAGP[1], RM.T, 1); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') rmSalonCard(g, w.k); else if (w.s === 'back' || w.s === 'neck') { const ww = {}; ww[w.s] = w.k; if (w.s === 'neck') { g.save(); g.translate(27, 112); g.scale(1.75, 1.75); rmManq(g, 0, 0, 1, ww); g.restore(); } else rmManq(g, 27, 64, 0.95, ww); } else { g.save(); g.translate(27, w.s === 'hat' ? 44 : 40); g.scale(1.9, 1.9); g.fillStyle = '#f7e9d8'; g.strokeStyle = 'rgba(80,50,90,.35)'; g.lineWidth = 0.6; g.beginPath(); g.ellipse(0, -59 + 59, 6.6, 7.6, 0, 0, 7); g.fill(); g.stroke(); rmWearItem(g, w.k, 0, 59, RM.T); g.restore(); }
   const nm = document.createElement('span'); nm.textContent = w.n; it.appendChild(nm); const pr = document.createElement('i'); pr.textContent = on ? '✨ لابسه هسه' : own ? '🎒 مملوك' : rmBalAdm() ? 'مجاناً 👑' : '💵 ' + w.p; it.appendChild(pr);
   if (selKey === w.k) { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'spBtn' + (own ? (on ? ' drop' : ' hold') : ''); bt.textContent = own ? (on ? '🚫 إلغاء اللبس' : '👕 لبس') : '🛒 شراء'; bt.onclick = e => { e.stopPropagation(); rmWearAct(w); }; it.appendChild(bt); }
   it.onclick = () => { onSel(selKey === w.k ? '' : w.k); try { sfx('click'); } catch (e) {} }; return it;
@@ -7816,7 +7816,7 @@ function rmWearAct(w) {
 function rmWearDlg(w, mode) {
   const S = $(RM.wearPanel === 'ruhShop' || RM.wearPanel === 'salonShop' ? RM.wearPanel : 'rbsShop'); if (!S) return; let D = S.querySelector('.spDlg'); if (D) D.remove(); D = document.createElement('div'); D.className = 'spDlg';
   D.innerHTML = '<div class="spDB"><canvas width="152" height="184"></canvas><b></b><p></p><div class="row"><button type="button" class="y"></button><button type="button" class="no"></button></div></div>';
-  const dc = D.querySelector('canvas'); dc.style.cssText = 'width:76px;height:92px;display:block;margin:0 auto'; const g = dc.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); const wear = {}; wear[w.s] = w.k; if (w.s === 'bag') { g.save(); g.translate(38, 50); g.scale(2.6, 2.6); rmBagItem(g, w.k, -13, 30, RM.T); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') { g.save(); g.scale(1.4, 1.4); rmSalonCard(g, w.k); g.restore(); } else rmManq(g, 38, 88, 1.15, wear);
+  const dc = D.querySelector('canvas'); dc.style.cssText = 'width:76px;height:92px;display:block;margin:0 auto'; const g = dc.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); const wear = {}; wear[w.s] = w.k; if (w.s === 'bag') { g.save(); g.translate(38, 50); g.scale(2.6, 2.6); rmBagItem(g, w.k, -RM_BAGP[0], -RM_BAGP[1], RM.T, 1); g.restore(); } else if ((w.s === 'sl' || w.s === 'fa') && typeof rmSalonCard === 'function') { g.save(); g.scale(1.4, 1.4); rmSalonCard(g, w.k); g.restore(); } else rmManq(g, 38, 88, 1.15, wear);
   const Y = D.querySelector('.y'), N = D.querySelector('.no');
   if (mode === 'buy') { D.querySelector('b').textContent = 'تأكيد الشراء'; D.querySelector('p').textContent = 'تشتري «' + w.n + '» بـ 🪙 ' + w.p + '؟ رصيدك 💵 ' + usdTxt(); Y.textContent = '✅ تأكيد الشراء'; N.textContent = '✖ إلغاء'; Y.onclick = () => { if (RM.wbuyT && performance.now() - RM.wbuyT < 1000) return; RM.wbuyT = performance.now(); Y.disabled = true; Y.textContent = '⏳ لحظة...'; rmSend({ t: 'rm_wear_buy', k: w.k }); }; N.onclick = () => D.remove(); }
   else { D.querySelector('b').textContent = '🎉 صار «' + w.n + '» إلك!'; D.querySelector('p').textContent = 'انحفظ بأغراضك 🎒 تلبسه هسه؟'; Y.textContent = '👕 لبس'; N.textContent = '🎒 لا، خليه بأغراضي'; Y.onclick = () => { D.remove(); rmSend({ t: 'rm_wear', k: w.k, on: 1 }); }; N.onclick = () => { D.remove(); showToast('🎒 القطعة بأغراضك، تلكاها بزر «أغراضي»'); }; }
@@ -7839,11 +7839,21 @@ const RM_RUH = { x: 48352, y: 396, say: null, wave: 0, idleT: 0, near: false };
 const RM_RUH_PAL = { fur: '#ffe0ef', bel: '#fff6fb', ap: '#ff5ca8', bow: '#ff2d7a', ol: '#7a2350', ic: '👜', glass: 1 };
 const RM_BAGCOL = { g_cherry: ['#e8284a', '#a3122e'], g_straw: ['#e7c27a', '#b08a3c'], g_heart: ['#ff6fae', '#c42a72'], g_star: ['#ffd23f', '#c9970a'], g_bow: ['#c9a2ff', '#8a5ad6'], g_bunny: ['#ffffff', '#d8c8d8'], g_cloud: ['#bfe4ff', '#6fb0e8'], g_pink: ['#ff9ec7', '#d65a92'], g_cat: ['#2b2b38', '#111118'], g_bear: ['#c98a5a', '#8a5a34'], g_pearl: ['#fff7fb', '#e0cfe0'], g_lux: ['#ffe27a', '#c9971f'] };
 /* رسم الحقيبة: معلّقة على الكتف وتطلع جنب الشخصية */
-function rmBagItem(c, k, x, y, T) {
+const RM_BAGP = [7.6, -27.5];
+/* الحزام: يبدي من فوك الكتف الثاني ويعبر الصدر بالعرض، والحقيبة مسنودة على الورك (مو طايرة). بعدها يحرك الرسم لمكان الحقيبة */
+function rmBagStrap(c, k, sw, noStrap) {
+  const BX = RM_BAGP[0], BY = RM_BAGP[1];
+  if (!noStrap) { const scol = ({ g_pearl: '#fff', g_lux: '#d7a400', g_diam: '#9adfff', g_moon: '#d7a400' })[k] || '#6a2a4a';
+    c.lineCap = 'round'; c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = k === 'g_pearl' ? 2.6 : 2.2; c.beginPath(); c.moveTo(-6.2, -48.4); c.quadraticCurveTo(-1, -42, BX - 2 + sw, BY - 6.6); c.stroke();
+    c.strokeStyle = scol; c.lineWidth = k === 'g_pearl' ? 2 : 1.6; c.beginPath(); c.moveTo(-7.2, -49.6); c.quadraticCurveTo(-1.6, -43, BX - 2.6 + sw, BY - 7.4); c.stroke(); c.beginPath(); c.moveTo(-7.2, -49.6); c.quadraticCurveTo(-9, -48.4, -9, -45.6); c.stroke();
+    if (k === 'g_pearl') { c.fillStyle = '#fff'; for (let i = 0; i < 7; i++) { const t = i / 6, px = -7.2 + (BX - 2.6 + sw + 7.2) * t, py = -49.6 + (BY - 7.4 + 49.6) * t - Math.sin(t * Math.PI) * 2.4; c.beginPath(); c.arc(px, py, 1.1, 0, 7); c.fill(); } }
+    c.fillStyle = k === 'g_lux' || k === 'g_moon' ? '#ffd76a' : '#c8c8d0'; c.beginPath(); c.arc(BX - 2.6 + sw, BY - 7.4, 0.9, 0, 7); c.fill(); }
+  c.translate(BX + sw, BY); c.rotate(sw * 0.04); c.scale(0.86, 0.86);
+}   // مكان الحقيبة على الجسم (على الورك تحت الكتف)
+function rmBagItem(c, k, x, y, T, noStrap) {
   const C = RM_BAGCOL[k]; if (!C) return; c.save(); c.translate(x, y); const sw = Math.sin((T || 0) / 18) * 1.2;
-  c.strokeStyle = k === 'g_pearl' ? '#fff' : k === 'g_lux' ? '#d7a400' : '#6a2a4a'; c.lineWidth = k === 'g_pearl' ? 2.4 : 1.4; c.beginPath(); c.moveTo(-3, -50); c.quadraticCurveTo(8, -46, 12 + sw, -36); c.stroke();
-  if (k === 'g_pearl') { c.fillStyle = '#fff'; for (let i = 0; i < 6; i++) { const t = i / 5, px = -3 + (15 + sw) * t, py = -50 + 14 * t - Math.sin(t * Math.PI) * 3; c.beginPath(); c.arc(px, py, 1.3, 0, 7); c.fill(); } }
-  c.translate(13 + sw, -30); c.rotate(sw * 0.04); const OL = () => { c.strokeStyle = 'rgba(40,10,30,.75)'; c.lineWidth = 0.9; c.stroke(); };
+  /* الحقيبة على الكتف: الحزام يبدي من فوك الكتف الثاني ويعبر الصدر بالعرض وينزل للحقيبة اللي مسنودة على الورك (مو طايرة) */
+  rmBagStrap(c, k, sw, noStrap); const OL = () => { c.strokeStyle = 'rgba(40,10,30,.75)'; c.lineWidth = 0.9; c.stroke(); };
   const body = () => { const g = c.createLinearGradient(-8, -8, 8, 8); g.addColorStop(0, C[0]); g.addColorStop(1, C[1]); c.fillStyle = g; };
   if (k === 'g_heart') { body(); c.beginPath(); c.moveTo(0, 8); c.bezierCurveTo(-12, 0, -9, -10, 0, -5); c.bezierCurveTo(9, -10, 12, 0, 0, 8); c.fill(); OL(); }
   else if (k === 'g_star') { body(); c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 4 : 9; c.lineTo(Math.cos(a) * r, Math.sin(a) * r + 1); } c.closePath(); c.fill(); OL(); }
@@ -9399,7 +9409,7 @@ function smStep(i, t) {
   const m = MEL[i % 64]; if (m) { smNote('square', m, t, STP * 1.8, 0.045, 3200); smNote('triangle', m + 12, t, STP * 1.2, 0.02); }
   if (lp % 2 === 1 && st % 2 === 0) smNote('sine', ch[(st / 2) % 3] + 24, t, STP * 1.1, 0.025);   // لمعات جرس بكل دورة ثانية
 }
-function smTick() { if (!RM_SM.on || !actx) return; if (document.hidden) { RM_SM.next = actx.currentTime + 0.08; return; } const tr = RM_SM.track; while (RM_SM.next < actx.currentTime + 0.18) { if (tr === 4) smStep4(RM_SM.step, RM_SM.next); else if (tr === 3) smStep3(RM_SM.step, RM_SM.next); else if (tr === 2) smStep2(RM_SM.step, RM_SM.next); else if (tr === 6 && typeof smStep6 === 'function') smStep6(RM_SM.step, RM_SM.next); else smStep(RM_SM.step, RM_SM.next); RM_SM.next += tr === 6 ? 0.25 : tr === 2 ? SM2_ST : tr === 3 ? SML_ST : tr === 4 ? SMG_ST : SM_ST; RM_SM.step++; if (RM_SM.step % (tr === 1 ? 64 : 32) === 0) RM_SM.loop++; } }
+function smTick() { if (!RM_SM.on || !actx) return; if (document.hidden) { RM_SM.next = actx.currentTime + 0.08; return; } const tr = RM_SM.track; while (RM_SM.next < actx.currentTime + 0.18) { if (tr === 4) smStep4(RM_SM.step, RM_SM.next); else if (tr === 3) smStep3(RM_SM.step, RM_SM.next); else if (tr === 2) smStep2(RM_SM.step, RM_SM.next); else if (tr === 6 && typeof smStep6 === 'function') smStep6(RM_SM.step, RM_SM.next); else if (tr === 5 && typeof smStep5 === 'function') smStep5(RM_SM.step, RM_SM.next); else smStep(RM_SM.step, RM_SM.next); RM_SM.next += tr === 5 ? (window.SM5_ST || 0.25) : tr === 6 ? 0.25 : tr === 2 ? SM2_ST : tr === 3 ? SML_ST : tr === 4 ? SMG_ST : SM_ST; RM_SM.step++; if (RM_SM.step % (tr === 1 ? 64 : 32) === 0) RM_SM.loop++; } }
 function rmShopMusic(on, track) {
   track = track || 1; if (on && RM_SM.on && RM_SM.track !== track) rmShopMusic(false); if (on === RM_SM.on) return; RM_SM.on = on; if (on) RM_SM.track = track;
   if (on) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { RM_SM.on = false; return; }
@@ -9585,7 +9595,7 @@ function rmDraw() {
   if (cv.width !== Math.round(bw * dpr) || cv.height !== Math.round(bh * dpr)) { cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); }
   { const tn = bh < 250; if (RM.tinyC !== tn) { RM.tinyC = tn; $('rmBox').classList.toggle('rmTiny', tn); } } RM.bw = bw; RM.bh = bh; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = rmInShop() ? '#2a1530' : '#7fd0f2'; c.fillRect(0, 0, bw, bh);
   RM.T++; rmWxStep(); try { rmPairTick(); rmHoldTick(); } catch (e) {} const m = RM.me, st = rmUpdMe(), SH = rmInShop(), SID = rmShopId();
-  rmShopMusic(SH && !RM.ambMute, SID === 5 ? 4 : SID >= 6 ? 6 : SID);
+  rmShopMusic(SH && !RM.ambMute, SID === 4 ? 5 : SID === 5 ? 4 : SID >= 6 ? 6 : SID);
   const pClose = Math.max(0.8, Math.min(2, Math.min(bw / 320, bh / 200))), pAll = Math.min(bw / (RMW - RMX0), bh / RMH); if (RM.camSnap) RM.uz = 0; RM.free = !RM.follow && !RM.camSnap && !RM.zoomAll; RM.zMin = Math.max(pAll, pClose * 0.55); RM.zMax = pClose * 2.5; /* حد للتبعيد */ RM.zt = RM.zoomAll ? pAll : pClose; if (SH) RM.zt = Math.min(pClose * 1.05, Math.max(bw / 470, bh / 512)); if (RM.uz) RM.zt = RM.uz = Math.max(RM.zMin, Math.min(RM.zMax, RM.uz)); if (!RM.z || RM.camSnap || RM.uz) RM.z = RM.zt;
   if (!isFinite(RM.z) || RM.z <= 0) RM.z = RM.zt; if (!isFinite(RM.cx) || !isFinite(RM.cy)) { RM.cx = m.x - 100; RM.cy = m.y - 100; RM.camSnap = 1; } if (!isFinite(RM.fx) || !isFinite(RM.fy)) { RM.fx = RM.cx; RM.fy = RM.cy; } if (!isFinite(m.x) || !isFinite(m.y)) { m.x = m.tx = 400; m.y = m.ty = 330; }   // حماية: رقم خربان بالكاميرا كان يخفي كلشي
   RM.z += (RM.zt - RM.z) * 0.14; const z = RM.z, vw = bw / z, vh = bh / z;
@@ -9616,8 +9626,10 @@ function rmKeys() { const K = typeof hKeys !== 'undefined' ? hKeys : {}; return 
 /* ---------- أزرار الجلوس القريبة ---------- */
 var rmPrKey = '';
 // تحديث مكان لاعب ثاني: إذا دخل/طلع من محل أو انتقل بعيد ينقل فوراً (قبل كان يبقى عالق بمكانه القديم ويختفي)
+/* إذا وصلت حركة شخص قبل بياناته → نطلب بياناته الكاملة (شكله + تاجه + ملابسه) من السيرفر، مع إعادة المحاولة */
+function rmWho(n) { RM.whoT = RM.whoT || {}; const t = performance.now(); if (RM.whoT[n] && t - RM.whoT[n] < 1500) return; RM.whoT[n] = t; try { rmSend({ t: 'rm_who', n }); } catch (e) {} setTimeout(() => { const o = RM.on && RM.others[n]; if (o && !o.full && !o.av) rmWho(n); }, 1800); }
 function rmPosIn(d) {
-  const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; return; }
+  const o = RM.others[d.n]; if (!o) { RM.others[d.n] = { name: d.n, skin: 'classic', x: d.x, y: d.y, tx: d.x, ty: d.y, dir: d.dir || 1, sit: !!d.sit }; rmWho(d.n); return; }
   const ns = rmShopId({ x: d.x }), os = rmShopId(o), jump = ns !== os || Math.hypot(d.x - o.x, d.y - o.y) > 320; if (ns !== os) { o.x0 = o.x; o.y0 = o.y; rmShopMoveNote(o, os, ns); }
   o.tx = d.x; o.ty = d.y; if (jump) { o.x = o.lx = d.x; o.y = o.ly = d.y; } o.dir = d.dir || 1; o.sit = !!d.sit; if (RM.me.goal) rmSeatCheck();
 }
@@ -9642,6 +9654,8 @@ function rmOnMsg(d) {
     (d.members || []).forEach(x => { if (x.n === rmMe()) return; RM.others[x.n] = { name: x.n, skin: x.skin, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, sit: !!x.sit, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : null, dance: x.emo | 0, umbOn: x.umb !== 0, bal: x.bal || '', pet: x.pet || '', wear: x.wear || {}, hid: !!x.hid, dt: 0, ph: 0 }; });
     if (d.me) { RM.me.x = RM.me.tx = d.me.x; RM.me.y = RM.me.ty = d.me.y; RM.camSnap = 1; } RM.me.bal = d.myBal || ''; RM.myBals = d.myBals || []; RM.me.pet = d.myPet || ''; RM.myPets = d.myPets || []; RM.petSt = {}; RM.me.wear = d.myWear || {}; RM.myWears = d.myWears || []; RM.usd = d.myUsd || 0; setTimeout(rmUsdHud, 30); RM.fish.bag = d.myFish || { n: 0, k: {} }; if (!RM.fish.bag.k) RM.fish.bag.k = {}; RM.me.sit = false; RM.me.goal = false; RM.me.seat = null; RM.me.jump = null; RM.sent = ''; if (RM.myAdm) { rmBurst(RM.me.x, RM.me.y, RM.myAdm); RM.ban = { txt: (RM.myAdm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + rmMe(), kind: RM.myAdm, t: 170, max: 170 }; }
     RM.holds = {}; RM.holdLead = {}; RM.pair = null; RM.myTime = d.myTime ? Object.assign({ t0: performance.now() }, d.myTime) : null; rmMuteSet(d.mutedMin ? Date.now() + d.mutedMin * 60000 : 0); RM.vipCnt = d.vipCnt || 0; RM.repCnt = d.repCnt || 0; setTimeout(() => { rmTimeTile(); rmVipBadge(); rmRepBadge(); }, 50); setTimeout(() => { if (RM.on) rmSend({ t: 'rm_ideas_get' }); }, 900); (d.holds || []).forEach(h => { RM.holds[h[0]] = h[1]; RM.holds[h[1]] = h[0]; RM.holdLead[h[0]] = true; }); rmAvInit(d.myAv); rmMusicSet(d.music || null); rmWxSync(d.wx); rmCastleSet(d.castles); RM.G = {}; RM.gTb = null; RM.gSide = null; (d.gs || []).forEach(g => { RM.G[g.tb] = g; }); rmShowRoom(); rmRenderMem(); rmRenderLog(); rmPrompt(true); if (!RM.petAnn) { RM.petAnn = 1; setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '📢 وفّرنا محل للحيوانات! محل غمازة يمين المنتجع 🐶🐱 كل حيوان صغير بـ 40 دولار 💵، والدولارات من الصيد 🎣', by: 'جربوع' }); rmNpcSay('عندي خبر حلو! وفّرنا محل للحيوانات، روحوا لمحل غمازة 🐾', 320); }, 5500); setTimeout(() => { if (!RM.on) return; rmAnnShow({ txt: '👗 جديد! محل ربشاتي للأزياء انفتح يمين المنتجع: قبعات، نظارات وأجنحة تلبسها والكل يشوفها ✨', by: 'جربوع' }); }, 16000); }
+  } else if (T === 'rm_join' && d.re) { const x = d.m; if (!x || x.n === rmMe()) return; const o = RM.others[x.n] || (RM.others[x.n] = { name: x.n, x: x.x, y: x.y, tx: x.x, ty: x.y, dir: x.dir || 1, dt: 0, ph: 0 });   /* تحديث صامت (رجوع بعد انقطاع / بيانات ناقصة): التاج + لون الببل + الملابس ترجع صح */
+    Object.assign(o, { skin: x.skin, own: !!x.own, adm: x.adm || 0, mod: !!x.mod, g: !!x.g, av: x.av ? AVT.norm(x.av) : o.av || null, umbOn: x.umb !== 0, bal: x.bal || '', pet: x.pet || '', wear: x.wear || {}, hid: !!x.hid, full: 1 }); if (o.dance === undefined) o.dance = x.emo | 0; rmRenderMem();
   } else if (T === 'rm_join') { if (d.m.n === rmMe()) return; if (!d.m.hid) rmJoinBanner(d.m.n); if (!d.m.hid || RM.myAdm || RM.isMod) rmJoinSnd(d.m.adm || 0); if (d.m.adm && !d.m.hid) rmJoinFx(d.m.x, d.m.y, d.m.adm); if (d.m.adm && !d.m.hid) setTimeout(() => { if (RM.on) rmNpcAdm(d.m.n); }, 900); RM.others[d.m.n] = { name: d.m.n, skin: d.m.skin, x: d.m.x, y: d.m.y, tx: d.m.x, ty: d.m.y, dir: d.m.dir || 1, sit: !!d.m.sit, own: !!d.m.own, adm: d.m.adm || 0, mod: !!d.m.mod, g: !!d.m.g, av: d.m.av ? AVT.norm(d.m.av) : null, dance: d.m.emo | 0, umbOn: d.m.umb !== 0, bal: d.m.bal || '', pet: d.m.pet || '', wear: d.m.wear || {}, dt: 0, ph: 0 }; rmRenderMem(); rmNpcWelcome(); if (d.m.adm) { rmBurst(d.m.x, d.m.y, d.m.adm); RM.ban = { txt: (d.m.adm === 1 ? 'دخل المالك ' : 'دخل المشرف ') + d.m.n, kind: d.m.adm, t: 170, max: 170 }; try { sfx('level'); } catch (e) {} } else showToast('👋 ' + d.m.n + ' دخل الغرفة'); }
   else if (T === 'rm_leave') { delete RM.others[d.n]; if (RM.pair && RM.pair.with === d.n) rmPairEnd(); rmRenderMem(); rmPrompt(true); }
   else if (T === 'rm_pos') rmPosIn(d);
@@ -10186,14 +10200,15 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/run.js?v=13"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
-<script src="/resort2.js?v=2"></script>
+<script src="/resort2.js?v=3"></script>
 <script src="/resort3.js?v=5"></script>
 <script src="/resort4.js?v=4"></script>
 <script src="/resort5.js?v=3"></script>
 <script src="/resort6.js?v=2"></script>
 <script src="/resort7.js?v=2"></script>
-<script src="/resort8.js?v=5"></script>
+<script src="/resort8.js?v=6"></script>
 <script src="/resort9.js?v=1"></script>
+<script src="/resort10.js?v=1"></script>
 <script src="/resort-map.js?v=8"></script>
 <script src="/ballhub.js?v=2"></script>
 <script>

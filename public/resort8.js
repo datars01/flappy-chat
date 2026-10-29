@@ -169,7 +169,9 @@
   // مشية: كل رجل إلها طور (خلفية يسار، أمامية يسار، خلفية يمين، أمامية يمين)
   function gaitLeg(ph, o, front, amp, bendK) { const q = (ph + o) % 1, s = Math.sin(q * TAU), lift = q < .5 ? Math.sin(q / .5 * Math.PI) : 0; const a1 = front ? -s * amp : -s * amp * .9; const b = lift * bendK; return [a1, front ? a1 + b : a1 - b * .8, lift]; }
   const HCOL = [{ b: '#8a5530', d: '#4a2a14', m: '#2a160a', sock: 0 }, { b: '#ece6da', d: '#b8ae9c', m: '#d8d0c0', sock: 0 }, { b: '#2e2420', d: '#16100c', m: '#0a0806', sock: 1 }, { b: '#c8904a', d: '#8a5a28', m: '#f4e8d0', sock: 1 }];
-  function horseArt(c, x, y, dir, P, t, ph, R, opt) { opt = opt || {}; const C = opt.zebra ? { b: '#f4f2ee', d: '#c8c4bc', m: '#1a1a1a', sock: 0 } : HCOL[P], s = opt.s || .9, bob = -Math.abs(Math.sin(ph * TAU * 2)) * 1.3, nod = Math.sin(ph * TAU * 2) * .05; c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.22)'; ell(c, 0, 1, 34 * s, 6 * s); c.fill(); c.scale(dir * s, s);
+  const LEEL = 2, LEELC = { b: '#17121c', d: '#0a070d', m: '#050308', sock: 0 };   // 🖤 «ليل» — الحصان الأسود للمشرفين فقط
+  const HNAME = ['🤎 البني', '🤍 الأبيض', '🖤 ليل', '🧡 الأشقر'];
+  function horseArt(c, x, y, dir, P, t, ph, R, opt) { opt = opt || {}; const C = opt.zebra ? { b: '#f4f2ee', d: '#c8c4bc', m: '#1a1a1a', sock: 0 } : opt.leel ? LEELC : HCOL[P], s = opt.s || .9, bob = -Math.abs(Math.sin(ph * TAU * 2)) * 1.3, nod = Math.sin(ph * TAU * 2) * .05; c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.22)'; ell(c, 0, 1, 34 * s, 6 * s); c.fill(); c.scale(dir * s, s);
     const legs = [[-19, 0, 0, 1], [17, .25, 1, 1], [-19, .5, 0, 0], [17, .75, 1, 0]];   // x، الطور، أمامية، بعيدة
     const leg = L => { const g = gaitLeg(ph, L[1], L[2], opt.amp || .38, 1.1), far = L[3], col = far ? C.d : C.b; limb(c, L[0] + (far ? 2 : 0), -32 + bob, g[0], 15, g[1], 17, L[2] ? 6.6 : 8, 4, far ? hexL(col, -.15) : col, '#2a2420'); if (C.sock && !far) { const kx = L[0] + Math.sin(g[0]) * 15, ky = -32 + bob + Math.cos(g[0]) * 15; c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 4.2; c.beginPath(); c.moveTo(kx + Math.sin(g[1]) * 11, ky + Math.cos(g[1]) * 11); c.lineTo(kx + Math.sin(g[1]) * 16, ky + Math.cos(g[1]) * 16); c.stroke(); } };
     legs.filter(L => L[3]).forEach(leg);
@@ -179,6 +181,7 @@
     const bg = c.createLinearGradient(0, -52, 0, -22); bg.addColorStop(0, hexL(C.b, .22)); bg.addColorStop(.55, C.b); bg.addColorStop(1, hexL(C.b, -.25)); c.fillStyle = bg;
     c.beginPath(); c.moveTo(-30, -40 + bob); c.bezierCurveTo(-32, -52 + bob, -18, -52 + bob, -6, -48 + bob); c.bezierCurveTo(6, -46 + bob, 14, -50 + bob, 22, -48 + bob); c.bezierCurveTo(30, -44 + bob, 30, -28 + bob, 22, -24 + bob); c.bezierCurveTo(10, -20 + bob, -10, -20 + bob, -22, -24 + bob); c.bezierCurveTo(-30, -26 + bob, -32, -32 + bob, -30, -40 + bob); c.closePath(); c.fill();
     if (opt.zebra) { c.save(); c.clip(); c.strokeStyle = '#141414'; c.lineWidth = 2.6; for (let k = -30; k < 28; k += 5.5) { c.beginPath(); c.moveTo(k, -54); c.quadraticCurveTo(k + 3, -38, k - 1, -18); c.stroke(); } c.restore(); }
+    if (opt.leel) { const sh = c.createLinearGradient(-26, -50 + bob, 24, -30 + bob); sh.addColorStop(0, 'rgba(160,110,255,0)'); sh.addColorStop(.45, 'rgba(190,150,255,.38)'); sh.addColorStop(.55, 'rgba(255,255,255,.42)'); sh.addColorStop(.65, 'rgba(190,150,255,.3)'); sh.addColorStop(1, 'rgba(160,110,255,0)'); c.fillStyle = sh; ell(c, -2, -44 + bob, 24, 5); c.fill(); }
     c.fillStyle = 'rgba(255,255,255,.12)'; ell(c, -4, -45 + bob, 16, 3); c.fill(); c.strokeStyle = 'rgba(0,0,0,.12)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-20, -30 + bob); c.quadraticCurveTo(-24, -40 + bob, -16, -46 + bob); c.stroke();   // عضلة الفخذ
     // الرقبة والراس
     c.save(); c.translate(18, -44 + bob); c.rotate(nod + (opt.graze ? .9 : 0));
@@ -188,15 +191,20 @@
     c.fillStyle = C.b; [[14, -33], [17, -34]].forEach(([ex, ey]) => { c.beginPath(); c.moveTo(ex, ey); c.lineTo(ex - 1, ey - 8); c.lineTo(ex + 3, ey - 1); c.fill(); });
     if (opt.zebra) { c.save(); c.beginPath(); c.moveTo(-4, -2); c.bezierCurveTo(0, -16, 8, -26, 16, -30); c.lineTo(24, -24); c.bezierCurveTo(18, -16, 14, -6, 10, 10); c.closePath(); c.clip(); c.strokeStyle = '#141414'; c.lineWidth = 2.2; for (let k = -6; k < 30; k += 5) { c.beginPath(); c.moveTo(-10, k - 30); c.lineTo(30, k - 20); c.stroke(); } c.restore(); }
     c.fillStyle = C.m; c.beginPath(); c.moveTo(-6, -2); c.bezierCurveTo(-2, -16, 6, -28, 15, -33); c.lineTo(18, -30); c.bezierCurveTo(10, -24, 4, -14, 2, 0); c.closePath(); c.fill(); for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-2 + k * 2.6, -6 - k * 4.5); c.lineTo(-7 + k * 2.6 + Math.sin(t * 3 + k) * 1.2, -2 - k * 4.5); c.lineTo(0 + k * 2.6, -3 - k * 4.5); c.fill(); }   // العرف
+    if (opt.leel) { c.strokeStyle = 'rgba(170,110,255,.75)'; c.lineWidth = 1; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-1 + k * 2.6, -5 - k * 4.5); c.lineTo(-6 + k * 2.6 + Math.sin(t * 3 + k) * 1.2, -1.5 - k * 4.5); c.stroke(); } c.fillStyle = '#ffd76a'; c.beginPath(); c.arc(27, -24, 1.6, 0, TAU); c.fill(); c.fillStyle = '#c89aff'; c.beginPath(); c.moveTo(18, -31); c.lineTo(20, -35); c.lineTo(22, -31); c.lineTo(20, -29); c.closePath(); c.fill(); }   // لمعة بنفسجية بالعرف + جوهرة على الجبهة
     if (opt.tack) { c.strokeStyle = '#4a2a14'; c.lineWidth = 1.3; c.beginPath(); c.moveTo(16, -30); c.lineTo(33, -17); c.moveTo(20, -32); c.lineTo(28, -12); c.stroke(); }
     c.restore();
-    if (opt.tack) { c.fillStyle = '#b8302a'; rr(c, -12, -50 + bob, 24, 13, 3); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(-12, -40 + bob, 24, 2); c.fillStyle = '#3a2214'; c.beginPath(); c.moveTo(-10, -50 + bob); c.quadraticCurveTo(0, -46 + bob, 10, -52 + bob); c.lineTo(9, -48 + bob); c.quadraticCurveTo(0, -42 + bob, -9, -46 + bob); c.closePath(); c.fill(); }
+    if (opt.tack) { c.fillStyle = opt.leel ? '#6a1ad8' : '#b8302a'; rr(c, -12, -50 + bob, 24, 13, 3); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(-12, -40 + bob, 24, 2); c.fillStyle = '#3a2214'; c.beginPath(); c.moveTo(-10, -50 + bob); c.quadraticCurveTo(0, -46 + bob, 10, -52 + bob); c.lineTo(9, -48 + bob); c.quadraticCurveTo(0, -42 + bob, -9, -46 + bob); c.closePath(); c.fill(); }
     c.restore();
     if (R) { const hy = y + (-50 + bob) * s; c.save(); sitR(c, R, x - dir * 1 * s, hy, .42); c.restore(); }   // الفارس كاعد على السرج
-    c.save(); c.translate(x, y); c.scale(dir * s, s); if (opt.tack) { c.fillStyle = '#3a2214'; rr(c, -6, -45 + bob, 12, 13, 3); c.fill(); c.fillStyle = '#5a3a24'; rr(c, -5, -44 + bob, 10, 3, 2); c.fill(); c.strokeStyle = '#8a8a90'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -34 + bob); c.lineTo(0, -26 + bob); c.stroke(); c.strokeStyle = '#c8c8d0'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-3, -26 + bob); c.lineTo(3, -26 + bob); c.stroke();
+    c.save(); c.translate(x, y); c.scale(dir * s, s); if (opt.tack) { c.fillStyle = opt.leel ? '#2a0a5a' : '#3a2214'; rr(c, -6, -45 + bob, 12, 13, 3); c.fill(); c.fillStyle = opt.leel ? '#ffd76a' : '#5a3a24'; rr(c, -5, -44 + bob, 10, 3, 2); c.fill(); c.strokeStyle = '#8a8a90'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -34 + bob); c.lineTo(0, -26 + bob); c.stroke(); c.strokeStyle = '#c8c8d0'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-3, -26 + bob); c.lineTo(3, -26 + bob); c.stroke();
       if (R) { c.strokeStyle = '#4a2a14'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(4, -50 + bob); c.quadraticCurveTo(26, -42 + bob, 50, -58 + bob); c.stroke(); } }   // اللبادة والركاب واللجام
-    legs.filter(L => !L[3]).forEach(leg); c.restore(); }
-  function horse(c, x, y, dir, k, t, R, ph) { horseArt(c, x, y, dir, k, t, ph, R, { tack: 1, s: .92, amp: .28 }); }
+    legs.filter(L => !L[3]).forEach(leg); c.restore();
+    if (opt.leel) { c.save(); c.globalCompositeOperation = 'lighter'; const s2 = opt.s || .9;   // هالة وبريق حول ليل + حوافر تلمع
+      const g = c.createRadialGradient(x, y - 30 * s2, 4, x, y - 30 * s2, 58 * s2); g.addColorStop(0, 'rgba(150,80,255,.16)'); g.addColorStop(1, 'rgba(150,80,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y - 30 * s2, 58 * s2, 0, TAU); c.fill();
+      for (let k = 0; k < 7; k++) { const a = t * .9 + k * TAU / 7, rx = x + Math.cos(a) * 40 * s2, ry = y - 32 * s2 + Math.sin(a) * 22 * s2, tw = .5 + .5 * Math.sin(t * 5 + k * 2); c.globalAlpha = tw; c.fillStyle = k % 2 ? '#e0c8ff' : '#ffe9a8'; c.beginPath(); c.moveTo(rx, ry - 3 * tw); c.lineTo(rx + 1, ry - 1); c.lineTo(rx + 3 * tw, ry); c.lineTo(rx + 1, ry + 1); c.lineTo(rx, ry + 3 * tw); c.lineTo(rx - 1, ry + 1); c.lineTo(rx - 3 * tw, ry); c.lineTo(rx - 1, ry - 1); c.closePath(); c.fill(); }
+      c.globalAlpha = .55; c.fillStyle = '#b07aff'; [[-19, 0], [17, 0]].forEach(([hx]) => { c.beginPath(); c.ellipse(x + hx * dir * s2, y - 1, 6, 2, 0, 0, TAU); c.fill(); }); c.restore(); } }
+  function horse(c, x, y, dir, k, t, R, ph) { horseArt(c, x, y, dir, k, t, ph, R, k === LEEL ? { tack: 1, s: 1.0, amp: .3, leel: 1 } : { tack: 1, s: .92, amp: .28 }); }
   function stableDraw(c) { const B = STB.barn, t = now(); if (!vis(B.x - 120, B.x + 120, B.y - 160, B.y + 20)) return; c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, B.x, B.y + 3, 100, 12); c.fill();
     const wg = c.createLinearGradient(0, B.y - 90, 0, B.y); wg.addColorStop(0, '#c8342a'); wg.addColorStop(1, '#8a1a14'); c.fillStyle = wg; c.fillRect(B.x - 90, B.y - 90, 180, 90); c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1; for (let x = B.x - 86; x < B.x + 90; x += 8) { c.beginPath(); c.moveTo(x, B.y - 90); c.lineTo(x, B.y); c.stroke(); }
     c.fillStyle = '#5a2a1a'; c.beginPath(); c.moveTo(B.x - 102, B.y - 86); c.lineTo(B.x - 70, B.y - 128); c.lineTo(B.x + 70, B.y - 128); c.lineTo(B.x + 102, B.y - 86); c.closePath(); c.fill(); c.fillStyle = '#3a1a10'; c.fillRect(B.x - 102, B.y - 90, 204, 6);
@@ -211,7 +219,7 @@
   function paddockFront(c) { const P = STB; if (!vis(P.x - P.rx - 20, P.x + P.rx + 20, P.y - 10, P.y + P.ry + 50)) return; c.save(); fence(c, P, 0); c.fillStyle = '#8a6a3a'; c.fillRect(P.x - 26, P.y + P.ry - 30, 4, 32); c.fillRect(P.x + 22, P.y + P.ry - 30, 4, 32); c.fillRect(P.x - 26, P.y + P.ry - 34, 52, 5);
     c.fillStyle = '#5a7a9a'; rr(c, P.x + 120, P.y + P.ry - 20, 46, 14, 3); c.fill(); c.fillStyle = '#7ad0f0'; rr(c, P.x + 123, P.y + P.ry - 18, 40, 5, 2); c.fill();   // حوض مي
     sign(c, '🐴 إسطبل الخيل — اركب حصان', P.x, P.y + P.ry + 26, '#ffb46a'); c.restore(); }
-  function horsesDraw(c, front) { if (!vis(STB.x - STB.rx - 40, STB.x + STB.rx + 40, STB.y - STB.ry - 80, STB.y + STB.ry + 10)) return; const t = now(), riders = rmRiders('horse'); for (let i = 0; i < 4; i++) { const p = horsePos(i); if ((Math.sin(p[3]) >= 0) !== front) continue; const ph = ((now() * .14 + i * TAU / 4) * STB.rx * .8 / 42) % 1; horse(c, p[0], p[1], p[2], i, t, riders.find(R => R.i === i), ph); } }
+  function horsesDraw(c, front) { if (!vis(STB.x - STB.rx - 40, STB.x + STB.rx + 40, STB.y - STB.ry - 80, STB.y + STB.ry + 10)) return; const t = now(), riders = rmRiders('horse'); for (let i = 0; i < 4; i++) { const p = horsePos(i); if ((Math.sin(p[3]) >= 0) !== front) continue; const ph = ((now() * .14 + i * TAU / 4) * STB.rx * .8 / 42) % 1; const rd = riders.find(R => R.i === i); horse(c, p[0], p[1], p[2], i, t, rd, ph); if (i === LEEL) { try { rmTagDraw(c, p[0], p[1] - (rd ? 118 : 74), '🖤 ليل 👑', 'rgba(70,20,150,.92)'); } catch (e) {} } } }
 
   /* ================= 3) البحيرة: قوارب بدّالات + صيد + نافورة ================= */
   function pboatPos(i) { const a = now() * .07 + i * TAU / 4, x = LAKE.x + Math.cos(a) * LAKE.rx * .62 + Math.sin(a * 2 + i) * 18, y = LAKE.y + Math.sin(a) * LAKE.ry * .55, dir = -Math.sin(a) > 0 ? 1 : -1; return [x, y, dir, a]; }
@@ -448,9 +456,13 @@
     if (ok(bx, by)) return; if (ok(bx, py)) { m.y = py; return; } if (ok(px, by)) { m.x = px; return; } m.x = px; m.y = py; m.tx = px; m.ty = py; R8.mp = []; }
   /* ================= الركوب (بالأزرار فقط) ================= */
   const rideOld = rmRideOf; rmRideOf = function (o) { const e = o && o.dance || 0; for (const k in RIDES) { const D = RIDES[k]; if (e >= D.code && e < D.code + D.n) return { k, i: e - D.code }; } return rideOld(o); };
-  function board(kind) { const m = RM.me, D = RIDES[kind]; if (m.sit) { rmStand(); return; } if (m.jump) return;
+  function board(kind, want) { const m = RM.me, D = RIDES[kind]; if (m.sit) { rmStand(); return; } if (m.jump) return;
+    if (kind === 'horse' && want === undefined) { horsePick(); return; }
+    if (kind === 'horse' && want === LEEL && !RM.myAdm) { showToast('🖤 ليل حصان المشرفين بس 👑'); return; }
     if (kind === 'bal' && balState().st !== 'ground') { showToast('🎈 المنطاد طاير هسه، انتظره ينزل وبعدين اركب (' + Math.ceil(48 - balState().ph) + ' ث)'); return; }
-    const used = new Set(rmRiders(kind).filter(R => !R.me).map(R => R.i)); let pick = -1; for (let i = 0; i < D.n; i++) if (!used.has(i)) { pick = i; break; } if (pick < 0) { showToast('⛔ كله مليان، انتظر شوي'); return; }
+    const used = new Set(rmRiders(kind).filter(R => !R.me).map(R => R.i)); let pick = -1;
+    if (want !== undefined) { if (used.has(want)) { showToast('⛔ هذا الحصان راكبه واحد، اختار غيره'); return; } pick = want; }
+    else for (let i = 0; i < D.n; i++) if (!used.has(i) && !(kind === 'horse' && i === LEEL && !RM.myAdm)) { pick = i; break; } if (pick < 0) { showToast('⛔ كله مليان، انتظر شوي'); return; }
     if (!rmRideOf(m)) R8.from = { x: m.x, y: m.y }; m.tx = m.x; m.ty = m.y; rmSetDance(D.code + pick); RM.sent = ''; snd([['sine', 587, 587, .15, .05], ['sine', 740, 740, .15, .05, .1], ['triangle', 880, 880, .3, .05, .2]]);
     showToast({ horse: '🐴 ركبت الحصان! يلا نلف بالإسطبل', pboat: '🛶 ركبت قارب البدّالات! بدّل بالبحيرة', kart: '🏎️ ركبت الكارت! انطلق 🏁', bal: '🎈 ركبت المنطاد! راح نطير فوك المرج' }[kind]); rmPrompt(true); }
   function seatOf(r) { if (r.k === 'horse') { const p = horsePos(r.i); return [p[0], p[1] - 20]; } if (r.k === 'pboat') { const p = pboatPos(r.i); return [p[0], p[1] - 2]; } if (r.k === 'kart') { const p = kartPos(r.i); return [p[0], p[1]]; } if (r.k === 'bal') { const B = balState(); return [BAL.x + B.dx, BAL.y - B.h - 12]; } return null; }
@@ -464,6 +476,18 @@
       if (segHit) { const sx = (m.x + x) / 2 < MZ.x0 + MZW / 2 ? MZ.x0 - 30 : MZ.x0 + MZW + 30, pts = [[sx, Math.min(m.y, y) < MZ.y0 + 40 ? MZ.y0 - 30 : MZ.y0 + MZH + 30]]; pts.length = 0; const top = MZ.y0 - 30, bot = MZ.y0 + MZH + 30; pts.push([sx, m.y < MZ.y0 + MZH / 2 ? top : bot], [sx, y < MZ.y0 + MZH / 2 ? top : bot], [x, y]); R8.mp = pts.slice(1); return walkOld(pts[0][0], pts[0][1]); } }
     return walkOld(x, y); };
 
+  /* ---------- اختيار الحصان 🐴: تختار الحصان اللي يعجبك، وليل 🖤 للمشرفين بس ---------- */
+  function horsePick() { let P = document.getElementById('r8HP'); if (P) P.remove(); P = document.createElement('div'); P.id = 'r8HP';
+    P.style.cssText = 'position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(10,6,24,.55);backdrop-filter:blur(3px);font-family:Cairo,system-ui,sans-serif';
+    const used = new Set(rmRiders('horse').filter(R => !R.me).map(R => R.i)), adm = !!RM.myAdm;
+    let h = '<div style="width:min(92vw,380px);background:linear-gradient(160deg,#fff7ec,#f4e6d4);border-radius:22px;padding:14px 12px 12px;box-shadow:0 14px 40px rgba(0,0,0,.4);direction:rtl;text-align:center"><div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:17px;color:#5a3218">🐴 اختار حصانك</b><button type="button" data-x style="border:0;background:#e8d6c0;border-radius:50%;width:30px;height:30px;font-size:15px">✕</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px">';
+    for (let i = 0; i < 4; i++) { const lk = i === LEEL && !adm, bz = used.has(i), L = i === LEEL;
+      h += '<button type="button" data-h="' + i + '" style="position:relative;border:' + (L ? '2px solid #9a5aff' : '2px solid #e0c8a8') + ';border-radius:16px;padding:6px 4px 8px;background:' + (L ? 'linear-gradient(160deg,#2a1450,#120828)' : '#fffaf2') + ';color:' + (L ? '#f0e4ff' : '#5a3218') + ';' + (lk || bz ? 'opacity:.6;' : '') + (L ? 'box-shadow:0 0 16px rgba(150,80,255,.55)' : '') + '"><canvas width="150" height="96" style="width:100%;height:auto"></canvas><div style="font-weight:800;font-size:14px">' + HNAME[i] + (L ? ' 👑' : '') + '</div><div style="font-size:11px;opacity:.85">' + (bz ? '⛔ راكبه واحد' : lk ? '🔒 للمشرفين بس' : L ? '✨ حصان المشرفين المميز' : 'جاهز للركوب') + '</div></button>'; }
+    h += '</div></div>'; P.innerHTML = h; (document.getElementById('rmBox') || document.body).appendChild(P);
+    const close = () => { cancelAnimationFrame(P.raf); P.remove(); };
+    P.addEventListener('pointerdown', e => { if (e.target === P) close(); }); P.querySelector('[data-x]').onclick = close;
+    P.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { const i = +b.dataset.h; if (i === LEEL && !adm) { snd([['square', 220, 180, .15, .04]]); showToast('🖤 ليل حصان المشرفين بس 👑'); return; } close(); board('horse', i); });
+    const cv = [...P.querySelectorAll('canvas')]; const loop = () => { const t = now(); cv.forEach((cn, i) => { const c = cn.getContext('2d'); c.clearRect(0, 0, 150, 96); const ph = (t * .9) % 1; horseArt(c, 75, 90, 1, i, t, ph, null, i === LEEL ? { tack: 1, s: 1.05, amp: .3, leel: 1 } : { tack: 1, s: 1.0, amp: .28 }); }); P.raf = requestAnimationFrame(loop); }; loop(); }
   /* ---------- الأزرار حسب القرب ---------- */
   const NEAR = {
     feed: () => near(STAD.x, STAD.y + STAD.ry + 52, 150),

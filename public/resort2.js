@@ -20,11 +20,10 @@ const RX_BAGS = [['g_bfly', 'حقيبة الفراشة', 45, ['#c9a2ff', '#ff9ec
 RX_BAGS.forEach(b => { const w = { k: b[0], n: b[1], s: 'bag', p: b[2] }; RM_WEAR.push(w); RM_WEARD[b[0]] = w; RM_BAGCOL[b[0]] = b[3]; });
 const RX_BAGK = {}; RX_BAGS.forEach(b => RX_BAGK[b[0]] = b[3]);
 const rxBagOld = rmBagItem;
-rmBagItem = function (c, k, x, y, T) {
-  const C = RX_BAGK[k]; if (!C) return rxBagOld(c, k, x, y, T);
+rmBagItem = function (c, k, x, y, T, noStrap) {
+  const C = RX_BAGK[k]; if (!C) return rxBagOld(c, k, x, y, T, noStrap);
   c.save(); c.translate(x, y); const sw = Math.sin((T || 0) / 18) * 1.2;
-  c.strokeStyle = k === 'g_diam' ? '#9adfff' : k === 'g_moon' ? '#d7a400' : '#6a2a4a'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-3, -50); c.quadraticCurveTo(8, -46, 12 + sw, -36); c.stroke();
-  c.translate(13 + sw, -30); c.rotate(sw * 0.04); const OL = () => { c.strokeStyle = 'rgba(40,10,30,.75)'; c.lineWidth = 0.9; c.stroke(); };
+  rmBagStrap(c, k, sw, noStrap); const OL = () => { c.strokeStyle = 'rgba(40,10,30,.75)'; c.lineWidth = 0.9; c.stroke(); };
   const grad = (a, b) => { const g = c.createLinearGradient(-8, -8, 8, 8); g.addColorStop(0, a || C[0]); g.addColorStop(1, b || C[1]); return g; };
   if (k === 'g_bfly') {
     [-1, 1].forEach(s => { c.fillStyle = grad(); c.beginPath(); c.ellipse(s * 5, -2.5, 5.4, 4.2, s * 0.5, 0, 7); c.fill(); OL(); c.fillStyle = grad('#ffd0e8', '#ff7ab8'); c.beginPath(); c.ellipse(s * 4, 4, 3.6, 3, -s * 0.4, 0, 7); c.fill(); OL(); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(s * 5.5, -3, 1.3, 0, 7); c.fill(); });
@@ -96,37 +95,65 @@ const RX_SL = [
   ['s_royal', 'ملكي ذهبي 👑', 75, { sh: ['#ffd76a', '#b8860b'], sa: 0.75, lip: '#9a2a3a', gloss: 1, bl: '#d88a6a', liner: 'gold', lash: 4, contour: 1, hl: 2, glit: ['#ffe680', '#fff'] }],
   ['s_doll', 'دمية باربي 🎀', 50, { sh: ['#ffb0d8', '#ff6ab0'], sa: 0.6, lip: '#ff3d8a', gloss: 1, bl: '#ff6a9a', blBig: 1, lash: 4, lower: 1, hl: 1, glit: ['#fff'] }]
 ];
+/* 👑 مكياج المشرفين حصراً (10 لوكات احترافية) — يظهر بخانة «للمشرفين» داخل صالون ملاذ */
+const RX_SLA = [
+  ['sa_queen', 'ملكة المنتجع 👑', { sh: ['#ffe08a', '#7a2ad8'], sh3: '#c89a2a', sa: 0.8, lip: '#7a1a4a', gloss: 1, bl: '#e08a9a', liner: 'gold', lash: 5, contour: 1, hl: 2, bindi: '#ffd23f', gemsBrow: ['#ffd76a', '#fff3c0'], glit: ['#ffe680', '#fff'], shim: 1 }],
+  ['sa_galaxy', 'مجرة 🌌', { sh: ['#1a1050', '#7a3ad8'], sh3: '#ff4ad8', sa: 0.85, lip: '#6a2aa8', gloss: 1, bl: '#c87ad8', liner: 'cat', lash: 4, glow: '154,106,255', glit: ['#ffffff', '#c8b0ff', '#8affff'], stars: 1 }],
+  ['sa_rose', 'ورد جوري 🌹', { sh: ['#ffc0cc', '#d02a5a'], sa: 0.7, lip: '#d0103a', ombre: '#ff8aa8', gloss: 1, bl: '#ff6a8a', liner: 'wing', lash: 4, hl: 1, cheek: 'heart', cheekC: '#e8204a' }],
+  ['sa_diamond', 'ألماس 💎', { sh: ['#ffffff', '#9ad0ff'], sa: 0.75, lip: '#e0a0b8', gloss: 1, bl: '#ffc0d8', linerC: '#4a7ab8', lash: 4, hl: 2, gemsBrow: ['#ffffff', '#bfe8ff'], tear: '#bff4ff', shim: 1, glit: ['#fff', '#d0f0ff'] }],
+  ['sa_aurora', 'شفق قطبي 🌈', { sh: ['#3affc8', '#3a8aff'], sh3: '#c84aff', sa: 0.75, lip: '#ff7ac0', grad: 1, gloss: 1, bl: '#ff9ad0', linerC: '#18a8a0', lash: 3, glow: '122,255,224', shim: 1, glit: ['#bfffee', '#e0c8ff'] }],
+  ['sa_fire', 'لهب 🔥', { sh: ['#ffd040', '#ff3a1a'], sh3: '#ff7a1a', sa: 0.8, lip: '#c4101a', gloss: 1, bl: '#ff7a5a', liner: 'cat', lash: 4, contour: 1, glit: ['#ffe066', '#ffb03a'], glow: '255,120,40' }],
+  ['sa_angel', 'ملاك 🤍', { sh: ['#ffffff', '#ffd6ea'], sa: 0.6, lip: '#ffb0c4', gloss: 1, bl: '#ffb8c8', lash: 4, hl: 2, pearl: 2, glow: '255,243,192', glit: ['#ffffff', '#fff3c0'], bindi: '#ffffff' }],
+  ['sa_neon', 'نيون ⚡', { sh: ['#ff2ad8', '#2ad8ff'], sa: 0.85, lip: '#ff2a8a', gloss: 1, bl: '#ff6ad0', linerC: '#2affd8', dbl: 1, lash: 3, glow: '255,42,216', glit: ['#2affd8', '#ff2ad8'] }],
+  ['sa_pearl', 'لؤلؤة الخليج 🦪', { sh: ['#f6ead8', '#c8a88a'], sa: 0.65, lip: '#c87a7a', gloss: 1, bl: '#e8a8a0', liner: 'wing', lash: 3, hl: 1, pearl: 2, gemsBrow: ['#fffaf0', '#f0e6ff'], bindi: '#fff8f0' }],
+  ['sa_love', 'بابي 💜 بابيتو', { sh: ['#e0b0ff', '#8a2ad8'], sh3: '#ff6ab8', sa: 0.8, lip: '#a0207a', ombre: '#ff7ac8', gloss: 1, bl: '#e08aff', liner: 'wing', lash: 5, hl: 2, cheek: 'heart', cheekC: '#a453ff', glow: '192,138,255', glit: ['#ffffff', '#ffc8f0'], hearts: 1 }]
+];
 const RX_FA = [['f_gems', 'كريستال تحت العين 💎', 35], ['f_hearts', 'قلوب صغيرة 💗', 30], ['f_stars', 'نجوم لامعة ⭐', 30], ['f_freck', 'نمش ناعم 🌰', 25], ['f_bfly', 'رسمة فراشة 🦋', 40], ['f_moon', 'قمر ونجوم 🌙', 35]];
-const RX_SLD = {}; RX_SL.forEach(x => RX_SLD[x[0]] = x[3]);
+const RX_SLD = {}; RX_SL.forEach(x => RX_SLD[x[0]] = x[3]); RX_SLA.forEach(x => RX_SLD[x[0]] = x[2]);
 RX_SL.forEach(x => { const w = { k: x[0], n: x[1], s: 'sl', p: x[2] }; RM_WEAR.push(w); RM_WEARD[x[0]] = w; });
 RX_FA.forEach(x => { const w = { k: x[0], n: x[1], s: 'fa', p: x[2] }; RM_WEAR.push(w); RM_WEARD[x[0]] = w; });
+RX_SLA.forEach(x => { const w = { k: x[0], n: x[1], s: 'sl', p: 0, adm: 1 }; RM_WEAR.push(w); RM_WEARD[x[0]] = w; });
 function rxSlOf(o, me) { const W = (o && o.wear) || {}; let sl = W.sl || '', fa = W.fa || ''; if (me && RX.slTry) { if (RX.slTry[0] === 's') sl = RX.slTry; else fa = RX.slTry; } return sl || fa ? { sl, fa } : null; }
 function rmSalonFace(c, O, ex, rx, ry, t, male, klw) {
-  const L = window.AVT_SL; if (!L) return; const k = klw || 1, D = RX_SLD[L.sl], ey = -102;
+  const L = window.AVT_SL; if (!L) return; const k = klw || 1, D = RX_SLD[L.sl], ey = -102, HC = window.AVT_HEADCLIP;
+  /* كل شي على الخدود والبشرة ينقص على حدود الوجه بالضبط (ما يطلع برا الخد) */
+  const inFace = f => { c.save(); try { if (HC) HC(); f(); } catch (e) {} c.restore(); };
   if (D) {
-    if (D.contour) { c.save(); c.globalAlpha = 0.22; c.fillStyle = '#8a5a3a'; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 11.6, -92.6, 2.2, 4.4, s * 0.5, 0, 7); c.fill(); }); c.restore(); }
-    const bl = D.bl; if (bl) { c.save(); [-1, 1].forEach(s => { const cx = s * 10.4, cy = -94.2, r = D.blBig ? 4.6 : 3.6, g = c.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, bl); g.addColorStop(1, 'rgba(255,255,255,0)'); c.globalAlpha = D.blBig ? 0.75 : 0.6; c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill(); }); c.restore(); }
-    // ظلال الجفن (هلال فوق العين)
-    [-1, 1].forEach(s => { const cx = s * ex; c.save(); c.globalAlpha = D.sa || 0.6; const g = c.createLinearGradient(cx, ey - ry - 3.6, cx, ey); g.addColorStop(0, D.sh[0]); if (D.sh3) g.addColorStop(0.5, D.sh3); g.addColorStop(1, D.sh[1]); c.fillStyle = g; c.beginPath(); c.ellipse(cx + s * 0.6, ey - 0.6, rx + 2, ry + 3.4, 0, Math.PI, Math.PI * 2, false); c.ellipse(cx, ey, rx + 0.35, ry + 0.35, 0, Math.PI * 2, Math.PI, true); c.closePath(); c.fill(); c.restore(); });
-    // آيلاينر احترافي
-    if (D.liner) [-1, 1].forEach(s => { const ox = s * (ex + rx + 0.1); c.fillStyle = D.liner === 'gold' ? '#d4a017' : '#140c1a'; c.beginPath(); c.moveTo(ox - s * 2.4, ey - ry * 0.55); c.lineTo(ox + s * (D.liner === 'cat' ? 4.4 : 3.6), ey - ry - (D.liner === 'cat' ? 2.4 : 1.6)); c.lineTo(ox - s * 0.2, ey + 0.4); c.closePath(); c.fill(); if (D.liner === 'gold') { c.strokeStyle = '#140c1a'; c.lineWidth = 0.6 * k; c.beginPath(); c.ellipse(s * ex, ey, rx + 0.3, ry + 0.3, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); } });
+    inFace(() => {
+      if (D.glow) [-1, 1].forEach(s => { const cx = s * ex, g = c.createRadialGradient(cx, ey, 1, cx, ey, rx + 5); const q = (rx + 0.6) / (rx + 5); g.addColorStop(0, 'rgba(' + D.glow + ',0)'); g.addColorStop(q, 'rgba(' + D.glow + ',0)'); g.addColorStop(q + (1 - q) * 0.35, 'rgba(' + D.glow + ',' + (0.3 + 0.15 * Math.sin(t / 9)) + ')'); g.addColorStop(1, 'rgba(' + D.glow + ',0)'); c.fillStyle = g; c.beginPath(); c.arc(cx, ey, rx + 5, 0, 7); c.fill(); });
+      if (D.contour) { c.globalAlpha = 0.2; c.fillStyle = '#8a5a3a'; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 10.6, -92.8, 1.8, 3.8, s * 0.5, 0, 7); c.fill(); }); c.globalAlpha = 1; }
+      const bl = D.bl; if (bl) [-1, 1].forEach(s => { const cx = s * 9.4, cy = -94.4, r = D.blBig ? 3.9 : 3.2, g = c.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, bl); g.addColorStop(1, 'rgba(255,255,255,0)'); c.globalAlpha = D.blBig ? 0.68 : 0.55; c.fillStyle = g; c.beginPath(); c.ellipse(cx, cy, r, r * 0.72, 0, 0, 7); c.fill(); c.globalAlpha = 1; });
+      // ظلال الجفن (هلال فوق العين)
+      [-1, 1].forEach(s => { const cx = s * ex; c.save(); c.globalAlpha = D.sa || 0.6; const g = c.createLinearGradient(cx, ey - ry - 3.6, cx, ey); g.addColorStop(0, D.sh[0]); if (D.sh3) g.addColorStop(0.5, D.sh3); g.addColorStop(1, D.sh[1]); c.fillStyle = g; c.beginPath(); c.ellipse(cx + s * 0.6, ey - 0.6, rx + 2, ry + 3.4, 0, Math.PI, Math.PI * 2, false); c.ellipse(cx, ey, rx + 0.35, ry + 0.35, 0, Math.PI * 2, Math.PI, true); c.closePath(); c.fill();
+        if (D.shim) { c.clip(); const u = ((t / 70) % 1.6) - 0.3, sx = cx - rx - 3 + u * (rx * 2 + 6), sg = c.createLinearGradient(sx - 2.5, 0, sx + 2.5, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,.75)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); c.globalAlpha = 1; c.fillStyle = sg; c.fillRect(sx - 2.5, ey - ry - 5, 5, ry + 6); }
+        c.restore(); });
+      if (D.aegyo) { c.globalAlpha = 0.5; c.strokeStyle = '#fff0f4'; c.lineWidth = 0.9 * k; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * ex, ey + ry * 0.55, rx * 0.8, ry * 0.7, 0, Math.PI * 0.2, Math.PI * 0.8); c.stroke(); }); c.globalAlpha = 1; }
+      if (D.hl) { c.globalAlpha = D.hl > 1 ? 0.62 : 0.45; c.fillStyle = '#fff'; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 8.6, -97.4, D.hl > 1 ? 2.2 : 1.6, 0.8, -s * 0.35, 0, 7); c.fill(); }); c.beginPath(); c.ellipse(0, -98, 0.55, 2, 0, 0, 7); c.fill(); c.globalAlpha = 1; }
+      if (D.cheek === 'heart') [-1, 1].forEach(s => rxHeart(c, s * 9.2, -95.2, 0.95, D.cheekC || '#ff4a8a'));
+      if (D.tear) [-1, 1].forEach(s => { const px = s * (ex + rx * 0.35), py = ey + ry + 2.4, tw = 0.6 + 0.4 * Math.sin(t / 6 + s); c.fillStyle = D.tear; c.beginPath(); c.moveTo(px, py - 1.3); c.quadraticCurveTo(px + 0.9, py + 0.2, px, py + 1); c.quadraticCurveTo(px - 0.9, py + 0.2, px, py - 1.3); c.fill(); c.globalAlpha = tw; rxStar4(c, px + 0.4, py - 0.4, 1.1, '#fff'); c.globalAlpha = 1; });
+      if (D.pearl) [-1, 1].forEach(s => { const cx = s * (ex + rx * 0.62); for (let i = 0; i < (D.pearl > 1 ? 3 : 2); i++) { c.fillStyle = D.pearl > 1 ? ['#e0fffa', '#ffe0f4', '#e0e8ff'][i] : '#fff'; c.beginPath(); c.arc(cx + s * i * 0.9, ey + ry + 1.2 + i * 0.7, 0.6, 0, 7); c.fill(); } });
+      // شفايف + لمعة
+      if (D.lip) { if (D.grad || D.ombre) { const g = c.createRadialGradient(0, -90.6, 0, 0, -90.6, 3.9); if (D.ombre) { g.addColorStop(0, D.ombre); g.addColorStop(0.55, D.lip); g.addColorStop(1, D.lip); } else { g.addColorStop(0, D.lip); g.addColorStop(1, 'rgba(255,170,190,.55)'); } c.fillStyle = g; } else c.fillStyle = D.lip; c.beginPath(); c.ellipse(0, -90.6, 3.5, 1.8, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(80,10,30,.45)'; c.lineWidth = 0.5 * k; c.beginPath(); c.moveTo(-3.2, -90.8); c.quadraticCurveTo(-1.4, -91.8, 0, -91.2); c.quadraticCurveTo(1.4, -91.8, 3.2, -90.8); c.stroke(); if (D.gloss) { c.globalAlpha = 0.8; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(0.9, -90.0, 1.1, 0.42, 0, 0, 7); c.fill(); c.globalAlpha = 1; } }
+      if (D.bindi) { const tw = 0.5 + 0.5 * Math.sin(t / 7); c.fillStyle = D.bindi; c.beginPath(); c.moveTo(0, -107.6); c.lineTo(0.9, -106.5); c.lineTo(0, -105.2); c.lineTo(-0.9, -106.5); c.closePath(); c.fill(); c.strokeStyle = 'rgba(80,40,0,.4)'; c.lineWidth = 0.3; c.stroke(); c.globalAlpha = tw; rxStar4(c, 0.5, -107, 1.3, '#fff'); c.globalAlpha = 1; }
+    });
+    // آيلاينر احترافي (يطلع شوية برا العين، طبيعي)
+    const lc = D.liner === 'gold' ? '#d4a017' : D.linerC || '#140c1a';
+    if (D.liner || D.linerC) [-1, 1].forEach(s => { const ox = s * (ex + rx + 0.1), cat = D.liner === 'cat'; c.fillStyle = lc; c.beginPath(); c.moveTo(ox - s * 2.4, ey - ry * 0.55); c.lineTo(ox + s * (cat ? 3.6 : 3), ey - ry - (cat ? 2.2 : 1.5)); c.lineTo(ox - s * 0.2, ey + 0.4); c.closePath(); c.fill(); if (D.dbl) { c.globalAlpha = 0.85; c.fillStyle = D.sh[0]; c.beginPath(); c.moveTo(ox - s * 1.6, ey - ry * 0.95); c.lineTo(ox + s * 3.4, ey - ry - 3); c.lineTo(ox - s * 0.4, ey - ry * 0.6); c.closePath(); c.fill(); c.globalAlpha = 1; } if (D.liner === 'gold' || D.linerC) { c.strokeStyle = D.linerC || '#140c1a'; c.lineWidth = 0.6 * k; c.beginPath(); c.ellipse(s * ex, ey, rx + 0.3, ry + 0.3, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); } });
     // رموش طويلة
-    if (D.lash) [-1, 1].forEach(s => { const cx = s * ex, n = D.lash + 2, len = 1.8 + D.lash * 0.7; c.strokeStyle = '#140c1a'; c.lineWidth = 0.8 * k; c.lineCap = 'round'; for (let i = 0; i < n; i++) { const u = i / (n - 1), a = Math.PI * (1.15 + u * 0.7), px = cx + Math.cos(a) * (rx + 0.2), py = ey + Math.sin(a) * (ry + 0.2), aa = a - s * 0.35; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + Math.cos(aa) * len * 0.6, py + Math.sin(aa) * len * 0.9, px + Math.cos(aa) * len + s * 0.5, py + Math.sin(aa) * len); c.stroke(); } if (D.lower) for (let i = 0; i < 4; i++) { const a = Math.PI * (0.25 + i * 0.16), px = cx + Math.cos(a) * rx, py = ey + Math.sin(a) * ry; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 1.6, py + Math.sin(a) * 1.8); c.stroke(); } });
-    if (D.aegyo) { c.save(); c.globalAlpha = 0.55; c.strokeStyle = '#fff0f4'; c.lineWidth = 1.1 * k; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * ex, ey + ry * 0.4, rx, ry + 1.4, 0, Math.PI * 0.15, Math.PI * 0.85); c.stroke(); }); c.restore(); }
-    // هايلايتر
-    if (D.hl) { c.save(); c.globalAlpha = D.hl > 1 ? 0.7 : 0.5; c.fillStyle = '#fff'; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(s * 9, -97.2, D.hl > 1 ? 2.6 : 1.8, 0.9, -s * 0.35, 0, 7); c.fill(); }); c.beginPath(); c.ellipse(0, -98, 0.6, 2.2, 0, 0, 7); c.fill(); c.restore(); }
-    // شفايف + لمعة
-    if (D.lip) { c.save(); if (D.grad) { const g = c.createRadialGradient(0, -90.6, 0, 0, -90.6, 4); g.addColorStop(0, D.lip); g.addColorStop(1, 'rgba(255,170,190,.55)'); c.fillStyle = g; } else c.fillStyle = D.lip; c.beginPath(); c.ellipse(0, -90.6, 3.7, 1.9, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(80,10,30,.45)'; c.lineWidth = 0.5 * k; c.beginPath(); c.moveTo(-3.4, -90.8); c.quadraticCurveTo(-1.4, -91.9, 0, -91.2); c.quadraticCurveTo(1.4, -91.9, 3.4, -90.8); c.stroke(); if (D.gloss) { c.globalAlpha = 0.8; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(0.9, -90.0, 1.2, 0.45, 0, 0, 7); c.fill(); } c.restore(); }
-    if (D.pearl) [-1, 1].forEach(s => { const cx = s * (ex + rx + 1.6); for (let i = 0; i < (D.pearl > 1 ? 3 : 2); i++) { c.fillStyle = D.pearl > 1 ? ['#e0fffa', '#ffe0f4', '#e0e8ff'][i] : '#fff'; c.beginPath(); c.arc(cx + s * i * 0.5, ey + 1 + i * 1.8, 0.75, 0, 7); c.fill(); } });
-    if (D.glit) for (let i = 0; i < 7; i++) { const s = i % 2 ? 1 : -1, ph = Math.sin(t / 9 + i * 1.7); if (ph < 0.2) continue; const px = s * (ex - 2.6 + (i * 1.9) % 5.4), py = ey - ry - 1.4 - (i % 3) * 0.9; rxStar4(c, px, py, 0.5 + ph * 0.9, D.glit[i % D.glit.length]); }
+    if (D.lash) [-1, 1].forEach(s => { const cx = s * ex, n = D.lash + 2, len = 1.6 + D.lash * 0.55; c.strokeStyle = '#140c1a'; c.lineWidth = 0.75 * k; c.lineCap = 'round'; for (let i = 0; i < n; i++) { const u = i / (n - 1), a = Math.PI * (1.15 + u * 0.7), px = cx + Math.cos(a) * (rx + 0.2), py = ey + Math.sin(a) * (ry + 0.2), aa = a - s * 0.35; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + Math.cos(aa) * len * 0.6, py + Math.sin(aa) * len * 0.9, px + Math.cos(aa) * len + s * 0.5, py + Math.sin(aa) * len); c.stroke(); } if (D.lower) { c.lineWidth = 0.5 * k; for (let i = 0; i < 4; i++) { const a = Math.PI * (0.3 + i * 0.13), px = cx + Math.cos(a) * rx, py = ey + Math.sin(a) * ry; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 0.8, py + Math.sin(a) * 0.9); c.stroke(); } } });
+    if (D.gemsBrow) [-1, 1].forEach(s => { for (let i = 0; i < 5; i++) { const a = Math.PI * (1.2 + i * 0.15), px = s * ex + Math.cos(a) * (rx + 2.6), py = ey + Math.sin(a) * (ry + 3.2); c.fillStyle = D.gemsBrow[i % D.gemsBrow.length]; c.beginPath(); c.arc(px, py, 0.5, 0, 7); c.fill(); if (Math.sin(t / 6 + i * 1.3 + s) > 0.75) rxStar4(c, px, py, 1.2, 'rgba(255,255,255,.95)'); } });
+    if (D.glit) for (let i = 0; i < (D.stars ? 10 : 7); i++) { const s = i % 2 ? 1 : -1, ph = Math.sin(t / 9 + i * 1.7); if (ph < 0.2) continue; const px = s * (ex - 2.6 + (i * 1.9) % 5.4), py = ey - ry - 1.4 - (i % 3) * 0.9; rxStar4(c, px, py, 0.5 + ph * 0.9, D.glit[i % D.glit.length]); }
+    if (D.hearts) for (let i = 0; i < 2; i++) { const u = ((t / 90 + i * 0.5) % 1), s = i ? 1 : -1; c.globalAlpha = Math.sin(u * Math.PI) * 0.9; rxHeart(c, s * (ex + rx + 1.5), ey - ry - 1 - u * 5, 0.8, '#c87aff'); c.globalAlpha = 1; }
   }
   const fa = L.fa; if (!fa) return;
-  if (fa === 'f_gems') [-1, 1].forEach(s => { for (let i = 0; i < 4; i++) { const px = s * ex + s * (-rx * 0.4 + i * rx * 0.55), py = ey + ry + 1.5 + Math.sin(i * 1.1) * 0.5 - (i === 3 ? 1 : 0); c.fillStyle = ['#bff4ff', '#ffffff', '#e0c8ff', '#bff4ff'][i]; c.beginPath(); c.moveTo(px, py - 0.9); c.lineTo(px + 0.7, py); c.lineTo(px, py + 0.9); c.lineTo(px - 0.7, py); c.closePath(); c.fill(); if (Math.sin(t / 7 + i + s) > 0.6) rxStar4(c, px, py, 1.3, 'rgba(255,255,255,.9)'); } });
-  else if (fa === 'f_hearts') [-1, 1].forEach(s => { rxHeart(c, s * 11.4, -97.4, 1.1, '#ff4a8a'); rxHeart(c, s * 12.6, -94.6, 0.7, '#ff8ab8'); });
-  else if (fa === 'f_stars') [[-12.4, -99, 1.3], [-10.6, -96, 0.8], [12.6, -99.4, 1.1], [11, -95.6, 0.7], [-8, -110, 0.8]].forEach((p, i) => rxStar4(c, p[0], p[1], p[2] * (0.75 + 0.25 * Math.sin(t / 8 + i)), i % 2 ? '#fff6c0' : '#ffd23f'));
-  else if (fa === 'f_freck') { c.fillStyle = 'rgba(140,80,40,.55)'; [[-2.6, -96.4], [-4.4, -95.6], [-6.4, -95.8], [-5.4, -94.2], [-8.4, -95.2], [2.6, -96.4], [4.4, -95.6], [6.4, -95.8], [5.4, -94.2], [8.4, -95.2], [-1, -97.6], [1, -97.6]].forEach(p => { c.beginPath(); c.arc(p[0], p[1], 0.42, 0, 7); c.fill(); }); }
-  else if (fa === 'f_bfly') { const cx = -12, cy = -100, fl = 0.85 + 0.15 * Math.sin(t / 6); c.save(); c.translate(cx, cy); c.rotate(-0.4); [-1, 1].forEach(s => { c.save(); c.scale(s * fl, 1); c.fillStyle = '#9a6aff'; c.beginPath(); c.ellipse(1.6, -1, 1.8, 1.4, 0.4, 0, 7); c.fill(); c.fillStyle = '#ff7ab8'; c.beginPath(); c.ellipse(1.3, 1.2, 1.2, 1, -0.4, 0, 7); c.fill(); c.restore(); }); c.fillStyle = '#2a1a3a'; c.fillRect(-0.2, -1.8, 0.4, 3.6); c.restore(); }
-  else if (fa === 'f_moon') { c.strokeStyle = '#eef2ff'; c.lineWidth = 1.1 * k; c.lineCap = 'round'; c.beginPath(); c.arc(-12.2, -101, 1.9, Math.PI * 0.55, Math.PI * 1.7); c.stroke(); [[-10, -104.4, 0.7], [-13.6, -96.8, 0.6], [-9.8, -98.4, 0.5]].forEach((p, i) => rxStar4(c, p[0], p[1], p[2] * (0.8 + 0.3 * Math.sin(t / 7 + i)), '#eef2ff')); }
+  inFace(() => {
+  if (fa === 'f_gems') [-1, 1].forEach(s => { for (let i = 0; i < 4; i++) { const px = s * ex + s * (-rx * 0.4 + i * rx * 0.45), py = ey + ry + 1.5 + Math.sin(i * 1.1) * 0.5 - (i === 3 ? 1 : 0); c.fillStyle = ['#bff4ff', '#ffffff', '#e0c8ff', '#bff4ff'][i]; c.beginPath(); c.moveTo(px, py - 0.9); c.lineTo(px + 0.7, py); c.lineTo(px, py + 0.9); c.lineTo(px - 0.7, py); c.closePath(); c.fill(); if (Math.sin(t / 7 + i + s) > 0.6) rxStar4(c, px, py, 1.3, 'rgba(255,255,255,.9)'); } });
+  else if (fa === 'f_hearts') [-1, 1].forEach(s => { rxHeart(c, s * 9.6, -97, 1, '#ff4a8a'); rxHeart(c, s * 10.2, -94.4, 0.65, '#ff8ab8'); });
+  else if (fa === 'f_stars') [[-10.4, -98.6, 1.2], [-9.4, -95.6, 0.8], [10.4, -99, 1.05], [9.4, -95.4, 0.7], [-8, -110, 0.8]].forEach((p, i) => rxStar4(c, p[0], p[1], p[2] * (0.75 + 0.25 * Math.sin(t / 8 + i)), i % 2 ? '#fff6c0' : '#ffd23f'));
+  else if (fa === 'f_freck') { c.fillStyle = 'rgba(140,80,40,.55)'; [[-2.6, -96.4], [-4.4, -95.6], [-6.4, -95.8], [-5.4, -94.2], [-8.2, -95.2], [2.6, -96.4], [4.4, -95.6], [6.4, -95.8], [5.4, -94.2], [8.2, -95.2], [-1, -97.6], [1, -97.6]].forEach(p => { c.beginPath(); c.arc(p[0], p[1], 0.42, 0, 7); c.fill(); }); }
+  else if (fa === 'f_bfly') { const cx = -10.2, cy = -99.6, fl = 0.85 + 0.15 * Math.sin(t / 6); c.save(); c.translate(cx, cy); c.rotate(-0.4); [-1, 1].forEach(s => { c.save(); c.scale(s * fl, 1); c.fillStyle = '#9a6aff'; c.beginPath(); c.ellipse(1.6, -1, 1.8, 1.4, 0.4, 0, 7); c.fill(); c.fillStyle = '#ff7ab8'; c.beginPath(); c.ellipse(1.3, 1.2, 1.2, 1, -0.4, 0, 7); c.fill(); c.restore(); }); c.fillStyle = '#2a1a3a'; c.fillRect(-0.2, -1.8, 0.4, 3.6); c.restore(); }
+  else if (fa === 'f_moon') { c.strokeStyle = '#eef2ff'; c.lineWidth = 1.1 * k; c.lineCap = 'round'; c.beginPath(); c.arc(-10.4, -100.6, 1.9, Math.PI * 0.55, Math.PI * 1.7); c.stroke(); [[-8.6, -104, 0.7], [-11, -96.8, 0.6], [-8.4, -98.4, 0.5]].forEach((p, i) => rxStar4(c, p[0], p[1], p[2] * (0.8 + 0.3 * Math.sin(t / 7 + i)), '#eef2ff')); }
+  });
 }
 /* معاينة الكرت: وجه قريب بالمكياج */
 function rmSalonCard(g, k) {
@@ -302,10 +329,11 @@ function rxSalFg(c) {
 const RX_HT = { x: 4120, y: 600, x0: 3600, x1: 4640, top: 70 }, RX_HL = { x0: 50000, x1: 50640, dx: 50320, vx0: 49985, vx1: 50655, vy0: 120, vy1: 632 };
 const RX_HT_T = { 1: { n: 'غرفة لشخص واحد', ic: '👤', cap: 1, d: 'يومين', p: 25 }, 2: { n: 'غرفة لشخصين', ic: '👥', cap: 2, d: 'يومين', p: 40 }, 3: { n: 'جناح لـ3 أشخاص', ic: '👨‍👩‍👧', cap: 3, d: 'أسبوع', p: 90 } };
 const RX_BAB_AV = (() => { try { return AVT.norm(Object.assign({}, AVT.DEF, { g: 'f', hs: 'xlong', hc: 'black', sk: 'light', ey: 5, esp: 1, mk: [12, 13, 3, 3, 3, 3], o: 'f_par5' })); } catch (e) { return AVT.DEF; } })();
-const rxRoomNo = i => (Math.floor(i / 10) + 1) * 100 + (i % 10) + 1;
+const RX_ADM_I = 30;   // 👑 غرفة المشرفين (بابي وبابيتو) — دائماً متاحة إلهم
+const rxRoomNo = i => i === RX_ADM_I ? '👑 المشرفين' : (Math.floor(i / 10) + 1) * 100 + (i % 10) + 1;
 const rxRoomIdx = x => Math.floor((x - 50950) / 700);
 function rxRoomHI(i) { const x0 = 51000 + i * 700; return { x0, x1: x0 + 520, dx: x0 + 260, vx0: x0 - 15, vx1: x0 + 535, vy0: 120, vy1: 632, i }; }
-function rmXShi(id, o) { if (id === 5) return RX_SALHI; if (id === 6) return RX_HL; return rxRoomHI(Math.max(0, Math.min(29, rxRoomIdx((o || RM.me).x)))); }
+function rmXShi(id, o) { if (id === 5) return RX_SALHI; if (id === 6) return RX_HL; return rxRoomHI(Math.max(0, Math.min(RX_ADM_I, rxRoomIdx((o || RM.me).x)))); }
 Object.assign(RM_SHOP_NM, { 5: 'صالون ملاذ 💇‍♀️', 6: 'فندق بابيت 🏨', 7: 'غرفة بالفندق 🔑' });
 function rxNight() { return RM.dn ? RM.dn.d : 0; }
 function rxHotelOut(c) {
@@ -434,11 +462,12 @@ const rxNearElev = () => rmShopId() === 6 && RM.me.y < 470 && RM.me.x < 50215;
 const rxNearLobbyExit = () => rmShopId() === 6 && RM.me.y > 572 && Math.abs(RM.me.x - RX_HL.dx) < 60;
 
 /* ---- غرف الفندق 🛏️ (واقعية: تنام وتتغطى) ---- */
-function rxBeds(i) { const H = rxRoomHI(i), t = Math.floor(i / 10) + 1, x0 = H.x0; if (t === 1) return [{ x: x0 + 60, len: 132, y: 476, w: 36, sp: [0], dbl: 0 }]; if (t === 2) return [{ x: x0 + 56, len: 142, y: 482, w: 62, sp: [-15, 15], dbl: 1 }]; return [{ x: x0 + 40, len: 142, y: 482, w: 62, sp: [-15, 15], dbl: 1 }, { x: x0 + 300, len: 132, y: 476, w: 36, sp: [0], dbl: 0 }]; }
+function rxBeds(i) { const H = rxRoomHI(i), t = Math.floor(i / 10) + 1, x0 = H.x0; if (i === RX_ADM_I) return [{ x: x0 + 150, len: 156, y: 488, w: 80, sp: [-19, 19], dbl: 2, royal: 1 }]; if (t === 1) return [{ x: x0 + 60, len: 132, y: 476, w: 36, sp: [0], dbl: 0 }]; if (t === 2) return [{ x: x0 + 56, len: 142, y: 482, w: 62, sp: [-15, 15], dbl: 1 }]; return [{ x: x0 + 40, len: 142, y: 482, w: 62, sp: [-15, 15], dbl: 1 }, { x: x0 + 300, len: 132, y: 476, w: 36, sp: [0], dbl: 0 }]; }
 function rxSpotsOf(i) { const S = []; rxBeds(i).forEach((b, bi) => b.sp.forEach((dy, k) => S.push({ x: b.x + 73, y: b.y + dy, bed: b, k: bi + ':' + k }))); return S; }
 const rxLying = o => (o && o.dance) === 39;
 function rxSpotBusy(sp) { return Object.values(RM.others).some(o => rxLying(o) && Math.hypot(o.x - sp.x, o.y - sp.y) < 8); }
 function rxBedDraw(c, b) {
+  if (b.royal) return rxRoyalBed(c, b);
   const T = RM.T, top = b.y - b.w / 2, bot = b.y + b.w / 2;
   c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(b.x + b.len / 2, bot + 12, b.len / 2 + 12, 8, 0, 0, 7); c.fill();
   // كومودينو + أباجورة يم راس السرير
@@ -454,6 +483,7 @@ function rxBedDraw(c, b) {
   rxRect(c, b.x + b.len - 2, top + 4, 8, b.w + 8, 3, '#5a3a22');
 }
 function rxBlanketDraw(c, b) {
+  if (b.royal) return rxRoyalBlanket(c, b);
   const top = b.y - b.w / 2 + 2, bot = b.y + b.w / 2 - 1, x0 = b.x + 30, x1 = b.x + b.len - 2, T = RM.T;
   const g = c.createLinearGradient(0, top, 0, bot + 12); g.addColorStop(0, '#9a5ae8'); g.addColorStop(0.7, '#7a3ad0'); g.addColorStop(1, '#5a24a8'); c.fillStyle = g;
   c.beginPath(); c.moveTo(x0, top); for (let x = x0; x <= x1; x += 12) c.lineTo(x, top + Math.sin(x / 9 + T / 90) * 0.8); c.lineTo(x1, bot); c.quadraticCurveTo(x1 + 2, bot + 12, x1 - 4, bot + 12); for (let x = x1 - 4; x >= x0; x -= 10) c.lineTo(x, bot + 12 + Math.sin(x / 6) * 1.6); c.lineTo(x0, bot); c.closePath(); c.fill();
@@ -462,6 +492,7 @@ function rxBlanketDraw(c, b) {
   c.fillStyle = '#ffd76a'; c.fillRect(x0 + 12, bot + 7, x1 - x0 - 16, 2);
 }
 function rxRoomBg(c, i) {
+  if (i === RX_ADM_I) return rxAdmRoomBg(c, i);
   const H = rxRoomHI(i), t = Math.floor(i / 10) + 1, X0 = H.vx0, X1 = H.vx1, W = X1 - X0, T = RM.T, d = rxNight(), x0 = H.x0;
   let g = c.createLinearGradient(0, 120, 0, 344); g.addColorStop(0, '#f4ecdf'); g.addColorStop(1, '#fbf6ee'); c.fillStyle = g; c.fillRect(X0, 120, W, 224);
   c.fillStyle = 'rgba(160,130,90,.12)'; for (let x = X0 + 14; x < X1; x += 34) for (let y = 150; y < 296; y += 34) { c.beginPath(); c.moveTo(x, y - 6); c.quadraticCurveTo(x + 6, y, x, y + 6); c.quadraticCurveTo(x - 6, y, x, y - 6); c.fill(); }   // ورق جدران دمشقي
@@ -487,6 +518,7 @@ function rxRoomBg(c, i) {
   rxRect(c, x0 + 470, 210, 44, 134, 3, '#fff'); rxRect(c, x0 + 474, 214, 36, 130, 2, '#e8dcc8'); c.fillStyle = '#d7a400'; c.fillRect(x0 + 478, 280, 6, 3); rxTxt(c, '🚿', x0 + 492, 236, '14px sans-serif', '#000');
 }
 function rxRoomList(i) {
+  if (i === RX_ADM_I) return rxAdmRoomList(i);
   const L = [], H = rxRoomHI(i), t = Math.floor(i / 10) + 1, x0 = H.x0;
   rxBeds(i).forEach(b => { L.push([b.y - b.w / 2 - 4, c => rxBedDraw(c, b)]); L.push([b.y + b.w / 2 + 3, c => rxBlanketDraw(c, b)]); });
   // كبت ملابس + ثلاجة صغيرة + مكتب
@@ -507,7 +539,7 @@ const rxNearRoomExit = () => rmShopId() === 7 && RM.me.y > 572 && Math.abs(RM.me
 function rxNearBedSpot() { if (rmShopId() !== 7) return null; const m = RM.me, i = rxRoomIdx(m.x); let best = null, bd = 9e9; rxSpotsOf(i).forEach(s => { const dd = Math.hypot(m.x - s.x, (m.y - (s.bed.y + s.bed.w / 2 + 16)) * 1.4); if (dd < 70 && dd < bd && !rxSpotBusy(s)) { bd = dd; best = s; } }); return best; }
 function rxLieDown(s) { const m = RM.me; if (!s || m.sit || m.jump) return; if (m.dance) rmSetDance(0); RM.tapMk = null; m.x = m.tx = s.x; m.y = m.ty = s.y; m.dir = 1; RM.sent = ''; rmSetDance(39); RX.lieAt = s; rxSnd([['sine', 392, 330, 0.4, 0.04], ['sine', 330, 262, 0.6, 0.03, 0.3]]); showToast('😴 نمت وتغطيت… أحلام سعيدة'); rmPrompt(true); }
 function rxWakeUp() { const m = RM.me, s = RX.lieAt; rmSetDance(0); if (s) { m.x = m.tx = s.bed.x + 60; m.y = m.ty = Math.min(604, s.bed.y + s.bed.w / 2 + 22); } RM.sent = ''; RX.lieAt = null; rxSnd([['sine', 523, 784, 0.25, 0.05]]); showToast('🌅 صباح الخير!'); rmPrompt(true); }
-function rxEnterRoom(i) { const R = (RX.ht && RX.ht.mine || []).find(r => r.i === i); if (!R && !(RX.ht && RX.ht.adm)) { showToast('🔒 ما عندك مفتاح هذي الغرفة'); return; } const H = rxRoomHI(i), m = RM.me; if (m.sit || m.jump) return; if (m.dance) rmSetDance(0); RM.tapMk = null; m.x = m.tx = H.dx + (Math.random() - 0.5) * 40; m.y = m.ty = 592; m.dir = 1; RM.sent = ''; RM.sentP = 0; RM.camSnap = 1; RX.dark = false; rxHtClose(); rxSnd([['sine', 988, 988, 0.15, 0.05], ['sine', 1319, 1319, 0.4, 0.05, 0.12]]); showToast('🛗 وصلت غرفتك ' + rxRoomNo(i) + ' 🔑 — تكدر تنام بالسرير 😴'); rmPrompt(true); }
+function rxEnterRoom(i) { const R = (RX.ht && RX.ht.mine || []).find(r => r.i === i); if (i === RX_ADM_I && !rmBalAdm()) { showToast('👑 غرفة المشرفين لبابي وبابيتو بس'); return; } if (!R && !(RX.ht && RX.ht.adm) && i !== RX_ADM_I) { showToast('🔒 ما عندك مفتاح هذي الغرفة'); return; } const H = rxRoomHI(i), m = RM.me; if (m.sit || m.jump) return; if (m.dance) rmSetDance(0); RM.tapMk = null; m.x = m.tx = H.dx + (Math.random() - 0.5) * 40; m.y = m.ty = 592; m.dir = 1; RM.sent = ''; RM.sentP = 0; RM.camSnap = 1; RX.dark = false; rxHtClose(); rxSnd([['sine', 988, 988, 0.15, 0.05], ['sine', 1319, 1319, 0.4, 0.05, 0.12]]); if (i === RX_ADM_I) { showToast('👑 أهلاً بيكم بغرفة المشرفين 💜 — السرير الملكي يكفي ثنينكم 😴'); rxSnd([['sine', 784, 784, 0.15, 0.05, 0.3], ['sine', 1047, 1047, 0.2, 0.05, 0.42], ['sine', 1319, 1319, 0.4, 0.05, 0.54]]); } else showToast('🛗 وصلت غرفتك ' + rxRoomNo(i) + ' 🔑 — تكدر تنام بالسرير 😴'); rmPrompt(true); }
 function rxRoomExit() { const m = RM.me; if (rxLying(m)) rxWakeUp(); m.x = m.tx = 50110 + (Math.random() - 0.5) * 30; m.y = m.ty = 470; RM.sent = ''; RM.sentP = 0; RM.camSnap = 1; RX.dark = false; rxSnd([['sine', 1319, 988, 0.3, 0.05]]); showToast('🛗 نزلت للوبي'); rmPrompt(true); }
 
 /* =====================================================================
@@ -670,9 +702,9 @@ function rmXOutList(L) {
     add(RX_JUI.y + 1, c => rmSayDraw(c, RX_JUI.x + 20, RX_JUI.y - 196, RX.jui.say));
   }
 }
-function rmXBg(c, sid) { if (sid === 5) rxSalBg(c); else if (sid === 6) rxLobbyBg(c); else rxRoomBg(c, Math.max(0, Math.min(29, rxRoomIdx(RM.me.x)))); }
-function rmXList(sid) { return sid === 5 ? rxSalList() : sid === 6 ? rxLobbyList() : rxRoomList(Math.max(0, Math.min(29, rxRoomIdx(RM.me.x)))); }
-function rmXFg(c, sid) { if (sid === 5) rxSalFg(c); else if (sid === 6) rxLobbyFg(c); else rxRoomFg(c, Math.max(0, Math.min(29, rxRoomIdx(RM.me.x)))); }
+function rmXBg(c, sid) { if (sid === 5) rxSalBg(c); else if (sid === 6) rxLobbyBg(c); else rxRoomBg(c, Math.max(0, Math.min(RX_ADM_I, rxRoomIdx(RM.me.x)))); }
+function rmXList(sid) { return sid === 5 ? rxSalList() : sid === 6 ? rxLobbyList() : rxRoomList(Math.max(0, Math.min(RX_ADM_I, rxRoomIdx(RM.me.x)))); }
+function rmXFg(c, sid) { if (sid === 5) rxSalFg(c); else if (sid === 6) rxLobbyFg(c); else rxRoomFg(c, Math.max(0, Math.min(RX_ADM_I, rxRoomIdx(RM.me.x)))); }
 /* كراسي الصالون + كنبات اللوبي (تكدر تكعد عليها) */
 (function () { const add = (kind, x, y) => { const sd = { kind, x, y, s: 1, i: RM_SEATS.length }; RM_SEATS.push(sd); rmSpots(sd).forEach(s => RM_SPOTS.push(s)); }; RX_SAL_SEATS.forEach(p => add('gchair', p[0], p[1])); RX_LOBBY_SEATS.forEach(p => add('bench', p[0], p[1])); })();
 /* ---- النوم بالسرير: نرسم الشخصية مسدوحة وفوكها البطانية ---- */
@@ -680,6 +712,8 @@ function rxDrawLying(c, o, me, fn) {
   const e = o.dance, tg = window.rmTag, bb = window.rmBub; o.dance = 0; window.rmTag = () => {}; window.rmBub = () => {};
   c.save(); c.translate(o.x, o.y); c.rotate(-Math.PI / 2); c.translate(-o.x, -o.y); try { fn(); } catch (er) {} finally { c.restore(); window.rmTag = tg; window.rmBub = bb; o.dance = e; }
   const nm = me ? rmMe() : o.name; try { rmTagDraw(c, o.x - 58, o.y - 30, '😴 ' + nm, me ? 'rgba(122,42,216,.92)' : 'rgba(60,40,110,.85)'); } catch (er) {}
+  /* الشات يطلع حتى وانت نايم: الببل ينرسم عدل (مو مسدوح) فوك راسك */
+  try { bb(c, nm, o.x - 58, o.y - 42, me ? RM.myAdm : o.adm); if (!me && typeof rmTyping === 'function') rmTyping(c, nm, o.x - 58, o.y - 42); } catch (er) {}
   const T = RM.T; c.save(); c.font = 'bold 11px Arial'; c.textAlign = 'center'; for (let k = 0; k < 3; k++) { const u = ((T / 70 + k / 3) % 1); c.globalAlpha = Math.sin(u * Math.PI) * 0.9; c.fillStyle = '#9a6aff'; c.fillText('z', o.x - 66 + u * 18 + k * 3, o.y - 44 - u * 26); } c.restore();
 }
 const rxDM = rmDrawMe; rmDrawMe = function (c, st) { const m = RM.me; if (rxLying(m) && rmShopId() === 7) return rxDrawLying(c, m, true, () => rxDM(c, st)); return rxDM(c, st); };
@@ -724,7 +758,7 @@ function rmXKey() {
   const m = RM.me, sid = rmShopId(); let k = '|x' + sid + (rxLying(m) ? 'L' : '') + ((rmRideOf(m) || {}).k === 'boat' ? 'B' : '') + (RX.dark ? 'D' : '');
   if (sid === 0) k += (rxNearSal() ? 's' : '') + (rxNearHotel() ? 'h' : '') + (rxNearBoard() ? 'b' : '') + (rxNearDock() ? 'd' : '') + (rxNearJuice() ? 'j' : '') + (Math.hypot(m.x - RX_CAT.x, m.y - RX_CAT.y) < 90 ? 'c' : '');
   else if (sid === 5) k += (rxNearMlz() ? 'm' : '') + (rxNearSalExit() ? 'e' : '');
-  else if (sid === 6) k += (rxNearBab() ? 'a' : '') + (rxNearElev() ? 'v' : '') + (rxNearLobbyExit() ? 'e' : '');
+  else if (sid === 6) k += (rxNearBab() ? 'a' : '') + (rxNearElev() ? 'v' + (rmBalAdm() ? 'A' : '') : '') + (rxNearLobbyExit() ? 'e' : '');
   else if (sid === 7) { const s = rxNearBedSpot(); k += (s ? 'z' + s.k : '') + (rxNearRoomExit() ? 'e' : ''); rxRoomGuard(); }
   return k;
 }
@@ -734,7 +768,7 @@ function rmXPrompt(mk) {
   if (rxLying(m)) { mk('🌅 قوم من النوم', rxWakeUp); if (sid === 7) mk(RX.dark ? '💡 تشغيل الضوء' : '🌙 إطفاء الضوء', rxLight); return true; }
   if ((rmRideOf(m) || {}).k === 'boat') { mk('🛶 انزل من القارب', rxBoatLeave); return true; }
   if (sid === 5) { if (rxNearMlz()) mk('💄 اختاري مكياج من ملاذ', rxSalOpen); if (rxNearSalExit()) mk('🚪 اطلعي من الصالون', rxSalExit); return true; }
-  if (sid === 6) { if (rxNearBab()) mk('🛎️ استأجر غرفة من بابيتو', () => rxHtOpen()); if (rxNearElev()) mk('🛗 المصعد — غرفي', () => rxHtOpen('mine')); if (rxNearLobbyExit()) mk('🚪 اطلع من الفندق', rxHotelExit); return true; }
+  if (sid === 6) { if (rxNearBab()) mk('🛎️ استأجر غرفة من بابيتو', () => rxHtOpen()); if (rxNearElev()) mk('🛗 المصعد — غرفي', () => rxHtOpen('mine')); if (rxNearElev() && rmBalAdm()) mk('👑 غرفة المشرفين', () => rxEnterRoom(RX_ADM_I)); if (rxNearLobbyExit()) mk('🚪 اطلع من الفندق', rxHotelExit); return true; }
   if (sid === 7) { const s = rxNearBedSpot(); if (s) mk('🛏️ نام بالسرير', () => rxLieDown(s)); mk(RX.dark ? '💡 تشغيل الضوء' : '🌙 إطفاء الضوء', rxLight); if (rxNearRoomExit()) mk('🛗 ارجع للوبي', rxRoomExit); return true; }
   if (sid === 0) { if (rxNearSal()) mk('💇‍♀️ ادخلي صالون ملاذ', rxSalEnter); if (rxNearHotel()) mk('🏨 ادخل فندق بابيت', rxHotelEnter); if (rxNearBoard()) mk('🔑 أسعار الغرف', rxHtPrices); if (rxNearDock()) mk('🚣 اركب قارب (مجاناً)', rxBoatBoard); if (rxNearJuice()) mk('🍹 اطلب عصير استوائي', rxJuiceMenu); if (Math.hypot(m.x - RX_CAT.x, m.y - RX_CAT.y) < 90) mk('🐱 دلّع جاسمية', rxCatPet); }
   return false;
@@ -786,14 +820,14 @@ function rxCss() {
 /* ---- صالون ملاذ ---- */
 function rxSalOpen() {
   rxCss(); let P = $('salonShop'); RX.mlz.wave = 60; RM.wearPanel = 'salonShop';
-  if (!P) { P = document.createElement('div'); P.id = 'salonShop'; P.innerHTML = '<div class="spC"><div class="spH"><canvas width="104" height="104"></canvas><div><b>💇‍♀️ صالون ملاذ</b><small>💄 مكياج احترافي ما تلكينه ببداية اللعبة — يطلع على وجهج والكل يشوفه ✨</small></div><span class="spCo"></span><button type="button" class="spX">✕</button></div><div class="spT"><button type="button" data-t="sl" class="on">💄 لوكات مكياج</button><button type="button" data-t="fa">💎 زينة الوجه</button></div><div class="slTry" hidden></div><div class="spG"></div><div class="spF"></div></div>'; P.addEventListener('pointerdown', e => { if (e.target === P) rxSalClose(); }); P.querySelector('.spX').onclick = rxSalClose; P.querySelectorAll('.spT button').forEach(b => b.onclick = () => { RX.salTab = b.dataset.t; RX.salSel = ''; RX.slTry = ''; rmSalonRender(); }); $('rmBox').appendChild(P); }
+  if (!P) { P = document.createElement('div'); P.id = 'salonShop'; P.innerHTML = '<div class="spC"><div class="spH"><canvas width="104" height="104"></canvas><div><b>💇‍♀️ صالون ملاذ</b><small>💄 مكياج احترافي ما تلكينه ببداية اللعبة — يطلع على وجهج والكل يشوفه ✨</small></div><span class="spCo"></span><button type="button" class="spX">✕</button></div><div class="spT"><button type="button" data-t="sl" class="on">💄 لوكات مكياج</button><button type="button" data-t="fa">💎 زينة الوجه</button><button type="button" data-t="adm" class="slAdmT">👑 للمشرفين</button></div><div class="slTry" hidden></div><div class="spG"></div><div class="spF"></div></div>'; P.addEventListener('pointerdown', e => { if (e.target === P) rxSalClose(); }); P.querySelector('.spX').onclick = rxSalClose; P.querySelectorAll('.spT button').forEach(b => b.onclick = () => { RX.salTab = b.dataset.t; RX.salSel = ''; RX.slTry = ''; rmSalonRender(); }); $('rmBox').appendChild(P); }
   P.style.display = ''; const hc = P.querySelector('.spH canvas').getContext('2d'); hc.setTransform(2, 0, 0, 2, 0, 0); hc.clearRect(0, 0, 52, 52); try { AVT.drawAt(hc, RX_MLZ_AV, 26, 26 + 102 * 0.62, 137 * 0.62, { t: RM.T }); } catch (e) {}
   RX.salSel = ''; rmSalonRender(); rmMlzSay('اختاري اللوك اللي يعجبج، وتكدرين تجربينه قبل الشراء 🪞💖', 220);
 }
 function rxSalClose() { const P = $('salonShop'); if (P) P.style.display = 'none'; if (RM.wearPanel === 'salonShop') RM.wearPanel = ''; RX.slTry = ''; }
 function rmSalonRender() {
-  const P = $('salonShop'); if (!P || P.style.display === 'none') return; const tab = RX.salTab || 'sl'; P.querySelectorAll('.spT button').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); P.querySelector('.spCo').textContent = auth ? '💵 ' + usdTxt() : 'ضيفة';
-  const G = P.querySelector('.spG'); G.innerHTML = ''; RM_WEAR.filter(w => w.s === tab).forEach(w => G.appendChild(rmWearCard(w, RX.salSel, k => { RX.salSel = k; RX.slTry = k && !rmWearOn(k) ? k : ''; rmSalonRender(); if (k) rmMlzSay('شوفي بالمراية 🪞 «' + RM_WEARD[k].n + '» شلون يطلع عليج ✨', 160); })));
+  const P = $('salonShop'); if (!P || P.style.display === 'none') return; const tab = RX.salTab === 'adm' && !rmBalAdm() ? 'sl' : (RX.salTab || 'sl'); P.querySelectorAll('.spT button').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); P.querySelector('.spCo').textContent = auth ? '💵 ' + usdTxt() : 'ضيفة';
+  const at = P.querySelector('.slAdmT'); if (at) at.hidden = !rmBalAdm(); const G = P.querySelector('.spG'); G.innerHTML = ''; if (tab === 'adm') { const hd = document.createElement('div'); hd.className = 'slAdmH'; hd.textContent = '👑 خانة المشرفين — 10 لوكات احترافية حصرية لبابي وبابيتو بس ✨'; G.appendChild(hd); } RM_WEAR.filter(w => tab === 'adm' ? (w.adm && rmBalAdm()) : (w.s === tab && !w.adm)).forEach(w => G.appendChild(rmWearCard(w, RX.salSel, k => { RX.salSel = k; RX.slTry = k && !rmWearOn(k) ? k : ''; rmSalonRender(); if (k) rmMlzSay('شوفي بالمراية 🪞 «' + RM_WEARD[k].n + '» شلون يطلع عليج ✨', 160); })));
   const tr = P.querySelector('.slTry'); tr.hidden = !RX.slTry; if (RX.slTry) tr.textContent = '🪞 دا تجربين «' + RM_WEARD[RX.slTry].n + '» — شوفي شخصيتج ورا اللوحة';
   const F = P.querySelector('.spF'); F.innerHTML = ''; const tx = document.createElement('span'); const W = RM.me.wear || {}; const on = ['sl', 'fa'].filter(s => W[s] && RM_WEARD[W[s]]).map(s => RM_WEARD[W[s]].n); tx.textContent = on.length ? '✨ حاطة: ' + on.join(' + ') : '👆 دوسي على أي لوك'; F.appendChild(tx);
   const ib = document.createElement('button'); ib.type = 'button'; ib.textContent = '🎒 أغراضي'; ib.onclick = () => { rxSalClose(); RM.invTab = 'w'; rmInvOpen(); }; F.appendChild(ib);
@@ -811,6 +845,7 @@ function rxHtOpen(tab) {
 }
 function rxLeft(until) { const ms = until - (Date.now() + ((RX.ht && RX.ht.off) || 0)); if (ms <= 0) return '⌛ خلص'; const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4), s = Math.floor(ms % 6e4 / 1e3); return '⏳ باقي ' + (d ? d + ' يوم ' : '') + h + ' ساعة ' + m + ' دقيقة' + (d ? '' : ' ' + s + ' ثانية'); }
 function rxRoomPic(cv, t) {
+  if (t === 'adm') return rxAdmPic(cv);
   const g = cv.getContext('2d'); cv.width = 192; cv.height = 144; g.setTransform(2, 0, 0, 2, 0, 0); const W = 96, H = 72;
   let gr = g.createLinearGradient(0, 0, 0, 40); gr.addColorStop(0, '#f4ecdf'); gr.addColorStop(1, '#fbf6ee'); g.fillStyle = gr; g.fillRect(0, 0, W, 40); g.fillStyle = '#c89a6a'; g.fillRect(0, 40, W, 32);
   g.fillStyle = '#fff'; g.fillRect(36, 6, 26, 22); gr = g.createLinearGradient(0, 8, 0, 26); gr.addColorStop(0, '#6cc7ff'); gr.addColorStop(0.6, '#d6f3ff'); gr.addColorStop(0.61, '#2aa9dd'); gr.addColorStop(1, '#1a7ab0'); g.fillStyle = gr; g.fillRect(38, 8, 22, 18); g.fillStyle = '#7a3ad0'; g.fillRect(32, 4, 5, 28); g.fillRect(61, 4, 5, 28);
@@ -821,6 +856,7 @@ function rxRoomPic(cv, t) {
 function rxHtRender() {
   const P = $('htShop'); if (!P || P.style.display === 'none') return; const tab = RX.htTab || 'rent', D = RX.ht || { mine: [], free: {} }; P.querySelectorAll('.htT button').forEach(b => { b.classList.toggle('on', b.dataset.t === tab); if (b.dataset.t === 'mine') b.textContent = '🔑 غرفي' + ((D.mine || []).length ? ' (' + D.mine.length + ')' : ''); }); P.querySelector('.spCo').textContent = '💵 ' + usdTxt();
   const B = P.querySelector('.htB'); B.innerHTML = ''; const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+  if (rmBalAdm()) { const A = el('div', 'htR htAdm'), cv = el('canvas'); rxRoomPic(cv, 'adm'); A.appendChild(cv); const In = el('div', 'in'); In.append(el('b', '', '👑 غرفة المشرفين'), el('small', '', '💜 خاصة لبابي وبابيتو — دائماً متاحة، بلا إيجار ولا وقت'), el('small', '', '🛏️ سرير ملكي لشخصين • 🕯️ شموع وورد • 🌙 إطلالة على البحر')); const go = el('button', 'htBtn g', '🛗 ادخل غرفة المشرفين'); go.type = 'button'; go.onclick = () => { if (rmShopId() !== 6 && rmShopId() !== 7) { showToast('🏨 ادخل الفندق أول، والمصعد يوديك'); return; } rxEnterRoom(RX_ADM_I); }; In.appendChild(go); A.appendChild(In); B.appendChild(A); }
   if (tab === 'rent') {
     [1, 2, 3].forEach(t => { const I = RX_HT_T[t], R = el('div', 'htR'), cv = el('canvas'); rxRoomPic(cv, t); R.appendChild(cv); const In = el('div', 'in'); In.append(el('b', '', I.ic + ' ' + I.n), el('small', '', '🛏️ ' + (t === 1 ? 'سرير مفرد' : t === 2 ? 'سرير كبير لشخصين' : 'سرير كبير + سرير مفرد') + ' • 🗓️ الإيجار ' + I.d + ' • 🌊 إطلالة بحر'), el('span', 'pr', (rmBalAdm() ? '👑 مجاناً للمشرفين' : '💵 ' + I.p + ' دولار') + '  •  متوفر ' + ((D.free || {})[t] === undefined ? '…' : D.free[t]) + '/10'));
       const ins = []; for (let k = 1; k < I.cap; k++) { const ip = el('input'); ip.placeholder = '👤 اسم صاحبك ' + (I.cap > 2 ? k : '') + ' (اختياري)'; ip.maxLength = 12; ins.push(ip); In.appendChild(ip); }
@@ -837,4 +873,87 @@ function rxHtRender() {
       const cn = el('button', 'htBtn r', mine ? 'إلغاء الحجز' : 'اطلع من الغرفة'); cn.type = 'button'; cn.onclick = () => { if (cn.dataset.ok) { rmSend({ t: 'rm_ht_leave', i: r.i }); return; } cn.dataset.ok = 1; cn.textContent = '⚠️ متأكد؟ دوس مرة ثانية'; };
       rw.append(go, cn); In.appendChild(rw); R.appendChild(In); B.appendChild(R); });
   }
+}
+
+/* =====================================================================
+   👑 غرفة المشرفين — خاصة لبابي وبابيتو، دائماً متاحة، سرير ملكي لشخصين
+   ===================================================================== */
+function rxCrown(c, x, y, s, col) { c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = col || '#ffd23f'; c.beginPath(); c.moveTo(-10, 6); c.lineTo(-12, -6); c.lineTo(-5, 0); c.lineTo(0, -9); c.lineTo(5, 0); c.lineTo(12, -6); c.lineTo(10, 6); c.closePath(); c.fill(); c.strokeStyle = '#a07400'; c.lineWidth = 1; c.stroke(); c.fillStyle = '#e8304a'; c.beginPath(); c.arc(0, 1, 1.8, 0, 7); c.fill(); c.fillStyle = '#5ad0ff'; c.beginPath(); c.arc(-6, 2.4, 1.3, 0, 7); c.arc(6, 2.4, 1.3, 0, 7); c.fill(); c.restore(); }
+function rxRoyalBed(c, b) {
+  const T = RM.T, top = b.y - b.w / 2, bot = b.y + b.w / 2, L = b.len;
+  c.fillStyle = 'rgba(40,0,60,.25)'; c.beginPath(); c.ellipse(b.x + L / 2, bot + 14, L / 2 + 26, 10, 0, 0, 7); c.fill();
+  // أعمدة الستارة الذهبية + القبة
+  const pg = c.createLinearGradient(0, top - 96, 0, bot); pg.addColorStop(0, '#fff3b0'); pg.addColorStop(0.5, '#d7a400'); pg.addColorStop(1, '#8a6400');
+  [b.x - 18, b.x + L + 4].forEach(px => { rxRect(c, px, top - 92, 6, bot - top + 104, 3, pg); c.fillStyle = '#ffe680'; c.beginPath(); c.arc(px + 3, top - 94, 4.4, 0, 7); c.fill(); });
+  const cg = c.createLinearGradient(0, top - 100, 0, top - 80); cg.addColorStop(0, '#8a3ae8'); cg.addColorStop(1, '#4a1290'); c.fillStyle = cg; c.beginPath(); c.moveTo(b.x - 22, top - 90); c.quadraticCurveTo(b.x + L / 2, top - 112, b.x + L + 14, top - 90); c.lineTo(b.x + L + 14, top - 82); for (let k = 0; k <= 10; k++) { const xx = b.x + L + 14 - k * (L + 36) / 10; c.quadraticCurveTo(xx + (L + 36) / 20, top - 72, xx, top - 82); } c.closePath(); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(b.x - 22, top - 92, L + 36, 2.5);
+  rxCrown(c, b.x + L / 2 - 2, top - 108 + Math.sin(T / 30) * 1.2, 1.3);
+  // ستاير شفافة على الزوايا
+  c.save(); c.globalAlpha = 0.5; [[b.x - 16, 1], [b.x + L + 6, -1]].forEach(([cx, s]) => { const g = c.createLinearGradient(cx - 12, 0, cx + 12, 0); g.addColorStop(0, 'rgba(220,180,255,.2)'); g.addColorStop(0.5, 'rgba(240,215,255,.85)'); g.addColorStop(1, 'rgba(220,180,255,.2)'); c.fillStyle = g; c.beginPath(); c.moveTo(cx - 10, top - 84); c.lineTo(cx + 10, top - 84); c.quadraticCurveTo(cx + s * 4 + Math.sin(T / 40) * 2, top - 20, cx + 8 * s, bot + 6); c.lineTo(cx - 8 * s, bot + 6); c.closePath(); c.fill(); }); c.restore();
+  // لوح الراس المبطن (مخمل بنفسجي بإطار ذهبي)
+  const hg = c.createLinearGradient(0, top - 60, 0, bot); hg.addColorStop(0, '#9a4af0'); hg.addColorStop(1, '#5a1aa8'); rxRect(c, b.x - 16, top - 58, 26, b.w + 66, 10, '#d7a400'); rxRect(c, b.x - 13, top - 55, 20, b.w + 60, 8, hg);
+  c.fillStyle = 'rgba(255,230,140,.75)'; for (let y = top - 48; y < bot; y += 11) for (let k = 0; k < 2; k++) { c.beginPath(); c.arc(b.x - 7 + k * 8, y + k * 5.5, 1.3, 0, 7); c.fill(); }
+  rxHeart(c, b.x - 3, top - 36, 5, '#ff5aa8');
+  // كومودينو ذهبي + أباجورة
+  const nx = b.x - 46, ny = top + 2; rxRect(c, nx - 15, ny - 2, 30, 28, 4, '#f4ecdf'); rxRect(c, nx - 15, ny - 4, 30, 5, 2, '#d7a400'); c.fillStyle = '#d7a400'; c.fillRect(nx - 2, ny + 11, 4, 2); c.fillStyle = '#d7a400'; c.fillRect(nx - 1.5, ny - 26, 3, 22); c.fillStyle = RX.dark ? '#ffe6a8' : '#f6e8ff'; c.beginPath(); c.moveTo(nx - 11, ny - 26); c.lineTo(nx + 11, ny - 26); c.lineTo(nx + 7, ny - 42); c.lineTo(nx - 7, ny - 42); c.closePath(); c.fill(); c.strokeStyle = '#d7a400'; c.lineWidth = 1; c.stroke();
+  if (RX.dark) { const g = c.createRadialGradient(nx, ny - 32, 2, nx, ny - 32, 70); g.addColorStop(0, 'rgba(255,200,240,.55)'); g.addColorStop(1, 'rgba(255,200,240,0)'); c.fillStyle = g; c.beginPath(); c.arc(nx, ny - 32, 70, 0, 7); c.fill(); }
+  // الهيكل والفرشة
+  rxRect(c, b.x - 2, bot - 6, L + 8, 18, 4, '#3a0a6a'); c.fillStyle = '#d7a400'; c.fillRect(b.x - 2, bot + 8, L + 8, 2.5);
+  const mg = c.createLinearGradient(0, top, 0, bot); mg.addColorStop(0, '#ffffff'); mg.addColorStop(1, '#f0e6fa'); rxRect(c, b.x, top, L, b.w, 6, mg);
+  // مخدات: ثنتين كبار + مخدة قلب بالنص
+  b.sp.forEach((dy, i) => { const py = b.y + dy; rxRect(c, b.x + 4, py - 12, 30, 24, 8, '#fff'); c.strokeStyle = '#e0c8f4'; c.lineWidth = 1; c.beginPath(); c.roundRect ? c.roundRect(b.x + 4, py - 12, 30, 24, 8) : c.rect(b.x + 4, py - 12, 30, 24); c.stroke(); c.fillStyle = '#d7a400'; c.font = 'bold 8px Cairo, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(i ? 'بابيتو' : 'بابي', b.x + 19, py + 6); });
+  rxHeart(c, b.x + 16, b.y + 1, 6, '#c03aff');
+  rxRect(c, b.x + L - 2, top + 2, 10, b.w + 10, 4, '#d7a400'); rxRect(c, b.x + L, top + 4, 6, b.w + 6, 3, '#5a1aa8');
+}
+function rxRoyalBlanket(c, b) {
+  const top = b.y - b.w / 2 + 2, bot = b.y + b.w / 2 - 1, x0 = b.x + 36, x1 = b.x + b.len - 2, T = RM.T;
+  const g = c.createLinearGradient(0, top, 0, bot + 14); g.addColorStop(0, '#b06aff'); g.addColorStop(0.6, '#7a2ad8'); g.addColorStop(1, '#4a1290'); c.fillStyle = g;
+  c.beginPath(); c.moveTo(x0, top); for (let x = x0; x <= x1; x += 12) c.lineTo(x, top + Math.sin(x / 9 + T / 90) * 0.8); c.lineTo(x1, bot); c.quadraticCurveTo(x1 + 2, bot + 14, x1 - 4, bot + 14); for (let x = x1 - 4; x >= x0; x -= 10) c.lineTo(x, bot + 14 + Math.sin(x / 6) * 1.6); c.lineTo(x0, bot); c.closePath(); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.moveTo(x0 - 3, top - 1); c.lineTo(x0 + 10, top - 1); c.lineTo(x0 + 10, bot + 14); c.lineTo(x0 - 3, bot + 12); c.closePath(); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(x0 + 7, top, 3, bot - top + 14);
+  c.save(); c.beginPath(); c.rect(x0 + 10, top - 2, x1 - x0 - 10, bot - top + 18); c.clip(); c.globalAlpha = 0.35; for (let k = 0; k < 12; k++) rxHeart(c, x0 + 22 + (k % 6) * 20 + (k > 5 ? 10 : 0), top + 14 + (k > 5 ? 26 : 0), 3.2, '#ffc8f0'); c.restore();
+  c.fillStyle = '#ffd23f'; c.fillRect(x0 + 12, bot + 9, x1 - x0 - 16, 2.4); c.fillRect(x0 + 12, top + 2, x1 - x0 - 16, 1.4);
+  rxTxt(c, 'B 💜 B', (x0 + x1) / 2 + 6, (top + bot) / 2 + 4, 'bold 12px Cairo, Arial', '#ffe9a8', 6, '#ff7ad8');
+}
+function rxAdmRoomBg(c, i) {
+  const H = rxRoomHI(i), X0 = H.vx0, X1 = H.vx1, W = X1 - X0, T = RM.T, d = rxNight(), x0 = H.x0;
+  // جدار مخمل بنفسجي + زخرفة ذهبية
+  let g = c.createLinearGradient(0, 120, 0, 344); g.addColorStop(0, '#2a0a52'); g.addColorStop(1, '#5a1a9a'); c.fillStyle = g; c.fillRect(X0, 120, W, 224);
+  c.fillStyle = 'rgba(255,215,106,.13)'; for (let x = X0 + 14; x < X1; x += 30) for (let y = 146; y < 296; y += 30) { const yy = y + ((x / 30 | 0) % 2) * 15; c.beginPath(); c.moveTo(x, yy - 6); c.lineTo(x + 5, yy); c.lineTo(x, yy + 6); c.lineTo(x - 5, yy); c.closePath(); c.fill(); }
+  c.fillStyle = '#ffd23f'; c.fillRect(X0, 120, W, 8); c.fillStyle = '#a07400'; c.fillRect(X0, 128, W, 3);
+  // شبابيك مقوسة: البحر بالليل/النهار + ستاير ذهبية
+  [x0 + 18, x0 + 452].forEach((wx, wi) => { const ww = 60, wy = 150, wh = 120; c.save(); c.beginPath(); c.moveTo(wx, wy + wh); c.lineTo(wx, wy + 30); c.quadraticCurveTo(wx + ww / 2, wy - 12, wx + ww, wy + 30); c.lineTo(wx + ww, wy + wh); c.closePath(); c.fillStyle = '#ffd23f'; c.fill(); c.clip(); g = c.createLinearGradient(0, wy, 0, wy + wh); if (d > 0.4) { g.addColorStop(0, '#0a0624'); g.addColorStop(0.6, '#2a1a5a'); g.addColorStop(0.61, '#141a4a'); g.addColorStop(1, '#0a1030'); } else { g.addColorStop(0, '#7ac8ff'); g.addColorStop(0.6, '#e0f4ff'); g.addColorStop(0.61, '#2aa9dd'); g.addColorStop(1, '#1a7ab0'); } c.fillStyle = g; c.fillRect(wx + 3, wy - 10, ww - 6, wh + 6); if (d > 0.4) { c.fillStyle = '#fff'; for (let k = 0; k < 8; k++) { c.globalAlpha = 0.5 + 0.5 * Math.sin(T / 18 + k + wi); c.fillRect(wx + 6 + rxH(k * 7 + wi) * (ww - 12), wy + 4 + rxH(k * 3 + wi) * 54, 1.5, 1.5); } c.globalAlpha = 1; if (wi) { c.fillStyle = '#f6f3d6'; c.beginPath(); c.arc(wx + 30, wy + 30, 9, 0, 7); c.fill(); c.fillStyle = '#1a0e40'; c.beginPath(); c.arc(wx + 34, wy + 27, 8, 0, 7); c.fill(); } } c.restore(); c.fillStyle = '#ffd23f'; c.fillRect(wx + ww / 2 - 1.5, wy + 14, 3, wh - 14);
+    [[wx - 14, 1], [wx + ww - 2, -1]].forEach(([cx, s]) => { const cg = c.createLinearGradient(cx, 0, cx + 16, 0); cg.addColorStop(0, '#a07400'); cg.addColorStop(0.5, '#ffe680'); cg.addColorStop(1, '#a07400'); c.fillStyle = cg; c.beginPath(); c.moveTo(cx, wy - 18); c.lineTo(cx + 16, wy - 18); c.quadraticCurveTo(cx + 8 + s * 6, wy + 70, cx + 18, wy + wh + 26); c.lineTo(cx - 2, wy + wh + 26); c.closePath(); c.fill(); }); });
+  // صور بابي وبابيتو بإطارات ذهبية + قلب بيناتهم
+  [[x0 + 112, '👑', 'بابي', '#ff7ab8'], [x0 + 344, '💜', 'بابيتو', '#a453ff']].forEach(([fx, em, nm, col], k) => { rxRect(c, fx, 170, 74, 92, 6, '#d7a400'); g = c.createLinearGradient(0, 176, 0, 256); g.addColorStop(0, col); g.addColorStop(1, '#2a0a52'); rxRect(c, fx + 5, 175, 64, 82, 4, g); rxTxt(c, em, fx + 37, 205, '26px sans-serif', '#000'); rxTxt(c, nm, fx + 37, 240, 'bold 13px Lalezar, Cairo, Arial', '#fff3c4', 6, col); });
+  const hb = 1 + 0.12 * Math.sin(T / 9); c.save(); c.translate(x0 + 260, 218); c.scale(hb, hb); c.shadowColor = '#ff5ad8'; c.shadowBlur = 16; rxHeart(c, 0, 0, 13, '#ff4aa8'); c.restore();
+  // لوحة نيون «غرفة المشرفين»
+  const fl = 0.85 + 0.15 * Math.sin(T / 6); c.save(); try { c.direction = 'rtl'; } catch (e) {} c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 22px Lalezar, Cairo, Arial'; c.shadowColor = '#d07aff'; c.shadowBlur = 16 * fl; c.lineWidth = 4; c.strokeStyle = 'rgba(110,30,200,.9)'; c.strokeText('👑 غرفة المشرفين 👑', x0 + 260, 282); c.fillStyle = '#fbe9ff'; c.fillText('👑 غرفة المشرفين 👑', x0 + 260, 282); c.restore();
+  // ثريا كريستال
+  c.strokeStyle = '#d7a400'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x0 + 260, 131); c.lineTo(x0 + 260, 146); c.stroke(); rxRect(c, x0 + 236, 146, 48, 6, 3, '#d7a400');
+  for (let k = 0; k < 9; k++) { const cx = x0 + 232 + k * 7, ln = 10 + (4 - Math.abs(k - 4)) * 4, sw = Math.sin(T / 40 + k) * 0.8; c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(cx, 152); c.lineTo(cx + sw, 152 + ln); c.stroke(); c.fillStyle = 'rgba(220,240,255,.95)'; c.beginPath(); c.moveTo(cx + sw, 152 + ln - 2); c.lineTo(cx + sw + 2, 152 + ln + 2); c.lineTo(cx + sw, 152 + ln + 6); c.lineTo(cx + sw - 2, 152 + ln + 2); c.closePath(); c.fill(); if (Math.sin(T / 8 + k * 2) > 0.8) rxStar4(c, cx + sw, 152 + ln + 2, 3, '#fff'); }
+  if (!RX.dark) { g = c.createRadialGradient(x0 + 260, 160, 4, x0 + 260, 160, 170); g.addColorStop(0, 'rgba(255,240,200,.32)'); g.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = g; c.beginPath(); c.arc(x0 + 260, 160, 170, 0, 7); c.fill(); }
+  // لوح سفلي كريمي بإطار ذهبي
+  c.fillStyle = '#f6ecff'; c.fillRect(X0, 300, W, 44); c.strokeStyle = '#d7a400'; c.lineWidth = 1.5; for (let x = X0 + 8; x < X1 - 30; x += 46) c.strokeRect(x, 306, 38, 30); c.fillStyle = '#d7a400'; c.fillRect(X0, 298, W, 3); c.fillRect(X0, 341, W, 3);
+  // أرضية رخام فاتح بخطوط ذهبية
+  g = c.createLinearGradient(0, 344, 0, 632); g.addColorStop(0, '#f4ecfa'); g.addColorStop(1, '#e0d0ee'); c.fillStyle = g; c.fillRect(X0, 344, W, 288);
+  c.strokeStyle = 'rgba(200,160,40,.35)'; c.lineWidth = 1; c.beginPath(); for (let y = 344; y < 632; y += 36) { c.moveTo(X0, y); c.lineTo(X1, y); } for (let x = X0; x < X1; x += 36) { c.moveTo(x, 344); c.lineTo(x, 632); } c.stroke();
+  c.strokeStyle = 'rgba(160,120,200,.18)'; c.lineWidth = 0.8; for (let k = 0; k < 14; k++) { const sx = X0 + rxH(k * 5) * W, sy = 350 + rxH(k * 9) * 270; c.beginPath(); c.moveTo(sx, sy); c.quadraticCurveTo(sx + 14, sy + 6, sx + 26, sy + 2); c.stroke(); }
+  // سجادة حمرا من الباب + قلب ورد
+  g = c.createLinearGradient(0, 540, 0, 632); g.addColorStop(0, '#a01a4a'); g.addColorStop(1, '#d02a6a'); c.fillStyle = g; c.beginPath(); c.moveTo(x0 + 236, 632); c.lineTo(x0 + 284, 632); c.lineTo(x0 + 278, 548); c.lineTo(x0 + 242, 548); c.closePath(); c.fill(); c.fillStyle = '#ffd23f'; c.fillRect(x0 + 238, 548, 2, 84); c.fillRect(x0 + 280, 548, 2, 84);
+  for (let k = 0; k < 34; k++) { const a = k / 34 * Math.PI * 2, hx = 16 * Math.pow(Math.sin(a), 3), hy = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)); c.fillStyle = k % 3 ? '#e8204a' : '#ff6a9a'; c.beginPath(); c.ellipse(x0 + 400 + hx * 2.6, 572 + hy * 1.5, 3, 2, a, 0, 7); c.fill(); }
+}
+function rxAdmRoomList(i) {
+  const L = [], H = rxRoomHI(i), x0 = H.x0, T = () => RM.T;
+  rxBeds(i).forEach(b => { L.push([b.y - b.w / 2 - 4, c => rxBedDraw(c, b)]); L.push([b.y + b.w / 2 + 3, c => rxBlanketDraw(c, b)]); });
+  // تسريحة بمراية + كنبة حب + شموع + ورد
+  L.push([430, c => { const x = x0 + 458, y = 430; c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(x - 34, y - 2, 68, 6); rxRect(c, x - 34, y - 34, 68, 34, 4, '#f6ecff'); rxRect(c, x - 34, y - 36, 68, 5, 2, '#d7a400'); c.fillStyle = '#d7a400'; c.beginPath(); c.ellipse(x, y - 64, 20, 26, 0, 0, 7); c.fill(); const g = c.createLinearGradient(x - 16, y - 88, x + 16, y - 40); g.addColorStop(0, '#e8f4ff'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(1, '#c8d8f0'); c.fillStyle = g; c.beginPath(); c.ellipse(x, y - 64, 16, 22, 0, 0, 7); c.fill(); rxCrown(c, x, y - 92, 0.6); c.font = '9px sans-serif'; c.textAlign = 'center'; c.fillText('💄', x - 18, y - 40); c.fillText('💍', x - 4, y - 40); c.fillText('🌸', x + 14, y - 40); }]);
+  L.push([598, c => { const x = x0 + 92, y = 598; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x, y + 2, 52, 7, 0, 0, 7); c.fill(); const g = c.createLinearGradient(0, y - 46, 0, y); g.addColorStop(0, '#b06aff'); g.addColorStop(1, '#5a1aa8'); c.fillStyle = g; c.beginPath(); c.moveTo(x - 48, y - 8); c.quadraticCurveTo(x - 50, y - 44, x - 24, y - 46); c.quadraticCurveTo(x, y - 30, x + 24, y - 46); c.quadraticCurveTo(x + 50, y - 44, x + 48, y - 8); c.closePath(); c.fill(); rxRect(c, x - 46, y - 20, 92, 16, 6, '#8a3ae8'); c.fillStyle = '#d7a400'; c.fillRect(x - 44, y - 4, 4, 6); c.fillRect(x + 40, y - 4, 4, 6); rxHeart(c, x - 14, y - 26, 5, '#ff7ab8'); rxHeart(c, x + 14, y - 26, 5, '#ffd23f'); }]);
+  [[x0 + 360, 548], [x0 + 440, 548], [x0 + 360, 600], [x0 + 440, 600], [x0 + 18, 470]].forEach(([x, y], k) => L.push([y, c => { const t = RM.T; c.fillStyle = '#fff6e8'; rxRect(c, x - 3, y - 14, 6, 14, 2, '#fff6e8'); c.fillStyle = '#ffb000'; c.beginPath(); c.ellipse(x + Math.sin(t / 5 + k) * 0.6, y - 18, 2, 4 + Math.sin(t / 3 + k) * 0.6, 0, 0, 7); c.fill(); const g = c.createRadialGradient(x, y - 18, 1, x, y - 18, 22); g.addColorStop(0, 'rgba(255,200,100,.45)'); g.addColorStop(1, 'rgba(255,200,100,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y - 18, 22, 0, 7); c.fill(); }]));
+  L.push([452, c => { const x = x0 + 44, y = 452; rxRect(c, x - 10, y - 24, 20, 24, 5, '#ffffff'); c.strokeStyle = '#d7a400'; c.lineWidth = 1.2; c.strokeRect(x - 10, y - 24, 20, 24); for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.32, fx = x + Math.cos(a) * 16, fy = y - 28 + Math.sin(a) * 14; c.strokeStyle = '#3a8a3a'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y - 22); c.lineTo(fx, fy); c.stroke(); c.fillStyle = k % 2 ? '#e8204a' : '#ff5a8a'; c.beginPath(); c.arc(fx, fy, 3.6, 0, 7); c.fill(); } }]);
+  return L;
+}
+function rxAdmPic(cv) {
+  const g = cv.getContext('2d'); cv.width = 192; cv.height = 144; g.setTransform(2, 0, 0, 2, 0, 0); const W = 96;
+  let gr = g.createLinearGradient(0, 0, 0, 40); gr.addColorStop(0, '#2a0a52'); gr.addColorStop(1, '#5a1a9a'); g.fillStyle = gr; g.fillRect(0, 0, W, 40); g.fillStyle = '#ffd23f'; g.fillRect(0, 0, W, 2); g.fillStyle = '#f4ecfa'; g.fillRect(0, 40, W, 32);
+  g.fillStyle = '#d7a400'; g.fillRect(14, 6, 3, 60); g.fillRect(78, 6, 3, 60); g.fillStyle = '#8a3ae8'; g.fillRect(12, 4, 71, 5); g.fillStyle = '#5a1aa8'; g.fillRect(16, 38, 6, 26); g.fillStyle = '#fff'; g.fillRect(22, 40, 54, 24); g.fillStyle = '#9a4af0'; g.fillRect(36, 41, 40, 22); g.fillStyle = '#ffd23f'; g.fillRect(36, 41, 2, 22);
+  rxCrown(g, 47, 14, 0.7); rxHeart(g, 56, 52, 4, '#ffd6f4'); g.fillStyle = '#fff'; g.fillRect(24, 43, 9, 7); g.fillRect(24, 54, 9, 7);
 }
