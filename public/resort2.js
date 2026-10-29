@@ -972,7 +972,8 @@ function rxAdmPic(cv) {
    ===================================================================== */
 const RX_TUB = { dx: 260, y: 476, rx: 118, ry: 40 };   // نسبي لبداية الغرفة
 const rxBathX0 = () => rxRoomHI(RX_BATH_I).x0;
-const rxSoaking = o => (o && o.dance) === 41;
+const RX_SOAK_CODE = 177;   // كود البانيو (بعيد عن أكواد الألعاب 20-124)
+const rxSoaking = o => (o && o.dance) === RX_SOAK_CODE;
 const rxInBath = o => rmShopId(o) === 7 && rxRoomIdx((o || RM.me).x) === RX_BATH_I;
 function rxTubSpots() { const x0 = rxBathX0(); return [{ x: x0 + RX_TUB.dx - 44, y: RX_TUB.y, k: 0 }, { x: x0 + RX_TUB.dx + 44, y: RX_TUB.y, k: 1 }]; }
 const rxNearBathDoor = () => rmShopId() === 7 && rxRoomIdx(RM.me.x) === RX_ADM_I && rmBalAdm() && Math.abs(RM.me.x - (rxRoomHI(RX_ADM_I).x0 + 482)) < 60 && RM.me.y < 430;
@@ -992,7 +993,7 @@ function rxBathExit() {
 function rxSoakIn() {
   const m = RM.me; if (m.sit || m.jump) return; const busy = sp => Object.values(RM.others).some(o => rxSoaking(o) && Math.hypot(o.x - sp.x, o.y - sp.y) < 10);
   const free = rxTubSpots().filter(sp => !busy(sp)).sort((a, b) => Math.abs(a.x - m.x) - Math.abs(b.x - m.x))[0]; if (!free) { showToast('🛁 البانيو مليان'); return; }
-  if (m.dance) rmSetDance(0); RM.tapMk = null; m.x = m.tx = free.x; m.y = m.ty = free.y; m.dir = free.k ? -1 : 1; RM.sent = ''; rmSetDance(41); RX.soakAt = free;
+  if (m.dance) rmSetDance(0); RM.tapMk = null; m.x = m.tx = free.x; m.y = m.ty = free.y; m.dir = free.k ? -1 : 1; RM.sent = ''; rmSetDance(RX_SOAK_CODE); RX.soakAt = free;
   rxSnd([['sine', 300, 120, 0.35, 0.06], ['triangle', 900, 400, 0.25, 0.03, 0.05], ['sine', 1200, 1500, 0.08, 0.02, 0.3], ['sine', 1000, 1300, 0.08, 0.02, 0.45], ['sine', 1400, 1700, 0.08, 0.02, 0.6]]);
   showToast('🫧 دخلت البانيو… مي دافي ورغوة بنفسجية 💜'); rmPrompt(true);
 }
