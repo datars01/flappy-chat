@@ -8192,12 +8192,14 @@ function rmNpcBub(c, it, b, bx, by, w, h, LH) {
   c.restore();
 }
 function rmBubFlush(c) {
-  let Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = []; { const seen = new Set(); Q = Q.reverse().filter(it => { if (seen.has(it.b)) return false; seen.add(it.b); return true; }).reverse(); } /* نفس الببل ما ينرسم مرتين */
+  let Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = []; RM.bubTop = {}; { const seen = new Set(); Q = Q.reverse().filter(it => { if (seen.has(it.b)) return false; seen.add(it.b); return true; }).reverse(); } /* نفس الببل ما ينرسم مرتين */
   c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; try { c.direction = 'rtl'; } catch (e) {} const LH = 14, placed = [];
   Q.sort((p, q) => ((p.g || p.b.st) - (q.g || q.b.st)) || ((p.r || 0) - (q.r || 0))).forEach(it => {
     const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
-    for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = hit.y - h - 4; }
+    const gk = it.g || b.st, gt = (RM.bubTop || (RM.bubTop = {})); if (it.r) { if (gt[gk] != null) by = gt[gk] - h - 6; } /* رسايل نفس اللاعب: كل وحدة فوك اللي قبلها بالضبط */
+    for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = Math.min(by, hit.y) - h - 6; }
+    gt[gk] = by;
     placed.push({ x: bx, y: by, w, h });
     if (it.adm === 'npc') { rmNpcBub(c, it, b, bx, by, w, h, LH); return; }
     if (it.adm) { rmAdmBub(c, it, b, bx, by, w, h, LH); return; }
@@ -10201,7 +10203,7 @@ function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState
 <script src="/run.js?v=13"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
-<script src="/resort2.js?v=3"></script>
+<script src="/resort2.js?v=4"></script>
 <script src="/resort3.js?v=5"></script>
 <script src="/resort4.js?v=4"></script>
 <script src="/resort5.js?v=3"></script>
