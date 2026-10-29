@@ -8197,10 +8197,10 @@ function rmBubFlush(c) {
   Q.sort((p, q) => ((p.g || p.b.st) - (q.g || q.b.st)) || ((p.r || 0) - (q.r || 0))).forEach(it => {
     const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
-    const gk = it.g || b.st, gt = (RM.bubTop || (RM.bubTop = {})); if (it.r) { if (gt[gk] != null) by = gt[gk] - h - 6; } /* رسايل نفس اللاعب: كل وحدة فوك اللي قبلها بالضبط */
-    for (let g = 0; g < 14; g++) { const hit = placed.find(r => bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = Math.min(by, hit.y) - h - 6; }
+    const gk = it.g || b.st, gt = (RM.bubTop || (RM.bubTop = {}));     if (it.r && gt[gk] != null) by = gt[gk] - h - 4; /* مسافة صغيرة ومتناسقة بين رسايل نفس اللاعب */
+    for (let g = 0; g < 14; g++) { const hit = placed.find(r => r.gk !== gk && bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = Math.min(by, hit.y) - h - 6; }
     gt[gk] = by;
-    placed.push({ x: bx, y: by, w, h });
+    placed.push({ x: bx, y: by, w, h, gk }); if (it.r) it = Object.assign({}, it, { y: by + h + 14 }); /* الرسايل الفوك: بلا خط منقط يعبر فوك الرسايل الجديدة */
     if (it.adm === 'npc') { rmNpcBub(c, it, b, bx, by, w, h, LH); return; }
     if (it.adm) { rmAdmBub(c, it, b, bx, by, w, h, LH); return; }
     c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
