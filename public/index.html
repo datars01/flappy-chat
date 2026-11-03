@@ -8124,7 +8124,7 @@ function rmDrawMe0(c, st) {
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(m.x, m.y + 1, 17 * (1 - st.air / 40), 5 * (1 - st.air / 50), 0, 0, 7); c.fill();
   const cold = rmCold(m), ui = rmUi(m), wet = rmWet(m); m.pseed = 3;
   const swp = sk > 0.3 ? rmSwingFor(m.x, m.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * sk); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(m.x + rmShake(cold), m.y + 11 * sk - up); c.scale(m.dir, 1); rmAvDraw(c, m.av || AVT.DEF, { t: RM.T, mv: st.mv, ph: m.ph, sit: sk, dance: (m.dance === 9 ? 0 : m.dance || 0), dt: m.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(m), sip: rmSipP(m), cup: (m.drink && m.drink.sip) ? m.drink.k : '', burn: m.burn || 0, char: m.char || 0, cseed: 3, hold: rmHoldSide(rmMe(), m.x, m.dir), swim: rmInPool(m) }, wet); c.restore(); rmUmbrella(c, m.x + rmShake(cold), m.y - up, m.dir, sk, ui, rmHash(rmMe())); c.restore();
-  const lf = 16 * ui + rmHatLift(m); rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm);
+  const lf = 16 * ui + rmHatLift(m); rmTag(c, rmMe(), m.x, m.y - AV_H * 1.26 + 11 * sk - up - lf, { me: true, adm: RM.myAdm, own: RM.isOwner && !RM.myAdm, mod: RM.isMod }); rmBub(c, rmMe(), m.x, m.y - AV_H * 1.34 + 11 * sk - up - lf, RM.myAdm, 1);
 }
 function rmDrawOther(c, o) { rmHugEm(o); if (rmRideOf(o)) { rmDrawOther0(rmNullC(), o); return; } const sw = rmSwimStart(c, o); rmWearBack(c, o); rmDrawOtherH(c, o); rmWearFront(c, o); if (sw) rmSwimEnd(c, o); if (!o.hid || RM.myAdm || RM.isMod) { rmBurnFx(c, o); rmCupDraw(c, o); rmBalHeld(c, o); if (o.dance === 9) rmRodDraw(c, o, false, false); } }
 function rmDrawOtherH(c, o) { if (o.hid) { if (!(RM.myAdm || RM.isMod)) return; rmGhostDraw(c, o.x, o.y, g => rmDrawOther0(g, o)); rmGhost(c, o.x, o.y); return; } rmDrawOther0(c, o); }
@@ -8138,7 +8138,7 @@ function rmDrawOther0(c, o) {
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(o.x, o.y + 1, 17, 5, 0, 0, 7); c.fill();
   if (!o.pseed) o.pseed = rmHash(o.name) % 30; const cold = rmCold(o), ui = rmUi(o), wet = rmWet(o);
   const swp = k > 0.3 ? rmSwingFor(o.x, o.y) : null; c.save(); if (swp) { c.translate(swp.x, swp.ey - 80); c.rotate((swp.seat.ang || 0) * k); c.translate(-swp.x, -(swp.ey - 80)); } c.save(); c.translate(o.x + rmShake(cold), o.y + 11 * k); c.scale(o.dir, 1); rmAvDraw(c, o.av || AVT.DEF, { t: RM.T, mv, ph: o.ph || 0, sit: k, dance: (o.dance === 9 ? 0 : o.dance || 0), dt: o.dt || 0, umb: ui > 0.3 ? 1 : 0, cold, drink: rmDrinkL(o), sip: rmSipP(o), cup: (o.drink && o.drink.sip) ? o.drink.k : '', burn: o.burn || 0, char: o.char || 0, cseed: o.pseed || 0, hold: rmHoldSide(o.name, o.x, o.dir || 1), swim: rmInPool(o) }, wet); c.restore(); rmUmbrella(c, o.x + rmShake(cold), o.y, o.dir, k, ui, rmHash(o.name)); c.restore();
-  const lf = 16 * ui + rmHatLift(o); rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf, o.adm); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
+  const lf = 16 * ui + rmHatLift(o); rmTag(c, o.name, o.x, o.y - AV_H * 1.26 + 11 * k - lf, { adm: o.adm, own: o.own && !o.adm, mod: o.mod }); rmBub(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf, o.adm, 1); rmTyping(c, o.name, o.x, o.y - AV_H * 1.34 + 11 * k - lf);
 }
 function rmTyping(c, name, x, y) {
   if (!RM.typOn) return; const e = RM.typ[name]; if (!e) return; const now = performance.now(); if (now > e) { delete RM.typ[name]; return; }
@@ -8158,10 +8158,10 @@ function rmWrap(c, txt, maxW) {
   });
   if (cur) lines.push(cur); return lines;
 }
-function rmBub(c, name, x, y, adm) {
+function rmBub(c, name, x, y, adm, pl) {   /* pl = لاعب حقيقي: يطلع اليوزر مالته داخل الببل فوك الكلام */
   const b = RM.bubs[name]; if (!b) return; if (b.until) { b.t = Math.max(0, (b.until - performance.now()) / 16.7); if (b.t <= 0) { delete RM.bubs[name]; return; } } else { if (b.t <= 0) return; b.t--; } if (!b.st) b.st = ++RM.bubN;
-  const Q = RM.bubQ || (RM.bubQ = []); Q.push({ b, x, y, adm, g: b.st, r: 0 });
-  if (b.old && b.old.length) b.old.forEach((o, i) => { o.t = b.t; Q.push({ b: o, x, y, adm, g: b.st, r: i + 1 }); });   /* الرسايل القديمة تصعد فوك الجديدة (أقصى شي 3 ببل) */
+  const Q = RM.bubQ || (RM.bubQ = []); Q.push({ b, x, y, adm, g: b.st, r: 0, nm: pl ? name : '' });
+  if (b.old && b.old.length) b.old.forEach((o, i) => { o.t = b.t; Q.push({ b: o, x, y, adm, g: b.st, r: i + 1, nm: pl ? name : '' }); });   /* الرسايل القديمة تصعد فوك الجديدة (أقصى شي 3 ببل) */
 }
 RM.bubN = 0;
 function rmAdmBub(c, it, b, bx, by, w, h, LH) {
@@ -8213,7 +8213,7 @@ function rmBubFlush(c) {
   let Q = RM.bubQ; if (!Q || !Q.length) return; RM.bubQ = []; RM.bubTop = {}; { const seen = new Set(); Q = Q.reverse().filter(it => { if (seen.has(it.b)) return false; seen.add(it.b); return true; }).reverse(); } /* نفس الببل ما ينرسم مرتين */
   c.save(); c.font = 'bold 11px Cairo, system-ui, Arial'; c.textAlign = 'center'; try { c.direction = 'rtl'; } catch (e) {} const LH = 14, placed = [];
   Q.sort((p, q) => ((p.g || p.b.st) - (q.g || q.b.st)) || ((p.r || 0) - (q.r || 0))).forEach(it => {
-    const b = it.b; if (!b.lines) { b.lines = rmWrap(c, b.txt, 170); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
+    const b = it.b; if (!b.lines) { b.nmL = it.nm ? 1 : 0; b.lines = (it.nm ? ['@' + it.nm] : []).concat(rmWrap(c, b.txt, 170)); b.w = Math.min(190, Math.max.apply(null, b.lines.map(l => c.measureText(l).width)) + 16); }
     const w = b.w, h = b.lines.length * LH + 8, x = it.x, bx = x - w / 2; let by = it.y - 16 - h;
     const gk = it.g || b.st, gt = (RM.bubTop || (RM.bubTop = {}));     if (it.r && gt[gk] != null) by = gt[gk] - h - 4; /* مسافة صغيرة ومتناسقة بين رسايل نفس اللاعب */
     for (let g = 0; g < 14; g++) { const hit = placed.find(r => r.gk !== gk && bx < r.x + r.w + 2 && bx + w + 2 > r.x && by < r.y + r.h + 2 && by + h + 8 > r.y); if (!hit) break; by = Math.min(by, hit.y) - h - 6; }
@@ -8224,7 +8224,7 @@ function rmBubFlush(c) {
     c.save(); c.globalAlpha = Math.min(1, b.t / 20); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 9); else c.rect(bx, by, w, h); c.fill(); c.stroke();
     const ty = it.y - 16; if (by + h < ty - 2) { c.beginPath(); c.moveTo(x, by + h + 5); c.lineTo(x, ty + 3); c.strokeStyle = 'rgba(0,0,0,.25)'; c.setLineDash([2, 3]); c.stroke(); c.setLineDash([]); }
     else { c.beginPath(); c.moveTo(x - 5, by + h - 0.5); c.lineTo(x, by + h + 7); c.lineTo(x + 5, by + h - 0.5); c.fill(); }
-    c.fillStyle = '#222'; b.lines.forEach((l, k) => c.fillText(l, bx + w / 2, by + 4 + LH * (k + 1) - 3, w - 8)); c.restore();
+    b.lines.forEach((l, k) => { const nmK = b.nmL && k === 0; c.font = nmK ? 'bold 10px Cairo, system-ui, Arial' : 'bold 11px Cairo, system-ui, Arial'; c.fillStyle = nmK ? '#8b3fe0' : '#222'; c.fillText(l, bx + w / 2, by + 4 + LH * (k + 1) - 3, w - 8); }); c.font = 'bold 11px Cairo, system-ui, Arial'; c.restore();
   }); c.restore();
 }
 function rmSortOf(sy, sit, x, y) { if (sit) { const sp = RM_SPOTS.find(s => Math.hypot(s.x - x, s.y - y) < 7); if (sp) return sp.ey + 0.5; } return sy; }
