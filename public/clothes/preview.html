@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>معاينة الملابس</title>
+<style>
+  body{margin:0;padding:14px;font-family:system-ui,sans-serif;background:#1b1230;color:#fff}
+  h1{font-size:18px;margin:0 0 4px} p{margin:0 0 14px;color:#c9b6ff;font-size:13px}
+  #grid{display:flex;flex-wrap:wrap;gap:12px}
+  .card{background:#2a1d48;border-radius:12px;padding:8px;text-align:center;width:150px}
+  .card canvas{background:#6a22b8;border-radius:10px;width:134px;height:268px}
+  .card b{display:block;margin-top:6px} .card small{color:#c9b6ff}
+  .err{background:#5a1020;border:1px solid #ff5c7a;border-radius:10px;padding:10px;margin-bottom:12px;white-space:pre-wrap;direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<h1>👕 معاينة ملابس البوتيك</h1>
+<p>هذي الصفحة على لابتوبك بس، ما تأثر على اللعبة. عدّل items.js واحفظ وشوف التغيير هنا.</p>
+<div id="err"></div>
+<div id="grid"></div>
+<script>
+  window.onerror = (m, s, l) => { document.getElementById('err').innerHTML = '<div class="err">❌ خطأ بالكود: ' + m + '\nسطر: ' + l + '</div>'; };
+</script>
+<script src="items.js"></script>
+<script>
+  const tpl = new Image(); tpl.src = 'قالب_الرسم.png';
+  const S = 3.35;   // 40×80 وحدة → 134×268 بكسل
+  function draw(cv, it) {
+    const c = cv.getContext('2d'); cv.width = 268; cv.height = 536; c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 134, 268);
+    if (tpl.complete && tpl.naturalWidth) { c.globalAlpha = .55; c.drawImage(tpl, 0, 0, 134, 268); c.globalAlpha = 1; }
+    c.save(); c.translate(67, 268); c.scale(S, S);
+    try {
+      if (typeof it.draw === 'function') it.draw(c, performance.now() / 16);
+      else if (it.img) { const im = it._im || (it._im = Object.assign(new Image(), { src: '../' + it.img.replace(/^\/+/, '') })); if (im.complete && im.naturalWidth) c.drawImage(im, -20, -80, 40, 80); else im.onload = () => draw(cv, it); }
+    } catch (e) { document.getElementById('err').innerHTML += '<div class="err">❌ ' + it.k + ': ' + e.message + '</div>'; }
+    c.restore();
+  }
+  function build() {
+    const G = document.getElementById('grid'); G.innerHTML = '';
+    const L = window.BABI_CLOTHES || [];
+    if (!L.length) G.innerHTML = '<p>ماكو ملابس بـ items.js بعد</p>';
+    L.forEach(it => {
+      const d = document.createElement('div'); d.className = 'card';
+      const cv = document.createElement('canvas'); d.appendChild(cv);
+      const b = document.createElement('b'); b.textContent = it.n || it.k; d.appendChild(b);
+      const s = document.createElement('small'); s.textContent = (it.k || '?') + ' — 💵 ' + (it.p || 0); d.appendChild(s);
+      if (!/^c_[a-z0-9_]{1,10}$/i.test(it.k || '')) { const e = document.createElement('small'); e.style.color = '#ff8a9a'; e.textContent = ' ⚠️ k لازم يبدأ بـ c_ و12 حرف أو أقل'; d.appendChild(e); }
+      G.appendChild(d); draw(cv, it);
+    });
+  }
+  tpl.onload = build; build();
+</script>
+</body>
+</html>
