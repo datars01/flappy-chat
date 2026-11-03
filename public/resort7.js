@@ -32,9 +32,9 @@
   RM_CAR.x = 140; RM_CAR.y = 1112; moveDecor('rmCarouselDraw', RM_CAR.y + 20);          // الدوّارة صارت جوا منتجع بابي، يم بوابة التصوير
 
   /* ================= 3) أراضي المشاريع القادمة + الشارع الثاني ================= */
-  const LOTS = [1650, 2019, 2381, 2731].map((x, i) => ({ x, i, w: 300, y0: 656, y1: 830 }));
+  const LOTS = [2019, 2381, 2731].map((x, i) => ({ x, i: i + 1, w: 300, y0: 656, y1: 830 }));   // الأرض الأولى (كدام سبيناغ) صارت البوتيك 👕 — resort11.js
   const ST = { x0: 1262, x1: 3330, y0: 862, y1: 902 };
-  window.R7_LOTS = { x: 2190, y: 800 };
+  window.R7_LOTS = { x: 2380, y: 800 };
   function street(c) { if (RM.v1 < ST.x0 || RM.v0 > ST.x1 || RM.vy1 < ST.y0 - 10 || RM.vy0 > ST.y1 + 10) return; const a = Math.max(ST.x0, RM.v0 - 20), b = Math.min(ST.x1, RM.v1 + 20);
     c.fillStyle = 'rgba(150,110,60,.25)'; c.beginPath(); c.moveTo(a, ST.y0 - 4); for (let x = a; x <= b; x += 20) c.lineTo(x, ST.y0 - 4 + Math.sin(x / 37) * 1.6); for (let x = b; x >= a; x -= 20) c.lineTo(x, ST.y1 + 4 + Math.sin(x / 41) * 1.6); c.closePath(); c.fill();
     const g = c.createLinearGradient(0, ST.y0, 0, ST.y1); g.addColorStop(0, '#dcb984'); g.addColorStop(.5, '#d2ab72'); g.addColorStop(1, '#c79e64'); c.fillStyle = g;
