@@ -18,20 +18,45 @@ button { font-family: var(--body); cursor: pointer }
 [hidden] { display: none !important }
 
 /* ---- الدخول ---- */
-#auth { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px max(16px, env(safe-area-inset-right)) 20px max(16px, env(safe-area-inset-left));
-  background: radial-gradient(circle at 30% 10%, #17504c, var(--bg) 60%); overflow: auto; touch-action: auto }
-#auth .box { width: 100%; max-width: 380px; background: var(--paper); color: var(--ink); border-radius: 24px; padding: 22px 20px; box-shadow: 0 0 0 5px #fff, 0 12px 0 5px rgba(0,0,0,.3) }
-#auth h1 { font-family: var(--display); font-weight: 400; font-size: 46px; margin: 0; text-align: center; color: var(--red); text-shadow: 3px 3px 0 var(--pick) }
-#auth p.s { text-align: center; margin: 4px 0 16px; color: #6b5a4c; font-size: 14px }
-#auth .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px }
-#auth .tabs button { border: 2px solid var(--ink); background: transparent; border-radius: 12px; padding: 9px; font-weight: 700; color: var(--ink) }
-#auth .tabs button.on { background: var(--ink); color: var(--paper) }
-#auth label { display: block; font-size: 13px; font-weight: 700; margin: 10px 0 4px }
-#auth input { width: 100%; font: 500 16px var(--body); padding: 12px; border-radius: 12px; border: 2px solid #cfc4ad; background: #fff; color: var(--ink); direction: rtl }
-#auth input:focus { outline: none; border-color: var(--ink) }
-#auth .go { width: 100%; margin-top: 16px; padding: 13px; border: 0; border-radius: 14px; background: var(--red); color: #fff; font: 400 24px var(--display); box-shadow: 0 5px 0 #8a1424 }
+#auth { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow-y: auto; padding: calc(18px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: radial-gradient(120% 80% at 50% 0%, #1f6b5f 0%, #0d2f2e 55%, #071a19 100%); touch-action: pan-y }
+#auth::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(255,210,63,.05) 0 2px, transparent 2px 46px); pointer-events: none }
+#aFloat { position: absolute; inset: 0; overflow: hidden; pointer-events: none }
+#aFloat canvas { position: absolute; width: 84px; height: 84px; opacity: .5; filter: drop-shadow(0 8px 10px rgba(0,0,0,.4)); animation: aFl linear infinite }
+@keyframes aFl { from { transform: translateY(110vh) rotate(-12deg) } to { transform: translateY(-140px) rotate(14deg) } }
+#auth .box { position: relative; width: 100%; max-width: 390px; background: linear-gradient(180deg, #fffaf0, #f3ecdc); color: var(--ink); border-radius: 28px; padding: 22px 20px 18px; box-shadow: 0 0 0 4px var(--pick), 0 0 0 8px var(--ink), 0 18px 40px rgba(0,0,0,.5); animation: aIn .5s cubic-bezier(.2,1.4,.4,1) }
+@keyframes aIn { from { transform: translateY(30px) scale(.94); opacity: 0 } }
+#auth .box.shake { animation: aSh .4s }
+@keyframes aSh { 20%, 60% { transform: translateX(-8px) } 40%, 80% { transform: translateX(8px) } }
+#auth .crest { display: grid; place-items: center; margin: -54px auto 4px; width: 92px; height: 92px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, var(--pick) 55%, #e09a10); border: 4px solid var(--ink); box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 0 30px rgba(255,210,63,.6) }
+#auth .crest canvas { width: 78px; height: 78px }
+#auth h1 { font-family: var(--display); font-weight: 400; font-size: 44px; line-height: 1.05; margin: 0; text-align: center; background: linear-gradient(180deg, #ff6a7a, var(--red) 60%, #a5162a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(2px 3px 0 var(--pick)) }
+#auth p.s { text-align: center; margin: 4px 0 14px; color: #6b5a4c; font-size: 13px }
+#auth .tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: #e6dcc6; border-radius: 16px; padding: 4px; margin-bottom: 12px; border: 2px solid var(--ink) }
+#auth .tabs::before { content: ""; position: absolute; top: 4px; bottom: 4px; right: 4px; width: calc(50% - 4px); border-radius: 12px; background: var(--ink); transition: transform .28s cubic-bezier(.3,1.3,.5,1) }
+#auth.up .tabs::before { transform: translateX(-100%) }
+#auth .tabs button { position: relative; z-index: 1; border: 0; background: transparent; border-radius: 12px; padding: 10px 4px; font-weight: 700; font-size: 14px; color: var(--ink); transition: color .2s }
+#auth .tabs button.on { color: var(--pick) }
+#auth .gift { display: none; align-items: center; gap: 10px; background: linear-gradient(90deg, #2fd66b, #1fae55); color: #fff; border-radius: 16px; padding: 9px 12px; margin-bottom: 4px; border: 2px solid var(--ink); font-size: 13px; font-weight: 700; box-shadow: 0 4px 0 rgba(0,0,0,.2) }
+#auth.up .gift { display: flex; animation: aIn .35s }
+#auth .gift b { font-size: 26px } #auth .gift small { display: block; font-weight: 500; opacity: .9 }
+#auth .fld { position: relative; margin-top: 10px }
+#auth label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin: 0 2px 4px } #auth label small { font-weight: 500; color: #8a7a6a }
+#auth .inp { position: relative } #auth .inp .ic { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none }
+#auth input { width: 100%; font: 500 16px var(--body); padding: 13px 42px 13px 44px; border-radius: 14px; border: 2px solid #cfc4ad; background: #fff; color: var(--ink); direction: rtl; transition: border-color .15s, box-shadow .15s }
+#auth input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(255,210,63,.55) }
+#auth .fld.ok input { border-color: #2fd66b } #auth .fld.bad input { border-color: var(--red) }
+#auth .eye { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border: 0; border-radius: 10px; background: #f0e8d6; font-size: 16px }
+#auth .mark { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 900 } #auth .fld.ok .mark { color: #1fae55 } #auth .fld.bad .mark { color: var(--red) }
+#auth .meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px } #auth .meter i { height: 5px; border-radius: 3px; background: #e0d6c0; transition: background .2s }
+#auth .meterT { font-size: 11px; font-weight: 700; margin-top: 3px; min-height: 1.2em; color: #8a7a6a }
+#auth .go { position: relative; width: 100%; margin-top: 16px; padding: 13px; border: 3px solid var(--ink); border-radius: 16px; background: linear-gradient(180deg, #ff5d6e, var(--red)); color: #fff; font: 400 25px var(--display); box-shadow: 0 6px 0 #8a1424; transition: transform .08s, box-shadow .08s }
+#auth .go:active { transform: translateY(4px); box-shadow: 0 2px 0 #8a1424 } #auth .go:disabled { opacity: .7 }
+#auth .go.ld::after { content: ""; position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; animation: aSp .7s linear infinite }
+@keyframes aSp { to { transform: rotate(360deg) } }
 #auth .err { color: var(--red); font-size: 13px; font-weight: 700; min-height: 1.4em; margin-top: 8px; text-align: center }
-#auth .note { font-size: 12px; color: #6b5a4c; text-align: center; margin-top: 10px; line-height: 1.6 }
+#auth .note { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #6b5a4c; margin: 6px 0 0; line-height: 1.6; background: rgba(36,20,14,.05); border-radius: 12px; padding: 8px 10px }
+@media (prefers-reduced-motion: reduce) { #aFloat canvas, #auth .box { animation: none } }
 
 /* ---- الواجهة ---- */
 #hud { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; pointer-events: none;
@@ -140,18 +165,22 @@ button { font-family: var(--body); cursor: pointer }
 <canvas id="g"></canvas>
 
 <div id="auth">
-  <div class="box">
+  <div id="aFloat"></div>
+  <div class="box" id="aBox">
+    <div class="crest"><canvas id="aCrest"></canvas></div>
     <h1>منتظر روت</h1>
-    <p class="s">برينروت أونلاين — 7 لاعبين، كل واحد إله قاعدة</p>
-    <div class="tabs"><button type="button" id="tabIn" class="on">تسجيل دخول</button><button type="button" id="tabUp">حساب جديد</button></div>
-    <form id="authF" autocomplete="on">
-      <label for="aU">الاسم</label><input id="aU" name="username" autocomplete="username" maxlength="20" required>
-      <label for="aP">الرمز</label><input id="aP" name="password" type="password" autocomplete="current-password" maxlength="64" required>
-      <div id="p2w" hidden><label for="aP2">أعد الرمز</label><input id="aP2" type="password" autocomplete="new-password" maxlength="64"></div>
+    <p class="s">برينروت أونلاين • 7 لاعبين • كل واحد إله قاعدة</p>
+    <div class="tabs" role="tablist"><button type="button" id="tabIn" class="on" role="tab">تسجيل دخول</button><button type="button" id="tabUp" role="tab">حساب جديد</button></div>
+    <div class="gift"><b>🎁</b><div>هدية البداية: 30K 💰<small>تبدي مستوى 1 وتكدر تشتري أول برينروت وتجمع فلوس</small></div></div>
+    <form id="authF" autocomplete="on" novalidate>
+      <div class="fld" id="fU"><label for="aU">اسم اللاعب <small id="uHint">3 إلى 5 حروف أو أرقام</small></label><div class="inp"><span class="ic">👤</span><input id="aU" name="username" autocomplete="username" maxlength="20" required spellcheck="false" autocapitalize="off"><span class="mark" id="uMark"></span></div></div>
+      <div class="fld" id="fP"><label for="aP">الرمز <small id="pHint"></small></label><div class="inp"><span class="ic">🔑</span><input id="aP" name="password" type="password" autocomplete="current-password" maxlength="64" required><button type="button" class="eye" id="aEye" aria-label="إظهار الرمز">👁️</button></div>
+        <div id="pMeterW" hidden><div class="meter"><i></i><i></i><i></i><i></i></div><div class="meterT" id="pMeterT"></div></div></div>
+      <div class="fld" id="p2w" hidden><label for="aP2">أعد الرمز</label><div class="inp"><span class="ic">🔁</span><input id="aP2" type="password" autocomplete="new-password" maxlength="64"><span class="mark" id="p2Mark"></span></div></div>
       <button class="go" type="submit" id="aGo">ادخل اللعبة</button>
       <div class="err" id="aErr" aria-live="polite"></div>
     </form>
-    <p class="note">حسابك ورمزك ينحفظون بقاعدة البيانات، وبرينروتاتك وفلوسك وقاعدتك تبقى محفوظة وترجعلك كل ما تدخل.<br>نفس حساب بابيتو شات يشتغل هنا.</p>
+    <p class="note"><span>🛡️</span><span>حسابك ورمزك محفوظين بأمان، وبرينروتاتك وفلوسك وقاعدتك ترجعلك كل ما تدخل. نفس حساب بابيتو شات يشتغل هنا.</span></p>
   </div>
 </div>
 
@@ -218,6 +247,20 @@ let mode = 'in';
 $('tabIn').onclick = () => { mode = 'in'; $('tabIn').classList.add('on'); $('tabUp').classList.remove('on'); $('p2w').hidden = true; $('aGo').textContent = 'ادخل اللعبة'; $('aErr').textContent = ''; $('aP').autocomplete = 'current-password'; };
 $('tabUp').onclick = () => { mode = 'up'; $('tabUp').classList.add('on'); $('tabIn').classList.remove('on'); $('p2w').hidden = false; $('aGo').textContent = 'سوّي حسابي'; $('aErr').textContent = ''; $('aP').autocomplete = 'new-password'; };
 ['aU', 'aP', 'aP2'].forEach(id => $(id).addEventListener('input', () => { $('aErr').textContent = ''; }));
+/* ✨ شاشة التسجيل الاحترافية: تحقق مباشر، قوة الرمز، إظهار الرمز، وبرينروتات طايرة بالخلفية */
+const NAME_RE = /^[\p{L}\p{N}]+$/u;
+function aUpd() { const up = mode === 'up', u = $('aU').value.trim(), p = $('aP').value, p2 = $('aP2').value; $('auth').classList.toggle('up', up); $('pMeterW').hidden = !up;
+  const fu = $('fU'); fu.classList.remove('ok', 'bad'); $('uMark').textContent = ''; if (up && u) { const ok = u.length >= 3 && u.length <= 5 && NAME_RE.test(u); fu.classList.add(ok ? 'ok' : 'bad'); $('uMark').textContent = ok ? '✓' : '✗'; $('uHint').textContent = ok ? 'الاسم حلو 👌' : (!NAME_RE.test(u) ? 'حروف وأرقام بس، بلا مسافات ورموز' : u.length + ' / 5 — لازم 3 إلى 5'); } else $('uHint').textContent = up ? '3 إلى 5 حروف أو أرقام' : '';
+  if (up) { let sc = 0; if (p.length >= 4) sc++; if (p.length >= 8) sc++; if (/\d/.test(p) && /\D/.test(p)) sc++; if (/[^\p{L}\p{N}]/u.test(p) || (/[A-Z]/.test(p) && /[a-z]/.test(p))) sc++; if (/\s/.test(p)) sc = 0;
+    const cols = ['#e8344a', '#ff9a1f', '#ffd23f', '#2fd66b'], names = ['ضعيف', 'مقبول', 'زين', 'قوي جداً 💪']; document.querySelectorAll('#auth .meter i').forEach((el, i) => el.style.background = p && i < sc ? cols[Math.max(0, sc - 1)] : '');
+    $('pMeterT').textContent = !p ? 'على الأقل 4 أحرف، بلا مسافات' : /\s/.test(p) ? 'الرمز ممنوع بيه مسافات' : p.length < 4 ? 'قصير — لازم 4 أحرف على الأقل' : names[sc - 1]; $('pMeterT').style.color = p && sc ? cols[sc - 1] : '';
+    const f2 = $('p2w'); f2.classList.remove('ok', 'bad'); $('p2Mark').textContent = ''; if (p2) { const ok = p2 === p; f2.classList.add(ok ? 'ok' : 'bad'); $('p2Mark').textContent = ok ? '✓' : '✗'; } } }
+['aU', 'aP', 'aP2'].forEach(id => $(id).addEventListener('input', aUpd)); $('tabIn').addEventListener('click', aUpd); $('tabUp').addEventListener('click', aUpd);
+$('aEye').onclick = () => { const sh = $('aP').type === 'password'; $('aP').type = $('aP2').type = sh ? 'text' : 'password'; $('aEye').textContent = sh ? '🙈' : '👁️'; $('aEye').setAttribute('aria-label', sh ? 'إخفاء الرمز' : 'إظهار الرمز'); };
+new MutationObserver(() => { const t = $('aErr').textContent; if (t) { const b = $('aBox'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); } }).observe($('aErr'), { childList: true, characterData: true, subtree: true });
+new MutationObserver(() => $('aGo').classList.toggle('ld', $('aGo').disabled)).observe($('aGo'), { attributes: true, attributeFilter: ['disabled'] });
+setTimeout(() => { try { const ids = Object.keys(CH); charCanvas($('aCrest'), 'muntadher', 3); const F = $('aFloat'); for (let i = 0; i < 9; i++) { const c = document.createElement('canvas'); charCanvas(c, ids[i % ids.length], i % 4 === 0 ? 1 : 0); c.style.left = (4 + (i * 37) % 88) + '%'; c.style.animationDuration = (14 + (i * 7) % 11) + 's'; c.style.animationDelay = (-i * 2.3) + 's'; F.appendChild(c); } } catch (e) {} }, 0);
+
 $('authF').addEventListener('submit', async e => {
   e.preventDefault(); const u = $('aU').value.trim(), p = $('aP').value, p2 = $('aP2').value;
   if (!u) { $('aErr').textContent = 'اكتب اسمك'; return; } if (!p) { $('aErr').textContent = 'اكتب الرمز'; return; }
@@ -235,7 +278,7 @@ $('exitBtn').onclick = () => { try { ws && ws.send(JSON.stringify({ t: 'br_leave
 /* ===================== الاتصال ===================== */
 let ws = null, G = null, S = null, ME = null, retry = 0;
 function start() {
-  $('auth').hidden = true; $('hud').hidden = false; $('joy').hidden = false; $('acts').hidden = false; $('lookHint').hidden = false;
+  $('auth').hidden = true; $('aFloat').innerHTML = ''; $('hud').hidden = false; $('joy').hidden = false; $('acts').hidden = false; $('lookHint').hidden = false;
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?token=' + encodeURIComponent(auth.token));
   ws.onopen = () => { retry = 0; ws.send(JSON.stringify({ t: 'br_join' })); };
   ws.onmessage = e => { let d; try { d = JSON.parse(e.data); } catch (er) { return; } onMsg(d); };

@@ -5,11 +5,11 @@
 'use strict';
 module.exports = function rootInit(ctx) {
   const { db, save, send, isRich } = ctx;
-  const K$ = 30000;   // 💰 كل الأسعار والدخل مضروبة بـ 30 ألف (أرخص برينروت يطلّع 30K)
+  const K$ = 30000, KP = 500, START = 30000;   // 💰 الدخل ×30K (أرخص برينروت يطلّع 30K/ث)، والأسعار ×500 (أرخص برينروت = 30K) حتى اللاعب الجديد يكدر يشتري بهدية البداية
   const W = 5340, H = 2300, CP = { y0: 1060, y1: 1200 }, SPEED = 330, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 64, LV_MAX = 18;
   // مستوى القاعدة 1..18: مدة قفل الباب تبدي 40 ثانية وتزيد 10 ثواني كل مستوى (المستوى 18 = 210 ثانية)
   const lockSec = lv => 40 + (Math.max(1, Math.min(LV_MAX, lv | 0)) - 1) * 10;
-  const upCost = lv => Math.round(400 * Math.pow(1.85, lv - 1) / 10) * 10 * K$;   // كلفة الصعود من lv إلى lv+1
+  const upCost = lv => Math.round(400 * Math.pow(1.85, lv - 1) / 10) * 10 * KP;   // كلفة الصعود من lv إلى lv+1
   const RI = { common: 0, rare: 1, epic: 2, leg: 3, myth: 4, secret: 5 };
   const CAT = [
     ['istikan', 'common', 60, 1], ['samoon', 'common', 90, 2], ['nial', 'common', 140, 3],
@@ -18,11 +18,11 @@ module.exports = function rootInit(ctx) {
     ['tamr', 'leg', 55000, 520], ['betinjan', 'leg', 80000, 700], ['panka', 'leg', 110000, 900],
     ['kubba', 'myth', 420000, 3800], ['jamal', 'myth', 650000, 5200],
     ['qamar', 'secret', 3000000, 24000], ['muntadher', 'secret', 7777777, 60000]
-  ].map(([id, r, p, inc]) => ({ id, r, p: p * K$, inc: inc * K$ }));
+  ].map(([id, r, p, inc]) => ({ id, r, p: p * KP, inc: inc * K$ }));
   const CD = {}; CAT.forEach(c => CD[c.id] = c);
   const RW = { common: 620, rare: 250, epic: 95, leg: 28, myth: 6, secret: 1 };
   const MUT = [1, 2, 5, 12];   // عادي، ذهبي، ألماس، قوس قزح
-  const EGGS = { e1: { p: 1000 * K$, t: 30, w: { common: 70, rare: 28, epic: 2 } }, e2: { p: 25000 * K$, t: 90, w: { rare: 55, epic: 35, leg: 10 } }, e3: { p: 500000 * K$, t: 180, w: { epic: 40, leg: 40, myth: 17, secret: 3 } } };
+  const EGGS = { e1: { p: 1000 * KP, t: 30, w: { common: 70, rare: 28, epic: 2 } }, e2: { p: 25000 * KP, t: 90, w: { rare: 55, epic: 35, leg: 10 } }, e3: { p: 500000 * KP, t: 180, w: { epic: 40, leg: 40, myth: 17, secret: 3 } } };
   const FIGHT = { 1: { k: .8, r: 1 }, 2: { k: 1.15, r: 2.5 }, 3: { k: 1.6, r: 6 } };
 
   // القواعد: 4 فوك (بابها جوه على السجادة) و3 جوه (بابها فوك) + الساحة (بيض، دمج، معارك)
@@ -51,8 +51,8 @@ module.exports = function rootInit(ctx) {
   function pickChar(r) { const L = CAT.filter(c => c.r === r); return L[rnd(L.length)]; }
   function brOf(k) {
     const u = user(k); if (!u) return null;
-    if (!u.br || !Array.isArray(u.br.slots)) u.br = { k30: 1, coins: 250 * K$, slots: Array(SLOTS).fill(null), bank: 0, wins: 0, steals: 0, lvl: 1, bag: [] };
-    if (!u.br.k30) { u.br.k30 = 1; u.br.coins = (u.br.coins || 0) * K$ + (u.br.bank || 0) * K$; u.br.bank = 0; }   // تحويل الحسابات القديمة للأسعار الجديدة
+    if (!u.br || !Array.isArray(u.br.slots)) u.br = { k30: 1, coins: START, slots: Array(SLOTS).fill(null), bank: 0, wins: 0, steals: 0, lvl: 1, bag: [] };
+    if (!u.br.k30) { u.br.k30 = 1; u.br.coins = Math.max(START, (u.br.coins || 0) * KP + (u.br.bank || 0) * KP); u.br.bank = 0; }   // تحويل الحسابات القديمة للأسعار الجديدة
     if (!Array.isArray(u.br.sb)) u.br.sb = Array(SLOTS).fill(0); while (u.br.sb.length < SLOTS) u.br.sb.push(0); u.br.sb.length = SLOTS;
     if (!Array.isArray(u.br.bag)) u.br.bag = []; if (!u.br.lvl) u.br.lvl = 1;
     while (u.br.slots.length < SLOTS) u.br.slots.push(null); u.br.slots.length = SLOTS;
@@ -201,7 +201,7 @@ module.exports = function rootInit(ctx) {
       def[di].hp = Math.max(0, def[di].hp - dmg); log.push([side, ai, di, dmg, crit ? 1 : 0]); side ^= 1;
     }
     const win = E.every(u => u.hp <= 0) || (A.reduce((s, u) => s + u.hp, 0) > E.reduce((s, u) => s + u.hp, 0) && !A.every(u => u.hp <= 0));
-    const tot = br.slots.reduce((s, x) => s + incOf(x), 0), reward = win ? Math.round((300 * K$ + tot * 25) * F.r) : 0;
+    const tot = br.slots.reduce((s, x) => s + incOf(x), 0), reward = win ? Math.round((300 * KP + tot * 25) * F.r) : 0;
     if (win) { if (!rich(p.key)) br.coins += reward; br.wins = (br.wins || 0) + 1; save(); }
     send(p.ws, { t: 'br_fight', me, en, log, win, reward, lv });
   }
