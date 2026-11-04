@@ -394,6 +394,7 @@ function render(ms) {
   // الكاميرا: ورا ظهر الشخصية وفوك كتفها شوية
   const me = ME && AV.get(ME[0]);
   if (me) { if (!camInit) { camInit = true; camYaw = G.geo[G.base].d > 0 ? Math.PI : 0; }
+    { let sx = jx; if (keys.a || keys.arrowleft) sx = -1; if (keys.d || keys.arrowright) sx = 1; if (lookId == null && !placing && $('bookOv').hidden && $('fightOv').hidden && Math.abs(sx) > .1) camYaw -= sx * 1.9 * Math.min(dtF, .05); }   // الكاميرا تلف ويا الشخصية من تتحرك يمين/يسار
     camTarget.set(me.position.x, 92, me.position.z);
     const cp = Math.cos(camPitch), ox = Math.sin(camYaw) * camDist * cp, oz = Math.cos(camYaw) * camDist * cp, oy = Math.sin(camPitch) * camDist + 40;
     const sideX = Math.cos(camYaw) * 26, sideZ = -Math.sin(camYaw) * 26;   // كتف يمين
