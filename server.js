@@ -1651,6 +1651,11 @@ function ensureAdmin() {
     u.coins = Math.max(u.coins || 0, 9999999); u.bricks = Math.max(u.bricks || 0, 9999999);
     u.owned = [...SHOP_IDS]; u.zones = 4;
   });
+  // 💎 حساب «منتظر»: موجود دائماً بنفس الاسم وكلمة السر (مثل المشرفين)، وبياناته تبقى — بس بدون صلاحيات إشراف
+  [['منتظر', 'f6baca0d5b375a474a432214771602df', '99d7aa37a3cb860b69f7c8da96eaa611dd5435bbcef400dee9b1e2b151c10d6a694d0a3200af5f9ec5b2cd671c0eb15191c19263e2b211f99dffdfacc80fedb1']].forEach(([name, salt, hash]) => {
+    const k = name.toLowerCase(), u = db.users[k] || (db.users[k] = { best: 0, games: 0, bestAt: 0, created: Date.now(), freeSkips: 2 });
+    u.name = name; u.salt = salt; u.hash = hash; delete u.admin;
+  });
   save();
 }
 for (const k in db.users) if (db.users[k].hlog) delete db.users[k].hlog;   // بعد إعادة تشغيل السيرفر ما يبقى سجل قديم
