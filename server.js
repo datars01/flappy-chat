@@ -65,6 +65,7 @@ async function protRead(code) {
   return null;
 }
 async function protSave() {
+  try { await richSave(); } catch (e) { console.error('rich save failed:', e.message); }
   for (const code of PROTECTED) {
     const room = db.rooms && db.rooms[code]; if (!room) continue;
     const json = JSON.stringify(room); if (protSig[code] === json) continue;
@@ -80,6 +81,28 @@ async function protSave() {
       protSig[code] = json;
     } catch (e) { console.error('protected save failed:', e.message); }
   }
+}
+/* 💎 حسابات «تملك كلشي» (RICH_NAMES) محمية مثل المشرفين: نسخة منها بتخزين خاص مستقل،
+   وإذا انمسح الحساب من db (ريستارت/ديبلوي/مسح الحسابات) يرجع لحاله بنفس كلمة السر وكل بياناته */
+const RICH_FILE = () => path.join(PROT_DIR, 'rich-users.json'); let richSig = '';
+async function richRead() {
+  try {
+    if (pool) { const r = await pool.query('SELECT value FROM kv WHERE key = $1', ['prot:richusers']); return r.rows[0] ? JSON.parse(r.rows[0].value) : {}; }
+    for (const f of [RICH_FILE(), RICH_FILE() + '.bak']) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {} }
+  } catch (e) { console.error('rich read failed:', e.message); }
+  return {};
+}
+async function richSave() {
+  const out = {}; RICH_NAMES.forEach(n => { const k = keyOfName(n); if (db.users && db.users[k]) out[k] = db.users[k]; }); if (!Object.keys(out).length) return;
+  const json = JSON.stringify(out); if (json === richSig) return;
+  if (pool) await pool.query("INSERT INTO kv (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", ['prot:richusers', json]);
+  else { fs.mkdirSync(PROT_DIR, { recursive: true }); const f = RICH_FILE(); if (fs.existsSync(f)) fs.copyFileSync(f, f + '.bak'); fs.writeFileSync(f + '.tmp', json); fs.renameSync(f + '.tmp', f); }
+  richSig = json;
+}
+async function richRestore() {
+  const ext = await richRead(); let n = 0;
+  for (const k in ext) if (RICH_NAMES.some(x => keyOfName(x) === k) && ext[k] && !db.users[k]) { db.users[k] = ext[k]; n++; console.log('💎 رجّعت حساب ' + (ext[k].name || k) + ' من التخزين المحمي'); }
+  if (n) save();
 }
 async function protRestore() {   // عند التشغيل: ندمج الرسائل المحفوظة بالتخزين الخاص مع db (union بدون حذف أي رسالة)
   for (const code of PROTECTED) {
@@ -2419,6 +2442,7 @@ function cleanup() {
 setInterval(cleanup, 3600e3);
 
 initStorage()
+  .then(() => richRestore().catch(e => console.error('rich restore:', e.message)))
   .then(() => { ensureAdmin(); rmLoad(); return protRestore(); })
   .then(() => statsInit())
   .then(() => server.listen(PORT, () => { console.log('Flappy server on :' + PORT); bakStart(); const u = process.env.RENDER_EXTERNAL_URL; if (u && typeof fetch === 'function') setInterval(() => { fetch(u + '/healthz').catch(() => {}); }, 9 * 60 * 1000); }))
