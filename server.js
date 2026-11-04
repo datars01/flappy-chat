@@ -332,7 +332,7 @@ function dailyInfo(u) {
   const claimStreak = can ? streak + 1 : streak;
   return { can, streak, claimStreak, amount: can ? dailyAmount(claimStreak) : dailyAmount(claimStreak + 1), msLeft: (today + 1) * DAY_MS - DAY_OFFSET - now };
 }
-const skinOk = (u, id) => u.admin && (own(SKIN_AT, id) || SHOP_IDS.includes(id)) ? true : own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
+const skinOk = (u, id) => isRich(u) && (own(SKIN_AT, id) || SHOP_IDS.includes(id)) ? true : own(SKIN_AT, id) ? (u.best || 0) >= SKIN_AT[id] : (SHOP_IDS.includes(id) && Array.isArray(u.owned) && u.owned.includes(id));
 const skinOf = key => { const u = db.users[key]; return u.skin && skinOk(u, u.skin) ? u.skin : 'classic'; };
 /* ===== طرق ثانية لكسب العملات (كلها حقول جديدة تنضاف للاعب، ما تمس القديمة) ===== */
 const PLAY_DIV = 25, PLAY_CAP = 60;                         // عملة لكل 25 نقطة بالفردي، بحد أقصى 60 عملة باليوم
@@ -425,7 +425,7 @@ function houseOf(u) {
   if (!u.house || typeof u.house !== 'object') u.house = { own: [], set: {} };
   if (!Array.isArray(u.house.own)) u.house.own = [];
   if (!u.house.set || typeof u.house.set !== 'object') u.house.set = {};
-  const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0 || u.admin) own.add(i.id); }));
+  const own = new Set(u.house.own); HOUSE.forEach(sl => sl.items.forEach(i => { if (i.price === 0 || isRich(u)) own.add(i.id); }));
   const set = {};
   HOUSE.forEach(sl => { const cur = u.house.set[sl.slot]; if (cur && own.has(cur) && HOUSE_ITEM[cur] && HOUSE_ITEM[cur].slot === sl.slot) set[sl.slot] = cur; else { const d = sl.items.find(i => i.price === 0); if (d) set[sl.slot] = d.id; } });
   const pos = {};
@@ -435,11 +435,11 @@ function houseOf(u) {
   return { own: [...own], set, pos };
 }
 const userInfo = key => {
-  const u = db.users[key], dy = dayOf(u); if (u.admin && (u.coins || 0) < 9999999) u.coins = 9999999;   // المشرفين عملاتهم ما تخلص
+  const u = db.users[key], dy = dayOf(u); if (isRich(u)) { if ((u.coins || 0) < 9999999) u.coins = 9999999; if ((u.bricks || 0) < 9999999) u.bricks = 9999999; if (!u.admin) { u.owned = [...SHOP_IDS]; u.zones = 4; } }   // المشرفين عملاتهم ما تخلص
   return {
     name: u.name, best: u.best || 0, games: u.games || 0, rank: rankOf(key), skin: skinOf(key), avatar: u.avatar || '', frame: frameOf(u),
     coins: u.coins || 0, owned: Array.isArray(u.owned) ? u.owned : [], daily: dailyInfo(u),
-    bricks: u.bricks || 0, admin: !!u.admin, zones: u.zones || 1, cp: u.cp || 1, freeSkips: u.freeSkips || 0, house: houseOf(u), likes: (u.hlikes || []).length,
+    bricks: u.bricks || 0, admin: !!u.admin, rich: isRich(u), zones: u.zones || 1, cp: u.cp || 1, freeSkips: u.freeSkips || 0, house: houseOf(u), likes: (u.hlikes || []).length,
     tasks: tasksOf(u), play: { got: dy.play, cap: PLAY_CAP, div: PLAY_DIV },
     ach: ACH.map(a => ({ id: a.id, title: a.title, reward: a.reward, done: Array.isArray(u.ach) && u.ach.includes(a.id) })),
     ref: { code: refCodeOf(u), count: u.refCount || 0, max: REF_MAX, reward: REF_REWARD }
@@ -694,7 +694,7 @@ app.post('/api/start', authMw, (req, res) => {
   const gid = crypto.randomBytes(12).toString('hex');
   const u = db.users[req.key];
   let sl = Math.floor(Number(req.body && req.body.startLevel)) || 1;
-  if (u.admin) sl = Math.max(1, Math.min(500, sl));   // الأدمن يبدأ من أي مرحلة
+  if (isRich(u)) sl = Math.max(1, Math.min(500, sl));   // الأدمن يبدأ من أي مرحلة
   else if (sl !== (u.cp || 1) && (sl < 1 || (sl - 1) % 7 !== 0 || (sl - 1) / 7 >= (u.zones || 1))) sl = 1;   // نقدر نبدأ فقط من أول مرحلة بمنطقة مفتوحة
   games.set(gid, { k: req.key, sl, t: Date.now(), last: sl - 1, lt: Date.now(), bn: 0, bt: 0 });
   if (alOnce('st:' + req.key, 20e3)) alog('🎮', u.name + ' بدأ يلعب من المرحلة ' + sl);
@@ -813,7 +813,7 @@ app.post('/api/house/stash', authMw, (req, res) => {
 // بيع غرض من البيت: يرجع نفس سعره (مواد بناء)
 app.post('/api/house/sell', authMw, (req, res) => {
   const id = String((req.body && req.body.id) || ''), it = HOUSE_ITEM[id], u = db.users[req.key], h = houseOf(u);
-  if (u.admin) return res.status(400).json({ error: 'حساب الأدمن يملك كل شي، ما يحتاج بيع' });
+  if (isRich(u)) return res.status(400).json({ error: 'حساب الأدمن يملك كل شي، ما يحتاج بيع' });
   if (!it || it.price <= 0 || it.slot === 'home') return res.status(400).json({ error: 'هذا الغرض ما ينباع' });
   if (!h.own.includes(id)) return res.status(400).json({ error: 'ما تملك هذا الغرض' });
   const set = Object.assign({}, h.set); if (set[it.slot] === id) delete set[it.slot];
@@ -1616,6 +1616,9 @@ function hvLeave(ws) {
     else hvBc(o, { t: 'hv_leave', n: u && u.name });
   }
 }
+// 💎 حسابات «تملك كلشي»: فلوس ما تخلص وكل الشخصيات والأغراض مفتوحة بكل الألعاب — بدون صلاحيات إشراف (لا تاج ولا طرد/حظر)
+const RICH_NAMES = ['منتظر'];
+function isRich(u) { return !!(u && (u.admin || RICH_NAMES.includes(u.name))); }
 // حساب الأدمن «بابي»: كل السكنات والأثاث مفتوحة + رصيد كبير (كلمة السر محفوظة كهاش فقط)
 function ensureAdmin() {
   [['بابي', '9f20292687d06a45930d194ca3474cd6', 'd4c5357e9a05f8e69460b81e093723a633761cd08734691d2cd9bd8c426835b7249d0a8bf2f64e109f26df2a3be433efcf4bb119614248990f526f7176d6fa72'],
@@ -1895,7 +1898,7 @@ const htNo = i => (Math.floor(i / 10) + 1) * 100 + (i % 10) + 1;
 function htUser(n) { const k = String(n || '').trim().toLowerCase(); const u = own(db.users, k) ? db.users[k] : null; return u ? u.name : null; }
 function htCanEnter(me, i) { if (!me) return false; if (me.admin) return true; if (!(i >= 0 && i < 30)) return false; const R = htDb().r[i]; return !!R && R.until > Date.now() && (R.by === me.name || (R.mates || []).includes(me.name)); }
 function htMemAll() { const out = []; try { for (const r of rmRooms.values()) for (const w of r.mem) out.push(w); } catch (e) {} return out; }
-const rmUsdOf = u => u && u.admin ? 9999999 : ((u && u.rmUsd) || 0);   // دولار المنتجع 💵
+const rmUsdOf = u => isRich(u) ? 9999999 : ((u && u.rmUsd) || 0);   // دولار المنتجع 💵
 function rmOnMsg(ws, d) {
   const me = ws.guest ? { name: ws.gname } : db.users[ws.key]; if (!me) return; const now = Date.now();
   if (d.t === 'rm_join') {
@@ -2091,17 +2094,17 @@ function rmOnMsg(ws, d) {
     if (ws.guest || !me) return send(ws, d.t === 'rm_ap_get' ? { t: 'rm_ap', tk: 0, price: AP_PRICE } : { t: 'rm_ap_err', error: 'سجّل حساب حتى تحجز تذكرة طيارة ✈️' });
     if (d.t === 'rm_ap_buy') {
       if ((me.apTk || 0) > 0) return send(ws, { t: 'rm_ap_err', error: 'عندك تذكرة من قبل 🎫 — روح سلّمها للقبطان' });
-      if (!me.admin) { if ((me.rmUsd || 0) < AP_PRICE) return send(ws, { t: 'rm_ap_err', error: 'التذكرة بـ ' + AP_PRICE + ' دولار منتجع 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - AP_PRICE; }
+      if (!isRich(me)) { if ((me.rmUsd || 0) < AP_PRICE) return send(ws, { t: 'rm_ap_err', error: 'التذكرة بـ ' + AP_PRICE + ' دولار منتجع 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - AP_PRICE; }
       me.apTk = 1; save(); return send(ws, { t: 'rm_ap', tk: 1, price: AP_PRICE, usd: rmUsdOf(me), bought: 1 });
     }
     if (d.t === 'rm_ap_fly') {
-      if ((me.apTk || 0) < 1 && !me.admin) return send(ws, { t: 'rm_ap_err', error: 'تحتاج تذكرة من مركز حجز التذاكر 🎫' });
+      if ((me.apTk || 0) < 1 && !isRich(me)) return send(ws, { t: 'rm_ap_err', error: 'تحتاج تذكرة من مركز حجز التذاكر 🎫' });
       me.apTk = 0; me.apFlights = (me.apFlights || 0) + 1; save(); return send(ws, { t: 'rm_ap_go', tk: 0 });
     }
     send(ws, { t: 'rm_ap', tk: (me.apTk || 0) > 0 ? 1 : 0, price: AP_PRICE, usd: rmUsdOf(me) });
   } else if (d.t === 'rm_juice') {   // كشك العصائر الاستوائية 🍹: كل عصير بدولار منتجع واحد
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.dk || 0) < 4000) return; const k = String(d.k || ''); if (!['mango', 'pine', 'coco', 'melon', 'passion', 'berry'].includes(k)) return;
-    if (!ws.guest && !me.admin) { if ((me.rmUsd || 0) < 1) return send(ws, { t: 'rm_juice_err', error: 'تحتاج دولار منتجع واحد 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - 1; save(); send(ws, { t: 'rm_usd', usd: rmUsdOf(me) }); }
+    if (!ws.guest && !isRich(me)) { if ((me.rmUsd || 0) < 1) return send(ws, { t: 'rm_juice_err', error: 'تحتاج دولار منتجع واحد 💵 — اصطاد سمك وبيعه' }); me.rmUsd = (me.rmUsd || 0) - 1; save(); send(ws, { t: 'rm_usd', usd: rmUsdOf(me) }); }
     h.dk = now; send(ws, { t: 'rm_juice_ok', k }); const m = { t: 'rm_drink', n: rmNm(ws), k }; if (h.hid) rmBcV(r, m, ws); else rmBc(r, m, ws);
   } else if (d.t === 'rm_ht_get' || d.t === 'rm_ht_rent' || d.t === 'rm_ht_mate' || d.t === 'rm_ht_leave') {   // فندق «بابيت» 🏨: إيجار الغرف
     const h = ws.rm; if (!h || now - (h.htt || 0) < 400) return; h.htt = now;
@@ -2112,7 +2115,7 @@ function rmOnMsg(ws, d) {
       let idx = Object.keys(H.r).map(Number).find(i => H.r[i] && H.r[i].by === nm && H.r[i].until > now && H.r[i].t === ty);   // عنده غرفة من نفس النوع: نمدد الإيجار
       if (idx === undefined) { if (Object.keys(H.r).some(i => H.r[i] && H.r[i].by === nm && H.r[i].until > now)) return send(ws, { t: 'rm_ht_err', error: 'عندك غرفة مأجرة هسه 🔑 — ادخلها أو انتظر يخلص إيجارها' }); for (let i = T.i0; i < T.i0 + 10; i++) if (!H.r[i] || H.r[i].until <= now) { idx = i; break; } }
       if (idx === undefined) return send(ws, { t: 'rm_ht_err', error: 'كل غرف هذا النوع محجوزة هسه 😔 جرّب نوع ثاني' });
-      if (!me.admin) { if ((me.rmUsd || 0) < T.p) return send(ws, { t: 'rm_ht_err', error: 'دولاراتك ما تكفي 💵 الغرفة سعرها ' + T.p }); me.rmUsd = (me.rmUsd || 0) - T.p; }
+      if (!isRich(me)) { if ((me.rmUsd || 0) < T.p) return send(ws, { t: 'rm_ht_err', error: 'دولاراتك ما تكفي 💵 الغرفة سعرها ' + T.p }); me.rmUsd = (me.rmUsd || 0) - T.p; }
       const old = H.r[idx] && H.r[idx].by === nm && H.r[idx].until > now ? H.r[idx] : null;
       const mates = (Array.isArray(d.mates) ? d.mates : []).map(x => htUser(x)).filter(x => x && x !== nm).filter((x, i, a) => a.indexOf(x) === i).slice(0, T.n - 1);
       H.r[idx] = old ? Object.assign(old, { until: old.until + T.d * 864e5 }) : { t: ty, by: nm, mates, until: now + T.d * 864e5, at: now };
@@ -2134,35 +2137,35 @@ function rmOnMsg(ws, d) {
     if (ws.guest) return send(ws, { t: 'rm_wear_err', error: 'سجّل حساب حتى تشتري أزياء 👗' });
     if (RM_WEAR_ADM(k) && !me.admin) return send(ws, { t: 'rm_wear_err', error: 'هذا المكياج للمشرفين بس 👑' });
     const own = Array.isArray(me.rmWears) ? me.rmWears : (me.rmWears = []);
-    if (!own.includes(k) && !me.admin) { const p = RM_WEAR_P[k][1]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_wear_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
+    if (!own.includes(k) && !isRich(me)) { const p = RM_WEAR_P[k][1]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_wear_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
     if (!own.includes(k)) own.push(k); save(); send(ws, { t: 'rm_wear_bought', k, owned: own, usd: rmUsdOf(me) });
   } else if (d.t === 'rm_wear') {   // لبس / إلغاء لبس (قطعة وحدة لكل نوع: قبعة، نظارة، أجنحة)
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.wrt || 0) < 400) return; h.wrt = now; const k = String(d.k || '').slice(0, 12), it = RM_WEAR_P[k]; if (!it) return;
-    if (!me.admin && !(Array.isArray(me.rmWears) && me.rmWears.includes(k))) return send(ws, { t: 'rm_wear_err', error: 'لازم تشتري هذي القطعة أول 🛒' });
+    if (!isRich(me) && !(Array.isArray(me.rmWears) && me.rmWears.includes(k))) return send(ws, { t: 'rm_wear_err', error: 'لازم تشتري هذي القطعة أول 🛒' });
     const W = rmWearClean(h.wear); if (d.on) W[it[0]] = k; else if (W[it[0]] === k) delete W[it[0]]; h.wear = W; if (!ws.guest) { me.rmWear = W; save(); }
     send(ws, { t: 'rm_wear_ok', k, wear: W }); const wm = { t: 'rm_wear', n: rmNm(ws), wear: W }; if (h.hid) rmBcV(r, wm, ws); else rmBc(r, wm, ws);
   } else if (d.t === 'rm_pet_buy') {   // شراء حيوان من محل غمازة (40 عملة، ينحفظ بالأغراض)
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.pbt || 0) < 800) return; h.pbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_PET_P[k]) return;
     if (ws.guest) return send(ws, { t: 'rm_pet_err', error: 'سجّل حساب حتى تشتري حيوان 🐾' });
     const own = Array.isArray(me.rmPets) ? me.rmPets : (me.rmPets = []);
-    if (!own.includes(k) && !me.admin) { const p = RM_PET_P[k]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_pet_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
+    if (!own.includes(k) && !isRich(me)) { const p = RM_PET_P[k]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_pet_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
     if (!own.includes(k)) own.push(k); save(); send(ws, { t: 'rm_pet_bought', k, owned: own, usd: rmUsdOf(me) });
   } else if (d.t === 'rm_pet') {   // حمل / إلغاء حمل الحيوان (يمشي ورا صاحبه)
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.ptt || 0) < 500) return; h.ptt = now; const k = String(d.k || '').slice(0, 12);
     if (k && !RM_PET_P[k]) return;
-    if (k && !me.admin && !(Array.isArray(me.rmPets) && me.rmPets.includes(k))) return send(ws, { t: 'rm_pet_err', error: 'لازم تشتري هذا الحيوان أول 🛒' });
+    if (k && !isRich(me) && !(Array.isArray(me.rmPets) && me.rmPets.includes(k))) return send(ws, { t: 'rm_pet_err', error: 'لازم تشتري هذا الحيوان أول 🛒' });
     h.pet = k; if (!ws.guest) { me.rmPet = k; save(); }
     send(ws, { t: 'rm_pet_ok', k }); const pm = { t: 'rm_pet', n: rmNm(ws), k }; if (h.hid) rmBcV(r, pm, ws); else rmBc(r, pm, ws);
   } else if (d.t === 'rm_bal_buy') {   // شراء بالون من محل سبيناغ (ينحفظ بأغراض اللاعب)
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bbt || 0) < 800) return; h.bbt = now; const k = String(d.k || '').slice(0, 12); if (!RM_BAL_P[k]) return;
     if (ws.guest) return send(ws, { t: 'rm_bal_err', error: 'سجّل حساب حتى تشتري بالون 🎈' });
     const own = Array.isArray(me.rmBals) ? me.rmBals : (me.rmBals = []);
-    if (!own.includes(k) && !me.admin) { const p = RM_BAL_P[k]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
+    if (!own.includes(k) && !isRich(me)) { const p = RM_BAL_P[k]; if ((me.rmUsd || 0) < p) return send(ws, { t: 'rm_bal_err', error: 'دولاراتك ما تكفي 💵 تحتاج ' + p }); me.rmUsd = (me.rmUsd || 0) - p; }
     if (!own.includes(k)) own.push(k); save(); send(ws, { t: 'rm_bal_bought', k, owned: own, usd: rmUsdOf(me) });
   } else if (d.t === 'rm_bal') {   // حمل / عدم حمل بالون
     const h = ws.rm, r = h && rmRooms.get(h.id); if (!r || now - (h.bt || 0) < 500) return; h.bt = now; const k = String(d.k || '').slice(0, 12);
     if (k && !(k in RM_BAL_P)) return;
-    if (k && RM_BAL_P[k] && !me.admin && !(Array.isArray(me.rmBals) && me.rmBals.includes(k))) return send(ws, { t: 'rm_bal_err', error: 'لازم تشتري هذا البالون أول 🛒' });
+    if (k && RM_BAL_P[k] && !isRich(me) && !(Array.isArray(me.rmBals) && me.rmBals.includes(k))) return send(ws, { t: 'rm_bal_err', error: 'لازم تشتري هذا البالون أول 🛒' });
     h.bal = k; if (!ws.guest) { me.rmBal = k; save(); }
     send(ws, { t: 'rm_bal_ok', k }); const bm = { t: 'rm_bal', n: rmNm(ws), k }; if (h.hid) rmBcV(r, bm, ws); else rmBc(r, bm, ws);
   } else if (d.t === 'rm_umb') {   // شمسية المطر

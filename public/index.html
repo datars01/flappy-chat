@@ -1888,7 +1888,7 @@ function syncUser(u) {
   if (u.name === 'بابيتو' && u.admin) bbtNote();   // فقط لحساب المشرفة بابيتو
   auth.name = u.name; auth.best = u.best; auth.games = u.games; auth.rank = u.rank; auth.skin = u.skin; auth.avatar = u.avatar || ''; auth.frame = u.frame || '';
   auth.coins = u.coins || 0; auth.owned = Array.isArray(u.owned) ? u.owned : [];
-  auth.freeSkips = u.freeSkips || 0; auth.admin = !!u.admin; auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
+  auth.freeSkips = u.freeSkips || 0; auth.admin = !!u.admin; auth.rich = !!(u.rich || u.admin); auth.bricks = u.bricks || 0; auth.zones = u.zones || 1; auth.cp = u.cp || 1; if (u.house) auth.house = u.house;
   if (u.tasks) auth.tasks = u.tasks; if (u.ach) auth.ach = u.ach; if (u.ref) auth.ref = u.ref; if (u.play) auth.play = u.play;
   if (u.daily) { auth.daily = u.daily; auth.dailyAt = Date.now() + (u.daily.msLeft || 0); }
   if (auth.daily && auth.daily.can && !dailyToastShown) { dailyToastShown = true; setTimeout(() => showToast('🎁 مكافأتك اليومية جاهزة! روح للمتجر 🪙'), 800); }
@@ -2172,7 +2172,7 @@ function drawBirdSkin(c, x, y, rot, sk, fr) {
 }
 function renderRewards() {
   const grid = $('skinGrid'); if (!grid) return;
-  const best = (auth && auth.admin) ? 99999 : myBest();   // الادمنية: كل السكنات مفتوحة
+  const best = (auth && auth.rich) ? 99999 : myBest();   // الادمنية: كل السكنات مفتوحة
   const can = k => auth ? best >= k.at : k.at === 0;
   const next = SKINS.find(k => k.at > best);
   const prev = [...SKINS].reverse().find(k => k.at <= best) || SKINS[0];
@@ -4948,7 +4948,7 @@ function openPage(id) {
   if (!curPage) { try { history.pushState({ pg: id }, ''); } catch (e) {} }
   curPage = id;
   try {
-    if (id === 'house') { houseLoad(); setTimeout(() => { if (curPage === 'house' && !hFull) hSetFull(true, true); }, 0); } else if (id === 'sus') susOpen(); else if (id === 'ludo') { if (window.ludoOpen) ludoOpen(); } else if (id === 'run') { if (window.runOpen) runOpen(); } else if (id === 'race') { if (IOSX) { location.href = '/race.html?v=3&top=1'; return; } const f = $('raceFr'), adm = auth && auth.admin ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('race:adm:' + adm, location.origin); } catch (e) {} raceGs(); }; f.src = '/race.html?v=3&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('race:adm:' + adm, location.origin); } catch (e) {} } } else if (id === 'arena') { if (IOSX) { location.href = '/arena.html?v=4&top=1'; return; } const f = $('arenaFr'), adm = auth && auth.admin ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('arena:adm:' + adm, location.origin); } catch (e) {} arenaGs(); }; f.src = '/arena.html?v=4&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('arena:adm:' + adm, location.origin); } catch (e) {} } } else if (id === 'farm') { if (IOSX) { location.href = '/farm.html?v=7&top=1'; return; } const f = $('farmFr'), adm = auth && auth.admin ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('farm:adm:' + (auth && auth.admin ? 1 : 0), '*'); } catch (e) {} farmGs(); }; f.src = '/farm.html?v=7&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('farm:adm:' + adm, '*'); } catch (e) {} } } else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
+    if (id === 'house') { houseLoad(); setTimeout(() => { if (curPage === 'house' && !hFull) hSetFull(true, true); }, 0); } else if (id === 'sus') susOpen(); else if (id === 'ludo') { if (window.ludoOpen) ludoOpen(); } else if (id === 'run') { if (window.runOpen) runOpen(); } else if (id === 'race') { if (IOSX) { location.href = '/race.html?v=3&top=1'; return; } const f = $('raceFr'), adm = auth && auth.rich ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('race:adm:' + adm, location.origin); } catch (e) {} raceGs(); }; f.src = '/race.html?v=3&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('race:adm:' + adm, location.origin); } catch (e) {} } } else if (id === 'arena') { if (IOSX) { location.href = '/arena.html?v=4&top=1'; return; } const f = $('arenaFr'), adm = auth && auth.rich ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('arena:adm:' + adm, location.origin); } catch (e) {} arenaGs(); }; f.src = '/arena.html?v=4&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('arena:adm:' + adm, location.origin); } catch (e) {} } } else if (id === 'farm') { if (IOSX) { location.href = '/farm.html?v=7&top=1'; return; } const f = $('farmFr'), adm = auth && auth.rich ? 1 : 0; if (f && !f.src) { f.onload = () => { try { f.contentWindow.postMessage('farm:adm:' + (auth && auth.rich ? 1 : 0), '*'); } catch (e) {} farmGs(); }; f.src = '/farm.html?v=7&adm=' + adm; } else if (f) { try { f.contentWindow.postMessage('farm:adm:' + adm, '*'); } catch (e) {} } } else if (id === 'rooms') rmOpen(); else if (id === 'pet') petOpen(); else if (id === 'zones') renderZones(); else if (id === 'levels') renderLevels(); else if (id === 'lb') lbRefresh(); else if (id === 'friends') loadFriends(); else if (id === 'shop' || id === 'earn' || id === 'skins') { loadMe(); renderRewards(); renderShop(); }
   } catch (e) {}
 }
 function hidePage() { document.body.classList.remove('pgOn'); if (curPage === 'farm') { try { $('farmFr').contentWindow.postMessage('farm:pause', '*'); } catch (e) {} } if (curPage === 'arena') { try { $('arenaFr').contentWindow.postMessage('arena:pause', location.origin); } catch (e) {} } if (curPage === 'race') { try { $('raceFr').contentWindow.postMessage('race:pause', location.origin); } catch (e) {} } document.querySelectorAll('.page.open').forEach(p => p.classList.remove('open')); curPage = null; if (GW.wall && !auth) setTimeout(() => openPage('account'), 0); }
@@ -5946,7 +5946,7 @@ const ZSEA = ['☀️ الصيف', '🍂 الخريف', '❄️ الشتاء', '
 function renderLevels() {
   const cp = cpGet(), L = $('lvList'); if (!L) return; L.innerHTML = '';
   $('lvHead').textContent = '📍 وصلت المرحلة ' + cp + (auth ? ' • محفوظة بحسابك' : ' • محفوظة بهذا الجهاز');
-  const adm = !!(auth && auth.admin), zc = adm ? 72 : Math.max(4, Math.ceil((cp + 1) / 7));
+  const adm = !!(auth && auth.rich), zc = adm ? 72 : Math.max(4, Math.ceil((cp + 1) / 7));
   for (let z = 0; z < zc; z++) {
     const sec = document.createElement('div'); sec.className = 'lvZone';
     const h = document.createElement('h4'); h.textContent = (ZONES[z % ZONES.length].deco[0] || '') + ' ' + ZONES[z % ZONES.length].n + ' — المراحل ' + (z * 7 + 1) + ' إلى ' + (z * 7 + 7); sec.appendChild(h);
@@ -7566,7 +7566,7 @@ function rmPetFg(c) {
 }
 
 /* ---- لوحة شراء الحيوانات + الأغراض ---- */
-function rmPetOwned(k) { return !!RM_PETD[k] && (rmBalAdm() || (RM.myPets || []).includes(k)); }
+function rmPetOwned(k) { return !!RM_PETD[k] && (rmRich() || (RM.myPets || []).includes(k)); }
 function rmPetCard(P, selKey, onSel) {
   const own = rmPetOwned(P.k), held = RM.me.pet === P.k, it = document.createElement('div'); it.className = 'spI' + (held ? ' on' : '') + (own ? ' own' : '') + (selKey === P.k ? ' sel' : ''); it.setAttribute('role', 'button');
   const cv = document.createElement('canvas'); cv.width = 108; cv.height = 132; it.appendChild(cv); const g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); g.fillStyle = 'rgba(46,196,182,.15)'; g.beginPath(); g.ellipse(27, 50, 20, 5, 0, 0, 7); g.fill(); rmPetDraw(g, 27, 50, P, 1, 0, false, 2.1);
@@ -7801,7 +7801,7 @@ function rmFashFg(c) {
   rmShopPeek(c, RM_FSHOP.x, RM_FHI); rmSayDraw(c, RM_RBS.x, RM_RBS.y - 128, RM_RBS.say);
 }
 /* ---- لوحة شراء الأزياء ---- */
-function rmWearOwned(k) { return !!RM_WEARD[k] && (rmBalAdm() || (RM.myWears || []).includes(k)); }
+function rmWearOwned(k) { return !!RM_WEARD[k] && (rmRich() || (RM.myWears || []).includes(k)); }
 function rmWearOn(k) { const W = RM.me.wear || {}, w = RM_WEARD[k]; return !!w && W[w.s] === k; }
 function rmWearCard(w, selKey, onSel) {
   const own = rmWearOwned(w.k), on = rmWearOn(w.k), it = document.createElement('div'); it.className = 'spI' + (on ? ' on' : '') + (own ? ' own' : '') + (selKey === w.k ? ' sel' : ''); it.setAttribute('role', 'button');
@@ -9103,7 +9103,7 @@ function rmFishOk(d) {
   else if (F.bag.n >= RM_BAGN && prev < RM_BAGN) setTimeout(() => showToast('🧺 المخزن تعبّى! افتح «مخزن السمك» وبيع ' + RM_BAGN + ' سمكة بـ 🪙 ' + RM_BAGC), 2700);
   rmBagRender(); rmPrompt(true);
 }
-function coinTxt() { return auth && auth.admin ? '∞' : auth ? (auth.coins || 0) : 0; }
+function coinTxt() { return auth && auth.rich ? '∞' : auth ? (auth.coins || 0) : 0; }
 function rmRodDraw(c, o, bite, me) {
   const d = o.dir || 1, T = RM.T, hx = o.x + d * 12, hy = o.y - AV_H * 0.52, tx = o.x + d * 46, ty = o.y - AV_H * 1.18, F = me ? RM.fish : null; let bx = o.x + d * 62, by = o.y - 92 + (bite ? 7 + Math.sin(T / 2) * 2.5 : Math.sin(T / 14 + o.x) * 1.4); if (F && F.nib > 0) by += Math.sin(F.nib / 16 * Math.PI) * 4; if (F && F.st === 'reel') { bx += Math.sin(T / 3) * 3; by += 5 + Math.sin(T / 2.2) * 3; } if (F && F.st === 'cast') { const k = Math.min(1, F.cast / 28); bx = tx + (bx - tx) * k; by = ty + (by - ty) * k - Math.sin(k * Math.PI) * 34; }
   c.save(); c.strokeStyle = '#6a4220'; c.lineWidth = 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo((tx + bx) / 2 + d * 4, Math.min(ty, by) - 6, bx, by - 3); c.stroke();
@@ -9508,7 +9508,8 @@ function rmSpnOpen() {
 }
 function rmSpnClose() { const P = $('spnShop'); if (P) P.style.display = 'none'; }
 function rmBalAdm() { return !!(auth && auth.admin) || !!RM.myAdm; }
-function rmBalOwned(k) { const b = RM_BALD[k]; return !!b && (!b.p || rmBalAdm() || (RM.myBals || []).includes(k)); }
+function rmRich() { return rmBalAdm() || !!(auth && auth.rich); }   // 💎 يملك كلشي (المشرفين + حسابات مثل منتظر)
+function rmBalOwned(k) { const b = RM_BALD[k]; return !!b && (!b.p || rmRich() || (RM.myBals || []).includes(k)); }
 // كرت بالون: أول ضغطة تبين زر (شراء / حمل / عدم حمل) فوق البالون
 function rmBalCard(b, selKey, onSel) {
   const own = rmBalOwned(b.k), held = RM.me.bal === b.k, it = document.createElement('div'); it.className = 'spI' + (held ? ' on' : '') + (own && b.p ? ' own' : '') + (selKey === b.k ? ' sel' : ''); it.setAttribute('role', 'button');
@@ -9600,8 +9601,8 @@ function rmSignNight(c) {
 }
 /* ---- دولار المنتجع 💵: عملة خاصة بالمنتجع (من الصيد + دولار كل يوم) ---- */
 RM.usd = 0;
-function rmUsd() { return rmBalAdm() ? Infinity : (RM.usd || 0); }
-function usdTxt() { return rmBalAdm() ? '∞' : String(RM.usd || 0); }
+function rmUsd() { return rmRich() ? Infinity : (RM.usd || 0); }
+function usdTxt() { return rmRich() ? '∞' : String(RM.usd || 0); }
 function rmUsdCss() { if ($('rmUsdCss')) return; const st = document.createElement('style'); st.id = 'rmUsdCss'; st.textContent = '#rmUsd{position:absolute;top:44px;left:8px;transform:scale(.82);transform-origin:left top;z-index:8;display:flex;align-items:center;gap:5px;padding:3px 9px 3px 5px;border-radius:18px;background:linear-gradient(135deg,#0f7a3d,#22c55e 55%,#0f7a3d);border:2px solid #ffe27a;color:#fff;font-weight:900;font-size:13px;box-shadow:0 3px 12px rgba(0,0,0,.35),0 0 14px rgba(34,197,94,.55);overflow:hidden;pointer-events:auto;direction:rtl;cursor:pointer;user-select:none}#rmUsd .bill{position:relative;width:30px;height:18px;border-radius:3px;background:linear-gradient(135deg,#bff0c9,#7fd394);border:1.5px solid #e9ffe9;display:grid;place-items:center;color:#0b5a2c;font-size:12px;font-weight:900;box-shadow:inset 0 0 0 2px rgba(11,90,44,.25)}#rmUsd .bill:before,#rmUsd .bill:after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:rgba(11,90,44,.35);top:50%;transform:translateY(-50%)}#rmUsd .bill:before{left:2px}#rmUsd .bill:after{right:2px}#rmUsd small{font-size:10.5px;opacity:.9;font-weight:700}#rmUsd .sh{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);animation:usdSh 2.8s ease-in-out infinite;pointer-events:none}#rmUsd.pop{animation:usdPop .5s cubic-bezier(.2,1.8,.5,1)}#rmUsd .pl{position:absolute;right:8px;top:-2px;color:#fff7a8;font-size:13px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.5);animation:usdUp 1.4s ease-out forwards}@keyframes usdSh{60%,100%{transform:translateX(120%)}}@keyframes usdPop{40%{transform:scale(1.05)}}@keyframes usdUp{to{transform:translateY(-26px);opacity:0}}#rmBox.rmTiny #rmUsd{top:30px;font-size:11px;transform:scale(.75)}#rmBox.memOpen #rmUsd{opacity:0;visibility:hidden;pointer-events:none}'; document.head.appendChild(st); }
 function rmUsdHud() { rmUsdCss(); let E = $('rmUsd'); if (!E) { E = document.createElement('div'); E.id = 'rmUsd'; E.innerHTML = '<span class="sh"></span><span class="bill">$</span><b></b><small>دولار المنتجع</small>'; E.onclick = () => showToast('💵 دولار المنتجع: تاخذ دولار كل يوم تدخل، ودولارين كل ما تبيع 15 سمكة 🎣 — تشتري بيه من محلات المنتجع'); const B = $('rmBox'); if (B) B.appendChild(E); } E.querySelector('b').textContent = usdTxt(); rmUsdPlace(); return E; }
 function rmUsdPlace() { try { const E = $('rmUsd'), D = $('rmDockA'), B = $('rmBox'); if (!E || !B) return; let top = B.classList.contains('rmTiny') ? 30 : 44; if (D && !D.hidden && D.offsetHeight) { const br = B.getBoundingClientRect(), dr = D.getBoundingClientRect(); top = Math.round(dr.bottom - br.top + 6); } E.style.top = top + 'px'; } catch (e) {} }   // لوحة الدولار يسار الشاشة، وإذا لوحة المشرف مفتوحة تنزل تحتها
@@ -10218,11 +10219,11 @@ setInterval(alSync, 2500); setTimeout(alSync, 600);
 function alEv(o) { try { if (typeof fws !== 'undefined' && fws && fws.readyState === 1) fws.send(JSON.stringify(Object.assign({ t: 'al_ev' }, o))); } catch (e) {} }
 </script>
 <script src="/sus.js?v=6"></script>
-<script src="/run.js?v=13"></script>
+<script src="/run.js?v=14"></script>
 <script src="/ludo.js?v=10"></script>
 <script src="/rate.js?v=3"></script>
-<script src="/resort2.js?v=7"></script>
-<script src="/resort3.js?v=5"></script>
+<script src="/resort2.js?v=8"></script>
+<script src="/resort3.js?v=6"></script>
 <script src="/resort4.js?v=4"></script>
 <script src="/resort5.js?v=3"></script>
 <script src="/resort6.js?v=2"></script>

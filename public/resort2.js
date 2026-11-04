@@ -783,7 +783,7 @@ function rmXPrompt(mk) {
 function rxHtPrices() { showToast('🏨 فندق بابيت: 👤 شخص واحد يومين 25💵 • 👥 شخصين يومين 40💵 • 👨‍👩‍👧 3 أشخاص أسبوع 90💵 — ادخل واطلب من بابيتو'); }
 /* ---- رسائل السيرفر ---- */
 function rmXMsg(T, d) {
-  if (T === 'rm_ht') { RX.ht = d; RX.ht.off = (d.now || Date.now()) - Date.now(); if (typeof d.usd === 'number' && !rmBalAdm()) { try { rmUsdSet(d.usd); } catch (e) {} } rxHtRender(); }
+  if (T === 'rm_ht') { RX.ht = d; RX.ht.off = (d.now || Date.now()) - Date.now(); if (typeof d.usd === 'number' && !rmRich()) { try { rmUsdSet(d.usd); } catch (e) {} } rxHtRender(); }
   else if (T === 'rm_ht_ok') { showToast('🔑 ' + (d.msg || 'تم')); RX.bab.wave = 90; rxSay(RX.bab, 'مبروك! 🎉 ' + (d.msg || '') + ' — المصعد يم اليسار 🛗', 260); rxSnd([['sine', 784, 784, 0.15, 0.05], ['sine', 988, 988, 0.15, 0.05, 0.1], ['sine', 1319, 1319, 0.3, 0.05, 0.2]]); RX.htTab = 'mine'; }
   else if (T === 'rm_ht_err') { showToast('⛔ ' + (d.error || '')); rxSay(RX.bab, d.error || '', 200); const b = document.querySelector('#htShop .htBusy'); if (b) b.classList.remove('htBusy'); rxHtRender(); }
   else if (T === 'rm_ht_inv') { showToast('🏨 ' + d.by + ' ضافك لغرفة ' + d.no + ' بفندق بابيت 🔑'); rxHtGet(); }

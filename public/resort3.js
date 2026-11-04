@@ -475,7 +475,7 @@ const r3PromptO = rmXPrompt; rmXPrompt = function (mk) {
 const r3MsgO = rmXMsg; rmXMsg = function (T, d) {
   if (T === 'rm_swan') { R3.swanN = d.n; if (d.me !== undefined && !d.by) R3.swanMe = d.me ? 1 : 0; if (d.ok) { showToast('❤️ حطيت لايك لبجعة الحب الأبدي — صار عددهم ' + d.n + ' 💖'); r3SwanBurst(22); } else if (d.by && r3NearSwan()) r3SwanBurst(5); rmPrompt(true); return; }
   if (T === 'rm_swan_err') { showToast('⛔ ' + (d.error || '')); return; }
-  if (T === 'rm_ap') { R3.tk = d.tk ? 1 : 0; if (d.price) R3.price = d.price; if (typeof d.usd === 'number' && !rmBalAdm()) { try { rmUsdSet(d.usd); } catch (e) {} } if (d.bought) r3Bought(); r3TktRender(); rmPrompt(true); return; }
+  if (T === 'rm_ap') { R3.tk = d.tk ? 1 : 0; if (d.price) R3.price = d.price; if (typeof d.usd === 'number' && !rmRich()) { try { rmUsdSet(d.usd); } catch (e) {} } if (d.bought) r3Bought(); r3TktRender(); rmPrompt(true); return; }
   if (T === 'rm_ap_err') { showToast('⛔ ' + (d.error || '')); rxSay(R3.agt, d.error || '', 200); const b = document.querySelector('#apShop .htBusy'); if (b) b.classList.remove('htBusy'); return; }
   if (T === 'rm_ap_go') { R3.tk = 0; r3Fly(false); return; }
   return r3MsgO(T, d);
@@ -502,7 +502,7 @@ function r3TktRender() {
   const P = $('apShop'); if (!P || P.style.display === 'none') return; P.querySelector('.spCo').textContent = auth ? '💵 ' + usdTxt() : 'ضيف';
   const B = P.querySelector('.apB'); B.innerHTML = '';
   const t = document.createElement('div'); t.className = 'apTk' + (R3.tk ? ' on' : ''); t.innerHTML = '<div class="l"><small>بابيت إيرلاينز ✈️</small><div class="rt"><span><b>منتجع بابيت</b><i>BBT</i></span><em>✈</em><span><b>الشمال</b><i>NTH</i></span></div><div class="mt"><span>رحلة <b>BT-101</b></span><span>البوابة <b>1</b></span><span>المقعد <b>VIP</b></span></div></div><div class="r"><small>السعر</small><b></b><span class="st"></span></div>';
-  t.querySelector('.r b').textContent = rmBalAdm() ? 'مجاناً 👑' : R3.price + ' 💵'; t.querySelector('.r .st').textContent = R3.tk ? '✅ محجوزة' : '';
+  t.querySelector('.r b').textContent = rmRich() ? 'مجاناً 👑' : R3.price + ' 💵'; t.querySelector('.r .st').textContent = R3.tk ? '✅ محجوزة' : '';
   const n = document.createElement('div'); n.className = 'apN'; n.textContent = R3.tk ? '🎫 تذكرتك جاهزة! روح للقبطان يم الطيارة وسلّمه التذكرة حتى تطير مباشرة ✈️' : '💡 بعد ما تحجز، شخصيتك تمشي للقبطان وتنطيه التذكرة وتطير مباشرة ✈️ — الرجعة مجانية';
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'htBtn ' + (R3.tk ? 'g' : ''); btn.textContent = R3.tk ? '🚶 روح للقبطان هسه' : '🎫 احجز التذكرة';
   btn.onclick = () => { if (R3.tk) { r3TktClose(); r3GoCap(); return; } if (!auth) { showToast('🔐 سجّل حساب حتى تحجز تذكرة ✈️'); return; } if (!rmBalAdm() && (RM.usd || 0) < R3.price) { showToast('💵 تحتاج ' + R3.price + ' دولار منتجع — اصطاد سمك وبيعه 🎣'); rxSay(R3.agt, 'التذكرة بـ ' + R3.price + ' دولار 💵 اصطاد سمك وبيعه وارجعلي 🎣', 200); return; } btn.classList.add('htBusy'); rmSend({ t: 'rm_ap_buy' }); };
@@ -512,7 +512,7 @@ function r3Bought() { showToast('🎫 انحجزت التذكرة! هسه ترو
 function r3GoCap() { if (rmShopId() !== 0) return; rmWalkTo(R3_CAP.x + 34, R3_CAP.y + 2); rmTapMark(R3_CAP.x + 34, R3_CAP.y + 2); R3.autoFly = true; R3.cap.wave = 60; rxSay(R3.cap, 'تعال يمي ' + rmMe() + ' ✈️', 160); }
 function r3CapTalk() { rxSay(R3.cap, R3.tk ? 'هات التذكرة ونطير سوا ✈️' : 'أهلاً! 👨‍✈️ احجز تذكرة من مركز الحجز 🎫 وأطيّرك للمنتجع الجديد', 240); }
 function r3GiveTicket() {
-  if (R3.flying || R3.hand) return; if (!R3.tk && !rmBalAdm()) { r3CapTalk(); return; }
+  if (R3.flying || R3.hand) return; if (!R3.tk && !rmRich()) { r3CapTalk(); return; }
   R3.hand = { t: 0 }; rxSay(R3.cap, 'شكراً! 🎫 تفضل اصعد، رحلة سعيدة ✈️', 200); rxSnd([['triangle', 1047, 1047, 0.12, 0.05], ['triangle', 1319, 1319, 0.18, 0.05, 0.1]]);
   const m = RM.me, sx = m.x, sy = m.y - 50, ex = R3_CAP.x + 6, ey = R3_CAP.y - 44, el = document.createElement('div'); let k = 0;
   const step = () => { k++; R3.hand.t = k; if (k < 34) { requestAnimationFrame(step); return; } R3.hand = null; rmSend({ t: 'rm_ap_fly' }); };

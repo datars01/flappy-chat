@@ -68,7 +68,7 @@
     try { menuInfo(); } catch (e) {}
   }
   document.addEventListener('gs-ready', () => { synced = ''; runSync(); });
-  const isAdm = () => { try { return !!(typeof auth !== 'undefined' && auth && (auth.admin || auth.name === 'بابي' || auth.name === 'بابيتو')); } catch (e) { return false; } };
+  const isAdm = () => { try { return !!(typeof auth !== 'undefined' && auth && (auth.admin || auth.rich || auth.name === 'بابي' || auth.name === 'بابيتو')); } catch (e) { return false; } };
   /* المشرفين (بابي وبابيتو): عملات لانهائية ♾️ */
   const CN = () => isAdm() ? Infinity : S.coins;
   const CT = () => isAdm() ? '♾️' : String(S.coins);

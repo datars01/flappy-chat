@@ -19,7 +19,7 @@
   addEventListener('pagehide', flush); document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
   async function boot() {
     if (!auth) { self(KEY + ':gs:' + JSON.stringify({ acct: '', ok: false, srv: null })); return; }
-    try { const me = await (await fetch('/api/me', { headers: H(), cache: 'no-store' })).json(); if (me && me.admin) self(KEY + ':adm:1'); } catch (e) {}
+    try { const me = await (await fetch('/api/me', { headers: H(), cache: 'no-store' })).json(); if (me && (me.admin || me.rich)) self(KEY + ':adm:1'); } catch (e) {}
     try { const r = await (await fetch('/api/gs', { headers: H(), cache: 'no-store' })).json(); const g = (r && r.gs && r.gs[KEY]) || null; self(KEY + ':gs:' + JSON.stringify({ acct: auth.name, ok: true, srv: g ? g.d : null })); } catch (e) {}
   }
   // زر الرجوع للعبة الرئيسية
