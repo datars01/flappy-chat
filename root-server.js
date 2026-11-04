@@ -56,6 +56,14 @@ module.exports = function rootInit(ctx) {
     return { i, x, y, w: BW, h: BH, d, front, back, ped, cash: ped.map(([px, pz]) => [px, pz + d * 80]), collect: [x + 110, front - d * 55], lock: [x + BW - 110, front - d * 55], spawn: [x + BW / 2, front - d * 40], col: COLORS[i] };
   });
   const B = geo.map(() => ({ owner: null, name: '', lockUntil: 0 }));
+  // 🧱 المباني الصلبة: ما يطبها اللاعب. جدران القواعد (إلا بابها)، الشوب، جدران الحفلة (إلا بابها)، ماكينة الدمج
+  const PR = 14, OBS = [];
+  const wallR = (x0, z0, x1, z1) => OBS.push({ x0: Math.min(x0, x1) - 8, x1: Math.max(x0, x1) + 8, y0: Math.min(z0, z1) - 8, y1: Math.max(z0, z1) + 8 });
+  geo.forEach(g => { const dx0 = g.x + g.w / 2 - 75, dx1 = g.x + g.w / 2 + 75; wallR(g.x, g.back, g.x + g.w, g.back); wallR(g.x, g.back, g.x, g.front); wallR(g.x + g.w, g.back, g.x + g.w, g.front); wallR(g.x, g.front, dx0, g.front); wallR(dx1, g.front, g.x + g.w, g.front); });
+  OBS.push({ x0: SHOP.x - 115, x1: SHOP.x + 115, y0: SHOP.y - 75, y1: SHOP.y + 75 });
+  { const dz0 = PARTY.door[1] - 90, dz1 = PARTY.door[1] + 90, X1 = PARTY.x + PARTY.w, Z1 = PARTY.y + PARTY.h; wallR(PARTY.x, PARTY.y, X1, PARTY.y); wallR(PARTY.x, Z1, X1, Z1); wallR(X1, PARTY.y, X1, Z1); wallR(PARTY.x, PARTY.y, PARTY.x, dz0); wallR(PARTY.x, dz1, PARTY.x, Z1); }
+  OBS.push({ x0: HUB.merge.x - 50, x1: HUB.merge.x + 50, y0: HUB.merge.y - 40, y1: HUB.merge.y + 40 });
+  const solid = (x, y) => OBS.some(o => x > o.x0 - PR && x < o.x1 + PR && y > o.y0 - PR && y < o.y1 + PR);
   const P = new Map();          // key → لاعب
   const LINE = (CP.y0 + CP.y1) / 2, GATE = { x: 40, s: CP.y0 - 150, n: CP.y1 + 150 }, SPEC_MS = 5 * 60 * 1000, RW_SPEC = { leg: 60, myth: 32, secret: 8 };
   let specAt = Date.now() + SPEC_MS, payT = 0, carpet = [], uidN = 1, spawnT = 0, lastBc = 0, lastSave = Date.now();
@@ -100,7 +108,7 @@ module.exports = function rootInit(ctx) {
     const bi = B.findIndex(b => !b.owner); if (bi < 0) return send(ws, { t: 'br_full', error: 'الخريطة مليانة — 7 لاعبين جوه. جرب بعد شوي' });
     const br = brOf(k); B[bi].owner = k; B[bi].name = u.name; B[bi].lockUntil = 0; B[bi].mines = [];
     br.slots.forEach(s => { if (s) delete s.gone; });
-    const g = geo[bi]; p = { ws, key: k, name: u.name, base: bi, x: g.spawn[0], y: g.spawn[1], ix: 0, iy: 0, carry: null, fightAt: 0, dir: 1, pan: -1, panAt: 0, stunUntil: 0, noStealUntil: 0, inB: -1 };
+    const g = geo[bi]; p = { ws, key: k, name: u.name, base: bi, x: g.spawn[0], y: g.spawn[1], ix: 0, iy: 0, carry: null, fightAt: 0, dir: 1, pan: -1, panOn: false, panAt: 0, stunUntil: 0, noStealUntil: 0, inB: -1 };
     P.set(k, p); save(); sendInit(p); toastAll('👋 ' + u.name + ' دخل اللعبة', p);
   }
   function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, shop: SHOP, party: PARTY, pans: PANS, shoesC: SHOES, mineP: MINE_P, mineMax: MINE_MAX, alarmP: ALARM_P, carpEnd: CARP_END, groups: GROUPS, fuse: FUSE, next: NEXT, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
@@ -201,7 +209,7 @@ module.exports = function rootInit(ctx) {
       if (d.k === 'party' && rich(p.key)) { partyStart(t); return; }
       if (dist(p.x, p.y, SHOP.x, SHOP.y) > 180) return toast(p, 'روح للشوب');
       br.shoes = br.shoes || { own: [], on: -1 }; const i = d.i | 0;
-      if (d.k === 'pan') { const it = PANS[i]; if (!it) return; if (p.pan >= i) return toast(p, 'عندك طاوة بنفس القوة أو أقوى'); if (!pay(p, it.p)) return toast(p, 'فلوسك ما تكفي — تحتاج ' + fmt(it.p) + ' 💰'); p.pan = i; save(); return toast(p, '🍳 اشتريت ' + it.n + '! تروح منك إذا طلعت من اللعبة'); }
+      if (d.k === 'pan') { const it = PANS[i]; if (!it) return; if (p.pan >= i) return toast(p, 'عندك طاوة بنفس القوة أو أقوى'); if (!pay(p, it.p)) return toast(p, 'فلوسك ما تكفي — تحتاج ' + fmt(it.p) + ' 💰'); p.pan = i; p.panOn = true; save(); return toast(p, '🍳 اشتريت ' + it.n + '! تروح منك إذا طلعت من اللعبة'); }
       if (d.k === 'shoe') { const it = SHOES[i]; if (!it) return; if (!br.shoes.own.includes(i)) { if (!pay(p, it.p)) return toast(p, 'فلوسك ما تكفي — تحتاج ' + fmt(it.p) + ' 💰'); br.shoes.own.push(i); } br.shoes.on = br.shoes.on === i && d.off ? -1 : i; save(); return toast(p, br.shoes.on === i ? '👟 لبست ' + it.n + ' — سرعتك ×' + it.sp : '👟 شلت الجوتي'); }
       if (d.k === 'mine') { if (!pay(p, MINE_P)) return toast(p, 'فلوسك ما تكفي — تحتاج ' + fmt(MINE_P) + ' 💰'); br.mines = (br.mines || 0) + 1; save(); return toast(p, '💣 صار عندك ' + br.mines + ' لغم — حطه يم باب قاعدتك'); }
       if (d.k === 'alarm') { if (br.alarm) return toast(p, 'عندك إنذار'); if (!pay(p, ALARM_P)) return toast(p, 'فلوسك ما تكفي — تحتاج ' + fmt(ALARM_P) + ' 💰'); br.alarm = 1; save(); return toast(p, '🚨 ركّبت الإنذار! أي واحد يدخل قاعدتك يرنّ عندك'); }
@@ -214,15 +222,18 @@ module.exports = function rootInit(ctx) {
       if (dist(p.x, p.y, g.x + g.w / 2, g.front) > 230) return toast(p, 'حط اللغم يم باب قاعدتك');
       br.mines--; b.mines.push({ x: p.x, y: p.y }); save(); return toast(p, '💣 حطيت لغم! محد يشوفه غيرك');
     }
+    if (d.t === 'br_pan') {   // 🍳 تمسك الطاوة / تحطها بجيبك
+      if (p.pan < 0) return toast(p, 'ماعندك طاوة — اشتري من الشوب'); p.panOn = !p.panOn; return toast(p, p.panOn ? '🍳 الطاوة بإيدك' : '🍳 حطيت الطاوة بجيبك');
+    }
     if (d.t === 'br_hit') {   // 🍳 ضربة طاوة على لاعب
-      if (p.pan < 0) return toast(p, 'ماعندك طاوة — اشتري من الشوب'); const pn = PANS[p.pan]; if (t - p.panAt < pn.cd) return; const q = P.get(String(d.k)); if (!q || q === p) return;
+      if (p.pan < 0 || !p.panOn) return toast(p, p.pan < 0 ? 'ماعندك طاوة — اشتري من الشوب' : '🍳 امسك الطاوة أول (زر الطاوة)'); const pn = PANS[p.pan]; if (t - p.panAt < pn.cd) return; const q = P.get(String(d.k)); if (!q || q === p) return;
       if (dist(p.x, p.y, q.x, q.y) > pn.rng) return toast(p, 'قرّب أكثر'); p.panAt = t; q.stunUntil = t + pn.stun; q.noStealUntil = t + pn.block; q.ix = q.iy = 0;
       if (q.carry) { returnStolen(q.carry, '🍳 ' + p.name + ' ضرب ' + q.name + ' بالطاوة ورجّع البرينروت!'); q.carry = null; }
       toast(q, '🍳 ' + p.name + ' ضربك بالطاوة! ما تكدر تسرق ' + Math.round(pn.block / 1000) + 'ث', 'alarm');
-      for (const o of P.values()) send(o.ws, { t: 'br_fx', k: 'pan', x: q.x, y: q.y, tier: p.pan }); return;
+      for (const o of P.values()) send(o.ws, { t: 'br_fx', k: 'pan', x: q.x, y: q.y, tier: p.pan, f: p.key }); return;
     }
     if (d.t === 'br_hitegg') {   // 🥚 تكسير بيض الحفلة
-      if (p.pan < 0) return toast(p, 'تحتاج طاوة حتى تكسر البيض — اشتري من الشوب'); const pn = PANS[p.pan]; if (t - p.panAt < Math.min(600, pn.cd)) return; const e = peggs.find(x => x.u === d.u); if (!e || partyEnd < t) return;
+      if (p.pan < 0 || !p.panOn) return toast(p, p.pan < 0 ? 'تحتاج طاوة حتى تكسر البيض — اشتري من الشوب' : '🍳 امسك الطاوة أول (زر الطاوة)'); const pn = PANS[p.pan]; if (t - p.panAt < Math.min(600, pn.cd)) return; const e = peggs.find(x => x.u === d.u); if (!e || partyEnd < t) return;
       if (dist(p.x, p.y, e.x, e.y) > 110) return toast(p, 'قرّب من البيضة'); p.panAt = t; e.hp -= pn.dmg;
       if (e.hp > 0) { for (const o of P.values()) send(o.ws, { t: 'br_fx', k: 'egghit', x: e.x, y: e.y }); return; }
       peggs = peggs.filter(x => x !== e); if (!hasRoom(p.key)) return toast(p, 'قاعدتك وحقيبتك مليانة — البيضة انكسرت بس ما كان عندك مكان 😢');
@@ -297,6 +308,7 @@ module.exports = function rootInit(ctx) {
     carpet.forEach(c => { c.x += 110 * dt; c.y += (LINE - c.y) * Math.min(1, dt * 1.6); }); carpet = carpet.filter(c => c.x < CARP_END);
     for (const p of P.values()) {
       const bs = brOf(p.key).shoes, shoe = bs && bs.on >= 0 ? SHOES[bs.on].sp : 1, sp = p.stunUntil > t ? 0 : SPEED * shoe * (p.carry ? CARRY : 1); let nx = Math.max(16, Math.min(W - 16, p.x + p.ix * sp * dt)), ny = Math.max(16, Math.min(H - 16, p.y + p.iy * sp * dt));
+      if (solid(nx, ny) && !solid(p.x, p.y)) { if (!solid(nx, p.y)) ny = p.y; else if (!solid(p.x, ny)) nx = p.x; else { nx = p.x; ny = p.y; } }
       for (const g of geo) { const b = B[g.i]; if (g.i === p.base || !b.owner || b.lockUntil <= t) continue; if (inRect(nx, ny, g, 4)) { if (!inRect(p.x, ny, g, 4)) nx = p.x; else if (!inRect(nx, p.y, g, 4)) ny = p.y; else { nx = g.spawn[0]; ny = g.front + g.d * 40; } } }
       p.x = nx; p.y = ny;
       const g = geo[p.base], br = brOf(p.key);
@@ -323,10 +335,10 @@ module.exports = function rootInit(ctx) {
   }, 50);
 
   function pubBases(t) { return geo.map(g => { const b = B[g.i], br = b.owner ? brOf(b.owner) : null; return { o: b.name, k: b.owner || '', lv: br ? br.lvl : 0, lk: Math.max(0, b.lockUntil - t), bank: 0, cb: br ? br.sb.map(v => Math.floor(v || 0)) : [], s: br ? br.slots.map(s => !s ? 0 : s.egg ? [0, 0, s.egg, Math.max(0, s.at - t)] : [s.id, s.m || 0, 0, 0, s.gone ? 1 : 0]) : [] }; }); }
-  function pubPlayers() { return [...P.values()].map(p => [p.key, p.name, Math.round(p.x), Math.round(p.y), p.base, p.carry ? [p.carry.id, p.carry.m] : 0, p.dir, (p.ix || p.iy) ? 1 : 0, rich(p.key) ? 1 : 0, now() < p.stunUntil ? 1 : 0, p.pan + 1, (brOf(p.key).shoes || { on: -1 }).on + 1]); }
+  function pubPlayers() { return [...P.values()].map(p => [p.key, p.name, Math.round(p.x), Math.round(p.y), p.base, p.carry ? [p.carry.id, p.carry.m] : 0, p.dir, (p.ix || p.iy) ? 1 : 0, rich(p.key) ? 1 : 0, now() < p.stunUntil ? 1 : 0, (p.panOn ? p.pan + 1 : 0), (brOf(p.key).shoes || { on: -1 }).on + 1]); }
   function bcAll() { const t = now(), bs = pubBases(t), pl = pubPlayers(), cp = carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx = Math.max(0, specAt - t); for (const p of P.values()) { const br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl, bs, cp, spx, fcd: Math.max(0, p.fightAt - t) }, meOf(p))); } }
   function bcOne(p) { const t = now(), br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl: pubPlayers(), bs: pubBases(t), cp: carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx: Math.max(0, specAt - t), fcd: 0 }, meOf(p))); }
-  function meOf(p) { const br = brOf(p.key); markSeen(br); const t0 = now(); return { pan: p.pan, shoes: br.shoes || { own: [], on: -1 }, mines: br.mines || 0, mpos: (B[p.base].mines || []).map(m => [Math.round(m.x), Math.round(m.y)]), alarm: br.alarm ? 1 : 0, ns: Math.max(0, p.noStealUntil - t0), party: { on: partyEnd > t0 ? 1 : 0, ms: partyEnd > t0 ? partyEnd - t0 : partyAt - t0, eg: peggs.map(e => [e.u, e.t, Math.round(e.x), Math.round(e.y), e.hp, e.max]) }, seen: Object.keys(br.seen), cl: br.cl || {}, c: Math.floor(br.coins), inc: br.slots.reduce((s, x) => s + incOf(x), 0), bag: br.bag.map(b => [b.id, b.m || 0]), lv: br.lvl, ls: lockSec(br.lvl), uc: br.lvl < LV_MAX ? upCost(br.lvl) : 0, adm: rich(p.key) ? 1 : 0, bagMax: BAG_MAX }; }
+  function meOf(p) { const br = brOf(p.key); markSeen(br); const t0 = now(); return { pan: p.pan, panOn: !!p.panOn, shoes: br.shoes || { own: [], on: -1 }, mines: br.mines || 0, mpos: (B[p.base].mines || []).map(m => [Math.round(m.x), Math.round(m.y)]), alarm: br.alarm ? 1 : 0, ns: Math.max(0, p.noStealUntil - t0), party: { on: partyEnd > t0 ? 1 : 0, ms: partyEnd > t0 ? partyEnd - t0 : partyAt - t0, eg: peggs.map(e => [e.u, e.t, Math.round(e.x), Math.round(e.y), e.hp, e.max]) }, seen: Object.keys(br.seen), cl: br.cl || {}, c: Math.floor(br.coins), inc: br.slots.reduce((s, x) => s + incOf(x), 0), bag: br.bag.map(b => [b.id, b.m || 0]), lv: br.lvl, ls: lockSec(br.lvl), uc: br.lvl < LV_MAX ? upCost(br.lvl) : 0, adm: rich(p.key) ? 1 : 0, bagMax: BAG_MAX }; }
 
   return { onMsg, leave };
 };

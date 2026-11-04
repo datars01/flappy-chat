@@ -73,13 +73,26 @@ button { font-family: var(--body); cursor: pointer }
 .toast { background: rgba(8,25,24,.92); border: 2px solid var(--pick); color: #fff; border-radius: 14px; padding: 7px 14px; font-size: 14px; font-weight: 500; text-align: center; animation: tIn .2s ease-out }
 .toast.alarm { border-color: var(--red); background: rgba(90,10,20,.95); font-weight: 700 }
 @keyframes tIn { from { transform: translateY(-8px); opacity: 0 } }
-#acts { position: fixed; z-index: 5; right: max(14px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); display: flex; flex-direction: column-reverse; gap: 10px; align-items: flex-end; max-width: 56vw }
+#acts { position: fixed; z-index: 5; right: max(14px, env(safe-area-inset-right)); bottom: calc(128px + env(safe-area-inset-bottom)); display: flex; flex-direction: column-reverse; gap: 10px; align-items: flex-end; max-width: 56vw }
 .act { border: 3px solid var(--ink); border-radius: 18px; padding: 10px 16px; font: 400 19px var(--display); color: var(--ink); background: var(--pick); box-shadow: 0 5px 0 rgba(0,0,0,.45); text-align: center; line-height: 1.15; min-width: 120px }
 .act small { display: block; font: 700 12px var(--body); opacity: .8 }
 .act.red { background: var(--red); color: #fff } .act.blue { background: #3fa7ff } .act.green { background: #3ddc84 } .act.dim { background: #c9d6d4 }
 .act:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.45) }
 #lookHint { position: fixed; z-index: 4; left: 50%; transform: translateX(-50%); bottom: calc(170px + env(safe-area-inset-bottom)); background: rgba(8,25,24,.75); color: #fff; padding: 6px 12px; border-radius: 12px; font-size: 13px; pointer-events: none; animation: hintOut 1s 6s forwards }
 @keyframes hintOut { to { opacity: 0 } }
+#panBox { position: fixed; z-index: 6; right: max(14px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); width: 98px; height: 98px }
+#panBox button { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 3px solid #24140e; border-radius: 50%; font: 900 12px var(--body); color: #24140e; box-shadow: 0 5px 0 #24140e, 0 10px 16px rgba(0,0,0,.35); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; overflow: hidden }
+#panBox button:active { transform: translateY(3px); box-shadow: 0 2px 0 #24140e }
+#hitBtn { right: 0; bottom: 0; width: 98px; height: 98px; background: radial-gradient(circle at 36% 28%, #ffb08a, #ff4f5e 62%, #b8202c); color: #fff; font-size: 14px }
+#hitBtn > span, #hitBtn > b, #hitBtn > small { position: relative }
+#hitBtn .hi { font-size: 28px; line-height: 1 }
+#hitBtn b { font-size: 15px; line-height: 1.1; text-shadow: 0 2px 0 #24140e }
+#hitBtn small { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 700; color: #ffe9d8 }
+#hitCd { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(10,4,4,.55) var(--cd, 0deg), transparent 0); pointer-events: none }
+#panBtn { right: 110px; bottom: 26px; width: 66px; height: 66px; background: #ffd23f; font-size: 11px }
+#panBtn .pi { font-size: 24px; line-height: 1 }
+#panBtn.on { background: #3fe0a0 }
+#panBtn small { font-size: 10px; font-weight: 800 }
 #joy { position: fixed; z-index: 5; left: max(18px, env(safe-area-inset-left)); bottom: calc(24px + env(safe-area-inset-bottom)); width: 136px; height: 136px; border-radius: 50%;
   background: radial-gradient(circle, rgba(255,255,255,.08), rgba(255,255,255,.16)); border: 3px solid rgba(255,255,255,.3) }
 #knob { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, var(--pick)); border: 3px solid var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.35) }
@@ -248,6 +261,7 @@ button { font-family: var(--body); cursor: pointer }
 <div id="joy" hidden><div id="knob"></div></div>
 <div id="lookHint" hidden>👆 اسحب بالشاشة حتى تلف الكاميرا</div>
 <div id="acts" hidden></div>
+<div id="panBox" hidden><button type="button" id="hitBtn" aria-label="اضرب" hidden><i id="hitCd"></i><span class="hi">🍳</span><b id="hitTxt">اضرب</b><small id="hitSub"></small></button><button type="button" id="panBtn" aria-label="الطاوة"><span class="pi">🍳</span><small id="panSub">حمل</small></button></div>
 <div id="placeBar" hidden><span id="placeTxt">دوس على منصة فاضية بقاعدتك</span><span id="placeNums"></span><button type="button" id="placeX">إلغاء</button></div>
 
 <div id="alarmFx"></div>
@@ -500,20 +514,82 @@ function buildHub() {
 }
 
 /* ---- شخصية اللاعب (اعتيادية، ثلاثية الأبعاد) ---- */
-function buildAvatar(col) {
-  const g = new THREE.Group(), skin = M('#f2c79e'), shirt = M(col), pants = M('#2d3e6a'), shoe = M('#24140e'), hair = M('#3a2416');
-  const hip = new THREE.Group(); hip.position.y = 34; g.add(hip);
-  const legL = new THREE.Group(), legR = new THREE.Group(); [legL, legR].forEach((l, i) => { l.position.set(i ? 7 : -7, 34, 0); l.add(mesh(new THREE.BoxGeometry(11, 32, 11), pants, 0, -16, 0)); l.add(mesh(new THREE.BoxGeometry(12, 7, 17), shoe, 0, -31, 3)); g.add(l); });
-  const body = mesh(new THREE.BoxGeometry(28, 32, 16), shirt, 0, 50, 0); g.add(body);
-  const armL = new THREE.Group(), armR = new THREE.Group(); [armL, armR].forEach((a, i) => { a.position.set(i ? 19 : -19, 64, 0); a.add(mesh(new THREE.BoxGeometry(9, 28, 9), shirt, 0, -13, 0)); a.add(mesh(new THREE.BoxGeometry(8, 7, 8), skin, 0, -30, 0)); g.add(a); });
-  const head = new THREE.Group(); head.position.y = 82; head.add(mesh(new THREE.BoxGeometry(22, 22, 20), skin, 0, 0, 0)); head.add(mesh(new THREE.BoxGeometry(24, 8, 22), hair, 0, 10, 0)); head.add(mesh(new THREE.BoxGeometry(24, 14, 6), hair, 0, 4, -9));
-  const eyeM = M('#24140e'); head.add(mesh(new THREE.BoxGeometry(3, 4, 1), eyeM, -5, 1, 10.5, false)); head.add(mesh(new THREE.BoxGeometry(3, 4, 1), eyeM, 5, 1, 10.5, false)); g.add(head);
-  const crown = new THREE.Group(); crown.add(mesh(new THREE.CylinderGeometry(10, 11, 8, 6), M('#ffd23f'), 0, 0, 0)); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; crown.add(mesh(new THREE.ConeGeometry(3, 8, 4), M('#ffd23f'), Math.cos(a) * 9, 7, Math.sin(a) * 9)); } crown.position.y = 100; crown.visible = false; g.add(crown);
+const AVG = {}, AVM = new Map();
+const avM = (key, mk) => { if (!AVM.has(key)) AVM.set(key, mk()); return AVM.get(key); };
+const hashS = v => { let h = 0; for (const ch of String(v)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+let AVBLOB = null; const blobTex = () => AVBLOB || (AVBLOB = texCanvas(64, 64, c => { const gr = c.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,.5)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64); }));
+const PANM = ['#3a3a42', '#c8743a', '#ffd23f'].map(c => M(c));
+function avGeo() {
+  if (AVG.head) return AVG;
+  const sph = (r, w, h) => new THREE.SphereGeometry(r, w, h);
+  Object.assign(AVG, {
+    torso: new THREE.CylinderGeometry(12.5, 10, 30, 16), belt: new THREE.CylinderGeometry(11.4, 11.4, 4, 16), pack: new THREE.BoxGeometry(14, 18, 6), neck: new THREE.CylinderGeometry(4.2, 4.6, 8, 10),
+    head: sph(12.5, 18, 14), hair: new THREE.SphereGeometry(13.2, 18, 12, 0, Math.PI * 2, 0, Math.PI * .5), spike: new THREE.ConeGeometry(3.2, 9, 6), fringe: new THREE.BoxGeometry(20, 4.5, 4), brim: new THREE.BoxGeometry(17, 1.6, 9),
+    ear: sph(2.6, 8, 6), eyeW: sph(2.7, 10, 8), eyeP: sph(1.6, 8, 6), hl: sph(.65, 6, 4), brow: new THREE.BoxGeometry(4.8, 1.3, 1), blush: new THREE.CircleGeometry(2.8, 12), smile: new THREE.TorusGeometry(3.2, .7, 5, 12, Math.PI),
+    shoulder: sph(5.6, 12, 10), upArm: new THREE.CylinderGeometry(4.4, 4, 13, 10), foreArm: new THREE.CylinderGeometry(3.9, 3.4, 13, 10), hand: sph(4.6, 10, 8),
+    thigh: new THREE.CylinderGeometry(5.6, 4.6, 17, 10), shin: new THREE.CylinderGeometry(4.8, 4.2, 15, 10), pelvis: new THREE.CylinderGeometry(10.5, 9.5, 7, 14),
+    shoe: sph(6, 14, 10), sole: new THREE.BoxGeometry(11.4, 1.8, 16.6),
+    panD: new THREE.CylinderGeometry(12, 11, 3, 18), panIn: new THREE.CylinderGeometry(9.2, 9.2, 1, 18), handle: new THREE.BoxGeometry(2.8, 2.8, 9),
+    crownB: new THREE.CylinderGeometry(10, 11, 8, 6), crownC: new THREE.ConeGeometry(3, 8, 4), blob: new THREE.PlaneGeometry(40, 40),
+  });
+  return AVG;
+}
+function buildAvatar(col, seed) {
+  const GG = avGeo(), sd = hashS(seed || col), g = new THREE.Group(), HOP = 36;
+  const SKIN = ['#f2c79e', '#e3a878', '#c98b5e', '#ffdcbc'][sd % 4], PANTS = ['#2d3e6a', '#24140e', '#4a4a58', '#3b2f5e'][(sd >> 2) % 4], HAIR = ['#3a2416', '#1d1b2e', '#7a4a1e', '#e8c15a', '#2a2a2a'][(sd >> 4) % 5], HS = (sd >> 7) % 3;
+  const mS = avM('s' + SKIN, () => M(SKIN)), mSh = avM('c' + col, () => M(col)), mSd = avM('d' + col, () => M('#' + new THREE.Color(col).multiplyScalar(.55).getHexString())), mPt = avM('p' + PANTS, () => M(PANTS)), mHr = avM('h' + HAIR, () => M(HAIR)),
+    mInk = avM('ink', () => M('#24140e')), mW = avM('white', () => M('#ffffff')), mBelt = avM('belt', () => M('#24140e')), mShoe = avM('shoeM', () => M('#2b1a10')), mSole = avM('sole', () => M('#f4f4f4')), mWood = avM('wood', () => M('#5a3a24')), mPanIn = avM('panin', () => M('#2a2a30'));
+  const blush = avM('blush', () => new THREE.MeshBasicMaterial({ color: '#ff7a9a', transparent: true, opacity: .5, depthWrite: false }));
+  const blob = mesh(GG.blob, avM('blob', () => new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false })), 0, 6.6, 0, false); blob.rotation.x = -Math.PI / 2; g.add(blob);
+  g.add(mesh(GG.pelvis, mPt, 0, HOP + 1, 0, false));
+  const legs = [-1, 1].map(side => { const hip = new THREE.Group(); hip.position.set(side * 6.2, HOP, 0); const knee = new THREE.Group(); knee.position.y = -17;
+    hip.add(mesh(GG.thigh, mPt, 0, -8.5, 0)); knee.add(mesh(GG.shin, mPt, 0, -7.5, 0));
+    const shoe = mesh(GG.shoe, mShoe, 0, -16.4, 2.4, false); shoe.scale.set(.95, .6, 1.4); knee.add(shoe); knee.add(mesh(GG.sole, mSole, 0, -19.6, 2.4, false));
+    hip.add(knee); g.add(hip); return { hip, knee }; });
+  const tor = new THREE.Group(); tor.position.y = HOP; g.add(tor);
+  const torso = mesh(GG.torso, mSh, 0, 15, 0); torso.scale.set(1.12, 1, .8); tor.add(torso);
+  tor.add(mesh(GG.belt, mBelt, 0, 3, 0, false)); tor.add(mesh(GG.pack, mSd, 0, 17, -9.2, false)); tor.add(mesh(GG.neck, mS, 0, 31, 0, false));
+  const head = new THREE.Group(); head.position.y = 44; tor.add(head);
+  head.add(mesh(GG.head, mS, 0, 0, 0)); [-1, 1].forEach(sx => head.add(mesh(GG.ear, mS, sx * 12.2, 0, 0, false)));
+  if (HS === 2) { head.add(mesh(GG.hair, mSh, 0, 1.4, -.4)); head.add(mesh(GG.brim, mSd, 0, 6.6, 9.4, false)); }
+  else { head.add(mesh(GG.hair, mHr, 0, 1.6, -.6)); head.add(mesh(GG.fringe, mHr, 0, 8.4, 10.4, false)); }
+  if (HS === 1) [[-5, 0, .35], [0, -2, 0], [5, 0, -.35]].forEach(([x, z, rz]) => { const sp = mesh(GG.spike, mHr, x, 13.4, z, false); sp.rotation.z = rz; head.add(sp); });
+  const eyes = [-4.6, 4.6].map(x => { const e = new THREE.Group(); e.position.set(x, 1.2, 11.1); e.add(mesh(GG.eyeW, mW, 0, 0, 0, false)); e.add(mesh(GG.eyeP, mInk, 0, -.2, 1.5, false)); e.add(mesh(GG.hl, mW, .7, .9, 2.4, false)); head.add(e); return e; });
+  [-4.6, 4.6].forEach((x, i) => { const b = mesh(GG.brow, mHr, x, 5.3, 11.4, false); b.rotation.z = i ? -.22 : .22; head.add(b); });
+  const mouth = mesh(GG.smile, mInk, 0, -3.6, 11.7, false); mouth.rotation.z = Math.PI; head.add(mouth);
+  [-7.2, 7.2].forEach(x => head.add(mesh(GG.blush, blush, x, -2.4, 11.9, false)));
+  const mkArm = side => { const sh = new THREE.Group(); sh.position.set(side * 13.6, 26, 0); tor.add(sh); sh.add(mesh(GG.shoulder, mSh, 0, 0, 0, false)); sh.add(mesh(GG.upArm, mSh, 0, -6.5, 0));
+    const el = new THREE.Group(); el.position.y = -13; sh.add(el); el.add(mesh(GG.foreArm, mS, 0, -6.5, 0)); el.add(mesh(GG.hand, mS, 0, -14, 0)); return { sh, el }; };
+  const armL = mkArm(-1), armR = mkArm(1);
+  const pan = new THREE.Group(); pan.position.set(0, -14, 2.4); armR.el.add(pan); pan.visible = false;
+  pan.add(mesh(GG.handle, mWood, 0, 0, 4.6, false));
+  const panD = mesh(GG.panD, PANM[0], 0, 0, 10, false); panD.rotation.x = Math.PI / 2; pan.add(panD);
+  const panI = mesh(GG.panIn, mPanIn, 0, 0, 11.4, false); panI.rotation.x = Math.PI / 2; pan.add(panI);
+  const crown = new THREE.Group(); const mGold = avM('gold', () => M('#ffd23f')); crown.add(mesh(GG.crownB, mGold, 0, 0, 0, false)); for (let i = 0; i < 5; i++) { const an = i / 5 * Math.PI * 2; crown.add(mesh(GG.crownC, mGold, Math.cos(an) * 9, 7, Math.sin(an) * 9, false)); } crown.position.y = 100; crown.visible = false; g.add(crown);
   const name = label(22, '#fff', null, '#24140e', 1.25); name.position.y = 128; g.add(name);
   const carry = charSprite(84); carry.position.y = 150; carry.visible = false; g.add(carry);
-  const pan = new THREE.Group(); pan.add(mesh(new THREE.CylinderGeometry(11, 9, 3, 16), M('#3a3a42'), 0, 0, 0)); pan.add(mesh(new THREE.BoxGeometry(3, 3, 18), M('#5a3a24'), 0, 0, 16)); pan.position.set(0, -32, 6); pan.rotation.x = Math.PI / 2; pan.visible = false; armR.add(pan);
   const stun = label(22, '#ffd23f', null, '#24140e', 1.1); stun.position.y = 112; g.add(stun); const bub = label(20, '#24140e', '#ffffff', null, 1.1); bub.position.y = 165; g.add(bub);
-  g.userData = { legL, legR, armL, armR, body, name, carry, crown, pan, stun, bub, bubT: 0, trailT: 0, ph: 0, yaw: 0 }; return g;
+  g.userData = { legL: legs[0].hip, legR: legs[1].hip, kneeL: legs[0].knee, kneeR: legs[1].knee, armL: armL.sh, armR: armR.sh, elL: armL.el, elR: armR.el, tor, torso, head, eyes, body: tor, name, carry, crown, pan, panD, stun, bub,
+    bubT: 0, trailT: 0, ph: (sd % 628) / 100, spd: 0, swing: 0, blinkN: 1 + (sd % 300) / 100, blink: 0, sd: (sd % 100) / 10, yaw: 0 };
+  return g;
+}
+// 🚶 المشي: رجلين وركبة وإيد وكوع بتتحرك، الجسم يميل وينزل ويطلع، والعين ترمش، والطاوة تتأرجح لما تضرب
+function animAv(a, p, mv, dtF, T) {
+  const U = a.userData, sp = (U.spd += ((mv ? 1 : 0) - U.spd) * Math.min(1, dtF * 8));
+  U.ph += dtF * (3.2 + 7.5 * sp); const s = Math.sin(U.ph), c = Math.cos(U.ph), carry = !!p[5], holdPan = !carry && p[10] > 0;
+  const L = s * .72 * sp;
+  U.legL.rotation.x = L; U.legR.rotation.x = -L;
+  U.kneeL.rotation.x = Math.max(0, -c) * .9 * sp; U.kneeR.rotation.x = Math.max(0, c) * .9 * sp;
+  U.armL.rotation.x = carry ? -2.4 : -L * .8;
+  U.armR.rotation.x = carry ? -2.4 : holdPan ? -1.05 + L * .25 : L * .8;
+  U.elL.rotation.x = carry ? -.25 : -.18 - .3 * sp; U.elR.rotation.x = carry ? -.25 : holdPan ? -.6 : -.18 - .3 * sp;
+  if (U.swing > 0) { U.swing = Math.max(0, U.swing - dtF); const q = 1 - U.swing / .32; U.armR.rotation.x = q < .35 ? -1.05 - 1.4 * (q / .35) : -2.45 + 3.05 * ((q - .35) / .65); U.elR.rotation.x = -.5; }
+  U.tor.position.y = 36 + Math.abs(s) * 1.2 * sp; U.tor.rotation.x = .07 * sp;
+  U.torso.scale.y = 1 + Math.sin(T * 2.2 + U.sd) * .012;
+  U.head.position.y = 44 - Math.abs(s) * .6 * sp; U.head.rotation.y = Math.sin(T * .7 + U.sd) * .14;
+  if (T > U.blinkN) { U.blinkN = T + 2.6 + (U.sd % 2.4); U.blink = .14; }
+  if (U.blink > 0) U.blink -= dtF;
+  U.eyes.forEach(e => { e.scale.y = U.blink > 0 ? .12 : 1; });
 }
 
 
@@ -550,7 +626,7 @@ function burst(x, z, col, n, y) { const m = new THREE.MeshBasicMaterial({ color:
 function floatTxt(x, z, txt, col, y) { const sp = label(20, col || '#ffd23f', null, '#24140e', 1.5); setLabel(sp, txt); sp.position.set(x, y || 110, z); scene.add(sp); FX.push({ o: sp, t: 1.6, up: 1 }); }
 function onFx(d) {
   if (d.k === 'buy') { if (d.by === (G && G.name)) { SFX.buy(); toast('🎉 اشتريت ' + nameOf(d.id)); } const sp = charSprite(90); setChar(sp, d.id, 0); scene.add(sp); FX.push({ o: sp, fly: 1, x0: d.fx, z0: d.fy, x1: d.x, z1: d.y, t: 1 }); }
-  else if (d.k === 'pan') { snd(180, 90, .25, 'square', .12); setTimeout(() => snd(1200, 900, .12, 'triangle', .07), 60); burst(d.x, d.y, ['#9aa4b2', '#c8743a', '#ffd23f'][d.tier || 0], 18, 100); floatTxt(d.x, d.y, '🍳 بونگ!', '#ffd23f', 150); }
+  else if (d.k === 'pan') { { const av = AV.get(d.f); if (av) av.userData.swing = .32; } snd(180, 90, .25, 'square', .12); setTimeout(() => snd(1200, 900, .12, 'triangle', .07), 60); burst(d.x, d.y, ['#9aa4b2', '#c8743a', '#ffd23f'][d.tier || 0], 18, 100); floatTxt(d.x, d.y, '🍳 بونگ!', '#ffd23f', 150); }
   else if (d.k === 'boom') { snd(120, 40, .7, 'sawtooth', .16); snd(80, 30, .9, 'square', .1); burst(d.x, d.y, '#ff7a1f', 40, 20); burst(d.x, d.y, '#3a3a42', 24, 20); floatTxt(d.x, d.y, '💥 بووم!', '#ff4f5e', 120); }
   else if (d.k === 'egghit') { snd(500, 300, .1, 'triangle', .08); burst(d.x, d.y, '#fff6c8', 8, 50); }
   else if (d.k === 'eggwin') { [523, 784, 1047].forEach((f, i) => setTimeout(() => snd(f, f, .2, 'triangle', .09), i * 90)); burst(d.x, d.y, '#ffd23f', 40, 60); floatTxt(d.x, d.y, '🎁 ' + nameOf(d.id) + ' لـ ' + d.by, '#ffe14a', 150); }
@@ -596,12 +672,12 @@ function render(ms) {
   CARP.forEach((o, u) => { if (!seen.has(u)) { scene.remove(o); CARP.delete(u); } });
   partyTick();
   // اللاعبين
-  const seenP = new Set(); S.pl.forEach(p => { seenP.add(p[0]); let a = AV.get(p[0]); if (!a) { a = buildAvatar(G.geo[p[4]] ? G.geo[p[4]].col : '#fff'); scene.add(a); AV.set(p[0], a); a.position.set(p.rx, 0, p.ry); }
+  const seenP = new Set(); S.pl.forEach(p => { seenP.add(p[0]); let a = AV.get(p[0]); if (!a) { a = buildAvatar(G.geo[p[4]] ? G.geo[p[4]].col : '#fff', p[0]); scene.add(a); AV.set(p[0], a); a.position.set(p.rx, 0, p.ry); }
     const U = a.userData, dx = p.rx - a.position.x, dz = p.ry - a.position.z, mv = Math.hypot(dx, dz) > .3; a.position.set(p.rx, 0, p.ry);
     if (mv) { const want = Math.atan2(dx, dz); let d0 = want - U.yaw; d0 = Math.atan2(Math.sin(d0), Math.cos(d0)); U.yaw += d0 * Math.min(1, dtF * 12); } a.rotation.y = U.yaw;
-    U.ph += mv ? dtF * 11 : 0; const sw = mv ? Math.sin(U.ph) * .7 : 0; U.legL.rotation.x = sw; U.legR.rotation.x = -sw; U.armL.rotation.x = p[5] ? -2.6 : -sw * .9; U.armR.rotation.x = p[5] ? -2.6 : sw * .9; U.body.position.y = 50 + (mv ? Math.abs(Math.sin(U.ph)) * 1.5 : 0);
+    animAv(a, p, mv, dtF, T);
     U.crown.visible = !!p[8]; setLabel(U.name, (p[8] ? '👑 ' : '') + p[1]); U.name.material.color.set(p[0] === G.me ? '#ffd23f' : '#ffffff');
-    { const tier = (p[10] || 0) - 1; U.pan.visible = tier >= 0; if (tier >= 0) U.pan.children[0].material.color.set(['#3a3a42', '#c8743a', '#ffd23f'][tier]); setLabel(U.stun, p[9] ? '💫 ⭐ 💫' : ''); if (p[9]) U.stun.position.y = 112 + Math.sin(T * 8) * 3;
+    { const tier = (p[10] || 0) - 1; U.pan.visible = tier >= 0; if (tier >= 0) U.panD.material = PANM[tier]; setLabel(U.stun, p[9] ? '💫 ⭐ 💫' : ''); if (p[9]) U.stun.position.y = 112 + Math.sin(T * 8) * 3;
       if (U.bubT && performance.now() > U.bubT) { U.bubT = 0; setLabel(U.bub, ''); }
       if (p[11] && mv && (U.trailT -= dtF) <= 0) { U.trailT = .07; const col = ['#9fdcff', '#7dffb0', '#ffe14a'][p[11] - 1]; const sp = label(16, col, null, null, 1); setLabel(sp, p[11] === 3 ? '⚡' : '💨'); sp.position.set(a.position.x - Math.sin(U.yaw) * 22, 10 + Math.random() * 10, a.position.z - Math.cos(U.yaw) * 22); scene.add(sp); FX.push({ o: sp, t: .5, up: 1 }); burst(a.position.x - Math.sin(U.yaw) * 18, a.position.z - Math.cos(U.yaw) * 18, col, 2, 6); } }
     if (p[5]) { U.carry.visible = true; setChar(U.carry, p[5][0], p[5][1]); U.carry.position.y = 150 + Math.sin(T * 6) * 3; U.name.position.y = 200; } else { U.carry.visible = false; U.name.position.y = 128; } });
@@ -624,7 +700,7 @@ function render(ms) {
     const look = new THREE.Vector3(camTarget.x - Math.sin(camYaw) * 140 + sideX, camTarget.y + 10, camTarget.z - Math.cos(camYaw) * 140 + sideZ); cam.lookAt(look);
     sun.position.set(me.position.x + 300, 700, me.position.z + 200); sun.target.position.set(me.position.x, 0, me.position.z); }
   RND.render(scene, cam);
-  actsTick();
+  actsTick(); hitTick();
 }
 requestAnimationFrame(render);
 
@@ -672,15 +748,33 @@ function actsTick() {
   const H = G.hub; if (dd(x, y, H.egg.x, H.egg.y) < 140) L.push(['egg', '🥚 محل البيض', '', '', () => openBook('eggs')]);
   if (dd(x, y, H.merge.x, H.merge.y) < 140) L.push(['mrg', '🌀 ادمج', 'اثنين يصيرون واحد أقوى', '', () => openBook('merge')]);
   if (dd(x, y, H.arena.x, H.arena.y) < 170) L.push(['ftg', '⚔️ معركة', S.fcd > 0 ? 'بعد ' + Math.ceil(S.fcd / 1000) + 'ث' : '', 'red', () => openBook('fight')]);
-  { const C = []; if (S.pan >= 0) { const pn = G.pans[S.pan]; let tgt = null, td = pn.rng; S.pl.forEach(q => { if (q[0] === G.me) return; const d0 = dd(x, y, q[2], q[3]); if (d0 < td && (q[5] || true)) { td = d0; tgt = q; } }); if (tgt) C.push(['hit' + tgt[0], '🍳 اضرب ' + tgt[1], tgt[5] ? 'شايل برينروت مسروق!' : '', 'red', () => send({ t: 'br_hit', k: tgt[0] })]);
-      if (S.party && S.party.on) { let be = null, bd2 = 110; (S.party.eg || []).forEach(e => { const d0 = dd(x, y, e[2], e[3]); if (d0 < bd2) { bd2 = d0; be = e; } }); if (be) C.push(['egg' + be[0], '🍳 اكسر البيضة', '❤️ ' + be[4] + ' / ' + be[5], 'green', () => send({ t: 'br_hitegg', u: be[0] })]); } }
-    else if (S.party && S.party.on && (S.party.eg || []).some(e => dd(x, y, e[2], e[3]) < 110)) C.push(['nopan', '🍳 تحتاج طاوة', 'اشتريها من الشوب', 'dim', () => toast('روح للشوب واشتري طاوة')]);
+  { const C = []; if (S.pan < 0 && S.party && S.party.on && (S.party.eg || []).some(e => dd(x, y, e[2], e[3]) < 110)) C.push(['nopan', '🍳 تحتاج طاوة', 'اشتريها من الشوب', 'dim', () => toast('روح للشوب واشتري طاوة')]);
     if (dd(x, y, G.shop.x, G.shop.y) < 180) C.push(['shop', '🛒 افتح الشوب', 'طاوات • جواتي • ألغام', 'blue', shopOpen]);
     if (S.mines > 0 && inR(x, y, myG) && dd(x, y, myG.x + myG.w / 2, myG.front) < 230) C.push(['mine' + S.mines, '💣 حط لغم', 'عندك ' + S.mines, '', () => send({ t: 'br_mine' })]);
     L.unshift(...C); }
   const key = L.map(a => a[0] + a[1] + a[2]).join('|'); if (key === actKey) return; actKey = key;
   const box = $('acts'); box.innerHTML = ''; L.slice(0, 4).forEach(a => { const b = document.createElement('button'); b.type = 'button'; b.className = 'act ' + a[3]; b.textContent = a[1]; if (a[2]) { const s = document.createElement('small'); s.textContent = a[2]; b.appendChild(s); } b.onclick = () => { a[4](); actKey = ''; }; box.appendChild(b); });
 }
+
+/* ===================== 🍳 الطاوة: زر «امسك / حط» وزر «اضرب» على الشاشة ===================== */
+let hitAct = null, hitCdUntil = 0;
+function hitTick() {
+  const box = $('panBox'); if (!ME || !G || !S || !(S.pan >= 0) || !G.pans[S.pan]) { box.hidden = true; hitAct = null; return; }
+  box.hidden = false; const pn = G.pans[S.pan], hb = $('hitBtn');
+  $('panBtn').classList.toggle('on', !!S.panOn); $('panSub').textContent = S.panOn ? 'بإيدك' : 'حمل';
+  const x = ME[2], y = ME[3]; let act = null;
+  if (S.panOn) {
+    let td = pn.rng, tgt = null; S.pl.forEach(q => { if (q[0] === G.me) return; const d0 = dd(x, y, q[2], q[3]); if (d0 < td) { td = d0; tgt = q; } });
+    if (tgt) act = { k: 'hit', id: tgt[0], lb: 'اضرب', sub: tgt[1] + (tgt[5] ? ' 🎒' : ''), cd: pn.cd };
+    else if (S.party && S.party.on) { let bd = 110, be = null; (S.party.eg || []).forEach(e => { const d0 = dd(x, y, e[2], e[3]); if (d0 < bd) { bd = d0; be = e; } }); if (be) act = { k: 'egg', id: be[0], lb: 'اكسر', sub: '❤️ ' + be[4] + ' / ' + be[5], cd: Math.min(600, pn.cd) }; }
+  }
+  hitAct = act; hb.hidden = !act;
+  if (act) { $('hitTxt').textContent = act.lb; $('hitSub').textContent = act.sub; }
+  const left = Math.max(0, hitCdUntil - performance.now()), dur = act ? act.cd : pn.cd;
+  $('hitCd').style.setProperty('--cd', (Math.min(1, left / dur) * 360).toFixed(0) + 'deg');
+}
+$('hitBtn').onclick = () => { if (!hitAct || performance.now() < hitCdUntil) return; const a = hitAct; hitCdUntil = performance.now() + a.cd; const me = AV.get(G.me); if (me) me.userData.swing = .32; send(a.k === 'hit' ? { t: 'br_hit', k: a.id } : { t: 'br_hitegg', u: a.id }); };
+$('panBtn').onclick = () => { if (S && S.pan >= 0) send({ t: 'br_pan' }); };
 
 /* ===================== الواجهة ===================== */
 
