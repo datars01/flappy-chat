@@ -1101,6 +1101,7 @@ app.use('/uploads', express.static(UP_DIR, {
 }));
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'))); // ملف ربط تطبيق الأندرويد (assetlinks.json)
 /* رابط تثبيت الأندرويد: /android صفحة بيها زر Install يثبت اللعبة كتطبيق. و /app رابط واحد للكل: الآيفون يروح لـ /ios والباقي لـ /android */
+app.get(['/root', '/root/', '/muntadher'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'public', 'root.html')); });   // 🧠 منتظر روت
 app.get(['/android', '/android/', '/install-android', '/Android'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'public', 'android.html')); });
 app.get(['/app', '/app/', '/App', '/APP', '/install', '/download'], (req, res) => {
   const ua = req.get('user-agent') || '';
@@ -2253,6 +2254,7 @@ function rmOnMsg(ws, d) {
   }
 }
 const SUS = require('./sus-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b) });
+const ROOT = require('./root-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, isRich: u => isRich(u) });   // 🧠 منتظر روت
 const LUDO = require('./ludo-server')({ db: new Proxy({}, { get: (_, k) => db[k] }), save: () => save(), send, crypto, alog: (a, b) => alog(a, b), onTable: (rmId, st) => { const r = rmRooms.get(rmId); if (r) rmBc(r, { t: 'rm_lt', s: st }); } });   // لعبة «غوكو»
 function onMsg(ws, d) {
   if (!d || typeof d !== 'object') return;
@@ -2260,6 +2262,7 @@ function onMsg(ws, d) {
   if (typeof d.t === 'string' && d.t.startsWith('rm_')) return rmOnMsg(ws, d);
   if (typeof d.t === 'string' && d.t.startsWith('sus_')) return SUS.onMsg(ws, d);   // لعبة «مين الخاين؟»
   if (typeof d.t === 'string' && d.t.startsWith('ludo_')) return LUDO.onMsg(ws, d);   // لعبة «غوكو»
+  if (typeof d.t === 'string' && d.t.startsWith('br_')) return ROOT.onMsg(ws, d);   // 🧠 منتظر روت
   if (d.t === 'duo_aim' || d.t === 'duo_fire' || d.t === 'duo_swap') return zInput(ws, d);
   const now = Date.now();
   if (now - ws.bucket.t > 10000) ws.bucket = { n: 0, t: now };
@@ -2422,7 +2425,7 @@ wss.on('connection', (ws, req) => {
   alCntPush();
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => { let d; try { d = JSON.parse(raw); } catch (e) { return; } if (d && typeof d.t === 'string' && d.t.startsWith('al_')) { try { alMsg(ws, d); } catch (e) { console.error(e); } return; } try { onMsg(ws, d); } catch (e) { console.error(e); } });
-  ws.on('close', () => { alSubs.delete(ws); try { SUS.leave(ws); } catch (e) {} try { LUDO.leave(ws); } catch (e) {} hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
+  ws.on('close', () => { alSubs.delete(ws); try { SUS.leave(ws); } catch (e) {} try { LUDO.leave(ws); } catch (e) {} try { ROOT.leave(ws); } catch (e) {} hvLeave(ws); rmLeave(ws); leave(ws); if (!isOnline(ws.key, ws)) { presenceChange(ws.key, false); alOff(ws.key); } alCntPush(); });
   ws.on('error', () => {});
 });
 setInterval(() => {

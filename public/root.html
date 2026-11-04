@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>منتظر روت</title>
+<meta name="theme-color" content="#0d2f2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Rubik:wght@400;500;700&display=swap">
+<style>
+:root { --bg: #0d2f2e; --ink: #24140e; --pick: #ffd23f; --red: #e8344a; --paper: #f7f3e8; --leather: #6b3a1e; --leather2: #4a2412; --txt: #eaf6f2; --mut: #9cc7bf;
+  --display: 'Lalezar', 'Rubik', system-ui, sans-serif; --body: 'Rubik', system-ui, sans-serif; color-scheme: dark }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font-family: var(--body); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none }
+canvas#g { position: fixed; inset: 0; width: 100%; height: 100%; display: block }
+button { font-family: var(--body); cursor: pointer }
+[hidden] { display: none !important }
+
+/* ---- الدخول ---- */
+#auth { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px max(16px, env(safe-area-inset-right)) 20px max(16px, env(safe-area-inset-left));
+  background: radial-gradient(circle at 30% 10%, #17504c, var(--bg) 60%); overflow: auto; touch-action: auto }
+#auth .box { width: 100%; max-width: 380px; background: var(--paper); color: var(--ink); border-radius: 24px; padding: 22px 20px; box-shadow: 0 0 0 5px #fff, 0 12px 0 5px rgba(0,0,0,.3) }
+#auth h1 { font-family: var(--display); font-weight: 400; font-size: 46px; margin: 0; text-align: center; color: var(--red); text-shadow: 3px 3px 0 var(--pick) }
+#auth p.s { text-align: center; margin: 4px 0 16px; color: #6b5a4c; font-size: 14px }
+#auth .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px }
+#auth .tabs button { border: 2px solid var(--ink); background: transparent; border-radius: 12px; padding: 9px; font-weight: 700; color: var(--ink) }
+#auth .tabs button.on { background: var(--ink); color: var(--paper) }
+#auth label { display: block; font-size: 13px; font-weight: 700; margin: 10px 0 4px }
+#auth input { width: 100%; font: 500 16px var(--body); padding: 12px; border-radius: 12px; border: 2px solid #cfc4ad; background: #fff; color: var(--ink); direction: rtl }
+#auth input:focus { outline: none; border-color: var(--ink) }
+#auth .go { width: 100%; margin-top: 16px; padding: 13px; border: 0; border-radius: 14px; background: var(--red); color: #fff; font: 400 24px var(--display); box-shadow: 0 5px 0 #8a1424 }
+#auth .err { color: var(--red); font-size: 13px; font-weight: 700; min-height: 1.4em; margin-top: 8px; text-align: center }
+#auth .note { font-size: 12px; color: #6b5a4c; text-align: center; margin-top: 10px; line-height: 1.6 }
+
+/* ---- الواجهة ---- */
+#hud { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; pointer-events: none;
+  padding: calc(8px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)) }
+.pill { pointer-events: auto; background: rgba(8,25,24,.82); border: 2px solid rgba(255,255,255,.14); border-radius: 16px; padding: 6px 12px; display: flex; flex-direction: column; gap: 1px; backdrop-filter: blur(6px) }
+.pill b { font: 400 22px var(--display); color: var(--pick); line-height: 1.1; font-variant-numeric: tabular-nums; direction: ltr; text-align: right }
+.pill small { font-size: 11px; color: var(--mut) }
+#hudR { display: flex; gap: 8px; align-items: flex-start }
+.icb { pointer-events: auto; width: 54px; height: 54px; border-radius: 16px; border: 3px solid var(--ink); font-size: 26px; display: grid; place-items: center; box-shadow: 0 4px 0 rgba(0,0,0,.4) }
+#bookBtn { background: linear-gradient(160deg, #8a4a24, var(--leather2)); color: var(--pick) }
+#exitBtn { background: #1b3a39; color: #fff; width: 44px; height: 44px; font-size: 18px; border-color: rgba(255,255,255,.2) }
+#lockInfo { margin-top: 4px }
+#toasts { position: fixed; top: calc(76px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; width: min(92vw, 420px) }
+.toast { background: rgba(8,25,24,.92); border: 2px solid var(--pick); color: #fff; border-radius: 14px; padding: 7px 14px; font-size: 14px; font-weight: 500; text-align: center; animation: tIn .2s ease-out }
+.toast.alarm { border-color: var(--red); background: rgba(90,10,20,.95); font-weight: 700 }
+@keyframes tIn { from { transform: translateY(-8px); opacity: 0 } }
+#acts { position: fixed; z-index: 5; right: max(14px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); display: flex; flex-direction: column-reverse; gap: 10px; align-items: flex-end; max-width: 56vw }
+.act { border: 3px solid var(--ink); border-radius: 18px; padding: 10px 16px; font: 400 19px var(--display); color: var(--ink); background: var(--pick); box-shadow: 0 5px 0 rgba(0,0,0,.45); text-align: center; line-height: 1.15; min-width: 120px }
+.act small { display: block; font: 700 12px var(--body); opacity: .8 }
+.act.red { background: var(--red); color: #fff } .act.blue { background: #3fa7ff } .act.green { background: #3ddc84 } .act.dim { background: #c9d6d4 }
+.act:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.45) }
+#joy { position: fixed; z-index: 5; left: max(18px, env(safe-area-inset-left)); bottom: calc(24px + env(safe-area-inset-bottom)); width: 136px; height: 136px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.08), rgba(255,255,255,.16)); border: 3px solid rgba(255,255,255,.3) }
+#knob { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, var(--pick)); border: 3px solid var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.35) }
+#placeBar { position: fixed; z-index: 7; left: 50%; transform: translateX(-50%); top: calc(76px + env(safe-area-inset-top)); background: var(--pick); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 8px 12px; display: flex; gap: 10px; align-items: center; font-weight: 700; font-size: 14px; max-width: 92vw }
+#placeBar button { border: 2px solid var(--ink); border-radius: 10px; background: #fff; padding: 5px 10px; font-weight: 700 }
+
+/* ---- الكتاب ---- */
+.ov { position: fixed; inset: 0; z-index: 20; background: rgba(4,14,13,.72); display: grid; place-items: center; padding: calc(12px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); touch-action: auto }
+.book { position: relative; width: min(100%, 760px); max-height: 100%; display: flex; flex-direction: column; background: linear-gradient(160deg, #8a4a24, var(--leather) 40%, var(--leather2)); border-radius: 18px 26px 26px 18px; padding: 14px; box-shadow: 0 0 0 3px var(--ink), 0 16px 40px rgba(0,0,0,.6); animation: bookIn .25s ease-out }
+@keyframes bookIn { from { transform: rotateY(-25deg) scale(.92); opacity: 0 } }
+.book::before { content: ""; position: absolute; inset: 8px; border: 2px dashed rgba(255,210,63,.35); border-radius: 14px 20px 20px 14px; pointer-events: none }
+.book .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 6px 10px; position: relative }
+.book .top h2 { font: 400 28px var(--display); color: var(--pick); margin: 0; text-shadow: 2px 2px 0 var(--ink) }
+.book .x { border: 2px solid var(--ink); background: var(--pick); color: var(--ink); border-radius: 12px; width: 40px; height: 40px; font-size: 18px; font-weight: 700 }
+.book .tabsB { display: flex; gap: 4px; flex-wrap: wrap; padding: 0 6px; position: relative }
+.book .tabsB button { border: 2px solid var(--ink); border-bottom: 0; border-radius: 12px 12px 0 0; padding: 7px 12px; background: #d9c9a6; color: var(--ink); font-weight: 700; font-size: 13px }
+.book .tabsB button.on { background: var(--paper) }
+.pages { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; background: var(--paper); color: var(--ink); border-radius: 6px 10px 10px 6px; border: 2px solid var(--ink); overflow: hidden }
+.pages::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 24px; margin-left: -12px; background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.16), rgba(0,0,0,0)); pointer-events: none }
+.page { padding: 14px; overflow: auto; min-height: 0; max-height: min(64vh, 520px) }
+.page h3 { font: 400 22px var(--display); margin: 0 0 8px }
+.page .muted { color: #6b5a4c; font-size: 13px; line-height: 1.6 }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px }
+.it { position: relative; border: 2px solid #cfc4ad; border-radius: 14px; background: #fff; padding: 4px 2px 6px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink) }
+.it canvas { width: 100%; aspect-ratio: 1; display: block }
+.it.sel { border-color: var(--ink); box-shadow: 0 0 0 3px var(--pick) }
+.it .m { position: absolute; top: 3px; right: 4px; font-size: 13px }
+.det { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center }
+.det canvas { width: 170px; height: 170px }
+.det h4 { font: 400 26px var(--display); margin: 0 }
+.det .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px }
+.btn { border: 3px solid var(--ink); border-radius: 14px; padding: 9px 14px; font: 400 18px var(--display); background: var(--pick); color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.35) }
+.btn.red { background: var(--red); color: #fff } .btn.green { background: #3ddc84 } .btn.blue { background: #3fa7ff } .btn:disabled { opacity: .45 }
+.chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; color: var(--ink) }
+.r-common { background: #c9d6d4 } .r-rare { background: #6cc4ff } .r-epic { background: #c79bff } .r-leg { background: #ffc24a } .r-myth { background: #ff7a8f } .r-secret { background: linear-gradient(90deg, #ff7a8f, #ffc24a, #7dffb0, #6cc4ff, #c79bff) }
+.mutp { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center }
+.mutp button { border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink); padding: 4px 8px; font-weight: 700; font-size: 12px }
+.mutp button.on { background: var(--ink); color: var(--paper) }
+.stat { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; text-align: right; width: 100% }
+.stat b { font-variant-numeric: tabular-nums }
+@media (max-width: 620px) { .pages { grid-template-columns: 1fr } .pages::after { display: none } .page + .page { border-top: 2px dashed #cfc4ad } .page { max-height: none } .pages { overflow: auto; max-height: 70vh } }
+
+/* ---- معركة ---- */
+#fightOv .arena { width: min(100%, 560px); background: linear-gradient(#2a1048, #120626); border: 3px solid var(--pick); border-radius: 22px; padding: 14px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,.6) }
+.teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px }
+.team { display: flex; flex-direction: column; gap: 6px }
+.fu { position: relative; background: rgba(255,255,255,.07); border-radius: 12px; padding: 4px }
+.fu canvas { width: 72px; height: 72px }
+.fu .hp { height: 7px; background: rgba(255,255,255,.15); border-radius: 4px; overflow: hidden } .fu .hp i { display: block; height: 100%; background: #3ddc84; transition: width .25s }
+.fu.hit { animation: shake .3s } .fu.dead { opacity: .3; filter: grayscale(1) }
+.fu .dmg { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font: 400 24px var(--display); color: #ff4f5e; text-shadow: 2px 2px 0 #000; animation: up .7s forwards }
+.fu .dmg.crit { color: var(--pick); font-size: 30px }
+@keyframes shake { 30% { transform: translateX(-6px) } 60% { transform: translateX(6px) } }
+@keyframes up { to { transform: translate(-50%, -30px); opacity: 0 } }
+.vs { font: 400 34px var(--display); color: var(--pick) }
+#fightRes { font: 400 30px var(--display); margin-top: 10px; min-height: 1.3em }
+</style>
+</head>
+<body>
+<canvas id="g"></canvas>
+
+<div id="auth">
+  <div class="box">
+    <h1>منتظر روت</h1>
+    <p class="s">برينروت أونلاين — 7 لاعبين، كل واحد إله قاعدة</p>
+    <div class="tabs"><button type="button" id="tabIn" class="on">تسجيل دخول</button><button type="button" id="tabUp">حساب جديد</button></div>
+    <form id="authF" autocomplete="on">
+      <label for="aU">الاسم</label><input id="aU" name="username" autocomplete="username" maxlength="20" required>
+      <label for="aP">الرمز</label><input id="aP" name="password" type="password" autocomplete="current-password" maxlength="64" required>
+      <div id="p2w" hidden><label for="aP2">أعد الرمز</label><input id="aP2" type="password" autocomplete="new-password" maxlength="64"></div>
+      <button class="go" type="submit" id="aGo">ادخل اللعبة</button>
+      <div class="err" id="aErr" aria-live="polite"></div>
+    </form>
+    <p class="note">حسابك ورمزك ينحفظون بقاعدة البيانات، وبرينروتاتك وفلوسك وقاعدتك تبقى محفوظة وترجعلك كل ما تدخل.<br>نفس حساب بابيتو شات يشتغل هنا.</p>
+  </div>
+</div>
+
+<div id="hud" hidden>
+  <div class="pill"><b id="coins">0</b><small id="incs">+0 / ثانية</small></div>
+  <div id="hudR">
+    <div class="pill" id="lockInfo"><small id="lvTxt">قاعدتك مستوى 1</small><small id="lockTxt">الباب مفتوح</small></div>
+    <button type="button" class="icb" id="bookBtn" aria-label="الكتاب">📖</button>
+    <button type="button" class="icb" id="exitBtn" aria-label="خروج">⏻</button>
+  </div>
+</div>
+<div id="toasts"></div>
+<div id="joy" hidden><div id="knob"></div></div>
+<div id="acts" hidden></div>
+<div id="placeBar" hidden><span id="placeTxt">دوس على منصة فاضية بقاعدتك</span><button type="button" id="placeX">إلغاء</button></div>
+
+<div class="ov" id="bookOv" hidden>
+  <div class="book" role="dialog" aria-label="الكتاب">
+    <div class="top"><h2 id="bookT">📖 كتابي</h2><button type="button" class="x" id="bookX" aria-label="سد">✕</button></div>
+    <div class="tabsB" id="bookTabs"></div>
+    <div class="pages"><div class="page" id="pgL"></div><div class="page" id="pgR"></div></div>
+  </div>
+</div>
+<div class="ov" id="fightOv" hidden>
+  <div class="arena"><div class="teams"><div class="team" id="tA"></div><div class="vs">ضد</div><div class="team" id="tE"></div></div><div id="fightRes"></div><button type="button" class="btn" id="fightX" hidden>تمام</button></div>
+</div>
+
+<script src="/root-chars.js?v=1"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const RN = { common: 'عادي', rare: 'نادر', epic: 'ملحمي', leg: 'أسطوري', myth: 'خرافي', secret: 'سري' };
+const RC = { common: '#c9d6d4', rare: '#6cc4ff', epic: '#c79bff', leg: '#ffc24a', myth: '#ff7a8f', secret: '#ffffff' };
+const MN = ['', 'ذهبي', 'ألماس', 'قوس قزح'], MI = ['', '🥇', '💎', '🌈'];
+const EGN = { e1: ['بيضة عادية', '#f3ead6'], e2: ['بيضة ذهبية', '#ffd23f'], e3: ['بيضة كونية', '#8a5cff'] };
+const fmt = n => { n = Math.floor(n); return n >= 1e12 ? '∞' : n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : String(n); };
+const CH = window.BR_CHARS || {};
+const nameOf = id => (CH[id] && CH[id].n) || id;
+function drawChar(c, id, x, y, s, t, m) {   // القدم عند (x,y)
+  const ch = CH[id]; if (!ch) return; c.save();
+  if (m) { const col = m === 1 ? 'rgba(255,210,63,' : m === 2 ? 'rgba(120,220,255,' : 'hsla(' + ((t * 120) % 360) + ',90%,65%,'; const g = c.createRadialGradient(x, y - 90 * s, 10 * s, x, y - 90 * s, 110 * s); g.addColorStop(0, col + '.55)'); g.addColorStop(1, col + '0)'); c.fillStyle = g; c.fillRect(x - 120 * s, y - 210 * s, 240 * s, 230 * s); }
+  c.translate(x - 100 * s, y - 186 * s); c.scale(s, s); try { ch.draw(c, t); } catch (e) {} c.restore();
+}
+function charCanvas(cv, id, m, t) { const c = cv.getContext('2d'); cv.width = 240; cv.height = 240; c.setTransform(1.2, 0, 0, 1.2, 0, 0); c.clearRect(0, 0, 200, 200); if (m) { c.fillStyle = m === 1 ? 'rgba(255,210,63,.25)' : m === 2 ? 'rgba(120,220,255,.25)' : 'rgba(200,120,255,.25)'; c.beginPath(); c.arc(100, 105, 90, 0, 7); c.fill(); } try { CH[id].draw(c, t || 1); } catch (e) {} }
+
+/* ===================== الصوت ===================== */
+let AC = null; const snd = (f, f2, d, type, v) => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f2 || f, t + d); g.gain.setValueAtTime(v || .12, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d); } catch (e) {} };
+const SFX = { buy: () => { snd(660, 990, .12); setTimeout(() => snd(990, 1320, .15), 90); }, cash: () => snd(1400, 1800, .08, 'triangle', .08), steal: () => { snd(300, 900, .25, 'square', .07); }, alarm: () => { snd(880, 440, .3, 'sawtooth', .08); setTimeout(() => snd(880, 440, .3, 'sawtooth', .08), 320); }, lock: () => snd(220, 120, .3, 'square', .1), hatch: () => { snd(500, 1500, .4, 'triangle'); }, hit: () => snd(200, 80, .12, 'square', .1), up: () => { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => snd(f, f, .12, 'triangle'), i * 90)); } };
+
+/* ===================== الحساب ===================== */
+let auth = null; try { auth = JSON.parse(localStorage.getItem('flappyAuth') || 'null'); } catch (e) {}
+let mode = 'in';
+$('tabIn').onclick = () => { mode = 'in'; $('tabIn').classList.add('on'); $('tabUp').classList.remove('on'); $('p2w').hidden = true; $('aGo').textContent = 'ادخل اللعبة'; $('aErr').textContent = ''; $('aP').autocomplete = 'current-password'; };
+$('tabUp').onclick = () => { mode = 'up'; $('tabUp').classList.add('on'); $('tabIn').classList.remove('on'); $('p2w').hidden = false; $('aGo').textContent = 'سوّي حسابي'; $('aErr').textContent = ''; $('aP').autocomplete = 'new-password'; };
+['aU', 'aP', 'aP2'].forEach(id => $(id).addEventListener('input', () => { $('aErr').textContent = ''; }));
+$('authF').addEventListener('submit', async e => {
+  e.preventDefault(); const u = $('aU').value.trim(), p = $('aP').value, p2 = $('aP2').value;
+  if (!u) { $('aErr').textContent = 'اكتب اسمك'; return; } if (!p) { $('aErr').textContent = 'اكتب الرمز'; return; }
+  if (mode === 'up' && p !== p2) { $('aErr').textContent = 'الرمز وتأكيده مو نفس الشي'; return; }
+  $('aGo').disabled = true;
+  try {
+    const r = await fetch(mode === 'up' ? '/api/register' : '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mode === 'up' ? { u, p, p2 } : { u, p }) });
+    const j = await r.json(); if (!r.ok || !j.token) throw new Error(j.error || 'صار خطأ، جرب مرة ثانية');
+    auth = { token: j.token, name: (j.user && j.user.name) || u }; try { localStorage.setItem('flappyAuth', JSON.stringify(auth)); } catch (e2) {}
+    start();
+  } catch (er) { $('aErr').textContent = er.message; } finally { $('aGo').disabled = false; }
+});
+$('exitBtn').onclick = () => { try { ws && ws.send(JSON.stringify({ t: 'br_leave' })); } catch (e) {} try { localStorage.removeItem('flappyAuth'); } catch (e) {} location.reload(); };
+
+/* ===================== الاتصال ===================== */
+let ws = null, G = null, S = null, ME = null, retry = 0;
+function start() {
+  $('auth').hidden = true; $('hud').hidden = false; $('joy').hidden = false; $('acts').hidden = false;
+  ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?token=' + encodeURIComponent(auth.token));
+  ws.onopen = () => { retry = 0; ws.send(JSON.stringify({ t: 'br_join' })); };
+  ws.onmessage = e => { let d; try { d = JSON.parse(e.data); } catch (er) { return; } onMsg(d); };
+  ws.onclose = () => { if (stopped) return; toast('انقطع الاتصال… أرجع أتصل', 'alarm'); setTimeout(start, Math.min(8000, 1000 * ++retry)); };
+}
+let stopped = false;
+function onMsg(d) {
+  if (d.t === 'err' && d.fatal) { stopped = true; try { localStorage.removeItem('flappyAuth'); } catch (e) {} $('auth').hidden = false; $('aErr').textContent = d.error || 'سجّل دخول من جديد'; return; }
+  if (d.t === 'br_full' || d.t === 'br_kicked') { stopped = true; toast(d.error, 'alarm'); return; }
+  if (d.t === 'br_init') { G = d; G.cd = {}; d.cat.forEach(c => G.cd[c.id] = c); return; }
+  if (d.t === 'br_s') { const prev = S; S = d; S.at = performance.now(); S.pl.forEach(p => { const o = prev && prev.pm && prev.pm[p[0]]; p.rx = o ? o.rx : p[2]; p.ry = o ? o.ry : p[3]; }); S.pm = {}; S.pl.forEach(p => S.pm[p[0]] = p); ME = S.pm[G && G.me]; updHud(); if (!$('bookOv').hidden) bookRender(); return; }
+  if (d.t === 'br_toast') { toast(d.msg, d.k); if (d.k === 'alarm') SFX.alarm(); return; }
+  if (d.t === 'br_fx') return onFx(d);
+  if (d.t === 'br_merged') { toast('✨ صار عندك ' + nameOf(d.id) + ' ' + MN[d.m] + '!'); SFX.up(); burst(ME ? ME.rx : 0, ME ? ME.ry - 60 : 0, '#ffd23f', 30); closeOv(); return; }
+  if (d.t === 'br_fight') return playFight(d);
+}
+function toast(msg, k) { if (!msg) return; const el = document.createElement('div'); el.className = 'toast' + (k === 'alarm' ? ' alarm' : ''); el.textContent = msg; const T = $('toasts'); T.prepend(el); while (T.children.length > 3) T.lastChild.remove(); setTimeout(() => el.remove(), 3200); }
+const send = o => { try { ws && ws.readyState === 1 && ws.send(JSON.stringify(o)); } catch (e) {} };
+
+/* ===================== المؤثرات ===================== */
+const FX = [], PARTS = [];
+function burst(x, y, col, n) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 60 + Math.random() * 160; PARTS.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, t: .9, col }); } }
+function floatTxt(x, y, txt, col) { FX.push({ x, y, txt, col: col || '#ffd23f', t: 1.4 }); }
+function onFx(d) {
+  const mine = ME && Math.hypot(d.x - ME[2], d.y - ME[3]) < 900;
+  if (d.k === 'buy') { if (d.by === (G && G.name)) { SFX.buy(); toast('🎉 اشتريت ' + nameOf(d.id)); } FX.push({ fly: 1, id: d.id, x0: d.fx, y0: d.fy, x1: d.x, y1: d.y, t: 1 }); }
+  else if (d.k === 'cash') { SFX.cash(); floatTxt(d.x, d.y - 30, '+' + fmt(d.v) + ' 💰'); burst(d.x, d.y, '#ffd23f', 10); }
+  else if (d.k === 'steal') { SFX.steal(); burst(d.x, d.y, '#ff4f5e', 24); floatTxt(d.x, d.y - 80, '🦹 مسروق!', '#ff4f5e'); }
+  else if (d.k === 'catch') { SFX.hit(); burst(d.x, d.y, '#3fa7ff', 24); floatTxt(d.x, d.y - 80, '🛡️ انمسك!', '#3fa7ff'); }
+  else if (d.k === 'lock') { SFX.lock(); floatTxt(d.x, d.y - 40, '🔒 ' + (d.sec || 40) + ' ثانية', '#3fa7ff'); }
+  else if (d.k === 'up') { SFX.up(); burst(d.x, d.y, '#ffd23f', 40); floatTxt(d.x, d.y - 50, '⬆️ مستوى ' + d.lv + ' — القفل ' + d.sec + 'ث'); toast('⬆️ قاعدتك صارت مستوى ' + d.lv + ' — الباب ينسد ' + d.sec + ' ثانية'); }
+  else if (d.k === 'hatch') { SFX.hatch(); burst(d.x, d.y - 40, '#fff3a0', 30); floatTxt(d.x, d.y - 100, '🐣 ' + nameOf(d.id)); }
+  else if (d.k === 'sell') { SFX.cash(); floatTxt(d.x, d.y - 60, '+' + fmt(d.v) + ' 💰'); }
+  else if (d.k === 'place') { SFX.buy(); burst(d.x, d.y - 30, '#7dffb0', 18); }
+  else if (d.k === 'pick') { snd(800, 500, .12); floatTxt(d.x, d.y - 60, '🎒', '#fff'); }
+}
+
+/* ===================== الرسم ===================== */
+const cv = $('g'), c = cv.getContext('2d'); let DPR = 1, VW = 0, VH = 0, Z = 1, CX = 0, CY = 0;
+function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); VW = innerWidth; VH = innerHeight; cv.width = VW * DPR; cv.height = VH * DPR; Z = Math.max(.42, Math.min(1.1, Math.min(VW, VH) / 620)); }
+addEventListener('resize', resize); resize();
+const rrect = (x, y, w, h, r) => { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); };
+function txt(s, x, y, size, col, out, font) { c.font = (font || '700 ') + size + 'px ' + (font ? 'Lalezar, Rubik, sans-serif' : 'Rubik, sans-serif'); c.textAlign = 'center'; c.textBaseline = 'middle'; try { c.direction = 'rtl'; } catch (e) {} if (out) { c.lineWidth = Math.max(3, size / 4); c.strokeStyle = out; c.lineJoin = 'round'; c.strokeText(s, x, y); } c.fillStyle = col; c.fillText(s, x, y); }
+let grass = null;
+function grassPat() { const o = document.createElement('canvas'); o.width = o.height = 120; const g = o.getContext('2d'); g.fillStyle = '#5cb85c'; g.fillRect(0, 0, 120, 120); for (let i = 0; i < 60; i++) { g.fillStyle = i % 3 ? 'rgba(40,120,40,.35)' : 'rgba(170,230,120,.35)'; const x = (i * 53) % 120, y = (i * 37) % 120; g.fillRect(x, y, 2, 5); } return c.createPattern(o, 'repeat'); }
+// شخصية اللاعب الاعتيادية
+function drawPlayer(p, t) {
+  const x = p.rx, y = p.ry, col = G.geo[p[4]] ? G.geo[p[4]].col : '#fff', mv = p[7], ph = t * 10, dir = p[6] || 1, sw = mv ? Math.sin(ph) * 7 : 0, bob = mv ? Math.abs(Math.sin(ph)) * 2 : 0;
+  c.save(); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(x, y + 2, 18, 6, 0, 0, 7); c.fill();
+  c.translate(x, y - bob); c.scale(dir, 1); c.lineJoin = 'round'; c.lineCap = 'round';
+  c.strokeStyle = '#24140e'; c.lineWidth = 7; c.beginPath(); c.moveTo(-6, -22); c.lineTo(-6 + sw, -2); c.moveTo(6, -22); c.lineTo(6 - sw, -2); c.stroke(); c.strokeStyle = '#2d3e6a'; c.lineWidth = 5; c.stroke();
+  c.fillStyle = '#24140e'; [-6 + sw, 6 - sw].forEach(fx => { c.beginPath(); c.ellipse(fx + 3, 0, 7, 4, 0, 0, 7); c.fill(); });
+  c.lineWidth = 3; c.strokeStyle = '#24140e'; rrect(-13, -50, 26, 30, 9); c.fillStyle = col; c.fill(); c.stroke();
+  c.strokeStyle = '#24140e'; c.lineWidth = 7; c.beginPath(); c.moveTo(-12, -44); c.lineTo(-17, -28 - sw * .5); c.moveTo(12, -44); c.lineTo(17, -28 + sw * .5); c.stroke(); c.strokeStyle = col; c.lineWidth = 4.5; c.stroke();
+  c.fillStyle = '#f2c79e'; c.beginPath(); c.arc(-17, -27 - sw * .5, 4, 0, 7); c.arc(17, -27 + sw * .5, 4, 0, 7); c.fill();
+  c.lineWidth = 3; c.beginPath(); c.arc(0, -64, 15, 0, 7); c.fillStyle = '#f2c79e'; c.fill(); c.stroke();
+  c.fillStyle = '#3a2416'; c.beginPath(); c.arc(0, -68, 15.5, Math.PI * 1.05, Math.PI * 1.95); c.lineTo(10, -70); c.quadraticCurveTo(0, -74, -12, -66); c.fill();
+  c.fillStyle = '#24140e'; c.beginPath(); c.arc(5, -63, 2.4, 0, 7); c.arc(-3, -63, 2.4, 0, 7); c.fill(); c.lineWidth = 2; c.beginPath(); c.arc(2, -58, 4, .2, 2.6); c.stroke();
+  c.restore();
+  if (p[5]) { const by = y - 95 - Math.sin(t * 6) * 3; drawChar(c, p[5][0], x, by + 20, .36, t, p[5][1]); }
+  const me = p[0] === G.me; txt((p[8] ? '👑 ' : '') + p[1], x, y - (p[5] ? 160 : 92), 15, me ? '#ffd23f' : '#fff', '#24140e');
+}
+function drawPed(x, y, s, bi, si, t) {
+  c.save(); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x, y + 4, 36, 11, 0, 0, 7); c.fill();
+  c.lineWidth = 3; c.strokeStyle = '#24140e'; c.fillStyle = '#d8dee6'; c.beginPath(); c.ellipse(x, y, 34, 11, 0, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#b9c2cc'; c.fillRect(x - 34, y, 68, 8); c.strokeRect(x - 34, y, 68, 8); c.beginPath(); c.ellipse(x, y, 34, 11, 0, 0, 7); c.fillStyle = '#eef2f6'; c.fill(); c.stroke();
+  c.restore();
+  if (placing && bi === G.base && !s) { c.save(); c.globalAlpha = .5 + .5 * Math.sin(t * 6); c.strokeStyle = '#7dffb0'; c.lineWidth = 5; c.beginPath(); c.ellipse(x, y, 42, 15, 0, 0, 7); c.stroke(); c.restore(); txt('➕', x, y - 20, 22, '#7dffb0', '#24140e'); }
+  if (!s) return;
+  if (s[2]) { const E = EGN[s[2]], wob = Math.sin(t * (s[3] < 5000 ? 18 : 4)) * .12; c.save(); c.translate(x, y - 4); c.rotate(wob); c.lineWidth = 3; c.strokeStyle = '#24140e'; c.beginPath(); c.ellipse(0, -28, 22, 28, 0, 0, 7); c.fillStyle = E[1]; c.fill(); c.stroke(); c.fillStyle = 'rgba(255,255,255,.5)'; [[-8, -40], [6, -22], [-4, -14]].forEach(([a, b]) => { c.beginPath(); c.arc(a, b, 4, 0, 7); c.fill(); }); c.restore(); txt('⏳ ' + Math.ceil(s[3] / 1000) + 'ث', x, y + 22, 13, '#fff', '#24140e'); return; }
+  if (s[4]) { txt('🦹 مسروق!', x, y - 30, 14, '#ff4f5e', '#24140e'); return; }
+  drawChar(c, s[0], x, y + 2, .42, t + si, s[1]);
+  const cd = G.cd[s[0]]; if (cd) { txt('+' + fmt(cd.inc * G.mut[s[1] || 0]) + '/ث', x, y + 22, 13, '#7dffb0', '#24140e'); }
+}
+function drawBase(g, b, t) {
+  const own = g.i === G.base, locked = b.lk > 0, x = g.x, y = g.y, w = g.w, h = g.h;
+  c.save(); c.fillStyle = b.o ? g.col : '#8a9a98'; c.globalAlpha = .22; rrect(x, y, w, h, 26); c.fill(); c.globalAlpha = 1;
+  c.strokeStyle = 'rgba(255,255,255,.08)'; c.lineWidth = 2; for (let i = 1; i < 8; i++) { c.beginPath(); c.moveTo(x + i * w / 8, y); c.lineTo(x + i * w / 8, y + h); c.stroke(); }
+  // الحيطان: 3 جهات + الجهة الأمامية بيها باب بالنص
+  const wall = (x0, y0, x1, y1) => { c.strokeStyle = '#24140e'; c.lineWidth = 20; c.lineCap = 'round'; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); c.strokeStyle = b.o ? g.col : '#9aa6a5'; c.lineWidth = 13; c.stroke(); c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 3; c.stroke(); };
+  const fy = g.front, by = g.back, dx0 = x + w / 2 - 75, dx1 = x + w / 2 + 75;
+  wall(x, by, x + w, by); wall(x, by, x, fy); wall(x + w, by, x + w, fy); wall(x, fy, dx0, fy); wall(dx1, fy, x + w, fy);
+  if (locked) { const pul = .6 + .4 * Math.sin(t * 8); c.strokeStyle = 'rgba(80,160,255,' + pul + ')'; c.lineWidth = 6; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(dx0, fy - 8 + i * 5); c.lineTo(dx1, fy - 8 + i * 5); c.stroke(); } c.fillStyle = 'rgba(80,160,255,.18)'; c.fillRect(dx0, fy - 12, 150, 24); txt('🔒 ' + Math.ceil(b.lk / 1000) + 'ث', x + w / 2, fy + g.d * 34, 18, '#9fd4ff', '#24140e'); }
+  // اللافتة
+  const sy = g.back - g.d * 0 + (g.d > 0 ? -26 : 26); c.fillStyle = '#24140e'; rrect(x + w / 2 - 120, sy - 22, 240, 44, 14); c.fill(); c.fillStyle = b.o ? g.col : '#556'; rrect(x + w / 2 - 116, sy - 18, 232, 36, 11); c.fill();
+  txt(b.o ? ((own ? '⭐ ' : '') + 'قاعدة ' + b.o + ' • مستوى ' + (b.lv || 1)) : 'قاعدة فاضية', x + w / 2, sy + 1, 17, '#fff', '#24140e');
+  // الأزرار: جمع الفلوس + القفل
+  if (b.o) {
+    const [cx, cy] = g.collect, [lx, ly] = g.lock;
+    c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(cx, cy + 4, 40, 14, 0, 0, 7); c.fill(); c.fillStyle = '#2fd66b'; c.strokeStyle = '#24140e'; c.lineWidth = 3; c.beginPath(); c.ellipse(cx, cy, 38, 13, 0, 0, 7); c.fill(); c.stroke(); txt('💰 ' + fmt(b.bank), cx, cy - 26, 15, '#ffd23f', '#24140e'); if (own) txt('وگف هنا تجمع', cx, cy + 24, 11, '#fff', '#24140e');
+    c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(lx, ly + 4, 34, 12, 0, 0, 7); c.fill(); c.fillStyle = locked ? '#3fa7ff' : '#e8344a'; c.beginPath(); c.ellipse(lx, ly, 32, 11, 0, 0, 7); c.fill(); c.stroke(); txt(locked ? '🔒' : '🔓', lx, ly - 20, 20, '#fff', '#24140e');
+  }
+  c.restore();
+  const bs = b.s || []; g.ped.forEach(([px, py], si) => drawPed(px, py, bs[si], g.i, si, t));
+}
+function drawHub(t) {
+  const H = G.hub; c.save(); c.fillStyle = 'rgba(255,210,63,.15)'; rrect(H.x, H.y, H.w, H.h, 26); c.fill(); c.strokeStyle = 'rgba(255,210,63,.6)'; c.setLineDash([14, 10]); c.lineWidth = 4; c.stroke(); c.setLineDash([]);
+  txt('الساحة', H.x + H.w / 2, H.y + 30, 30, '#ffd23f', '#24140e', '400 ');
+  // الحلبة
+  const A = H.arena; c.fillStyle = '#b0623a'; c.beginPath(); c.ellipse(A.x, A.y, 120, 50, 0, 0, 7); c.fill(); c.strokeStyle = '#24140e'; c.lineWidth = 4; c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.ellipse(A.x, A.y, 90, 36, 0, 0, 7); c.stroke(); txt('⚔️ حلبة المعارك', A.x, A.y - 70, 18, '#fff', '#24140e');
+  // محل البيض
+  const E = H.egg; c.fillStyle = '#24140e'; rrect(E.x - 80, E.y - 90, 160, 100, 14); c.fill(); c.fillStyle = '#fff3d6'; rrect(E.x - 74, E.y - 84, 148, 88, 10); c.fill(); for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#ff7ab8' : '#fff'; c.fillRect(E.x - 80 + i * 26.6, E.y - 104, 26.6, 18); }
+  ['#f3ead6', '#ffd23f', '#8a5cff'].forEach((col, i) => { c.save(); c.translate(E.x - 46 + i * 46, E.y - 30); c.rotate(Math.sin(t * 3 + i) * .08); c.lineWidth = 3; c.strokeStyle = '#24140e'; c.beginPath(); c.ellipse(0, 0, 15, 20, 0, 0, 7); c.fillStyle = col; c.fill(); c.stroke(); c.restore(); }); txt('🥚 محل البيض', E.x, E.y + 26, 16, '#fff', '#24140e');
+  // مكينة الدمج
+  const M = H.merge; c.fillStyle = '#24140e'; rrect(M.x - 60, M.y - 110, 120, 120, 16); c.fill(); c.fillStyle = '#6a7a8a'; rrect(M.x - 54, M.y - 104, 108, 108, 12); c.fill(); c.save(); c.translate(M.x, M.y - 50); c.rotate(t * 2); for (let i = 0; i < 4; i++) { c.rotate(Math.PI / 2); c.fillStyle = 'hsl(' + ((t * 80 + i * 90) % 360) + ',80%,60%)'; c.fillRect(-4, 10, 8, 26); } c.restore(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(M.x, M.y - 50, 12, 0, 7); c.fill(); txt('🌀 مكينة الدمج', M.x, M.y + 26, 16, '#fff', '#24140e');
+  c.restore();
+}
+function drawCarpet(t) {
+  const P = G.CP; c.fillStyle = '#24140e'; c.fillRect(0, P.y0 - 8, G.W, P.y1 - P.y0 + 16); c.fillStyle = '#b3121a'; c.fillRect(0, P.y0, G.W, P.y1 - P.y0);
+  c.fillStyle = '#ffd23f'; c.fillRect(0, P.y0, G.W, 5); c.fillRect(0, P.y1 - 5, G.W, 5);
+  c.fillStyle = 'rgba(0,0,0,.14)'; const off = (t * 52) % 60; for (let x = -60 + off; x < G.W; x += 60) { c.beginPath(); c.moveTo(x, P.y0 + 10); c.lineTo(x + 20, (P.y0 + P.y1) / 2); c.lineTo(x, P.y1 - 10); c.lineTo(x + 10, P.y1 - 10); c.lineTo(x + 30, (P.y0 + P.y1) / 2); c.lineTo(x + 10, P.y0 + 10); c.fill(); }
+  (S.cp || []).forEach(it => { const [u, id, m, x, y] = it; const cd = G.cd[id]; drawChar(c, id, x, y + 26, .4, t + u, m); if (cd) { const pr = cd.p * G.mut[m || 0]; c.save(); c.fillStyle = RC[cd.r]; rrect(x - 44, y + 32, 88, 22, 8); c.fill(); c.strokeStyle = '#24140e'; c.lineWidth = 2; c.stroke(); c.restore(); txt('💰' + fmt(pr), x, y + 43, 13, '#24140e'); if (m) txt(MI[m], x + 30, y - 40, 16, '#fff'); } });
+}
+function render(ms) {
+  const t = ms / 1000; requestAnimationFrame(render); if (!G || !S) { c.setTransform(DPR, 0, 0, DPR, 0, 0); c.fillStyle = '#0d2f2e'; c.fillRect(0, 0, VW, VH); return; }
+  const k = Math.min(1, 1 - Math.pow(.0006, dtF)); S.pl.forEach(p => { p.rx += (p[2] - p.rx) * k; p.ry += (p[3] - p.ry) * k; });
+  if (ME) { CX += (ME.rx - CX) * .18; CY += (ME.ry - 40 - CY) * .18; }
+  const hw = VW / 2 / Z, hh = VH / 2 / Z; CX = Math.max(hw - 60, Math.min(G.W - hw + 60, CX)); CY = Math.max(hh - 60, Math.min(G.H - hh + 60, CY));
+  c.setTransform(DPR * Z, 0, 0, DPR * Z, DPR * (VW / 2 - CX * Z), DPR * (VH / 2 - CY * Z));
+  if (!grass) grass = grassPat(); c.fillStyle = '#2f7a3a'; c.fillRect(CX - hw - 200, CY - hh - 200, hw * 2 + 400, hh * 2 + 400); c.fillStyle = grass; c.fillRect(0, 0, G.W, G.H);
+  c.strokeStyle = '#24140e'; c.lineWidth = 8; c.strokeRect(0, 0, G.W, G.H);
+  drawCarpet(t); drawHub(t); G.geo.forEach(g => drawBase(g, S.bs[g.i] || {}, t));
+  [...S.pl].sort((a, b) => a.ry - b.ry).forEach(p => drawPlayer(p, t));
+  for (let i = FX.length - 1; i >= 0; i--) { const f = FX[i]; f.t -= dtF; if (f.t <= 0) { FX.splice(i, 1); continue; } if (f.fly) { const u = 1 - f.t, x = f.x0 + (f.x1 - f.x0) * u, y = f.y0 + (f.y1 - f.y0) * u - Math.sin(u * Math.PI) * 180; drawChar(c, f.id, x, y, .4, t, 0); } else { c.globalAlpha = Math.min(1, f.t * 2); txt(f.txt, f.x, f.y - (1.4 - f.t) * 40, 22, f.col, '#24140e', '400 '); c.globalAlpha = 1; } }
+  for (let i = PARTS.length - 1; i >= 0; i--) { const q = PARTS[i]; q.t -= dtF; if (q.t <= 0) { PARTS.splice(i, 1); continue; } q.vy += 380 * dtF; q.x += q.vx * dtF; q.y += q.vy * dtF; c.globalAlpha = q.t; c.fillStyle = q.col; c.fillRect(q.x - 4, q.y - 4, 8, 8); } c.globalAlpha = 1;
+  actsTick();
+}
+let lastMs = performance.now(), dtF = .016; (function loop(ms) { dtF = Math.min(.05, (ms - lastMs) / 1000); lastMs = ms; requestAnimationFrame(loop); })(performance.now());
+requestAnimationFrame(render);
+
+/* ===================== الجويستك والكيبورد ===================== */
+const joy = $('joy'), knob = $('knob'); let jid = null, jx = 0, jy = 0; const keys = {};
+function setJ(x, y) { jx = x; jy = y; knob.style.transform = 'translate(' + (x * 38) + 'px,' + (y * 38) + 'px)'; }
+joy.addEventListener('pointerdown', e => { jid = e.pointerId; joy.setPointerCapture(jid); moveJ(e); snd(1, 1, .01, 'sine', .0001); });
+joy.addEventListener('pointermove', e => { if (e.pointerId === jid) moveJ(e); });
+const endJ = e => { if (e.pointerId === jid) { jid = null; setJ(0, 0); } }; joy.addEventListener('pointerup', endJ); joy.addEventListener('pointercancel', endJ);
+function moveJ(e) { const r = joy.getBoundingClientRect(); let x = (e.clientX - r.left - r.width / 2) / (r.width / 2), y = (e.clientY - r.top - r.height / 2) / (r.height / 2); const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; } if (l < .15) { x = 0; y = 0; } setJ(x, y); }
+addEventListener('keydown', e => { keys[e.key.toLowerCase()] = 1; if (e.key === 'e' || e.key === 'E' || e.key === ' ') { const b = $('acts').querySelector('.act'); if (b) b.click(); e.preventDefault(); } });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = 0; });
+let lastIn = '';
+setInterval(() => { let x = jx, y = jy; if (keys.a || keys.arrowleft) x = -1; if (keys.d || keys.arrowright) x = 1; if (keys.w || keys.arrowup) y = -1; if (keys.s || keys.arrowdown) y = 1; if (placing || !$('bookOv').hidden || !$('fightOv').hidden) { x = 0; y = 0; } const k = x.toFixed(2) + ',' + y.toFixed(2); if (k !== lastIn) { lastIn = k; send({ t: 'br_in', x, y }); } }, 66);
+
+/* ===================== أزرار القرب ===================== */
+let actKey = '';
+const dd = (a, b, x, y) => Math.hypot(a - x, b - y);
+const inR = (x, y, g) => x > g.x && x < g.x + g.w && y > g.y && y < g.y + g.h;
+function actsTick() {
+  if (!ME || !G) return; const x = ME[2], y = ME[3], L = [], myG = G.geo[G.base], myB = S.bs[G.base] || {};
+  if (!ME[5]) {
+    let best = null, bd = 110; (S.cp || []).forEach(it => { const d0 = dd(x, y, it[3], it[4]); if (d0 < bd) { bd = d0; best = it; } });
+    if (best) { const cd = G.cd[best[1]]; L.push(['buy' + best[0], 'اشتري ' + nameOf(best[1]) + (best[2] ? ' ' + MI[best[2]] : ''), '💰 ' + fmt(cd.p * G.mut[best[2] || 0]), '', () => send({ t: 'br_buy', u: best[0] })]); }
+    G.geo.forEach(g => { if (g.i === G.base || !inR(x, y, g)) return; const b = S.bs[g.i]; if (!b || !b.o) return; g.ped.forEach(([px, py], si) => { const s = b.s[si]; if (s && !s[2] && !s[4] && dd(x, y, px, py) < 80) L.push(['st' + g.i + '_' + si, b.lk > 0 ? '🔒 مقفولة' : '🦹 اسرق ' + nameOf(s[0]), b.lk > 0 ? 'استنى ' + Math.ceil(b.lk / 1000) + 'ث' : '', 'red', () => send({ t: 'br_steal', b: g.i, s: si })]); }); });
+  }
+  if (inR(x, y, myG)) myG.ped.forEach(([px, py], si) => { const s = (myB.s || [])[si]; if (s && !s[2] && !s[4] && dd(x, y, px, py) < 70) { L.push(['pk' + si, '🎒 شيل للحقيبة', nameOf(s[0]), 'blue', () => send({ t: 'br_pick', s: si })]); if (!S.adm) L.push(['sl' + si, '💰 بيع', '+' + fmt(G.cd[s[0]].p * G.mut[s[1] || 0] * .5), 'dim', () => send({ t: 'br_sell', s: si })]); } });
+  if (dd(x, y, myG.lock[0], myG.lock[1]) < 70) { L.push(['lk' + (myB.lk > 0), myB.lk > 0 ? '🔒 مقفول ' + Math.ceil(myB.lk / 1000) + 'ث' : '🔒 سد الباب', S.ls + ' ثانية', 'blue', () => send({ t: 'br_lock' })]); if (S.uc) L.push(['up' + S.lv, '⬆️ طوّر القاعدة', 'مستوى ' + (S.lv + 1) + ' • 💰 ' + fmt(S.uc), 'green', () => send({ t: 'br_up' })]); }
+  const H = G.hub; if (dd(x, y, H.egg.x, H.egg.y) < 140) L.push(['egg', '🥚 محل البيض', '', '', () => openBook('eggs')]);
+  if (dd(x, y, H.merge.x, H.merge.y) < 140) L.push(['mrg', '🌀 ادمج', 'اثنين يصيرون واحد أقوى', '', () => openBook('merge')]);
+  if (dd(x, y, H.arena.x, H.arena.y) < 170) L.push(['ftg', '⚔️ معركة', S.fcd > 0 ? 'بعد ' + Math.ceil(S.fcd / 1000) + 'ث' : '', 'red', () => openBook('fight')]);
+  const key = L.map(a => a[0] + a[1] + a[2]).join('|'); if (key === actKey) return; actKey = key;
+  const box = $('acts'); box.innerHTML = ''; L.slice(0, 4).forEach(a => { const b = document.createElement('button'); b.type = 'button'; b.className = 'act ' + a[3]; b.textContent = a[1]; if (a[2]) { const s = document.createElement('small'); s.textContent = a[2]; b.appendChild(s); } b.onclick = () => { a[4](); actKey = ''; }; box.appendChild(b); });
+}
+
+/* ===================== الواجهة ===================== */
+function updHud() {
+  $('coins').textContent = S.adm ? '∞ 👑' : fmt(S.c) + ' 💰'; $('incs').textContent = '+' + fmt(S.inc) + ' / ثانية';
+  const b = S.bs[G.base] || {}; $('lvTxt').textContent = 'قاعدتك مستوى ' + S.lv + ' / ' + G.lvMax + ' • القفل ' + S.ls + 'ث'; $('lockTxt').textContent = b.lk > 0 ? '🔒 الباب مسدود ' + Math.ceil(b.lk / 1000) + 'ث' : '🔓 الباب مفتوح';
+}
+
+/* ---- الكتاب: الحقيبة، كل البرينروتات (للمشرف)، قاعدتي، البيض، الدمج، المعارك ---- */
+let bookTab = 'bag', bookSel = null, adMut = 0, fightTeam = [], fightLv = 1, mergeSel = null, placing = null;
+function openBook(tab) { bookTab = tab || 'bag'; bookSel = null; mergeSel = null; $('bookOv').hidden = false; bookRender(true); snd(500, 700, .12, 'triangle'); }
+function closeOv() { $('bookOv').hidden = true; }
+$('bookBtn').onclick = () => openBook('bag'); $('bookX').onclick = closeOv; $('bookOv').addEventListener('pointerdown', e => { if (e.target === $('bookOv')) closeOv(); });
+let bookKey = '';
+function itemEl(id, m, sel, onClick, badge) { const d = document.createElement('button'); d.type = 'button'; d.className = 'it' + (sel ? ' sel' : ''); const cv2 = document.createElement('canvas'); d.appendChild(cv2); charCanvas(cv2, id, m); const n = document.createElement('div'); n.textContent = nameOf(id); d.appendChild(n); if (m) { const mm = document.createElement('span'); mm.className = 'm'; mm.textContent = MI[m]; d.appendChild(mm); } if (badge) { const bb = document.createElement('div'); bb.style.cssText = 'font-size:10px;color:#6b5a4c'; bb.textContent = badge; d.appendChild(bb); } d.onclick = onClick; return d; }
+function det(R, id, m) { const cd = G.cd[id]; const w = document.createElement('div'); w.className = 'det'; const cv2 = document.createElement('canvas'); cv2.width = 240; cv2.height = 240; w.appendChild(cv2); charCanvas(cv2, id, m, 2); const h = document.createElement('h4'); h.textContent = nameOf(id) + (m ? ' ' + MI[m] : ''); w.appendChild(h); const ch = document.createElement('span'); ch.className = 'chip r-' + cd.r; ch.textContent = RN[cd.r] + (m ? ' • ' + MN[m] : ''); w.appendChild(ch); const st = document.createElement('div'); st.className = 'stat'; st.innerHTML = '<span>يطلّع</span><b></b><span>سعره</span><b></b>'; st.children[1].textContent = '+' + fmt(cd.inc * G.mut[m || 0]) + ' 💰 / ثانية'; st.children[3].textContent = fmt(cd.p * G.mut[m || 0]) + ' 💰'; w.appendChild(st); R.appendChild(w); return w; }
+function freePed() { const b = S.bs[G.base] || {}; return (b.s || []).findIndex(s => !s); }
+function startPlace(src) { if (freePed() < 0) { toast('كل منصاتك مليانة — شيل وحد للحقيبة أول'); return; } placing = src; closeOv(); $('placeBar').hidden = false; $('placeTxt').textContent = 'دوس على منصة فاضية بقاعدتك حتى تنصب ' + nameOf(src.id) + (inR(ME[2], ME[3], G.geo[G.base]) ? '' : ' (لازم تكون جوه قاعدتك)'); }
+$('placeX').onclick = () => { placing = null; $('placeBar').hidden = true; };
+cv.addEventListener('pointerdown', e => {
+  if (!placing || !G) return; const wx = (e.clientX - VW / 2) / Z + CX, wy = (e.clientY - VH / 2) / Z + CY, g = G.geo[G.base];
+  let best = -1, bd = 60; g.ped.forEach(([px, py], si) => { const d0 = dd(wx, wy, px, py - 25); if (d0 < bd) { bd = d0; best = si; } });
+  if (best < 0) return; const s = (S.bs[G.base].s || [])[best]; if (s) { toast('هذي المنصة مشغولة'); return; }
+  send(placing.cat ? { t: 'br_place', s: best, cat: { id: placing.id, m: placing.m } } : { t: 'br_place', s: best, b: placing.b });
+  if (!placing.cat) { placing = null; $('placeBar').hidden = true; }   // المشرف يكدر يكمل ينصب نفس الشي
+});
+function bookRender(force) {
+  const myB = S.bs[G.base] || {}, key = bookTab + '|' + JSON.stringify(S.bag) + JSON.stringify(myB.s) + bookSel + adMut + S.c + S.lv + fightTeam.join() + fightLv + mergeSel + (S.fcd > 0);
+  if (!force && key === bookKey) return; bookKey = key;
+  const tabs = [['bag', '🎒 حقيبتي'], ['base', '🏠 قاعدتي'], ['eggs', '🥚 البيض'], ['merge', '🌀 الدمج'], ['fight', '⚔️ المعارك']]; if (S.adm) tabs.splice(1, 0, ['all', '👑 كل البرينروتات']);
+  const T = $('bookTabs'); T.innerHTML = ''; tabs.forEach(([k, n]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; if (k === bookTab) b.className = 'on'; b.onclick = () => { bookTab = k; bookSel = null; bookRender(true); snd(700, 900, .06, 'triangle', .05); }; T.appendChild(b); });
+  const L = $('pgL'), R = $('pgR'); L.innerHTML = ''; R.innerHTML = '';
+  const h = (el, t2, cls) => { const x = document.createElement(el); x.textContent = t2; if (cls) x.className = cls; return x; };
+  if (bookTab === 'bag') {
+    L.appendChild(h('h3', '🎒 حقيبتي ' + (S.adm ? '' : '(' + S.bag.length + '/' + S.bagMax + ')')));
+    if (!S.bag.length) L.appendChild(h('p', S.adm ? 'حقيبتك فاضية — بس عندك كل البرينروتات من صفحة «👑 كل البرينروتات».' : 'حقيبتك فاضية. البرينروت اللي تشيله من المنصة أو تشتريه والمنصات مليانة، يجي هنا.', 'muted'));
+    const g = document.createElement('div'); g.className = 'items'; S.bag.forEach((b, i) => g.appendChild(itemEl(b[0], b[1], bookSel === i, () => { bookSel = i; bookRender(true); }))); L.appendChild(g);
+    if (bookSel != null && S.bag[bookSel]) { const b = S.bag[bookSel], w = det(R, b[0], b[1]), row = document.createElement('div'); row.className = 'row'; const p1 = h('button', '📍 انصب بالقاعدة', 'btn green'); p1.type = 'button'; p1.onclick = () => startPlace({ b: bookSel, id: b[0], m: b[1] }); row.appendChild(p1); if (!S.adm) { const p2 = h('button', '💰 بيع ' + fmt(G.cd[b[0]].p * G.mut[b[1] || 0] * .5), 'btn'); p2.type = 'button'; p2.onclick = () => { send({ t: 'br_bagsell', b: bookSel }); bookSel = null; }; row.appendChild(p2); } w.appendChild(row); }
+    else R.appendChild(h('p', 'دوس على أي برينروت بالحقيبة حتى تشوفه وتنصبه بقاعدتك على المنصة اللي تريدها.', 'muted'));
+  } else if (bookTab === 'all') {
+    L.appendChild(h('h3', '👑 كل البرينروتات')); L.appendChild(h('p', 'انت المشرف: كل شخصية عندك بلا حدود. اختار وحدة وانصبها وين ما تريد.', 'muted'));
+    const g = document.createElement('div'); g.className = 'items'; G.cat.forEach(cd => g.appendChild(itemEl(cd.id, adMut, bookSel === cd.id, () => { bookSel = cd.id; bookRender(true); }, RN[cd.r]))); L.appendChild(g);
+    const mp = document.createElement('div'); mp.className = 'mutp'; mp.style.margin = '10px 0'; MN.forEach((n, i) => { const b = h('button', i ? MI[i] + ' ' + n : 'عادي'); b.type = 'button'; if (i === adMut) b.className = 'on'; b.onclick = () => { adMut = i; bookRender(true); }; mp.appendChild(b); }); L.insertBefore(mp, g);
+    if (bookSel && G.cd[bookSel]) { const w = det(R, bookSel, adMut), row = document.createElement('div'); row.className = 'row'; const p1 = h('button', '📍 انصب بالقاعدة', 'btn green'); p1.type = 'button'; p1.onclick = () => startPlace({ cat: 1, id: bookSel, m: adMut }); row.appendChild(p1); w.appendChild(row); }
+    else R.appendChild(h('p', 'اختار برينروت ونوعه (عادي، ذهبي، ألماس، قوس قزح) وانصبه.', 'muted'));
+  } else if (bookTab === 'base') {
+    L.appendChild(h('h3', '🏠 قاعدتي')); const st = document.createElement('div'); st.className = 'stat'; const rows = [['المستوى', S.lv + ' / ' + G.lvMax], ['مدة سد الباب', S.ls + ' ثانية'], ['الدخل', '+' + fmt(S.inc) + ' 💰 / ثانية'], ['المنصات', (myB.s || []).filter(Boolean).length + ' / 10'], ['التطوير الجاي', S.uc ? fmt(S.uc) + ' 💰 → ' + (S.ls + 10) + ' ثانية' : 'أعلى مستوى 👑']];
+    rows.forEach(([a, b]) => { st.appendChild(h('span', a)); st.appendChild(h('b', b)); }); L.appendChild(st); L.appendChild(h('p', 'كل مستوى يزيد مدة سد الباب 10 ثواني: المستوى 1 = 40 ثانية، والمستوى 18 = 210 ثانية. تطوّر وتسد الباب من الزر الأحمر يم باب قاعدتك.', 'muted'));
+    R.appendChild(h('h3', 'المنصات')); const g = document.createElement('div'); g.className = 'items'; (myB.s || []).forEach((s, i) => { if (s && !s[2] && !s[4]) g.appendChild(itemEl(s[0], s[1], false, () => {}, 'منصة ' + (i + 1))); else { const e = h('div', s && s[2] ? '🥚 بيضة' : s && s[4] ? '🦹 مسروق' : 'منصة ' + (i + 1) + ' فاضية', 'it'); e.style.cssText = 'display:grid;place-items:center;min-height:96px;color:#9a8a7a'; g.appendChild(e); } }); R.appendChild(g);
+  } else if (bookTab === 'eggs') {
+    L.appendChild(h('h3', '🥚 محل البيض')); L.appendChild(h('p', 'البيضة تنحط على منصة فاضية وتفقس برينروت عشوائي. كل ما البيضة أغلى، الحظ بالنادر أكثر.', 'muted'));
+    const near = dd(ME[2], ME[3], G.hub.egg.x, G.hub.egg.y) < 140; if (!near) L.appendChild(h('p', '📍 روح للساحة يم محل البيض حتى تشتري.', 'muted'));
+    Object.entries(G.eggs).forEach(([k, E]) => { const box = document.createElement('div'); box.style.cssText = 'display:flex;align-items:center;gap:10px;border:2px solid #cfc4ad;border-radius:14px;padding:10px;margin:8px 0;background:#fff'; const egg = document.createElement('div'); egg.style.cssText = 'width:36px;height:46px;border-radius:50%/60% 60% 40% 40%;border:3px solid #24140e;flex:none;background:' + EGN[k][1]; box.appendChild(egg); const tx = document.createElement('div'); tx.style.cssText = 'flex:1;min-width:0'; tx.appendChild(h('b', EGN[k][0])); tx.appendChild(h('div', 'تفقس بعد ' + E.t + ' ثانية • ' + Object.entries(E.w).map(([r, v]) => RN[r] + ' ' + v + '%').join('، '), 'muted')); box.appendChild(tx); const b = h('button', S.adm ? 'مجاناً' : fmt(E.p) + ' 💰', 'btn'); b.type = 'button'; b.disabled = !near; b.onclick = () => send({ t: 'br_egg', k }); box.appendChild(b); R.appendChild(box); });
+  } else if (bookTab === 'merge') {
+    L.appendChild(h('h3', '🌀 مكينة الدمج')); L.appendChild(h('p', 'اثنين من نفس البرينروت ونفس النوع يصيرون واحد أقوى: عادي ← 🥇 ذهبي (×2) ← 💎 ألماس (×5) ← 🌈 قوس قزح (×12).', 'muted'));
+    const near = dd(ME[2], ME[3], G.hub.merge.x, G.hub.merge.y) < 140; if (!near) L.appendChild(h('p', '📍 روح للساحة يم مكينة الدمج.', 'muted'));
+    const sl = myB.s || [], groups = {}; sl.forEach((s, i) => { if (s && !s[2] && !s[4] && (s[1] || 0) < 3) { const k = s[0] + '_' + (s[1] || 0); (groups[k] = groups[k] || []).push(i); } });
+    const pairs = Object.entries(groups).filter(([, v]) => v.length >= 2);
+    if (!pairs.length) R.appendChild(h('p', 'ماكو زوج متشابه على منصاتك. انصب اثنين من نفس البرينروت ونفس النوع وارجع.', 'muted'));
+    pairs.forEach(([k, v]) => { const [id, m] = k.split('_'); const box = document.createElement('div'); box.style.cssText = 'display:flex;align-items:center;gap:8px;border:2px solid #cfc4ad;border-radius:14px;padding:8px;margin:8px 0;background:#fff'; const cv2 = document.createElement('canvas'); cv2.style.cssText = 'width:64px;height:64px'; charCanvas(cv2, id, +m); box.appendChild(cv2); const tx = h('div', '2× ' + nameOf(id) + ' ' + (MN[+m] || 'عادي') + ' ← ' + MN[+m + 1] + ' ' + MI[+m + 1]); tx.style.cssText = 'flex:1;font-weight:700;font-size:14px'; box.appendChild(tx); const b = h('button', 'ادمج', 'btn green'); b.type = 'button'; b.disabled = !near; b.onclick = () => send({ t: 'br_merge', a: v[0], b: v[1] }); box.appendChild(b); R.appendChild(box); });
+  } else if (bookTab === 'fight') {
+    L.appendChild(h('h3', '⚔️ المعارك')); L.appendChild(h('p', 'اختار لحد 3 برينروتات من منصاتك وتعارك فريق الحلبة. إذا فزت تاخذ فلوس حسب الصعوبة.', 'muted'));
+    const sl = myB.s || [], g = document.createElement('div'); g.className = 'items'; sl.forEach((s, i) => { if (s && !s[2] && !s[4]) g.appendChild(itemEl(s[0], s[1], fightTeam.includes(i), () => { const k = fightTeam.indexOf(i); if (k >= 0) fightTeam.splice(k, 1); else if (fightTeam.length < 3) fightTeam.push(i); bookRender(true); })); }); L.appendChild(g);
+    fightTeam = fightTeam.filter(i => sl[i] && !sl[i][2] && !sl[i][4]);
+    R.appendChild(h('h3', 'الصعوبة')); const mp = document.createElement('div'); mp.className = 'mutp'; [[1, 'سهل ×1'], [2, 'وسط ×2.5'], [3, 'صعب ×6']].forEach(([lv, n]) => { const b = h('button', n); b.type = 'button'; if (lv === fightLv) b.className = 'on'; b.onclick = () => { fightLv = lv; bookRender(true); }; mp.appendChild(b); }); R.appendChild(mp);
+    R.appendChild(h('p', 'الفريق: ' + (fightTeam.length ? fightTeam.map(i => nameOf(sl[i][0])).join('، ') : 'ما اخترت بعد'), 'muted'));
+    const near = dd(ME[2], ME[3], G.hub.arena.x, G.hub.arena.y) < 170; if (!near) R.appendChild(h('p', '📍 روح للحلبة بالساحة حتى تتعارك.', 'muted'));
+    const b = h('button', S.fcd > 0 ? 'استريح ' + Math.ceil(S.fcd / 1000) + 'ث' : '⚔️ ابدي المعركة', 'btn red'); b.type = 'button'; b.disabled = !near || !fightTeam.length || S.fcd > 0; b.onclick = () => send({ t: 'br_fight', team: fightTeam, lv: fightLv }); R.appendChild(b);
+  }
+  $('bookT').textContent = { bag: '📖 كتابي', all: '👑 كتاب المشرف', base: '🏠 قاعدتي', eggs: '🥚 البيض', merge: '🌀 الدمج', fight: '⚔️ المعارك' }[bookTab];
+}
+
+/* ---- عرض المعركة ---- */
+function playFight(d) {
+  closeOv(); const O = $('fightOv'); O.hidden = false; $('fightX').hidden = true; $('fightRes').textContent = '';
+  const mk = (box, arr) => { box.innerHTML = ''; return arr.map(u => { const el = document.createElement('div'); el.className = 'fu'; const cv2 = document.createElement('canvas'); el.appendChild(cv2); charCanvas(cv2, u.id, u.m); const hp = document.createElement('div'); hp.className = 'hp'; hp.innerHTML = '<i style="width:100%"></i>'; el.appendChild(hp); box.appendChild(el); return { el, max: u.hp, hp: u.hp }; }); };
+  const A = mk($('tA'), d.me), E = mk($('tE'), d.en); let i = 0;
+  const step = () => { if (O.hidden) return; if (i >= d.log.length) { $('fightRes').textContent = d.win ? '🏆 فزت! +' + fmt(d.reward) + ' 💰' : '💀 خسرت… قوّي فريقك وارجع'; $('fightRes').style.color = d.win ? '#ffd23f' : '#ff7a8f'; $('fightX').hidden = false; if (d.win) SFX.up(); return; }
+    const [side, ai, di, dmg, crit] = d.log[i++], T = side ? A : E, u = T[di]; u.hp = Math.max(0, u.hp - dmg); u.el.querySelector('.hp i').style.width = (u.hp / u.max * 100) + '%'; u.el.classList.remove('hit'); void u.el.offsetWidth; u.el.classList.add('hit'); if (!u.hp) u.el.classList.add('dead');
+    const dm = document.createElement('div'); dm.className = 'dmg' + (crit ? ' crit' : ''); dm.textContent = '-' + dmg + (crit ? '!' : ''); u.el.appendChild(dm); setTimeout(() => dm.remove(), 700); SFX.hit(); setTimeout(step, 520); };
+  setTimeout(step, 600);
+}
+$('fightX').onclick = () => { $('fightOv').hidden = true; };
+
+/* ===================== البداية ===================== */
+if (auth && auth.token) start();
+</script>
+</body>
+</html>
