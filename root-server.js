@@ -5,7 +5,7 @@
 'use strict';
 module.exports = function rootInit(ctx) {
   const { db, save, send, isRich } = ctx;
-  const K$ = 30000, KP = 500, START = 30000;   // 💰 الدخل ×30K (أرخص برينروت يطلّع 30K/ث)، والأسعار ×500 (أرخص برينروت = 30K) حتى اللاعب الجديد يكدر يشتري بهدية البداية
+  const K$ = 30000, KP = 500, START = 100000;   // 💰 الدخل ×30K (أرخص برينروت يطلّع 30K/ث)، والأسعار ×500 (أرخص برينروت = 30K) حتى اللاعب الجديد يكدر يشتري بهدية البداية
   const W = 5340, H = 2300, CP = { y0: 1060, y1: 1200 }, SPEED = 330, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 64, LV_MAX = 18;
   // مستوى القاعدة 1..18: مدة قفل الباب تبدي 40 ثانية وتزيد 10 ثواني كل مستوى (المستوى 18 = 210 ثانية)
   const lockSec = lv => 40 + (Math.max(1, Math.min(LV_MAX, lv | 0)) - 1) * 10;
@@ -23,6 +23,9 @@ module.exports = function rootInit(ctx) {
   const RW = { common: 620, rare: 250, epic: 95, leg: 28, myth: 6, secret: 1 };
   const MUT = [1, 2, 5, 12];   // عادي، ذهبي، ألماس، قوس قزح
   const EGGS = { e1: { p: 1000 * KP, t: 30, w: { common: 70, rare: 28, epic: 2 } }, e2: { p: 25000 * KP, t: 90, w: { rare: 55, epic: 35, leg: 10 } }, e3: { p: 500000 * KP, t: 180, w: { epic: 40, leg: 40, myth: 17, secret: 3 } } };
+  // 🌀 الدمج داخل القاعدة: اثنين من نفس البرينروت → برينروت جديد أقوى، بنسبة نجاح ترفعها بالفلوس
+  const FUSE = { ch: { common: 70, rare: 60, epic: 50, leg: 40, myth: 30, secret: 25 }, feeK: .3, boostK: .6, step: 10 };
+  const NEXT = { common: 'rare', rare: 'epic', epic: 'leg', leg: 'myth', myth: 'secret' };
   const FIGHT = { 1: { k: .8, r: 1 }, 2: { k: 1.15, r: 2.5 }, 3: { k: 1.6, r: 6 } };
 
   // القواعد: 4 فوك (بابها جوه على السجادة) و3 جوه (بابها فوك) + الساحة (بيض، دمج، معارك)
@@ -84,7 +87,7 @@ module.exports = function rootInit(ctx) {
     const g = geo[bi]; p = { ws, key: k, name: u.name, base: bi, x: g.spawn[0], y: g.spawn[1], ix: 0, iy: 0, carry: null, fightAt: 0, dir: 1 };
     P.set(k, p); save(); sendInit(p); toastAll('👋 ' + u.name + ' دخل اللعبة', p);
   }
-  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
+  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, fuse: FUSE, next: NEXT, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
   function toastAll(msg, except) { for (const q of P.values()) if (q !== except) toast(q, msg); }
   function leave(ws) {
     const p = [...P.values()].find(q => q.ws === ws); if (!p) return;
@@ -176,6 +179,18 @@ module.exports = function rootInit(ctx) {
       if ((A.m || 0) >= MUT.length - 1) return toast(p, 'هذا أعلى مستوى ✨');
       br.slots[a] = { id: A.id, m: (A.m || 0) + 1 }; br.slots[b2] = null; save();
       return send(p.ws, { t: 'br_merged', id: A.id, m: (A.m || 0) + 1 });
+    }
+    if (d.t === 'br_fuse') {
+      const si = d.s | 0, A = br.slots[si]; if (!A || A.egg || A.gone || !CD[A.id]) return toast(p, 'ماكو برينروت هنا');
+      if (dist(p.x, p.y, g.ped[si][0], g.ped[si][1]) > 110) return toast(p, 'روح يم البرينروت حتى تدمجه');
+      const m = A.m || 0, r = CD[A.id].r; if (r === 'secret' && m >= MUT.length - 1) return toast(p, 'هذا أقوى شي باللعبة ✨ ما ينطوّر بعد');
+      let ps = br.slots.findIndex((s2, i) => i !== si && s2 && !s2.egg && !s2.gone && s2.id === A.id && (s2.m || 0) === m), pb = ps < 0 ? br.bag.findIndex(b => b.id === A.id && (b.m || 0) === m) : -1;
+      if (ps < 0 && pb < 0) return toast(p, 'تحتاج اثنين من نفس البرينروت (بالقاعدة أو بالحقيبة)');
+      const k = Math.max(0, Math.min(Math.ceil((100 - FUSE.ch[r]) / FUSE.step), d.k | 0)), ch = Math.min(100, FUSE.ch[r] + k * FUSE.step), fee = Math.round(priceOf(A.id, m) * FUSE.feeK), cost = fee + Math.round(fee * FUSE.boostK) * k;
+      if (!pay(p, cost)) return toast(p, 'فلوسك ما تكفي — الدمج يحتاج ' + fmt(cost) + ' 💰');
+      const roll = Math.random() * 100, win = roll < ch; let out = null;
+      if (win) { if (ps >= 0) br.slots[ps] = null; else br.bag.splice(pb, 1); out = r === 'secret' ? { id: A.id, m: m + 1 } : { id: pickChar(NEXT[r]).id, m }; br.slots[si] = out; }
+      save(); return send(p.ws, { t: 'br_fused', win, roll: Math.round(roll * 10) / 10, ch, from: A.id, fm: m, id: out && out.id, m: out && out.m, cost, s: si });
     }
     if (d.t === 'br_fight') return fight(p, d);
   }
