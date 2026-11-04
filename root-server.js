@@ -6,7 +6,7 @@
 module.exports = function rootInit(ctx) {
   const { db, save, send, isRich } = ctx;
   const K$ = 30000;   // 💰 كل الأسعار والدخل مضروبة بـ 30 ألف (أرخص برينروت يطلّع 30K)
-  const W = 5340, H = 2300, CP = { y0: 1060, y1: 1200 }, SPEED = 330, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 40, LV_MAX = 18;
+  const W = 5340, H = 2300, CP = { y0: 1060, y1: 1200 }, SPEED = 330, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 64, LV_MAX = 18;
   // مستوى القاعدة 1..18: مدة قفل الباب تبدي 40 ثانية وتزيد 10 ثواني كل مستوى (المستوى 18 = 210 ثانية)
   const lockSec = lv => 40 + (Math.max(1, Math.min(LV_MAX, lv | 0)) - 1) * 10;
   const upCost = lv => Math.round(400 * Math.pow(1.85, lv - 1) / 10) * 10 * K$;   // كلفة الصعود من lv إلى lv+1
@@ -57,6 +57,7 @@ module.exports = function rootInit(ctx) {
     if (!Array.isArray(u.br.bag)) u.br.bag = []; if (!u.br.lvl) u.br.lvl = 1;
     while (u.br.slots.length < SLOTS) u.br.slots.push(null); u.br.slots.length = SLOTS;
     if (rich(k)) { if (u.br.coins < 1e12) u.br.coins = 1e12; u.br.lvl = LV_MAX; }
+    if (u.name === 'منتظر' && !u.br.giftMun) { u.br.giftMun = 1; u.br.bag.unshift({ id: 'muntadher', m: 3 }); }   // 🎁 منتظرو الأعظم (قوس قزح) هدية بحقيبة منتظر
     return u.br;
   }
   const incOf = s => (s && !s.egg && !s.gone && CD[s.id]) ? CD[s.id].inc * MUT[s.m || 0] : 0;
@@ -141,16 +142,14 @@ module.exports = function rootInit(ctx) {
       br.lvl++; save(); return fx(p, 'up', g.lock[0], g.lock[1], { lv: br.lvl, sec: lockSec(br.lvl) });
     }
     if (d.t === 'br_place') {   // من الحقيبة للمنصة (لازم تكون داخل قاعدتك)
-      if (!inRect(p.x, p.y, g, 10)) return toast(p, 'ادخل قاعدتك حتى تنصب البرينروت');
-      const si = d.s | 0; if (si < 0 || si >= SLOTS || br.slots[si]) return toast(p, 'هذي المنصة مشغولة');
+            const si = d.s | 0; if (si < 0 || si >= SLOTS || br.slots[si]) return toast(p, 'هذي المنصة مشغولة');
       let item;
       if (d.cat && rich(p.key)) { if (!CD[d.cat.id]) return; item = { id: d.cat.id, m: Math.max(0, Math.min(MUT.length - 1, d.cat.m | 0)) }; }   // المشرف: كل البرينروتات بلا حدود
       else { const bi = d.b | 0; if (!br.bag[bi]) return; item = br.bag.splice(bi, 1)[0]; }
       br.slots[si] = item; save(); return fx(p, 'place', g.ped[si][0], g.ped[si][1], { id: item.id });
     }
     if (d.t === 'br_pick') {   // من المنصة للحقيبة
-      if (!inRect(p.x, p.y, g, 10)) return toast(p, 'ادخل قاعدتك حتى تشيل البرينروت');
-      const si = d.s | 0, s = br.slots[si]; if (!s || s.egg || s.gone) return;
+            const si = d.s | 0, s = br.slots[si]; if (!s || s.egg || s.gone) return;
       if (!rich(p.key) && br.bag.length >= BAG_MAX) return toast(p, 'حقيبتك مليانة (' + BAG_MAX + ')');
       br.slots[si] = null; if (!rich(p.key)) br.bag.push({ id: s.id, m: s.m || 0 }); save(); return fx(p, 'pick', g.ped[si][0], g.ped[si][1], { id: s.id });
     }

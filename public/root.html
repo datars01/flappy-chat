@@ -114,6 +114,26 @@ button { font-family: var(--body); cursor: pointer }
 @keyframes up { to { transform: translate(-50%, -30px); opacity: 0 } }
 .vs { font: 400 34px var(--display); color: var(--pick) }
 #fightRes { font: 400 30px var(--display); margin-top: 10px; min-height: 1.3em }
+
+/* 🎒 الحقيبة */
+#bagBtn { position: relative; background: #ffb020 }
+#bagN { position: absolute; top: -8px; left: -8px; min-width: 24px; height: 22px; padding: 0 5px; border-radius: 11px; background: var(--red); color: #fff; border: 2px solid var(--ink); font: 700 12px/18px Rubik, sans-serif }
+.bagBox { width: min(96vw, 520px); max-height: 92vh; display: flex; flex-direction: column; gap: 10px; background: var(--paper); color: var(--ink); border-radius: 22px; padding: 14px; box-shadow: 0 0 0 4px #fff, 0 10px 0 4px rgba(0,0,0,.3) }
+.bagBox .top { display: flex; align-items: center; justify-content: space-between; gap: 8px } .bagBox h2 { margin: 0; font-size: 20px }
+.bagBox .hint { font-size: 12px; opacity: .75; margin: -4px 0 0 }
+.bgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #1b3a39; padding: 8px; border-radius: 16px; direction: ltr }
+.bslot { position: relative; aspect-ratio: 1 / 1.25; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(255,255,255,.07); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 3px; color: #fff; font-size: 10px; font-weight: 700; text-align: center; min-width: 0 }
+.bslot.full { border-style: solid; border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.14) }
+.bslot.tgt { border-color: #7dffb0; background: rgba(125,255,176,.22); animation: bp 1s infinite } .bslot.hov { background: rgba(125,255,176,.5) }
+@keyframes bp { 50% { transform: scale(.95) } }
+.bslot canvas { width: 100%; flex: 1; min-height: 0; object-fit: contain } .bslot .n { font-size: 9px; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100% } .bslot .num { position: absolute; top: 2px; right: 4px; opacity: .5; font-size: 10px }
+.bslot button { width: 100%; border: 0; border-radius: 8px; background: #3fa7ff; color: #fff; font: 700 10px Rubik, sans-serif; padding: 3px 0 }
+.bslot .plus { flex: 1; display: grid; place-items: center; font-size: 22px; opacity: .45 }
+.blist { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; overflow-y: auto; min-height: 120px; padding: 2px; touch-action: pan-y }
+.bit { border: 2px solid #cfc4ad; border-radius: 12px; background: #fff; padding: 3px; text-align: center; font-size: 10px; font-weight: 700; touch-action: none; user-select: none; -webkit-user-select: none }
+.bit.sel { border-color: #2fd66b; box-shadow: 0 0 0 3px #7dffb0 } .bit canvas { width: 100%; aspect-ratio: 1; display: block; pointer-events: none }
+.bit .n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis } .bit button { width: 100%; margin-top: 2px; border: 0; border-radius: 8px; background: #2fd66b; color: var(--ink); font: 700 11px Rubik, sans-serif; padding: 3px 0 }
+#bagGhost { position: fixed; z-index: 40; width: 74px; height: 74px; pointer-events: none; transform: translate(-50%, -60%) scale(1.1); filter: drop-shadow(0 6px 8px rgba(0,0,0,.5)) }
 </style>
 </head>
 <body>
@@ -139,6 +159,7 @@ button { font-family: var(--body); cursor: pointer }
   <div class="pill"><b id="coins">0</b><small id="incs">+0 / ثانية</small></div>
   <div id="hudR">
     <div class="pill" id="lockInfo"><small id="lvTxt">قاعدتك مستوى 1</small><small id="lockTxt">الباب مفتوح</small></div>
+    <button type="button" class="icb" id="bagBtn" aria-label="الحقيبة">🎒<span id="bagN">0</span></button>
     <button type="button" class="icb" id="bookBtn" aria-label="الكتاب">📖</button>
     <button type="button" class="icb" id="exitBtn" aria-label="خروج">⏻</button>
   </div>
@@ -149,6 +170,14 @@ button { font-family: var(--body); cursor: pointer }
 <div id="acts" hidden></div>
 <div id="placeBar" hidden><span id="placeTxt">دوس على منصة فاضية بقاعدتك</span><span id="placeNums"></span><button type="button" id="placeX">إلغاء</button></div>
 
+<div class="ov" id="bagOv" hidden>
+  <div class="bagBox" role="dialog" aria-label="الحقيبة">
+    <div class="top"><h2 id="bagT">🎒 حقيبتي</h2><button type="button" class="x" id="bagX" aria-label="سد">✕</button></div>
+    <p class="hint">اسحب البرينروت من الحقيبة لمنصة بقاعدتك، أو دوس «ضع» وبعدين اختار المنصة. «سحب» يرجّعه للحقيبة.</p>
+    <div class="bgrid" id="bagGrid"></div>
+    <div class="blist" id="bagList"></div>
+  </div>
+</div>
 <div class="ov" id="bookOv" hidden>
   <div class="book" role="dialog" aria-label="الكتاب">
     <div class="top"><h2 id="bookT">📖 كتابي</h2><button type="button" class="x" id="bookX" aria-label="سد">✕</button></div>
@@ -441,7 +470,7 @@ function render(ms) {
   // الكاميرا: ورا ظهر الشخصية وفوك كتفها شوية
   const me = ME && AV.get(ME[0]);
   if (me) { if (!camInit) { camInit = true; camYaw = G.geo[G.base].d > 0 ? Math.PI : 0; }
-    { let sx = jx; if (keys.a || keys.arrowleft) sx = -1; if (keys.d || keys.arrowright) sx = 1; if (lookId == null && !placing && $('bookOv').hidden && $('fightOv').hidden && Math.abs(sx) > .1) camYaw -= sx * 1.9 * Math.min(dtF, .05); }   // الكاميرا تلف ويا الشخصية من تتحرك يمين/يسار
+    { let sx = jx; if (keys.a || keys.arrowleft) sx = -1; if (keys.d || keys.arrowright) sx = 1; if (lookId == null && !placing && $('bookOv').hidden && $('bagOv').hidden && $('fightOv').hidden && Math.abs(sx) > .1) camYaw -= sx * 1.9 * Math.min(dtF, .05); }   // الكاميرا تلف ويا الشخصية من تتحرك يمين/يسار
     camTarget.set(me.position.x, 92, me.position.z);
     const cp = Math.cos(camPitch), ox = Math.sin(camYaw) * camDist * cp, oz = Math.cos(camYaw) * camDist * cp, oy = Math.sin(camPitch) * camDist + 40;
     const sideX = Math.cos(camYaw) * 26, sideZ = -Math.sin(camYaw) * 26;   // كتف يمين
@@ -481,7 +510,7 @@ function moveJ(e) { const r = joy.getBoundingClientRect(); let x = (e.clientX - 
 addEventListener('keydown', e => { keys[e.key.toLowerCase()] = 1; if (e.key === 'e' || e.key === 'E' || e.key === ' ') { const b = $('acts').querySelector('.act'); if (b) b.click(); e.preventDefault(); } });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = 0; });
 let lastIn = '';
-setInterval(() => { let x = jx, y = jy; if (keys.a || keys.arrowleft) x = -1; if (keys.d || keys.arrowright) x = 1; if (keys.w || keys.arrowup) y = -1; if (keys.s || keys.arrowdown) y = 1; if (placing || !$('bookOv').hidden || !$('fightOv').hidden) { x = 0; y = 0; } { const f = -y, wx = Math.cos(camYaw) * x - Math.sin(camYaw) * f, wz = -Math.sin(camYaw) * x - Math.cos(camYaw) * f; x = wx; y = wz; } const k = x.toFixed(2) + ',' + y.toFixed(2); if (k !== lastIn) { lastIn = k; send({ t: 'br_in', x, y }); } }, 66);
+setInterval(() => { let x = jx, y = jy; if (keys.a || keys.arrowleft) x = -1; if (keys.d || keys.arrowright) x = 1; if (keys.w || keys.arrowup) y = -1; if (keys.s || keys.arrowdown) y = 1; if (placing || !$('bookOv').hidden || !$('bagOv').hidden || !$('fightOv').hidden) { x = 0; y = 0; } { const f = -y, wx = Math.cos(camYaw) * x - Math.sin(camYaw) * f, wz = -Math.sin(camYaw) * x - Math.cos(camYaw) * f; x = wx; y = wz; } const k = x.toFixed(2) + ',' + y.toFixed(2); if (k !== lastIn) { lastIn = k; send({ t: 'br_in', x, y }); } }, 66);
 
 /* ===================== أزرار القرب ===================== */
 let actKey = '';
@@ -504,7 +533,37 @@ function actsTick() {
 }
 
 /* ===================== الواجهة ===================== */
+
+/* ===================== 🎒 الحقيبة: تنصب من الحقيبة للقاعدة بالسحب أو بالأزرار ===================== */
+const hB = (el, t2, cls) => { const x = document.createElement(el); x.textContent = t2; if (cls) x.className = cls; return x; };
+let bagSel = -1, bagKey = '';
+function bagOpen() { bagSel = -1; bagKey = ''; $('bagOv').hidden = false; bagRend(); }
+function bagClose() { $('bagOv').hidden = true; bagSel = -1; }
+$('bagBtn').onclick = bagOpen; $('bagX').onclick = bagClose; $('bagOv').addEventListener('pointerdown', e => { if (e.target === $('bagOv')) bagClose(); });
+function bagRend() { if ($('bagOv').hidden || !S || !G) return; const myB = S.bs[G.base] || {}, sl = myB.s || [], key = JSON.stringify(S.bag) + JSON.stringify(sl) + bagSel; if (key === bagKey) return; bagKey = key;
+  $('bagT').textContent = '🎒 حقيبتي (' + S.bag.length + ' / 64)';
+  const grid = $('bagGrid'); grid.innerHTML = '';
+  for (let i = 0; i < 10; i++) { const s = sl[i] || 0, d = document.createElement('div'); d.className = 'bslot'; d.dataset.slot = i; d.appendChild(hB('span', String(i + 1), 'num'));
+    if (!s) { d.appendChild(hB('div', '+', 'plus')); if (bagSel >= 0) d.classList.add('tgt'); d.onclick = () => { if (bagSel >= 0) bagPut(bagSel, i); }; }
+    else if (s[2]) { d.classList.add('full'); d.appendChild(hB('div', '🥚', 'plus')); d.appendChild(hB('div', '⏳ ' + Math.ceil(s[3] / 1000) + 'ث', 'n')); }
+    else if (s[4]) { d.classList.add('full'); d.appendChild(hB('div', '🦹', 'plus')); d.appendChild(hB('div', 'مسروق', 'n')); }
+    else { d.classList.add('full'); const c = document.createElement('canvas'); charCanvas(c, s[0], s[1]); d.appendChild(c); d.appendChild(hB('div', (s[1] ? MI[s[1]] : '') + nameOf(s[0]), 'n')); const b = hB('button', '⬇ سحب'); b.type = 'button'; b.onclick = ev => { ev.stopPropagation(); if (S.bag.length >= 64 && !S.adm) { toast('حقيبتك مليانة (64)'); return; } send({ t: 'br_pick', s: i }); SFX.buy(); }; d.appendChild(b); }
+    grid.appendChild(d); }
+  const L = $('bagList'); L.innerHTML = ''; if (!S.bag.length) { L.appendChild(hB('p', 'حقيبتك فاضية. من تمتلي منصاتك، البرينروت اللي تاخذه ينحط هنا.', 'muted')); return; }
+  S.bag.forEach(([id, m], bi) => { const it = document.createElement('div'); it.className = 'bit' + (bi === bagSel ? ' sel' : ''); const c = document.createElement('canvas'); charCanvas(c, id, m); it.appendChild(c); it.appendChild(hB('div', (m ? MI[m] : '') + nameOf(id), 'n'));
+    const b = hB('button', bi === bagSel ? 'اختار منصة ⬆' : 'ضع'); b.type = 'button'; b.onclick = ev => { ev.stopPropagation(); if (freePed() < 0) { toast('كل منصاتك مليانة — اسحب وحد للحقيبة أول'); return; } bagSel = bagSel === bi ? -1 : bi; bagKey = ''; bagRend(); }; it.appendChild(b);
+    bagDrag(it, bi, id, m); L.appendChild(it); }); }
+function bagPut(bi, si) { send({ t: 'br_place', s: si, b: bi }); SFX.buy(); bagSel = -1; bagKey = ''; }
+function bagDrag(el, bi, id, m) { let sx = 0, sy = 0, pid = null, gh = null, hov = null;
+  const slotAt = (x, y) => { const t = document.elementFromPoint(x, y); const d = t && t.closest && t.closest('.bslot'); return d && !d.classList.contains('full') ? d : null; };
+  el.addEventListener('pointerdown', e => { if (e.target.tagName === 'BUTTON') return; pid = e.pointerId; sx = e.clientX; sy = e.clientY; try { el.setPointerCapture(pid); } catch (er) {} });
+  el.addEventListener('pointermove', e => { if (e.pointerId !== pid) return; if (!gh && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) { gh = document.createElement('canvas'); gh.id = 'bagGhost'; charCanvas(gh, id, m); document.body.appendChild(gh); document.querySelectorAll('.bslot:not(.full)').forEach(d => d.classList.add('tgt')); }
+    if (gh) { gh.style.left = e.clientX + 'px'; gh.style.top = e.clientY + 'px'; const d = slotAt(e.clientX, e.clientY); if (d !== hov) { if (hov) hov.classList.remove('hov'); hov = d; if (d) d.classList.add('hov'); } } });
+  const end = e => { if (e.pointerId !== pid) return; pid = null; if (gh) { gh.remove(); gh = null; const d = slotAt(e.clientX, e.clientY); document.querySelectorAll('.bslot').forEach(x => x.classList.remove('tgt', 'hov')); if (d && e.type === 'pointerup') bagPut(bi, +d.dataset.slot); else { bagKey = ''; bagRend(); } hov = null; }
+    else if (e.type === 'pointerup') { bagSel = bagSel === bi ? -1 : bi; bagKey = ''; bagRend(); } };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); }
 function updHud() {
+  try { $('bagN').textContent = S.bag.length; bagRend(); } catch (e) {}
   $('coins').textContent = S.adm ? '∞ 👑' : fmt(S.c) + ' 💰'; $('incs').textContent = '+' + fmt(S.inc) + ' / ثانية';
   const b = S.bs[G.base] || {}; $('lvTxt').textContent = 'قاعدتك مستوى ' + S.lv + ' / ' + G.lvMax + ' • القفل ' + S.ls + 'ث'; $('lockTxt').textContent = b.lk > 0 ? '🔒 الباب مسدود ' + Math.ceil(b.lk / 1000) + 'ث' : '🔓 الباب مفتوح';
 }
