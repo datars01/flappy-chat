@@ -160,6 +160,38 @@ const CHARS = [
   pen(c, 4); c.beginPath(); c.moveTo(76, 66); c.lineTo(80, 46); c.lineTo(90, 58); c.lineTo(100, 38); c.lineTo(110, 58); c.lineTo(120, 46); c.lineTo(124, 66); c.closePath(); fs(c, lg(c, 0, 38, 0, 66, '#fff', '#ffb000')); [[100, 50, '#ff3d7f'], [86, 58, '#2fd6a3'], [114, 58, '#3fa7ff']].forEach(([x, y, col]) => { pen(c, 2); ell(c, x, y, 3.5, 3.5); fs(c, col); });
   eye(c, 88, 120, 11, { iris: '#6a2aa8' }); eye(c, 112, 120, 11, { iris: '#6a2aa8' }); mouth(c, 100, 144, 11); blush(c, 74, 140); blush(c, 126, 140); c.restore();
   for (let i = 0; i < 6; i++) { const a = t * 1.3 + i; sparkle(c, 100 + Math.cos(a) * 82, 104 + Math.sin(a * 1.3) * 70, 4 + 3 * Math.abs(Math.sin(t * 4 + i)), '#fff'); } } },
+
+/* 🏆 جوائز المجموعة (ما تطلع بالسجادة ولا بالبيض — بس من الكتاب) */
+{ id: 'jamra', n: 'جمرو الأحمر', r: 'leg', rw: 'c', d: 'جمرة نار حمرة بقرنين، هدية اللي يجمع كل البرينروتات العادية.', draw(c, t) {
+  shadow(c, 100, 186, 50); const b = Math.sin(t * 5) * 3, sw = Math.sin(t * 6) * 6; leg(c, 84, 150, 24, 'sneaker', -sw); leg(c, 116, 150, 24, 'sneaker', sw);
+  for (let i = 0; i < 5; i++) { const x = 64 + i * 18, h = 34 + Math.sin(t * 9 + i * 1.7) * 10; c.beginPath(); c.moveTo(x - 12, 70 + b); c.quadraticCurveTo(x - 6, 70 - h * .6 + b, x, 70 - h + b); c.quadraticCurveTo(x + 6, 70 - h * .6 + b, x + 12, 70 + b); c.closePath(); c.fillStyle = i % 2 ? '#ffd23f' : '#ff7a1f'; c.fill(); }
+  pen(c); c.beginPath(); c.moveTo(100, 54 + b); c.bezierCurveTo(150, 54 + b, 156, 110 + b, 146, 132 + b); c.quadraticCurveTo(130, 162 + b, 100, 160 + b); c.quadraticCurveTo(70, 162 + b, 54, 132 + b); c.bezierCurveTo(44, 110 + b, 50, 54 + b, 100, 54 + b); c.closePath(); fs(c, rg(c, 100, 104 + b, 62, '#ff6a4a', '#b3121a'));
+  [[-1, 70], [1, 130]].forEach(([s, x]) => { pen(c, 4); c.beginPath(); c.moveTo(x, 66 + b); c.quadraticCurveTo(x + s * 16, 40 + b, x + s * 6, 26 + b); c.quadraticCurveTo(x - s * 2, 46 + b, x - s * 10, 62 + b); c.closePath(); fs(c, '#3a0c08'); });
+  c.fillStyle = 'rgba(255,220,120,.45)'; for (let i = 0; i < 6; i++) { ell(c, 70 + (i * 23) % 60, 100 + (i * 37) % 44 + b, 4, 3); c.fill(); }
+  arm(c, 56, 116 + b, 36, 100 + b, '#ff8a6a'); arm(c, 144, 116 + b, 166, 98 + b, '#ff8a6a'); shine(c, 74, 80 + b, 5, 16, .2);
+  eye(c, 86, 104 + b, 11, { iris: '#7a0a0a' }); eye(c, 114, 104 + b, 11, { iris: '#7a0a0a' }); pen(c, 4); c.beginPath(); c.moveTo(74, 88 + b); c.lineTo(96, 94 + b); c.moveTo(126, 88 + b); c.lineTo(104, 94 + b); c.stroke(); mouth(c, 100, 128 + b, 12, 1);
+  for (let i = 0; i < 4; i++) sparkle(c, 100 + Math.cos(t * 2 + i * 1.6) * 74, 100 + Math.sin(t * 2.4 + i) * 64, 3 + 2 * Math.abs(Math.sin(t * 5 + i)), '#ffd23f'); } },
+{ id: 'banafsaj', n: 'بنفسجو الملكي', r: 'myth', rw: 's', d: 'جوهرة بنفسجية ملكية بعباءة وتاج، هدية اللي يجمع كل البرينروتات المميزة.', draw(c, t) {
+  shadow(c, 100, 186, 52); const b = Math.sin(t * 3) * 4, sw = Math.sin(t * 5) * 5;
+  pen(c); c.beginPath(); c.moveTo(60, 96 + b); c.quadraticCurveTo(40, 150, 46, 176); c.lineTo(154, 176); c.quadraticCurveTo(160, 150, 140, 96 + b); c.closePath(); fs(c, lg(c, 0, 96, 0, 176, '#7a2fd0', '#3a0f78'));
+  leg(c, 88, 156, 22, '#3a0f78', -sw); leg(c, 112, 156, 22, '#3a0f78', sw);
+  pen(c); c.beginPath(); c.moveTo(100, 50 + b); c.lineTo(146, 82 + b); c.lineTo(132, 150 + b); c.lineTo(68, 150 + b); c.lineTo(54, 82 + b); c.closePath(); fs(c, lg(c, 54, 50, 146, 150, '#f0d6ff', '#b46bff', '#5a1aa8'));
+  pen(c, 2.5); c.strokeStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.moveTo(54, 82 + b); c.lineTo(146, 82 + b); c.moveTo(100, 50 + b); c.lineTo(80, 82 + b); c.lineTo(100, 150 + b); c.lineTo(120, 82 + b); c.lineTo(100, 50 + b); c.stroke();
+  pen(c, 4); c.beginPath(); c.moveTo(74, 52 + b); c.lineTo(80, 30 + b); c.lineTo(90, 44 + b); c.lineTo(100, 24 + b); c.lineTo(110, 44 + b); c.lineTo(120, 30 + b); c.lineTo(126, 52 + b); c.closePath(); fs(c, lg(c, 0, 24, 0, 52, '#fff3a0', '#e0a010'));
+  [[80, 30], [100, 24], [120, 30]].forEach(([x, y]) => { pen(c, 2); ell(c, x, y + b, 4, 4); fs(c, '#ff4fd8'); });
+  arm(c, 58, 104 + b, 38, 122 + b, '#f0d6ff'); arm(c, 142, 104 + b, 164, 90 + b, '#f0d6ff'); shine(c, 72, 76 + b, 5, 18, .3);
+  eye(c, 88, 104 + b, 11, { iris: '#4a0f8a' }); eye(c, 112, 104 + b, 11, { iris: '#4a0f8a' }); mouth(c, 100, 126 + b, 10); blush(c, 76, 120 + b); blush(c, 124, 120 + b);
+  for (let i = 0; i < 6; i++) { const a = t * 1.1 + i; sparkle(c, 100 + Math.cos(a) * 80, 100 + Math.sin(a * 1.2) * 72, 3 + 3 * Math.abs(Math.sin(t * 4 + i)), i % 2 ? '#e9c8ff' : '#fff'); } } },
+{ id: 'khariq', n: 'خارقو الأسطورة', r: 'secret', rw: 'x', d: 'نجمة ذهبية خارقة بعباءة قوس قزح، هدية اللي يجمع كل البرينروتات الخارقة.', draw(c, t) {
+  shadow(c, 100, 186, 54); const b = Math.sin(t * 3.5) * 5;
+  c.save(); c.globalAlpha = .55; const hg = c.createRadialGradient(100, 104 + b, 10, 100, 104 + b, 96); hg.addColorStop(0, '#fff6a0'); hg.addColorStop(1, 'rgba(255,210,63,0)'); c.fillStyle = hg; c.beginPath(); c.arc(100, 104 + b, 96, 0, TAU); c.fill(); c.restore();
+  const cl = ['#ff4f5e', '#ffb020', '#ffe14a', '#3ddc84', '#3fa7ff', '#b46bff']; cl.forEach((col, i) => { c.beginPath(); c.moveTo(70 + i * 2, 110 + b); c.quadraticCurveTo(40 - i * 4, 150 + Math.sin(t * 4 + i) * 6, 30 + i * 6, 178); c.lineTo(42 + i * 6, 178); c.quadraticCurveTo(54, 150, 76 + i * 2, 112 + b); c.closePath(); c.fillStyle = col; c.fill(); });
+  const sw = Math.sin(t * 6) * 6; leg(c, 88, 150, 24, '#b3121a', -sw); leg(c, 112, 150, 24, '#b3121a', sw);
+  pen(c, 5); c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5 + Math.sin(t * 2) * .05, r = i % 2 ? 30 : 66; c.lineTo(100 + Math.cos(a) * r, 104 + b + Math.sin(a) * r); } c.closePath(); fs(c, rg(c, 100, 104 + b, 70, '#fffbd0', '#f0a800'));
+  pen(c, 4); rr(c, 70, 92 + b, 60, 18, 9); fs(c, '#24140e'); [86, 114].forEach(x => { c.fillStyle = '#7dffef'; ell(c, x, 101 + b, 9, 5); c.fill(); });
+  mouth(c, 100, 126 + b, 12, 1); shine(c, 80, 74 + b, 4, 14, .3);
+  arm(c, 62, 112 + b, 40, 86 + b, '#ffe14a'); arm(c, 138, 112 + b, 162, 86 + b, '#ffe14a');
+  for (let i = 0; i < 8; i++) { const a = t * 1.6 + i * .8; sparkle(c, 100 + Math.cos(a) * 86, 102 + Math.sin(a * 1.1) * 78, 3 + 3 * Math.abs(Math.sin(t * 5 + i)), cl[i % 6]); } } },
 ];
 
 

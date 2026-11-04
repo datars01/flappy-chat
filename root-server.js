@@ -17,8 +17,10 @@ module.exports = function rootInit(ctx) {
     ['masgouf', 'epic', 6000, 70], ['fridge', 'epic', 9000, 95], ['cactus', 'epic', 13000, 130],
     ['tamr', 'leg', 55000, 520], ['betinjan', 'leg', 80000, 700], ['panka', 'leg', 110000, 900],
     ['kubba', 'myth', 420000, 3800], ['jamal', 'myth', 650000, 5200],
-    ['qamar', 'secret', 3000000, 24000], ['muntadher', 'secret', 7777777, 60000]
-  ].map(([id, r, p, inc]) => ({ id, r, p: p * KP, inc: inc * K$ }));
+    ['qamar', 'secret', 3000000, 24000], ['muntadher', 'secret', 7777777, 60000],
+    // 🏆 جوائز المجموعة: ما تطلع بالسجادة ولا البيض، بس من الكتاب
+    ['jamra', 'leg', 150000, 1500, 'c'], ['banafsaj', 'myth', 1500000, 12000, 's'], ['khariq', 'secret', 20000000, 150000, 'x']
+  ].map(([id, r, p, inc, rw]) => ({ id, r, p: p * KP, inc: inc * K$, rw: rw || '' }));
   const CD = {}; CAT.forEach(c => CD[c.id] = c);
   const RW = { common: 620, rare: 250, epic: 95, leg: 28, myth: 6, secret: 1 };
   const MUT = [1, 2, 5, 12];   // عادي، ذهبي، ألماس، قوس قزح
@@ -26,6 +28,10 @@ module.exports = function rootInit(ctx) {
   // 🌀 الدمج داخل القاعدة: اثنين من نفس البرينروت → برينروت جديد أقوى، بنسبة نجاح ترفعها بالفلوس
   const FUSE = { ch: { common: 70, rare: 60, epic: 50, leg: 40, myth: 30, secret: 25 }, feeK: .3, boostK: .6, step: 10 };
   const NEXT = { common: 'rare', rare: 'epic', epic: 'leg', leg: 'myth', myth: 'secret' };
+  // 📚 مجموعات الكتاب: تجمعهن كلهن (ولو مرة وحدة) وتدوس «جمع» تاخذ برينروت جائزة + فلوس هواي
+  const GROUPS = { c: { rs: ['common', 'rare'], rw: 'jamra', coins: 2e6 }, s: { rs: ['epic', 'leg'], rw: 'banafsaj', coins: 2e8 }, x: { rs: ['myth', 'secret'], rw: 'khariq', coins: 2e10 } };
+  Object.values(GROUPS).forEach(gr => gr.ids = CAT.filter(c => !c.rw && gr.rs.includes(c.r)).map(c => c.id));
+  const markSeen = br => { if (!br.seen || typeof br.seen !== 'object') br.seen = {}; br.slots.forEach(x => { if (x && !x.egg && x.id) br.seen[x.id] = 1; }); br.bag.forEach(x => { if (x && x.id) br.seen[x.id] = 1; }); };
   const FIGHT = { 1: { k: .8, r: 1 }, 2: { k: 1.15, r: 2.5 }, 3: { k: 1.6, r: 6 } };
 
   // القواعد: 4 فوك (بابها جوه على السجادة) و3 جوه (بابها فوك) + الساحة (بيض، دمج، معارك)
@@ -51,7 +57,7 @@ module.exports = function rootInit(ctx) {
   const rich = k => { try { return !!isRich(user(k)); } catch (e) { return false; } };
   const inRect = (x, y, g, pad) => x > g.x - (pad || 0) && x < g.x + g.w + (pad || 0) && y > g.y - (pad || 0) && y < g.y + g.h + (pad || 0);
   function pickW(w) { let s = 0; for (const k in w) s += w[k]; let v = Math.random() * s; for (const k in w) { v -= w[k]; if (v <= 0) return k; } return Object.keys(w)[0]; }
-  function pickChar(r) { const L = CAT.filter(c => c.r === r); return L[rnd(L.length)]; }
+  function pickChar(r) { const L = CAT.filter(c => c.r === r && !c.rw); return L[rnd(L.length)]; }
   function brOf(k) {
     const u = user(k); if (!u) return null;
     if (!u.br || !Array.isArray(u.br.slots)) u.br = { k30: 1, coins: START, slots: Array(SLOTS).fill(null), bank: 0, wins: 0, steals: 0, lvl: 1, bag: [] };
@@ -87,7 +93,7 @@ module.exports = function rootInit(ctx) {
     const g = geo[bi]; p = { ws, key: k, name: u.name, base: bi, x: g.spawn[0], y: g.spawn[1], ix: 0, iy: 0, carry: null, fightAt: 0, dir: 1 };
     P.set(k, p); save(); sendInit(p); toastAll('👋 ' + u.name + ' دخل اللعبة', p);
   }
-  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, fuse: FUSE, next: NEXT, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
+  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, groups: GROUPS, fuse: FUSE, next: NEXT, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
   function toastAll(msg, except) { for (const q of P.values()) if (q !== except) toast(q, msg); }
   function leave(ws) {
     const p = [...P.values()].find(q => q.ws === ws); if (!p) return;
@@ -180,6 +186,14 @@ module.exports = function rootInit(ctx) {
       br.slots[a] = { id: A.id, m: (A.m || 0) + 1 }; br.slots[b2] = null; save();
       return send(p.ws, { t: 'br_merged', id: A.id, m: (A.m || 0) + 1 });
     }
+    if (d.t === 'br_claim') {   // 📚 جمع مجموعة
+      const gr = GROUPS[d.g]; if (!gr) return; markSeen(br); br.cl = br.cl || {};
+      if (br.cl[d.g]) return toast(p, 'أخذت جائزة هذي المجموعة قبل ✅');
+      const miss = gr.ids.filter(id => !br.seen[id]); if (miss.length) return toast(p, 'باقيلك ' + miss.length + ' برينروت حتى تكمل المجموعة');
+      if (!hasRoom(p.key)) return toast(p, 'قاعدتك وحقيبتك مليانة — فرّغ مكان أول');
+      br.cl[d.g] = 1; stash(p.key, { id: gr.rw, m: 0 }); br.seen[gr.rw] = 1; if (!rich(p.key)) br.coins += gr.coins; save();
+      return send(p.ws, { t: 'br_claimed', g: d.g, id: gr.rw, coins: gr.coins });
+    }
     if (d.t === 'br_fuse') {
       const si = d.s | 0, A = br.slots[si]; if (!A || A.egg || A.gone || !CD[A.id]) return toast(p, 'ماكو برينروت هنا');
       if (dist(p.x, p.y, g.ped[si][0], g.ped[si][1]) > 110) return toast(p, 'روح يم البرينروت حتى تدمجه');
@@ -253,7 +267,7 @@ module.exports = function rootInit(ctx) {
   function pubPlayers() { return [...P.values()].map(p => [p.key, p.name, Math.round(p.x), Math.round(p.y), p.base, p.carry ? [p.carry.id, p.carry.m] : 0, p.dir, (p.ix || p.iy) ? 1 : 0, rich(p.key) ? 1 : 0]); }
   function bcAll() { const t = now(), bs = pubBases(t), pl = pubPlayers(), cp = carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx = Math.max(0, specAt - t); for (const p of P.values()) { const br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl, bs, cp, spx, fcd: Math.max(0, p.fightAt - t) }, meOf(p))); } }
   function bcOne(p) { const t = now(), br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl: pubPlayers(), bs: pubBases(t), cp: carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx: Math.max(0, specAt - t), fcd: 0 }, meOf(p))); }
-  function meOf(p) { const br = brOf(p.key); return { c: Math.floor(br.coins), inc: br.slots.reduce((s, x) => s + incOf(x), 0), bag: br.bag.map(b => [b.id, b.m || 0]), lv: br.lvl, ls: lockSec(br.lvl), uc: br.lvl < LV_MAX ? upCost(br.lvl) : 0, adm: rich(p.key) ? 1 : 0, bagMax: BAG_MAX }; }
+  function meOf(p) { const br = brOf(p.key); markSeen(br); return { seen: Object.keys(br.seen), cl: br.cl || {}, c: Math.floor(br.coins), inc: br.slots.reduce((s, x) => s + incOf(x), 0), bag: br.bag.map(b => [b.id, b.m || 0]), lv: br.lvl, ls: lockSec(br.lvl), uc: br.lvl < LV_MAX ? upCost(br.lvl) : 0, adm: rich(p.key) ? 1 : 0, bagMax: BAG_MAX }; }
 
   return { onMsg, leave };
 };

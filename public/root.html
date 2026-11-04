@@ -178,6 +178,17 @@ button { font-family: var(--body); cursor: pointer }
 #fuFx .msg small { display: block; font: 700 16px var(--body); color: #fff; margin-top: 6px } #fuFx canvas { width: 170px; height: 170px; display: block; margin: 0 auto; animation: fxSpin 1s ease-out both }
 @keyframes fxPop { from { transform: scale(.3); opacity: 0 } } @keyframes fxSpin { from { transform: scale(0) rotate(-200deg) } }
 #fuFx .cf { position: fixed; width: 10px; height: 14px; top: -20px; animation: cf 2.2s linear forwards } @keyframes cf { to { transform: translateY(110vh) rotate(720deg) } }
+
+/* 🏆 المجموعة بالكتاب */
+.colG { border-radius: 16px; padding: 10px; margin-bottom: 12px; border: 3px solid var(--gc); background: linear-gradient(180deg, color-mix(in srgb, var(--gc) 14%, #fff), #fff) }
+.colG h3 { margin: 0 0 2px; font: 400 22px var(--display); color: var(--gc); display: flex; justify-content: space-between; align-items: center } .colG h3 small { font: 700 13px var(--body); color: var(--ink); background: #fff; border: 2px solid var(--gc); border-radius: 10px; padding: 1px 8px }
+.colBar { height: 8px; border-radius: 4px; background: #e6dcc6; overflow: hidden; margin: 6px 0 8px } .colBar i { display: block; height: 100%; background: var(--gc); transition: width .4s }
+.colI { position: relative; border: 2px solid #cfc4ad; border-radius: 12px; background: #fff; padding: 3px; text-align: center; font-size: 10px; font-weight: 700 } .colI canvas { width: 100%; aspect-ratio: 1; display: block }
+.colI.no { background: #efe8d8 } .colI.no .n { color: #9a8a7a } .colI .ok { position: absolute; top: -6px; left: -6px; width: 22px; height: 22px; border-radius: 50%; background: #2fd66b; color: #fff; border: 2px solid var(--ink); font-size: 12px; line-height: 18px }
+.colI .q { position: absolute; inset: 0 0 18px; display: grid; place-items: center; font: 900 34px var(--body); color: #fff; text-shadow: 0 2px 0 var(--ink) } .colI .n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis }
+.colRw { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 8px; border-radius: 14px; background: #1a1020; color: #fff; border: 2px solid var(--gc); box-shadow: 0 0 18px color-mix(in srgb, var(--gc) 55%, transparent) }
+.colRw canvas { width: 76px; height: 76px; flex: none } .colRw.lock canvas { filter: brightness(0) opacity(.55) } .colRw .tx { flex: 1; min-width: 0 } .colRw b { display: block; font: 400 20px var(--display); color: var(--gc) } .colRw small { opacity: .85; font-size: 12px }
+.colRw button { flex: none; border: 2px solid #fff; border-radius: 14px; padding: 10px 14px; font: 400 20px var(--display); background: var(--gc); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.4) } .colRw button:disabled { opacity: .45; background: #555 } .colRw button.go { animation: fq 1.2s ease-in-out infinite }
 </style>
 </head>
 <body>
@@ -240,7 +251,7 @@ button { font-family: var(--body); cursor: pointer }
 </div>
 
 <script src="/vendor/three-r128.min.js"></script>
-<script src="/root-chars.js?v=1"></script>
+<script src="/root-chars.js?v=2"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -316,6 +327,7 @@ function onMsg(d) {
   if (d.t === 'br_merged') { toast('✨ صار عندك ' + nameOf(d.id) + ' ' + MN[d.m] + '!'); SFX.up(); burst(ME ? ME.rx : 0, ME ? ME.ry - 60 : 0, '#ffd23f', 30); closeOv(); return; }
   if (d.t === 'br_fight') return playFight(d);
   if (d.t === 'br_fused') return fuResult(d);
+  if (d.t === 'br_claimed') return claimFx(d);
 }
 function toast(msg, k) { if (!msg) return; const el = document.createElement('div'); el.className = 'toast' + (k === 'alarm' ? ' alarm' : ''); el.textContent = msg; const T = $('toasts'); T.prepend(el); while (T.children.length > 3) T.lastChild.remove(); setTimeout(() => el.remove(), 3200); }
 const send = o => { try { ws && ws.readyState === 1 && ws.send(JSON.stringify(o)); } catch (e) {} };
@@ -353,15 +365,16 @@ const RG = { common: ['#f2f7f5', '#9fb3ae'], rare: ['#bfe7ff', '#2f8fe0'], epic:
 const rrect = (g, x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
 const NTX = new Map();
 function nameTex(id, m) { const key = id + '_' + (m || 0) + fontsOk; let t = NTX.get(key); if (t) return t;
-  const cd = G.cd[id] || { r: 'common' }, r = cd.r, cc = RG[r] || RG.common, nm = (m ? MI[m] + ' ' : '') + nameOf(id), sub = (RN[r] || '') + (m ? ' • ' + MN[m] : '');
+  const cd = G.cd[id] || { r: 'common' }, r = cd.r, cc = (RG[r] || RG.common).slice(), nm = (m ? MI[m] + ' ' : '') + nameOf(id), sub = (RN[r] || '') + (m ? ' • ' + MN[m] : '');
   const k = 2, c2 = document.createElement('canvas'), g = c2.getContext('2d'), F1 = '800 ' + 30 * k + 'px Rubik, sans-serif', F2 = '700 ' + 14 * k + 'px Rubik, sans-serif';
   g.font = F1; const w = Math.ceil(Math.max(g.measureText(nm).width + 50 * k, 150 * k)), ph = 52 * k, h = ph + 30 * k; c2.width = w; c2.height = h; try { g.direction = 'rtl'; } catch (e) {}
-  let gr; if (r === 'secret') { gr = g.createLinearGradient(0, 0, w, 0); ['#ff4f5e', '#ffb020', '#ffe14a', '#3ddc84', '#3fa7ff', '#b46bff', '#ff4fd8'].forEach((cl, i, a) => gr.addColorStop(i / (a.length - 1), cl)); }
+  const RWS = { c: ['#2a0606', '#5a0a0a', '#ff4a4a'], s: ['#1e0838', '#3a0f78', '#d9a6ff'], x: ['#2a1c00', '#5a3a00', '#ffe14a'] }[cd.rw];
+  let gr; if (RWS) { gr = g.createLinearGradient(0, 4 * k, 0, ph); gr.addColorStop(0, RWS[1]); gr.addColorStop(1, RWS[0]); cc[1] = RWS[2]; } else if (r === 'secret') { gr = g.createLinearGradient(0, 0, w, 0); ['#ff4f5e', '#ffb020', '#ffe14a', '#3ddc84', '#3fa7ff', '#b46bff', '#ff4fd8'].forEach((cl, i, a) => gr.addColorStop(i / (a.length - 1), cl)); }
   else { gr = g.createLinearGradient(0, 4 * k, 0, ph); gr.addColorStop(0, cc[0]); gr.addColorStop(1, cc[1]); }
   g.shadowColor = cc[1]; g.shadowBlur = 10 * k; g.fillStyle = gr; rrect(g, 4 * k, 4 * k, w - 8 * k, ph - 4 * k, 22 * k); g.fill(); g.shadowBlur = 0;
-  g.lineWidth = 3.5 * k; g.strokeStyle = '#24140e'; g.stroke();
+  g.lineWidth = 3.5 * k; g.strokeStyle = RWS ? RWS[2] : '#24140e'; g.stroke();
   g.fillStyle = 'rgba(255,255,255,.4)'; rrect(g, 14 * k, 8 * k, w - 28 * k, 12 * k, 6 * k); g.fill();
-  g.font = F1; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.lineWidth = 7 * k; g.strokeStyle = '#24140e'; g.strokeText(nm, w / 2, ph / 2 + 3 * k); g.fillStyle = '#fff'; g.fillText(nm, w / 2, ph / 2 + 3 * k);
+  g.font = F1; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.lineWidth = 7 * k; g.strokeStyle = '#24140e'; g.strokeText(nm, w / 2, ph / 2 + 3 * k); g.fillStyle = RWS ? RWS[2] : '#fff'; g.fillText(nm, w / 2, ph / 2 + 3 * k);
   g.font = F2; const tw = g.measureText(sub).width + 26 * k, ty = ph + 2 * k; g.fillStyle = '#24140e'; rrect(g, (w - tw) / 2, ty, tw, 24 * k, 12 * k); g.fill(); g.fillStyle = r === 'secret' ? '#ffe14a' : cc[0] === '#f2f7f5' ? '#dfe9e6' : cc[0]; g.fillText(sub, w / 2, ty + 12 * k + 1);
   const tx = new THREE.CanvasTexture(c2); tx.anisotropy = 4; t = { tx, w: w / 2, h: h / 2 }; if (NTX.size > 200) NTX.clear(); NTX.set(key, t); return t; }
 function nameSprite() { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })); sp.visible = false; sp.renderOrder = 6; sp.userData = { key: '' }; return sp; }
@@ -657,6 +670,13 @@ function fuResult(d) { fuSpinThen(d, () => { fuBusy = false; const F = $('fuFx')
   else { F.className = 'on bad'; const msg = document.createElement('div'); msg.className = 'msg'; msg.textContent = '💔 فشل الدمج'; const sm = document.createElement('small'); sm.textContent = 'طلعت ' + d.roll + '% والنسبة ' + d.ch + '% — ارفع الحظ وجرب مرة ثانية'; msg.appendChild(sm); F.appendChild(msg);
     [392, 370, 349, 330].forEach((f, i) => setTimeout(() => snd(f, f * .97, .38, 'sawtooth', .07), i * 260)); setTimeout(() => snd(262, 130, 1.1, 'triangle', .1), 1050); try { navigator.vibrate && navigator.vibrate([120, 80, 200]); } catch (e) {}
     setTimeout(() => { F.className = ''; fuRend(); }, 1900); } }); }
+
+function silh(cv2) { const c = cv2.getContext('2d'); c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-in'; c.fillStyle = '#4a3a30'; c.fillRect(0, 0, cv2.width, cv2.height); c.restore(); }
+function claimFx(d) { const F = $('fuFx'); F.className = ''; F.innerHTML = ''; void F.offsetWidth; F.className = 'on good'; const col = { c: '#ff4a4a', s: '#c77dff', x: '#ffe14a' }[d.g] || '#ffe14a';
+  const cv2 = document.createElement('canvas'); charCanvas(cv2, d.id, 0); const msg = document.createElement('div'); msg.className = 'msg'; msg.style.color = col; msg.appendChild(cv2); msg.appendChild(document.createTextNode('🏆 كملت المجموعة!')); const sm = document.createElement('small'); sm.textContent = nameOf(d.id) + ' + ' + fmt(d.coins) + ' 💰'; msg.appendChild(sm); F.appendChild(msg);
+  for (let i = 0; i < 60; i++) { const c = document.createElement('i'); c.className = 'cf'; c.style.left = Math.random() * 100 + 'vw'; c.style.background = [col, '#ffd23f', '#fff', '#2fd66b'][i % 4]; c.style.animationDelay = Math.random() * .8 + 's'; F.appendChild(c); }
+  [392, 523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => setTimeout(() => snd(f, f, .3, 'triangle', .1), i * 120)); setTimeout(() => { snd(523, 1047, .8, 'sine', .08); snd(659, 1319, .8, 'sine', .06); snd(784, 1568, .8, 'sine', .05); }, 1000);
+  setTimeout(() => { F.className = ''; }, 3200); bookKey = ''; }
 function updHud() {
   try { $('bagN').textContent = S.bag.length; bagRend(); } catch (e) {}
   $('coins').textContent = S.adm ? '∞ 👑' : fmt(S.c) + ' 💰'; $('incs').textContent = '+' + fmt(S.inc) + ' / ثانية';
@@ -677,9 +697,9 @@ function placeSlots() { if (!placing) return; $('placeTxt').textContent = 'وي�
 $('placeX').onclick = () => { placing = null; $('placeBar').hidden = true; };
 
 function bookRender(force) {
-  const myB = S.bs[G.base] || {}, key = bookTab + '|' + JSON.stringify(S.bag) + JSON.stringify(myB.s) + bookSel + adMut + S.c + S.lv + fightTeam.join() + fightLv + mergeSel + (S.fcd > 0);
+  const myB = S.bs[G.base] || {}, key = bookTab + '|' + JSON.stringify(S.bag) + JSON.stringify(myB.s) + bookSel + adMut + S.c + S.lv + fightTeam.join() + fightLv + mergeSel + (S.fcd > 0) + JSON.stringify(S.seen || []) + JSON.stringify(S.cl || {});
   if (!force && key === bookKey) return; bookKey = key;
-  const tabs = [['bag', '🎒 حقيبتي'], ['base', '🏠 قاعدتي'], ['eggs', '🥚 البيض'], ['merge', '🌀 الدمج'], ['fight', '⚔️ المعارك']]; if (S.adm) tabs.splice(1, 0, ['all', '👑 كل البرينروتات']);
+  const tabs = [['bag', '🎒 حقيبتي'], ['base', '🏠 قاعدتي'], ['eggs', '🥚 البيض'], ['merge', '🌀 الدمج'], ['fight', '⚔️ المعارك'], ['col', '🏆 المجموعة']]; if (S.adm) tabs.splice(1, 0, ['all', '👑 كل البرينروتات']);
   const T = $('bookTabs'); T.innerHTML = ''; tabs.forEach(([k, n]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; if (k === bookTab) b.className = 'on'; b.onclick = () => { bookTab = k; bookSel = null; bookRender(true); snd(700, 900, .06, 'triangle', .05); }; T.appendChild(b); });
   const L = $('pgL'), R = $('pgR'); L.innerHTML = ''; R.innerHTML = '';
   const h = (el, t2, cls) => { const x = document.createElement(el); x.textContent = t2; if (cls) x.className = cls; return x; };
@@ -699,6 +719,16 @@ function bookRender(force) {
     L.appendChild(h('h3', '🏠 قاعدتي')); const st = document.createElement('div'); st.className = 'stat'; const rows = [['المستوى', S.lv + ' / ' + G.lvMax], ['مدة سد الباب', S.ls + ' ثانية'], ['الدخل', '+' + fmt(S.inc) + ' 💰 / ثانية'], ['المنصات', (myB.s || []).filter(Boolean).length + ' / 10'], ['التطوير الجاي', S.uc ? fmt(S.uc) + ' 💰 → ' + (S.ls + 10) + ' ثانية' : 'أعلى مستوى 👑']];
     rows.forEach(([a, b]) => { st.appendChild(h('span', a)); st.appendChild(h('b', b)); }); L.appendChild(st); L.appendChild(h('p', 'كل مستوى يزيد مدة سد الباب 10 ثواني: المستوى 1 = 40 ثانية، والمستوى 18 = 210 ثانية. تطوّر وتسد الباب من الزر الأحمر يم باب قاعدتك.', 'muted'));
     R.appendChild(h('h3', 'المنصات')); const g = document.createElement('div'); g.className = 'items'; (myB.s || []).forEach((s, i) => { if (s && !s[2] && !s[4]) g.appendChild(itemEl(s[0], s[1], false, () => {}, 'منصة ' + (i + 1))); else { const e = h('div', s && s[2] ? '🥚 بيضة' : s && s[4] ? '🦹 مسروق' : 'منصة ' + (i + 1) + ' فاضية', 'it'); e.style.cssText = 'display:grid;place-items:center;min-height:96px;color:#9a8a7a'; g.appendChild(e); } }); R.appendChild(g);
+  } else if (bookTab === 'col') {
+    const seen = new Set(S.seen || []), GI = { c: ['🔴 مجموعة العاديات', '#e8344a'], s: ['🟣 مجموعة المميزة', '#8a4be0'], x: ['🌟 مجموعة الخارقة', '#e09a10'] };
+    Object.entries(G.groups).forEach(([k, gr], gi) => { const P = gi < 2 ? L : R, [gn, gc] = GI[k], got = gr.ids.filter(id => seen.has(id)).length, done = got === gr.ids.length, claimed = !!(S.cl || {})[k];
+      const box = document.createElement('div'); box.className = 'colG'; box.style.setProperty('--gc', gc); const hd = document.createElement('h3'); hd.appendChild(document.createTextNode(gn)); hd.appendChild(h('small', got + ' / ' + gr.ids.length)); box.appendChild(hd);
+      const bar = document.createElement('div'); bar.className = 'colBar'; const bi = document.createElement('i'); bi.style.width = (got / gr.ids.length * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
+      const g = document.createElement('div'); g.className = 'items'; gr.ids.forEach(id => { const have = seen.has(id), it = document.createElement('div'); it.className = 'colI' + (have ? '' : ' no'); const cv2 = document.createElement('canvas'); charCanvas(cv2, id, 0); if (!have) silh(cv2); it.appendChild(cv2);
+        if (have) it.appendChild(h('span', '✓', 'ok')); else it.appendChild(h('span', '?', 'q')); it.appendChild(h('div', have ? nameOf(id) : '؟؟؟', 'n')); g.appendChild(it); }); box.appendChild(g);
+      const rw = document.createElement('div'); rw.className = 'colRw' + (done || claimed ? '' : ' lock'); const rc = document.createElement('canvas'); charCanvas(rc, gr.rw, 0); rw.appendChild(rc);
+      const tx = document.createElement('div'); tx.className = 'tx'; tx.appendChild(h('b', done || claimed ? nameOf(gr.rw) : 'جائزة سرية 🎁')); tx.appendChild(h('small', '🎁 برينروت جائزة + ' + fmt(gr.coins) + ' 💰' + (claimed ? '' : done ? ' — كملتها!' : ' — اجمع كل اللي فوك'))); rw.appendChild(tx);
+      const bt = h('button', claimed ? '✅ أخذتها' : 'جمع'); bt.type = 'button'; bt.disabled = claimed || !done; if (done && !claimed) bt.className = 'go'; bt.onclick = () => { send({ t: 'br_claim', g: k }); bt.disabled = true; }; rw.appendChild(bt); box.appendChild(rw); P.appendChild(box); });
   } else if (bookTab === 'eggs') {
     L.appendChild(h('h3', '🥚 محل البيض')); L.appendChild(h('p', 'البيضة تنحط على منصة فاضية وتفقس برينروت عشوائي. كل ما البيضة أغلى، الحظ بالنادر أكثر.', 'muted'));
     const near = dd(ME[2], ME[3], G.hub.egg.x, G.hub.egg.y) < 140; if (!near) L.appendChild(h('p', '📍 روح للساحة يم محل البيض حتى تشتري.', 'muted'));
