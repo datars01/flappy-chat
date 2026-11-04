@@ -162,6 +162,21 @@ const CHARS = [
   for (let i = 0; i < 6; i++) { const a = t * 1.3 + i; sparkle(c, 100 + Math.cos(a) * 82, 104 + Math.sin(a * 1.3) * 70, 4 + 3 * Math.abs(Math.sin(t * 4 + i)), '#fff'); } } },
 
 /* 🏆 جوائز المجموعة (ما تطلع بالسجادة ولا بالبيض — بس من الكتاب) */
+{ id: 'hazzo', n: 'حظّو أبو البرسيم', r: 'secret', rw: 'L', d: 'قطّوة حظ ذهبية تأشّر بإيدها وبراسها برسيمة أربع ورقات. تطلع من الباب العادي بنسبة 5% بس، وتجيب فلوس خرافية.', draw(c, t) {
+  shadow(c, 100, 188, 56); const b = Math.sin(t * 3) * 3, wave = Math.sin(t * 7) * .5;
+  for (let i = 0; i < 5; i++) { const a = t * 1.4 + i * 1.26, x = 100 + Math.cos(a) * 84, y = 112 + Math.sin(a) * 30; pen(c, 2.5); ell(c, x, y, 10, 10); fs(c, lg(c, x - 10, y - 10, x + 10, y + 10, '#fff3a0', '#e0a010')); c.fillStyle = '#a06a00'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', x, y + 1); }
+  pen(c); ell(c, 100, 150 + b, 50, 34); fs(c, rg(c, 100, 150 + b, 56, '#fff6c8', '#f0b020'));
+  pen(c, 3.5); ell(c, 100, 136 + b, 12, 10); fs(c, '#ff4f5e'); pen(c, 3); ell(c, 100, 146 + b, 6, 6); fs(c, '#ffd23f');
+  c.save(); c.translate(142, 120 + b); c.rotate(-.5 + wave); pen(c); rr(c, -10, -46, 20, 50, 10); fs(c, '#fff3d0'); pen(c, 3); ell(c, 0, -46, 12, 10); fs(c, '#fff8e8'); c.restore();
+  pen(c); ell(c, 60, 156 + b, 12, 16); fs(c, '#fff3d0');
+  pen(c); c.beginPath(); c.moveTo(56, 66 + b); c.lineTo(64, 30 + b); c.lineTo(84, 56 + b); c.closePath(); fs(c, '#fff3d0'); c.beginPath(); c.moveTo(144, 66 + b); c.lineTo(136, 30 + b); c.lineTo(116, 56 + b); c.closePath(); fs(c, '#fff3d0');
+  c.fillStyle = '#ff9db8'; c.beginPath(); c.moveTo(64, 60 + b); c.lineTo(66, 40 + b); c.lineTo(78, 56 + b); c.closePath(); c.fill(); c.beginPath(); c.moveTo(136, 60 + b); c.lineTo(134, 40 + b); c.lineTo(122, 56 + b); c.closePath(); c.fill();
+  pen(c); ell(c, 100, 92 + b, 50, 42); fs(c, rg(c, 100, 92 + b, 56, '#ffffff', '#f6e2b0'));
+  [['#ffb020', 70, 74], ['#3a2416', 124, 70]].forEach(([col, x, y]) => { c.fillStyle = col; ell(c, x, y + b, 12, 8, .4); c.fill(); });
+  c.save(); c.translate(100, 50 + b); c.rotate(Math.sin(t * 2) * .15); [0, 1, 2, 3].forEach(k => { c.save(); c.rotate(k * Math.PI / 2 + Math.PI / 4); pen(c, 3); c.beginPath(); c.moveTo(0, 0); c.bezierCurveTo(-14, -6, -12, -22, 0, -16); c.bezierCurveTo(12, -22, 14, -6, 0, 0); fs(c, k % 2 ? '#2fd66b' : '#3ddc84'); c.restore(); }); pen(c, 3); c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(4, 10, 0, 18); c.stroke(); c.restore();
+  eye(c, 84, 94 + b, 10, { iris: '#1b7a3a', tall: .8 }); eye(c, 116, 94 + b, 10, { iris: '#1b7a3a', tall: .8 }); mouth(c, 100, 112 + b, 9); blush(c, 72, 108 + b); blush(c, 128, 108 + b);
+  pen(c, 2); [[-1, 0], [1, 0]].forEach(([s2]) => { c.beginPath(); c.moveTo(100 + s2 * 20, 108 + b); c.lineTo(100 + s2 * 42, 102 + b); c.moveTo(100 + s2 * 20, 112 + b); c.lineTo(100 + s2 * 42, 114 + b); c.stroke(); });
+  for (let i = 0; i < 6; i++) { const a = t * 1.2 + i; sparkle(c, 100 + Math.cos(a) * 80, 100 + Math.sin(a * 1.3) * 74, 3 + 3 * Math.abs(Math.sin(t * 4 + i)), i % 2 ? '#7dffb0' : '#ffe14a'); } } },
 { id: 'jamra', n: 'جمرو الأحمر', r: 'leg', rw: 'c', d: 'جمرة نار حمرة بقرنين، هدية اللي يجمع كل البرينروتات العادية.', draw(c, t) {
   shadow(c, 100, 186, 50); const b = Math.sin(t * 5) * 3, sw = Math.sin(t * 6) * 6; leg(c, 84, 150, 24, 'sneaker', -sw); leg(c, 116, 150, 24, 'sneaker', sw);
   for (let i = 0; i < 5; i++) { const x = 64 + i * 18, h = 34 + Math.sin(t * 9 + i * 1.7) * 10; c.beginPath(); c.moveTo(x - 12, 70 + b); c.quadraticCurveTo(x - 6, 70 - h * .6 + b, x, 70 - h + b); c.quadraticCurveTo(x + 6, 70 - h * .6 + b, x + 12, 70 + b); c.closePath(); c.fillStyle = i % 2 ? '#ffd23f' : '#ff7a1f'; c.fill(); }
