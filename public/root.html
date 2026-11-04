@@ -696,7 +696,11 @@ function startPlace(src) { if (freePed() < 0) { toast('كل منصاتك ملي�
 function placeSlots() { if (!placing) return; $('placeTxt').textContent = 'وين تنصب ' + nameOf(placing.id) + '؟ دوس على منصة خضرة أو رقمها' + (inR(ME[2], ME[3], G.geo[G.base]) ? '' : ' (لازم تكون جوه قاعدتك)'); const box = $('placeNums'); box.innerHTML = ''; ((S.bs[G.base] || {}).s || []).forEach((s, i) => { if (s) return; const b = document.createElement('button'); b.type = 'button'; b.textContent = i + 1; b.onclick = () => placeAt(i); box.appendChild(b); }); }
 $('placeX').onclick = () => { placing = null; $('placeBar').hidden = true; };
 
-function bookRender(force) {
+// 📜 السكرول يبقى بمكانه لمن الكتاب يتحدّث (الفلوس تتغير كل شوية فكان يرجعك للبداية)
+let bookScrollTab = '';
+function bookRender(force) { const ps = document.querySelector('#bookOv .pages'), L0 = $('pgL'), R0 = $('pgR'), same = bookScrollTab === bookTab, sv = same ? [ps ? ps.scrollTop : 0, L0.scrollTop, R0.scrollTop] : [0, 0, 0];
+  bookRender0(force); bookScrollTab = bookTab; if (ps) ps.scrollTop = sv[0]; L0.scrollTop = sv[1]; R0.scrollTop = sv[2]; }
+function bookRender0(force) {
   const myB = S.bs[G.base] || {}, key = bookTab + '|' + JSON.stringify(S.bag) + JSON.stringify(myB.s) + bookSel + adMut + S.c + S.lv + fightTeam.join() + fightLv + mergeSel + (S.fcd > 0) + JSON.stringify(S.seen || []) + JSON.stringify(S.cl || {});
   if (!force && key === bookKey) return; bookKey = key;
   const tabs = [['bag', '🎒 حقيبتي'], ['base', '🏠 قاعدتي'], ['eggs', '🥚 البيض'], ['merge', '🌀 الدمج'], ['fight', '⚔️ المعارك'], ['col', '🏆 المجموعة']]; if (S.adm) tabs.splice(1, 0, ['all', '👑 كل البرينروتات']);
