@@ -87,7 +87,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 </head>
 <body>
 <canvas id="gl"></canvas>
-<div id="joy"><div id="joyK"></div><span>حرّك</span></div><button id="gunBtn" type="button"></button>
+<div id="joy"><div id="joyK"></div><span>دوس بأي مكان وحرّك</span></div><button id="gunBtn" type="button"></button>
 <div class="hud" id="top">
   <div class="chip" id="hpc"><span>❤️ <b id="hpN">100</b></span><div class="bar"><i id="hpB"></i></div></div>
   <div class="chip">🪙 <b class="coinsN">0</b></div><div class="chip">💀 باقي <b id="left">0</b></div>
@@ -876,6 +876,12 @@ function joyMove(e) { const r = JB.getBoundingClientRect(), cx = r.left + r.widt
 JB.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); JOY.id = e.pointerId; try { JB.setPointerCapture(e.pointerId); } catch (x) {} joyMove(e); });
 JB.addEventListener('pointermove', e => { if (e.pointerId === JOY.id) joyMove(e); });
 const joyUp = e => { if (e.pointerId !== JOY.id) return; JOY.id = null; JOY.x = JOY.y = 0; JKn.style.transform = ''; }; JB.addEventListener('pointerup', joyUp); JB.addEventListener('pointercancel', joyUp);
+// 🕹️ الكير يطلع وين ما تدوس بالشاشة، ويرجع لمكانه من تشيل إصبعك
+function joyAt(x, y) { const h = 75, W = innerWidth, H = innerHeight; x = Math.max(h + 6, Math.min(W - h - 6, x)); y = Math.max(h + 6, Math.min(H - h - 6, y)); JB.style.left = x + 'px'; JB.style.top = (y - h) + 'px'; JB.style.bottom = 'auto'; }
+function joyHome() { JB.style.left = JB.style.top = JB.style.bottom = ''; }
+cv.addEventListener('pointerdown', e => { if (!playing || e.pointerType === 'mouse' || JOY.id !== null) return; joyAt(e.clientX, e.clientY); JOY.id = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (x) {} joyMove(e); });
+addEventListener('pointermove', e => { if (e.pointerId === JOY.id) joyMove(e); });
+addEventListener('pointerup', e => { if (e.pointerId === JOY.id) { joyUp(e); joyHome(); } }); addEventListener('pointercancel', e => { if (e.pointerId === JOY.id) { joyUp(e); joyHome(); } });
 cv.addEventListener('pointerdown', e => { if (!playing) return; const p = groundAt(e.clientX, e.clientY); if (!p) return; let best = null, bd = 3; for (const en of EN) if (en.alive) { const d = en.m.position.distanceTo(p); if (d < bd) { bd = d; best = en; } } if (best) { P.target = best; feed('🎯 تركيز على ' + best.K.n); } });   // دوسة على عدو = ركّز عليه
 function gunUI() { const G = gunFor(GUN); $('gunBtn').innerHTML = `<b>${G.n}</b><small>🛒 الأسلحة</small>`; }
 $('gunBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); openShop(); }); gunUI();
