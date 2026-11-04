@@ -725,8 +725,10 @@
     for (let i = 0; i < 18; i++) R.fx.push({ x: R.x, y: 1 + R.y, z: 0.2, vx: rnd(-4, 4), vy: rnd(2, 8), vz: rnd(-2, 2), t: 0.9, e: ['💥', '⭐', '💫'][i % 3] });
     const nb = R.score > S.best; S.best = Math.max(S.best, R.score); S.coins += R.coins - R.banked; R.banked = R.coins; if (!R.revived) S.runs++; R.newBest = nb || R.newBest; save();
   }
+  const isMun = () => { try { return !!(typeof auth !== 'undefined' && auth && auth.name === 'منتظر'); } catch (e) { return false; } };   // 💎 منتظر: «كمّل من وين وكفت» بلا حد
   const REV = () => 60 + R.revived * 60;
   function revive() {
+    if (!isMun() && R.revived >= 3) return;
     const c = REV(); if (CN() < c) { showToastR('😅 تحتاج ' + c + ' 🪙'); return; }
     spend(c); save(); R.revived++; R.ph = 'play'; R.dead = 0; R.killer = null; R.inv = 2.5; R.y = Math.max(R.y, 0); R.vy = 0; R.slide = 0; R.stT = 0; R.ghT = 0; R.shake = 0;
     R.obs = R.obs.filter(o => o.z > 18); R.busy = [0, 0, 0]; R.x = LX[R.lane]; R.plane = R.lane;
@@ -1218,7 +1220,7 @@
   function showOver() {
     const O = $r('runOver'); O.classList.add('on'); R.ph = 'over';
     $r('runOvB').innerHTML = '<div class="ro1">' + (R.newBest ? '🎉 رقم قياسي جديد!' : '👻 الشبح لزمك!') + '</div><div class="ro2">' + R.score.toLocaleString('en') + '</div><div class="ro3"><span>📏 ' + Math.floor(R.dist) + ' متر</span><span>🪙 +' + R.coins + '</span><span>🏆 ' + S.best.toLocaleString('en') + '</span></div>';
-    const rv = $r('runRev'), c = REV(); if (rv) { rv.hidden = R.revived >= 3; rv.innerHTML = '💖 كمّل من وين وكفت <small>' + c + ' 🪙 (عندك ' + CT() + ')</small>'; rv.classList.toggle('no', CN() < c); }
+    const rv = $r('runRev'), c = REV(); if (rv) { rv.hidden = !isMun() && R.revived >= 3; rv.innerHTML = '💖 كمّل من وين وكفت <small>' + c + ' 🪙 (عندك ' + CT() + ')</small>'; rv.classList.toggle('no', CN() < c); }
   }
   function build() {
     const B = $r('runBody'); if (!B || B.dataset.ok) return; B.dataset.ok = '1';
