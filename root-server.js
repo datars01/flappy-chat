@@ -38,7 +38,8 @@ module.exports = function rootInit(ctx) {
   });
   const B = geo.map(() => ({ owner: null, name: '', lockUntil: 0 }));
   const P = new Map();          // key → لاعب
-  let payT = 0, carpet = [], uidN = 1, spawnT = 0, lastBc = 0, lastSave = Date.now();
+  const LINE = (CP.y0 + CP.y1) / 2, GATE = { x: 40, s: CP.y0 - 150, n: CP.y1 + 150 }, SPEC_MS = 5 * 60 * 1000, RW_SPEC = { leg: 60, myth: 32, secret: 8 };
+  let specAt = Date.now() + SPEC_MS, payT = 0, carpet = [], uidN = 1, spawnT = 0, lastBc = 0, lastSave = Date.now();
 
   const now = () => Date.now();
   const rnd = n => Math.floor(Math.random() * n);
@@ -82,7 +83,7 @@ module.exports = function rootInit(ctx) {
     const g = geo[bi]; p = { ws, key: k, name: u.name, base: bi, x: g.spawn[0], y: g.spawn[1], ix: 0, iy: 0, carry: null, fightAt: 0, dir: 1 };
     P.set(k, p); save(); sendInit(p); toastAll('👋 ' + u.name + ' دخل اللعبة', p);
   }
-  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
+  function sendInit(p) { send(p.ws, { t: 'br_init', me: p.key, name: p.name, base: p.base, W, H, CP, geo, hub: HUB, gate: GATE, line: LINE, cat: CAT, mut: MUT, eggs: EGGS, rich: rich(p.key), lvMax: LV_MAX }); bcOne(p); }
   function toastAll(msg, except) { for (const q of P.values()) if (q !== except) toast(q, msg); }
   function leave(ws) {
     const p = [...P.values()].find(q => q.ws === ws); if (!p) return;
@@ -211,8 +212,10 @@ module.exports = function rootInit(ctx) {
   setInterval(() => {
     const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t; if (!P.size) { carpet = []; return; }
     // السجادة
-    spawnT -= dt; if (spawnT <= 0) { spawnT = 1.6 + Math.random() * 1.4; const c = pickChar(pickW(RW)); const mr = Math.random(); carpet.push({ u: uidN++, id: c.id, m: mr < .006 ? 2 : mr < .04 ? 1 : 0, x: -40, y: CP.y0 + 30 + Math.random() * (CP.y1 - CP.y0 - 60) }); }
-    carpet.forEach(c => c.x += 110 * dt); carpet = carpet.filter(c => c.x < W + 50);
+    // بابين يصبّن بخط واحد: الباب العادي كل 5 ثواني، وباب المميز كل 5 دقايق يطلّع برينروت قوي
+    spawnT -= dt; if (spawnT <= 0) { spawnT = 5; const c = pickChar(pickW(RW)); const mr = Math.random(); carpet.push({ u: uidN++, id: c.id, m: mr < .006 ? 2 : mr < .04 ? 1 : 0, x: GATE.x, y: GATE.n, sp: 0 }); }
+    if (t >= specAt) { specAt = t + SPEC_MS; const c = pickChar(pickW(RW_SPEC)); const mr = Math.random(); carpet.push({ u: uidN++, id: c.id, m: mr < .15 ? 2 : mr < .5 ? 1 : 0, x: GATE.x, y: GATE.s, sp: 1 }); toastAll('🌟 باب المميز انفتح! طلع برينروت قوي على السجادة', null); }
+    carpet.forEach(c => { c.x += 110 * dt; c.y += (LINE - c.y) * Math.min(1, dt * 1.6); }); carpet = carpet.filter(c => c.x < W + 50);
     for (const p of P.values()) {
       const sp = SPEED * (p.carry ? CARRY : 1); let nx = Math.max(16, Math.min(W - 16, p.x + p.ix * sp * dt)), ny = Math.max(16, Math.min(H - 16, p.y + p.iy * sp * dt));
       for (const g of geo) { const b = B[g.i]; if (g.i === p.base || !b.owner || b.lockUntil <= t) continue; if (inRect(nx, ny, g, 4)) { if (!inRect(p.x, ny, g, 4)) nx = p.x; else if (!inRect(nx, p.y, g, 4)) ny = p.y; else { nx = g.spawn[0]; ny = g.front + g.d * 40; } } }
@@ -234,8 +237,8 @@ module.exports = function rootInit(ctx) {
 
   function pubBases(t) { return geo.map(g => { const b = B[g.i], br = b.owner ? brOf(b.owner) : null; return { o: b.name, k: b.owner || '', lv: br ? br.lvl : 0, lk: Math.max(0, b.lockUntil - t), bank: 0, cb: br ? br.sb.map(v => Math.floor(v || 0)) : [], s: br ? br.slots.map(s => !s ? 0 : s.egg ? [0, 0, s.egg, Math.max(0, s.at - t)] : [s.id, s.m || 0, 0, 0, s.gone ? 1 : 0]) : [] }; }); }
   function pubPlayers() { return [...P.values()].map(p => [p.key, p.name, Math.round(p.x), Math.round(p.y), p.base, p.carry ? [p.carry.id, p.carry.m] : 0, p.dir, (p.ix || p.iy) ? 1 : 0, rich(p.key) ? 1 : 0]); }
-  function bcAll() { const t = now(), bs = pubBases(t), pl = pubPlayers(), cp = carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y)]); for (const p of P.values()) { const br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl, bs, cp, fcd: Math.max(0, p.fightAt - t) }, meOf(p))); } }
-  function bcOne(p) { const t = now(), br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl: pubPlayers(), bs: pubBases(t), cp: carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y)]), fcd: 0 }, meOf(p))); }
+  function bcAll() { const t = now(), bs = pubBases(t), pl = pubPlayers(), cp = carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx = Math.max(0, specAt - t); for (const p of P.values()) { const br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl, bs, cp, spx, fcd: Math.max(0, p.fightAt - t) }, meOf(p))); } }
+  function bcOne(p) { const t = now(), br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl: pubPlayers(), bs: pubBases(t), cp: carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y), c.sp]), spx: Math.max(0, specAt - t), fcd: 0 }, meOf(p))); }
   function meOf(p) { const br = brOf(p.key); return { c: Math.floor(br.coins), inc: br.slots.reduce((s, x) => s + incOf(x), 0), bag: br.bag.map(b => [b.id, b.m || 0]), lv: br.lvl, ls: lockSec(br.lvl), uc: br.lvl < LV_MAX ? upCost(br.lvl) : 0, adm: rich(p.key) ? 1 : 0, bagMax: BAG_MAX }; }
 
   return { onMsg, leave };

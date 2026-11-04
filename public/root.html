@@ -253,6 +253,36 @@ function txtCanvas(text, size, col, bg, out) {
 function txtTex(text, size, col, bg, out) { const key = text + '|' + size + col + bg + out + fontsOk; let t = TXC.get(key); if (t) return t; const c2 = txtCanvas(text, size, col, bg, out), tx = new THREE.CanvasTexture(c2); tx.anisotropy = 4; t = { tx, w: c2.width / 2, h: c2.height / 2 }; if (TXC.size > 400) TXC.clear(); TXC.set(key, t); return t; }
 function label(size, col, bg, out, wsc) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })); sp.userData = { key: '', size, col, bg, out, wsc: wsc || 1.4 }; sp.renderOrder = 5; sp.visible = false; return sp; }
 function setLabel(sp, text) { const u = sp.userData, key = text + fontsOk; if (u.key === key) return; u.key = key; if (!text) { sp.visible = false; return; } sp.visible = true; const t = txtTex(text, u.size, u.col, u.bg, u.out); sp.material.map = t.tx; sp.material.needsUpdate = true; sp.scale.set(t.w * u.wsc * LBL, t.h * u.wsc * LBL, 1); }
+
+/* ---- 🏷️ أسماء البرينروت فوكاهن: لافتة ملوّنة حسب الندرة ---- */
+const RG = { common: ['#f2f7f5', '#9fb3ae'], rare: ['#bfe7ff', '#2f8fe0'], epic: ['#ecd6ff', '#8a4be0'], leg: ['#fff0a8', '#ff9a1f'], myth: ['#ffc4cd', '#e8344a'], secret: ['#ffffff', '#ff4fd8'] };
+const rrect = (g, x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
+const NTX = new Map();
+function nameTex(id, m) { const key = id + '_' + (m || 0) + fontsOk; let t = NTX.get(key); if (t) return t;
+  const cd = G.cd[id] || { r: 'common' }, r = cd.r, cc = RG[r] || RG.common, nm = (m ? MI[m] + ' ' : '') + nameOf(id), sub = (RN[r] || '') + (m ? ' • ' + MN[m] : '');
+  const k = 2, c2 = document.createElement('canvas'), g = c2.getContext('2d'), F1 = '800 ' + 30 * k + 'px Rubik, sans-serif', F2 = '700 ' + 14 * k + 'px Rubik, sans-serif';
+  g.font = F1; const w = Math.ceil(Math.max(g.measureText(nm).width + 50 * k, 150 * k)), ph = 52 * k, h = ph + 30 * k; c2.width = w; c2.height = h; try { g.direction = 'rtl'; } catch (e) {}
+  let gr; if (r === 'secret') { gr = g.createLinearGradient(0, 0, w, 0); ['#ff4f5e', '#ffb020', '#ffe14a', '#3ddc84', '#3fa7ff', '#b46bff', '#ff4fd8'].forEach((cl, i, a) => gr.addColorStop(i / (a.length - 1), cl)); }
+  else { gr = g.createLinearGradient(0, 4 * k, 0, ph); gr.addColorStop(0, cc[0]); gr.addColorStop(1, cc[1]); }
+  g.shadowColor = cc[1]; g.shadowBlur = 10 * k; g.fillStyle = gr; rrect(g, 4 * k, 4 * k, w - 8 * k, ph - 4 * k, 22 * k); g.fill(); g.shadowBlur = 0;
+  g.lineWidth = 3.5 * k; g.strokeStyle = '#24140e'; g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.4)'; rrect(g, 14 * k, 8 * k, w - 28 * k, 12 * k, 6 * k); g.fill();
+  g.font = F1; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.lineWidth = 7 * k; g.strokeStyle = '#24140e'; g.strokeText(nm, w / 2, ph / 2 + 3 * k); g.fillStyle = '#fff'; g.fillText(nm, w / 2, ph / 2 + 3 * k);
+  g.font = F2; const tw = g.measureText(sub).width + 26 * k, ty = ph + 2 * k; g.fillStyle = '#24140e'; rrect(g, (w - tw) / 2, ty, tw, 24 * k, 12 * k); g.fill(); g.fillStyle = r === 'secret' ? '#ffe14a' : cc[0] === '#f2f7f5' ? '#dfe9e6' : cc[0]; g.fillText(sub, w / 2, ty + 12 * k + 1);
+  const tx = new THREE.CanvasTexture(c2); tx.anisotropy = 4; t = { tx, w: w / 2, h: h / 2 }; if (NTX.size > 200) NTX.clear(); NTX.set(key, t); return t; }
+function nameSprite() { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false })); sp.visible = false; sp.renderOrder = 6; sp.userData = { key: '' }; return sp; }
+function setName(sp, id, m) { const key = id ? id + '_' + (m || 0) + fontsOk : ''; if (sp.userData.key === key) return; sp.userData.key = key; sp.visible = !!id; if (!id) return; const t = nameTex(id, m); sp.material.map = t.tx; sp.material.needsUpdate = true; sp.scale.set(t.w * LBL * 1.05, t.h * LBL * 1.05, 1); }
+
+/* ---- ⏱️ لوحة وقت القاعدة على الحايط ---- */
+function boardDraw(o, b) { const lk = b.lk > 0 ? Math.ceil(b.lk / 1000) : 0, key = lk + '|' + (b.lv || 0) + '|' + (b.o || '') + fontsOk; if (o.tbKey === key) return; o.tbKey = key;
+  const g = o.tbG, W = 640, H = 256, col = o.g.col; g.clearRect(0, 0, W, H);
+  const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, lk ? '#123a6b' : '#14402a'); gr.addColorStop(1, lk ? '#2c6fd6' : '#1f9a55'); g.fillStyle = gr; rrect(g, 6, 6, W - 12, H - 12, 34); g.fill();
+  g.lineWidth = 10; g.strokeStyle = col; g.stroke(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.35)'; rrect(g, 20, 20, W - 40, H - 40, 24); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.direction = 'rtl'; } catch (e) {}
+  g.font = '700 30px Rubik, sans-serif'; g.fillStyle = 'rgba(255,255,255,.85)'; g.fillText(lk ? '🔒 الباب مسدود' : '🔓 الباب مفتوح', W / 2, 54);
+  const big = lk ? Math.floor(lk / 60) + ':' + String(lk % 60).padStart(2, '0') : 'مفتوح'; g.font = '900 110px Rubik, sans-serif'; g.lineJoin = 'round'; g.lineWidth = 14; g.strokeStyle = '#0b1420'; g.strokeText(big, W / 2, 140);
+  const tg = g.createLinearGradient(0, 90, 0, 190); tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, lk ? '#9fd4ff' : '#ffe14a'); g.fillStyle = tg; g.fillText(big, W / 2, 140);
+  g.font = '700 26px Rubik, sans-serif'; g.fillStyle = '#ffd23f'; g.fillText(b.o ? '⭐ مستوى ' + (b.lv || 1) + ' • ' + b.o : 'قاعدة فاضية', W / 2, 214); o.tbTex.needsUpdate = true; }
 const CTX = new Map();
 function charTex(id, m) { const key = id + '_' + (m || 0); let t = CTX.get(key); if (t) return t; const c2 = document.createElement('canvas'); c2.width = c2.height = 256; const g = c2.getContext('2d');
   if (m) { const col = m === 1 ? '255,210,63' : m === 2 ? '120,220,255' : '220,140,255'; const gr = g.createRadialGradient(128, 128, 20, 128, 128, 128); gr.addColorStop(0, 'rgba(' + col + ',.7)'); gr.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); }
@@ -261,7 +291,8 @@ function charSprite(h) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ 
 function setChar(sp, id, m) { const key = id ? id + '_' + (m || 0) : ''; if (sp.userData.key === key) return; sp.userData.key = key; sp.visible = !!id; if (id) { sp.material.map = charTex(id, m); sp.material.needsUpdate = true; } }
 
 /* ---- الأرض والخريطة ---- */
-let built = false; const WALLS = [], BASES = [], CARP = new Map(), AV = new Map(); let carpTex = null;
+const camFade = (sp, x, y, z) => { if (!sp.visible) return; const d = Math.hypot(cam.position.x - x, cam.position.y - y, cam.position.z - z); sp.material.opacity = Math.max(0, Math.min(1, (d - 170) / 140)); };   // اللافتات القريبة من الكامرا تختفي حتى ما تسد الشاشة
+const GATES = {}; let built = false; const WALLS = [], BASES = [], CARP = new Map(), AV = new Map(); let carpTex = null;
 function texCanvas(w, h, fn) { const c2 = document.createElement('canvas'); c2.width = w; c2.height = h; fn(c2.getContext('2d')); const t = new THREE.CanvasTexture(c2); t.anisotropy = 8; return t; }
 function build() {
   built = true; const W = G.W, H = G.H;
@@ -276,6 +307,15 @@ function build() {
   const P = G.CP; carpTex = texCanvas(256, 128, g => { g.fillStyle = '#b3121a'; g.fillRect(0, 0, 256, 128); g.fillStyle = 'rgba(0,0,0,.16)'; for (let x = 0; x < 256; x += 64) { g.beginPath(); g.moveTo(x, 12); g.lineTo(x + 26, 64); g.lineTo(x, 116); g.lineTo(x + 14, 116); g.lineTo(x + 40, 64); g.lineTo(x + 14, 12); g.fill(); } g.fillStyle = '#ffd23f'; g.fillRect(0, 0, 256, 7); g.fillRect(0, 121, 256, 7); });
   carpTex.wrapS = THREE.RepeatWrapping; carpTex.repeat.set(W / 140, 1);
   const cp = mesh(new THREE.BoxGeometry(W, 6, P.y1 - P.y0), [M('#24140e'), M('#24140e'), M('#fff', { map: carpTex }), M('#24140e'), M('#24140e'), M('#24140e')], W / 2, 3, (P.y0 + P.y1) / 2, false); scene.add(cp);
+  // 🚪 بابين يصبّن بخط واحد على السجادة: باب المميز (كل 5 دقايق) والباب العادي (كل 5 ثواني)
+  { const GT = G.gate, LN = G.line, dk = M('#24140e');
+    [['s', GT.s, '#ffb020', '#b46bff'], ['n', GT.n, '#3fa7ff', '#2fd6a3']].forEach(([k, gz, c1, c2]) => {
+      const ex = GT.x + 300, dx = ex - GT.x, dz = LN - gz, len = Math.hypot(dx, dz), rt = carpTex.clone(); rt.needsUpdate = true; rt.repeat.set(len / 140, 1);
+      const rp = mesh(new THREE.BoxGeometry(len, 5, 96), [dk, dk, M('#fff', { map: rt }), dk, dk, dk], GT.x + dx / 2, 2.5, gz + dz / 2, false); rp.rotation.y = -Math.atan2(dz, dx); scene.add(rp);
+      const gp = new THREE.Group(); gp.position.set(GT.x, 0, gz); [-66, 66].forEach(z => { gp.add(mesh(new THREE.BoxGeometry(26, 200, 26), M(c1), 0, 100, z)); gp.add(mesh(new THREE.SphereGeometry(18, 12, 10), M(c2), 0, 212, z)); });
+      gp.add(mesh(new THREE.BoxGeometry(34, 30, 170), M(c2), 0, 196, 0)); const door = new THREE.Mesh(new THREE.PlaneGeometry(106, 170), new THREE.MeshBasicMaterial({ color: c2, transparent: true, opacity: .55, side: THREE.DoubleSide })); door.rotation.y = Math.PI / 2; door.position.y = 92; gp.add(door);
+      const lb = label(k === 's' ? 24 : 20, '#fff', k === 's' ? '#b46bff' : '#3fa7ff', null, 1.3); lb.position.y = 262; gp.add(lb); scene.add(gp); GATES[k] = { lb, door, key: '' };
+    }); }
   // القواعد
   G.geo.forEach(g => BASES.push(buildBase(g)));
   buildHub();
@@ -293,14 +333,17 @@ function buildBase(g) {
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(150, 160), new THREE.MeshBasicMaterial({ color: '#59b4ff', transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false })); glass.position.set(g.x + g.w / 2, 80, fz); lz.add(glass); lz.visible = false; grp.add(lz); o.laser = lz;
   // اللافتة فوك الباب
   o.sign = label(26, '#fff', g.col, null, 1.25); o.sign.position.set(g.x + g.w / 2, 215, fz); grp.add(o.sign);
+  { const tb = new THREE.Group(), cvb = document.createElement('canvas'); cvb.width = 640; cvb.height = 256; o.tbG = cvb.getContext('2d'); o.tbTex = new THREE.CanvasTexture(cvb); o.tbTex.anisotropy = 8;
+    tb.add(mesh(new THREE.BoxGeometry(470, 198, 10), dark, 0, 165, -6)); tb.add(new THREE.Mesh(new THREE.PlaneGeometry(450, 180), new THREE.MeshBasicMaterial({ map: o.tbTex, transparent: true })).translateY(165));
+    [-200, 200].forEach(px => tb.add(mesh(new THREE.BoxGeometry(14, 270, 14), dark, px, 135, -10))); tb.position.set(g.x + g.w / 2, 0, bz + g.d * 22); if (g.d < 0) tb.rotation.y = Math.PI; grp.add(tb); o.tb = tb; }   // ⏱️ وقت القاعدة على الحايط
   o.lockLbl = label(26, '#9fd4ff', null, '#24140e', 1.3); o.lockLbl.position.set(g.x + g.w / 2, 60, fz + g.d * 30); grp.add(o.lockLbl);
   // المنصات
   g.ped.forEach(([px, pz], si) => { const pg = new THREE.Group(); pg.position.set(px, 0, pz); const base = mesh(new THREE.CylinderGeometry(36, 40, 16, 20), M('#d8dee6'), 0, 8, 0); const top = mesh(new THREE.CylinderGeometry(33, 33, 4, 20), M('#ffffff'), 0, 18, 0); base.userData.si = si; top.userData.si = si; pg.add(base, top);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(42, 3, 8, 32), new THREE.MeshBasicMaterial({ color: '#7dffb0' })); ring.rotation.x = Math.PI / 2; ring.position.y = 22; ring.visible = false; pg.add(ring);
-    const sp = charSprite(110); sp.position.y = 20 + 55; pg.add(sp); const inc = label(24, '#7dffb0', null, '#24140e', 1.2); inc.position.y = 140; pg.add(inc);
+    const sp = charSprite(110); sp.position.y = 20 + 55; pg.add(sp); const inc = label(24, '#7dffb0', null, '#24140e', 1.2); inc.position.y = 140; pg.add(inc); const nm = nameSprite(); nm.position.y = 182; pg.add(nm);
     const egg = mesh(new THREE.SphereGeometry(22, 16, 12), M('#fff')); egg.scale.set(1, 1.3, 1); egg.position.y = 48; egg.visible = false; pg.add(egg);
     const cg = new THREE.Group(); cg.position.set(0, 0, g.d * 80); [[-9, 0], [9, 0], [0, 9]].forEach(([bx, bz], k) => { for (let j = 0; j < 3; j++) { const bill = mesh(new THREE.BoxGeometry(22, 5, 12), M(j % 2 ? '#2fae5a' : '#3ddc84'), bx, 3 + j * 5.5, bz); bill.rotation.y = k * .5 + j * .3; cg.add(bill); } }); const cl = label(20, '#ffd23f', null, '#24140e', 1.15); cl.position.y = 46; cg.add(cl); cg.visible = false; pg.add(cg);
-    grp.add(pg); o.peds.push({ pg, sp, inc, egg, ring, hit: [base, top], key: '', cg, cl }); });
+    grp.add(pg); o.peds.push({ pg, sp, inc, egg, ring, hit: [base, top], key: '', cg, cl, nm }); });
   // زر جمع الفلوس + زر القفل
   const cpad = mesh(new THREE.CylinderGeometry(38, 40, 8, 24), M('#2fd66b'), g.collect[0], 4, g.collect[1]); cpad.visible = false; o.bank = label(24, '#ffd23f', null, '#24140e', 1.3); o.bank.position.set(g.collect[0], 50, g.collect[1]); grp.add(o.bank);
   o.lpad = mesh(new THREE.CylinderGeometry(32, 34, 10, 24), M('#e8344a'), g.lock[0], 5, g.lock[1]); grp.add(o.lpad); const btn = mesh(new THREE.CylinderGeometry(12, 12, 14, 16), M('#ffffff'), g.lock[0], 14, g.lock[1]); grp.add(btn); o.btn = btn;
@@ -364,7 +407,7 @@ function render(ms) {
   if (carpTex) carpTex.offset.x = -(T * 52 / 140) % 1;
   if (HUBO.spin) HUBO.spin.rotation.y += dtF * 2; (HUBO.eggs || []).forEach((e, i) => e.rotation.z = Math.sin(T * 3 + i) * .15);
   // القواعد
-  BASES.forEach(o => { const g = o.g, b = S.bs[g.i] || {}, own = g.i === G.base, locked = b.lk > 0;
+  BASES.forEach(o => { const g = o.g, b = S.bs[g.i] || {}, own = g.i === G.base, locked = b.lk > 0; boardDraw(o, b); camFade(o.sign, o.sign.position.x, o.sign.position.y, o.sign.position.z);
     setLabel(o.sign, b.o ? (own ? '⭐ ' : '') + 'قاعدة ' + b.o + ' • مستوى ' + (b.lv || 1) : 'قاعدة فاضية');
     o.laser.visible = locked; if (locked) o.laser.children.forEach((m, i) => m.material.opacity = .55 + .4 * Math.sin(T * 8 + i));
     setLabel(o.lockLbl, locked ? '🔒 ' + Math.ceil(b.lk / 1000) + ' ثانية' : '');
@@ -372,13 +415,15 @@ function render(ms) {
     setLabel(o.lpLbl, own ? (locked ? 'مسدود' : '🔒 سد الباب') : '');
     o.peds.forEach((pd, si) => { const s = (b.s || [])[si] || 0; pd.ring.visible = !!(placing && own && !s); if (pd.ring.visible) pd.ring.material.color.setHSL(.4, 1, .5 + .2 * Math.sin(T * 6));
       { const cv0 = (b.cb || [])[si] || 0; pd.cg.visible = cv0 > 0; if (cv0 > 0) { setLabel(pd.cl, '💵 ' + fmt(cv0)); pd.cg.position.y = Math.sin(T * 3 + si) * 1.5; } }   // فلوس كدام البرينروت
+      if (!s || s[2] || s[4]) setName(pd.nm, ''); else setName(pd.nm, s[0], s[1]); camFade(pd.nm, pd.pg.position.x, 182, pd.pg.position.z);
       if (!s) { setChar(pd.sp, ''); setLabel(pd.inc, ''); pd.egg.visible = false; return; }
       if (s[2]) { setChar(pd.sp, ''); pd.egg.visible = true; pd.egg.material.color.set(EGN[s[2]][1]); pd.egg.rotation.z = Math.sin(T * (s[3] < 5000 ? 18 : 4)) * .15; setLabel(pd.inc, '⏳ ' + Math.ceil(s[3] / 1000) + 'ث'); return; }
       pd.egg.visible = false; if (s[4]) { setChar(pd.sp, ''); setLabel(pd.inc, '🦹 مسروق!'); return; }
       setChar(pd.sp, s[0], s[1]); pd.sp.position.y = 75 + Math.sin(T * 2 + si) * 3; const cd = G.cd[s[0]]; setLabel(pd.inc, cd ? '+' + fmt(cd.inc * G.mut[s[1] || 0]) + '/ث' : ''); }); });
+  if (GATES.s) { const sx = Math.ceil((S.spx || 0) / 1000), ts = '🌟 باب المميز • ' + Math.floor(sx / 60) + ':' + String(sx % 60).padStart(2, '0'); setLabel(GATES.s.lb, ts); GATES.s.door.material.opacity = .45 + Math.sin(T * 4) * .15 + (sx < 10 ? .25 : 0); setLabel(GATES.n.lb, '🚪 الباب العادي • كل 5 ثواني'); }
   // السجادة
-  const seen = new Set(); (S.cp || []).forEach(it => { const [u, id, m, x, z] = it; seen.add(u); let o = CARP.get(u); if (!o) { o = new THREE.Group(); const sp = charSprite(104); setChar(sp, id, m); sp.position.y = 58; const cd = G.cd[id], pr = label(22, '#24140e', RC[cd.r], null, 1.15); setLabel(pr, (m ? MI[m] + ' ' : '') + '💰' + fmt(cd.p * G.mut[m || 0])); pr.position.y = 128; o.add(sp, pr); o.userData = { sp }; scene.add(o); CARP.set(u, o); o.position.set(x, 6, z); }
-    o.position.x += (x - o.position.x) * k; o.position.z = z; o.userData.sp.position.y = 58 + Math.abs(Math.sin(T * 6 + u)) * 5; });
+  const seen = new Set(); (S.cp || []).forEach(it => { const [u, id, m, x, z] = it; seen.add(u); let o = CARP.get(u); if (!o) { o = new THREE.Group(); const sp = charSprite(104); setChar(sp, id, m); sp.position.y = 58; const cd = G.cd[id], pr = label(22, '#24140e', RC[cd.r], null, 1.15); setLabel(pr, (m ? MI[m] + ' ' : '') + '💰' + fmt(cd.p * G.mut[m || 0])); pr.position.y = 128; const nm = nameSprite(); setName(nm, id, m); nm.position.y = 170; o.add(sp, pr, nm); if (it[5]) { const gl = new THREE.Mesh(new THREE.TorusGeometry(52, 5, 8, 32), new THREE.MeshBasicMaterial({ color: '#ffd23f' })); gl.rotation.x = Math.PI / 2; gl.position.y = 8; o.add(gl); o.userData.gl = gl; } o.userData.sp = sp; scene.add(o); CARP.set(u, o); o.position.set(x, 6, z); }
+    o.position.x += (x - o.position.x) * k; o.position.z += (z - o.position.z) * k; if (o.userData.gl) { o.userData.gl.rotation.z = T * 2; o.userData.gl.material.color.setHSL((T * .3) % 1, 1, .6); } o.userData.sp.position.y = 58 + Math.abs(Math.sin(T * 6 + u)) * 5; });
   CARP.forEach((o, u) => { if (!seen.has(u)) { scene.remove(o); CARP.delete(u); } });
   // اللاعبين
   const seenP = new Set(); S.pl.forEach(p => { seenP.add(p[0]); let a = AV.get(p[0]); if (!a) { a = buildAvatar(G.geo[p[4]] ? G.geo[p[4]].col : '#fff'); scene.add(a); AV.set(p[0], a); a.position.set(p.rx, 0, p.ry); }
