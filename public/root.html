@@ -169,7 +169,7 @@ const RN = { common: 'عادي', rare: 'نادر', epic: 'ملحمي', leg: 'أ�
 const RC = { common: '#c9d6d4', rare: '#6cc4ff', epic: '#c79bff', leg: '#ffc24a', myth: '#ff7a8f', secret: '#ffffff' };
 const MN = ['', 'ذهبي', 'ألماس', 'قوس قزح'], MI = ['', '🥇', '💎', '🌈'];
 const EGN = { e1: ['بيضة عادية', '#f3ead6'], e2: ['بيضة ذهبية', '#ffd23f'], e3: ['بيضة كونية', '#8a5cff'] };
-const fmt = n => { n = Math.floor(n); return n >= 1e12 ? '∞' : n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : String(n); };
+const fmt = n => { n = Math.floor(n); return n >= 1e15 ? '∞' : n >= 1e12 ? (n / 1e12).toFixed(1) + 'T' : n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : String(n); };
 const CH = window.BR_CHARS || {};
 const nameOf = id => (CH[id] && CH[id].n) || id;
 function drawChar(c, id, x, y, s, t, m) {   // القدم عند (x,y)
@@ -299,9 +299,10 @@ function buildBase(g) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(42, 3, 8, 32), new THREE.MeshBasicMaterial({ color: '#7dffb0' })); ring.rotation.x = Math.PI / 2; ring.position.y = 22; ring.visible = false; pg.add(ring);
     const sp = charSprite(110); sp.position.y = 20 + 55; pg.add(sp); const inc = label(24, '#7dffb0', null, '#24140e', 1.2); inc.position.y = 140; pg.add(inc);
     const egg = mesh(new THREE.SphereGeometry(22, 16, 12), M('#fff')); egg.scale.set(1, 1.3, 1); egg.position.y = 48; egg.visible = false; pg.add(egg);
-    grp.add(pg); o.peds.push({ pg, sp, inc, egg, ring, hit: [base, top], key: '' }); });
+    const cg = new THREE.Group(); cg.position.set(0, 0, g.d * 80); [[-9, 0], [9, 0], [0, 9]].forEach(([bx, bz], k) => { for (let j = 0; j < 3; j++) { const bill = mesh(new THREE.BoxGeometry(22, 5, 12), M(j % 2 ? '#2fae5a' : '#3ddc84'), bx, 3 + j * 5.5, bz); bill.rotation.y = k * .5 + j * .3; cg.add(bill); } }); const cl = label(20, '#ffd23f', null, '#24140e', 1.15); cl.position.y = 46; cg.add(cl); cg.visible = false; pg.add(cg);
+    grp.add(pg); o.peds.push({ pg, sp, inc, egg, ring, hit: [base, top], key: '', cg, cl }); });
   // زر جمع الفلوس + زر القفل
-  const cpad = mesh(new THREE.CylinderGeometry(38, 40, 8, 24), M('#2fd66b'), g.collect[0], 4, g.collect[1]); grp.add(cpad); o.bank = label(24, '#ffd23f', null, '#24140e', 1.3); o.bank.position.set(g.collect[0], 50, g.collect[1]); grp.add(o.bank);
+  const cpad = mesh(new THREE.CylinderGeometry(38, 40, 8, 24), M('#2fd66b'), g.collect[0], 4, g.collect[1]); cpad.visible = false; o.bank = label(24, '#ffd23f', null, '#24140e', 1.3); o.bank.position.set(g.collect[0], 50, g.collect[1]); grp.add(o.bank);
   o.lpad = mesh(new THREE.CylinderGeometry(32, 34, 10, 24), M('#e8344a'), g.lock[0], 5, g.lock[1]); grp.add(o.lpad); const btn = mesh(new THREE.CylinderGeometry(12, 12, 14, 16), M('#ffffff'), g.lock[0], 14, g.lock[1]); grp.add(btn); o.btn = btn;
   o.lpLbl = label(20, '#fff', null, '#24140e', 1.2); o.lpLbl.position.set(g.lock[0], 48, g.lock[1]); grp.add(o.lpLbl);
   scene.add(grp); return o;
@@ -367,9 +368,10 @@ function render(ms) {
     setLabel(o.sign, b.o ? (own ? '⭐ ' : '') + 'قاعدة ' + b.o + ' • مستوى ' + (b.lv || 1) : 'قاعدة فاضية');
     o.laser.visible = locked; if (locked) o.laser.children.forEach((m, i) => m.material.opacity = .55 + .4 * Math.sin(T * 8 + i));
     setLabel(o.lockLbl, locked ? '🔒 ' + Math.ceil(b.lk / 1000) + ' ثانية' : '');
-    setLabel(o.bank, b.o ? '💰 ' + fmt(b.bank || 0) : ''); o.lpad.material.color.set(locked ? '#3fa7ff' : '#e8344a'); o.btn.position.y = locked ? 10 : 14 + Math.sin(T * 4) * 1.5;
+    setLabel(o.bank, ''); o.lpad.material.color.set(locked ? '#3fa7ff' : '#e8344a'); o.btn.position.y = locked ? 10 : 14 + Math.sin(T * 4) * 1.5;
     setLabel(o.lpLbl, own ? (locked ? 'مسدود' : '🔒 سد الباب') : '');
     o.peds.forEach((pd, si) => { const s = (b.s || [])[si] || 0; pd.ring.visible = !!(placing && own && !s); if (pd.ring.visible) pd.ring.material.color.setHSL(.4, 1, .5 + .2 * Math.sin(T * 6));
+      { const cv0 = (b.cb || [])[si] || 0; pd.cg.visible = cv0 > 0; if (cv0 > 0) { setLabel(pd.cl, '💵 ' + fmt(cv0)); pd.cg.position.y = Math.sin(T * 3 + si) * 1.5; } }   // فلوس كدام البرينروت
       if (!s) { setChar(pd.sp, ''); setLabel(pd.inc, ''); pd.egg.visible = false; return; }
       if (s[2]) { setChar(pd.sp, ''); pd.egg.visible = true; pd.egg.material.color.set(EGN[s[2]][1]); pd.egg.rotation.z = Math.sin(T * (s[3] < 5000 ? 18 : 4)) * .15; setLabel(pd.inc, '⏳ ' + Math.ceil(s[3] / 1000) + 'ث'); return; }
       pd.egg.visible = false; if (s[4]) { setChar(pd.sp, ''); setLabel(pd.inc, '🦹 مسروق!'); return; }

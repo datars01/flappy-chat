@@ -5,10 +5,11 @@
 'use strict';
 module.exports = function rootInit(ctx) {
   const { db, save, send, isRich } = ctx;
-  const W = 2240, H = 1400, CP = { y0: 630, y1: 770 }, SPEED = 250, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 40, LV_MAX = 18;
+  const K$ = 30000;   // 💰 كل الأسعار والدخل مضروبة بـ 30 ألف (أرخص برينروت يطلّع 30K)
+  const W = 5340, H = 2300, CP = { y0: 1060, y1: 1200 }, SPEED = 330, CARRY = 0.6, SLOTS = 10, MAXB = 7, STEAL_MS = 45000, BAG_MAX = 40, LV_MAX = 18;
   // مستوى القاعدة 1..18: مدة قفل الباب تبدي 40 ثانية وتزيد 10 ثواني كل مستوى (المستوى 18 = 210 ثانية)
   const lockSec = lv => 40 + (Math.max(1, Math.min(LV_MAX, lv | 0)) - 1) * 10;
-  const upCost = lv => Math.round(400 * Math.pow(1.85, lv - 1) / 10) * 10;   // كلفة الصعود من lv إلى lv+1
+  const upCost = lv => Math.round(400 * Math.pow(1.85, lv - 1) / 10) * 10 * K$;   // كلفة الصعود من lv إلى lv+1
   const RI = { common: 0, rare: 1, epic: 2, leg: 3, myth: 4, secret: 5 };
   const CAT = [
     ['istikan', 'common', 60, 1], ['samoon', 'common', 90, 2], ['nial', 'common', 140, 3],
@@ -17,26 +18,27 @@ module.exports = function rootInit(ctx) {
     ['tamr', 'leg', 55000, 520], ['betinjan', 'leg', 80000, 700], ['panka', 'leg', 110000, 900],
     ['kubba', 'myth', 420000, 3800], ['jamal', 'myth', 650000, 5200],
     ['qamar', 'secret', 3000000, 24000], ['muntadher', 'secret', 7777777, 60000]
-  ].map(([id, r, p, inc]) => ({ id, r, p, inc }));
+  ].map(([id, r, p, inc]) => ({ id, r, p: p * K$, inc: inc * K$ }));
   const CD = {}; CAT.forEach(c => CD[c.id] = c);
   const RW = { common: 620, rare: 250, epic: 95, leg: 28, myth: 6, secret: 1 };
   const MUT = [1, 2, 5, 12];   // عادي، ذهبي، ألماس، قوس قزح
-  const EGGS = { e1: { p: 1000, t: 30, w: { common: 70, rare: 28, epic: 2 } }, e2: { p: 25000, t: 90, w: { rare: 55, epic: 35, leg: 10 } }, e3: { p: 500000, t: 180, w: { epic: 40, leg: 40, myth: 17, secret: 3 } } };
+  const EGGS = { e1: { p: 1000 * K$, t: 30, w: { common: 70, rare: 28, epic: 2 } }, e2: { p: 25000 * K$, t: 90, w: { rare: 55, epic: 35, leg: 10 } }, e3: { p: 500000 * K$, t: 180, w: { epic: 40, leg: 40, myth: 17, secret: 3 } } };
   const FIGHT = { 1: { k: .8, r: 1 }, 2: { k: 1.15, r: 2.5 }, 3: { k: 1.6, r: 6 } };
 
   // القواعد: 4 فوك (بابها جوه على السجادة) و3 جوه (بابها فوك) + الساحة (بيض، دمج، معارك)
-  const BW = 470, BH = 470;
-  const BPOS = [[60, 110, 1], [610, 110, 1], [1160, 110, 1], [1710, 110, 1], [60, 820, -1], [610, 820, -1], [1160, 820, -1]];
-  const HUB = { x: 1710, y: 820, w: BW, h: BH, egg: { x: 1830, y: 1150 }, merge: { x: 2070, y: 1150 }, arena: { x: 1945, y: 960 } };
+  // كل منصة بينها وبين اللي يمها مكان برينروتين، وبين القواعد الفوك واللي كدامها مسافة جبيرة
+  const BW = 1200, BH = 650, GAPX = 1300;
+  const BPOS = [[60, 110, 1], [60 + GAPX, 110, 1], [60 + GAPX * 2, 110, 1], [60 + GAPX * 3, 110, 1], [60, 1500, -1], [60 + GAPX, 1500, -1], [60 + GAPX * 2, 1500, -1]];
+  const HUB = { x: 60 + GAPX * 3, y: 1500, w: BW, h: BH, egg: { x: 60 + GAPX * 3 + 300, y: 1950 }, merge: { x: 60 + GAPX * 3 + 900, y: 1950 }, arena: { x: 60 + GAPX * 3 + 600, y: 1720 } };
   const COLORS = ['#ff4f5e', '#3fa7ff', '#ffb020', '#2fd6a3', '#b46bff', '#ff7ab8', '#9be15d'];
   const geo = BPOS.map(([x, y, d], i) => {
     const back = d > 0 ? y : y + BH, front = d > 0 ? y + BH : y;
-    const ped = []; for (let r = 0; r < 2; r++) for (let k = 0; k < 5; k++) ped.push([x + 55 + k * 90, back + d * (95 + r * 125)]);
-    return { i, x, y, w: BW, h: BH, d, front, back, ped, collect: [x + 110, front - d * 55], lock: [x + BW - 110, front - d * 55], spawn: [x + BW / 2, front - d * 40], col: COLORS[i] };
+    const ped = []; for (let r = 0; r < 2; r++) for (let k = 0; k < 5; k++) ped.push([x + 120 + k * 240, back + d * (120 + r * 270)]);
+    return { i, x, y, w: BW, h: BH, d, front, back, ped, cash: ped.map(([px, pz]) => [px, pz + d * 80]), collect: [x + 110, front - d * 55], lock: [x + BW - 110, front - d * 55], spawn: [x + BW / 2, front - d * 40], col: COLORS[i] };
   });
   const B = geo.map(() => ({ owner: null, name: '', lockUntil: 0 }));
   const P = new Map();          // key → لاعب
-  let carpet = [], uidN = 1, spawnT = 0, lastBc = 0, lastSave = Date.now();
+  let payT = 0, carpet = [], uidN = 1, spawnT = 0, lastBc = 0, lastSave = Date.now();
 
   const now = () => Date.now();
   const rnd = n => Math.floor(Math.random() * n);
@@ -48,7 +50,9 @@ module.exports = function rootInit(ctx) {
   function pickChar(r) { const L = CAT.filter(c => c.r === r); return L[rnd(L.length)]; }
   function brOf(k) {
     const u = user(k); if (!u) return null;
-    if (!u.br || !Array.isArray(u.br.slots)) u.br = { coins: 250, slots: Array(SLOTS).fill(null), bank: 0, wins: 0, steals: 0, lvl: 1, bag: [] };
+    if (!u.br || !Array.isArray(u.br.slots)) u.br = { k30: 1, coins: 250 * K$, slots: Array(SLOTS).fill(null), bank: 0, wins: 0, steals: 0, lvl: 1, bag: [] };
+    if (!u.br.k30) { u.br.k30 = 1; u.br.coins = (u.br.coins || 0) * K$ + (u.br.bank || 0) * K$; u.br.bank = 0; }   // تحويل الحسابات القديمة للأسعار الجديدة
+    if (!Array.isArray(u.br.sb)) u.br.sb = Array(SLOTS).fill(0); while (u.br.sb.length < SLOTS) u.br.sb.push(0); u.br.sb.length = SLOTS;
     if (!Array.isArray(u.br.bag)) u.br.bag = []; if (!u.br.lvl) u.br.lvl = 1;
     while (u.br.slots.length < SLOTS) u.br.slots.push(null); u.br.slots.length = SLOTS;
     if (rich(k)) { if (u.br.coins < 1e12) u.br.coins = 1e12; u.br.lvl = LV_MAX; }
@@ -197,7 +201,7 @@ module.exports = function rootInit(ctx) {
       def[di].hp = Math.max(0, def[di].hp - dmg); log.push([side, ai, di, dmg, crit ? 1 : 0]); side ^= 1;
     }
     const win = E.every(u => u.hp <= 0) || (A.reduce((s, u) => s + u.hp, 0) > E.reduce((s, u) => s + u.hp, 0) && !A.every(u => u.hp <= 0));
-    const tot = br.slots.reduce((s, x) => s + incOf(x), 0), reward = win ? Math.round((300 + tot * 25) * F.r) : 0;
+    const tot = br.slots.reduce((s, x) => s + incOf(x), 0), reward = win ? Math.round((300 * K$ + tot * 25) * F.r) : 0;
     if (win) { if (!rich(p.key)) br.coins += reward; br.wins = (br.wins || 0) + 1; save(); }
     send(p.ws, { t: 'br_fight', me, en, log, win, reward, lv });
   }
@@ -208,13 +212,13 @@ module.exports = function rootInit(ctx) {
     const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t; if (!P.size) { carpet = []; return; }
     // السجادة
     spawnT -= dt; if (spawnT <= 0) { spawnT = 1.6 + Math.random() * 1.4; const c = pickChar(pickW(RW)); const mr = Math.random(); carpet.push({ u: uidN++, id: c.id, m: mr < .006 ? 2 : mr < .04 ? 1 : 0, x: -40, y: CP.y0 + 30 + Math.random() * (CP.y1 - CP.y0 - 60) }); }
-    carpet.forEach(c => c.x += 52 * dt); carpet = carpet.filter(c => c.x < W + 50);
+    carpet.forEach(c => c.x += 110 * dt); carpet = carpet.filter(c => c.x < W + 50);
     for (const p of P.values()) {
       const sp = SPEED * (p.carry ? CARRY : 1); let nx = Math.max(16, Math.min(W - 16, p.x + p.ix * sp * dt)), ny = Math.max(16, Math.min(H - 16, p.y + p.iy * sp * dt));
       for (const g of geo) { const b = B[g.i]; if (g.i === p.base || !b.owner || b.lockUntil <= t) continue; if (inRect(nx, ny, g, 4)) { if (!inRect(p.x, ny, g, 4)) nx = p.x; else if (!inRect(nx, p.y, g, 4)) ny = p.y; else { nx = g.spawn[0]; ny = g.front + g.d * 40; } } }
       p.x = nx; p.y = ny;
       const g = geo[p.base], br = brOf(p.key);
-      if (dist(p.x, p.y, g.collect[0], g.collect[1]) < 46 && br.bank >= 1) { const v = Math.floor(br.bank); br.bank -= v; if (!rich(p.key)) br.coins += v; send(p.ws, { t: 'br_fx', k: 'cash', x: g.collect[0], y: g.collect[1], v }); }
+      g.cash.forEach(([cx, cy], i) => { if (br.sb[i] >= 1 && dist(p.x, p.y, cx, cy) < 62) { const v = Math.floor(br.sb[i]); br.sb[i] = 0; if (!rich(p.key)) br.coins += v; send(p.ws, { t: 'br_fx', k: 'cash', x: cx, y: cy, v }); } });   // تمشي يم البرينروت تجمع فلوسه
       if (p.carry) {
         if (inRect(p.x, p.y, g)) finishSteal(p);
         else if (t - p.carry.at > STEAL_MS) { returnStolen(p.carry, ''); p.carry = null; toast(p, '⌛ تأخرت! البرينروت رجع لصاحبه'); }
@@ -222,12 +226,13 @@ module.exports = function rootInit(ctx) {
       }
     }
     // الفلوس + البيض
-    for (const p of P.values()) { const br = brOf(p.key); let inc = 0; br.slots.forEach((s, i) => { if (s && s.egg && t >= s.at) { const c = pickChar(pickW(EGGS[s.egg].w)); br.slots[i] = { id: c.id, m: Math.random() < .08 ? 1 : 0 }; const g = geo[p.base]; fx(p, 'hatch', g.ped[i][0], g.ped[i][1], { id: c.id }); } inc += incOf(br.slots[i]); }); br.bank = (br.bank || 0) + inc * dt; }
+    for (const p of P.values()) { const br = brOf(p.key); let inc = 0; br.slots.forEach((s, i) => { if (s && s.egg && t >= s.at) { const c = pickChar(pickW(EGGS[s.egg].w)); br.slots[i] = { id: c.id, m: Math.random() < .08 ? 1 : 0 }; const g = geo[p.base]; fx(p, 'hatch', g.ped[i][0], g.ped[i][1], { id: c.id }); } inc += incOf(br.slots[i]); }); }
+    payT += dt; if (payT >= 2) { payT -= 2; for (const p of P.values()) { const br = brOf(p.key); br.slots.forEach((s, i) => { const v = incOf(s); if (v) br.sb[i] = (br.sb[i] || 0) + v * 2; }); } }   // 💵 كل ثانيتين تطلع فلوس كدام كل برينروت
     if (t - lastSave > 15000) { lastSave = t; save(); }
     if (t - lastBc >= 100) { lastBc = t; bcAll(); }
   }, 50);
 
-  function pubBases(t) { return geo.map(g => { const b = B[g.i], br = b.owner ? brOf(b.owner) : null; return { o: b.name, k: b.owner || '', lv: br ? br.lvl : 0, lk: Math.max(0, b.lockUntil - t), bank: br ? Math.floor(br.bank || 0) : 0, s: br ? br.slots.map(s => !s ? 0 : s.egg ? [0, 0, s.egg, Math.max(0, s.at - t)] : [s.id, s.m || 0, 0, 0, s.gone ? 1 : 0]) : [] }; }); }
+  function pubBases(t) { return geo.map(g => { const b = B[g.i], br = b.owner ? brOf(b.owner) : null; return { o: b.name, k: b.owner || '', lv: br ? br.lvl : 0, lk: Math.max(0, b.lockUntil - t), bank: 0, cb: br ? br.sb.map(v => Math.floor(v || 0)) : [], s: br ? br.slots.map(s => !s ? 0 : s.egg ? [0, 0, s.egg, Math.max(0, s.at - t)] : [s.id, s.m || 0, 0, 0, s.gone ? 1 : 0]) : [] }; }); }
   function pubPlayers() { return [...P.values()].map(p => [p.key, p.name, Math.round(p.x), Math.round(p.y), p.base, p.carry ? [p.carry.id, p.carry.m] : 0, p.dir, (p.ix || p.iy) ? 1 : 0, rich(p.key) ? 1 : 0]); }
   function bcAll() { const t = now(), bs = pubBases(t), pl = pubPlayers(), cp = carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y)]); for (const p of P.values()) { const br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl, bs, cp, fcd: Math.max(0, p.fightAt - t) }, meOf(p))); } }
   function bcOne(p) { const t = now(), br = brOf(p.key); send(p.ws, Object.assign({ t: 'br_s', pl: pubPlayers(), bs: pubBases(t), cp: carpet.map(c => [c.u, c.id, c.m, Math.round(c.x), Math.round(c.y)]), fcd: 0 }, meOf(p))); }
