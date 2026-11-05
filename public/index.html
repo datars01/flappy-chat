@@ -9869,20 +9869,29 @@ const rmGtrOk = () => !!(RM.on && RM.myAdm && RM.me && RM.me.av && RM.me.av.rig 
 function rmGtrBtn() { const b = $('rmGtrBtn'); if (!b) return; const ok = rmGtrOk(); if (!ok && RM.me && RM.me.gtr) { RM.me.gtr = false; rmSend({ t: 'rm_gtr', on: 0 }); } if (b.hidden === ok) b.hidden = !ok; if (ok) { const t = RM.me.gtr ? 'وقّف' : 'اعزف'; if (b.dataset.t !== t) { b.dataset.t = t; b.querySelector('small').textContent = t; b.classList.toggle('on', !!RM.me.gtr); } } }
 $('rmGtrBtn').onclick = () => { if (!rmGtrOk()) return; RM.me.gtr = !RM.me.gtr; rmSend({ t: 'rm_gtr', on: RM.me.gtr ? 1 : 0 }); rmGtrBtn(); showToast(RM.me.gtr ? '🎸 بدأت تعزف، والكل يسمعك' : '🎸 وقّفت العزف'); };
 const GTR = { buf: null, src: null, g: null, v: 0 };
-function gtrBuild() {   // كيتار حقيقي بطريقة كاربلس-سترونغ: 4 أكوردات (Am F C G) بإيقاع ضرب للأسفل وللأعلى
-  const sr = actx.sampleRate, bpm = 92, beat = 60 / bpm, bar = beat * 4, L = Math.ceil(bar * 4 * sr), out = new Float32Array(L);
-  const CH = [[110, 164.81, 220, 261.63, 329.63], [87.31, 130.81, 174.61, 220, 261.63, 349.23], [130.81, 164.81, 196, 261.63, 329.63], [98, 123.47, 146.83, 196, 246.94, 392]];
-  const PAT = [[0, 1, 1], [1, 1, .8], [1.5, -1, .5], [2.5, -1, .55], [3, 1, .85], [3.5, -1, .5]];
-  const ks = (f, t0, amp, dur) => { const N = Math.max(2, Math.round(sr / f)), b = new Float32Array(N); for (let i = 0; i < N; i++) b[i] = Math.random() * 2 - 1; const s0 = Math.floor(t0 * sr), n = Math.min(L - s0, Math.floor(dur * sr)); let j = 0; for (let i = 0; i < n; i++) { const k2 = (j + 1) % N, v = b[j]; b[j] = (v + b[k2]) * 0.4985; out[s0 + i] += v * amp * (i < 40 ? i / 40 : 1); j = k2; } };
-  CH.forEach((ch, ci) => PAT.forEach(p => { const t = ci * bar + p[0] * beat, st = p[1] > 0 ? ch : ch.slice().reverse().slice(0, 4); st.forEach((f, si) => ks(f, t + si * (p[1] > 0 ? 0.012 : 0.009), 0.16 * p[2] * (f < 140 ? 1.15 : 1), beat * 2.2)); }));
-  CH.forEach((ch, ci) => { ks(ch[0] / 2 < 50 ? ch[0] : ch[0], ci * bar, 0.2, bar); });
+function gtrBuild(kind) {   // كيتار حقيقي بطريقة كاربلس-سترونغ. الولد: روك قوي وسريع (Em C G D). البنت: عزف أصابع ناعم وهادي (C Am F G)
+  const sr = actx.sampleRate, girl = kind === 'girl', bpm = girl ? 84 : 108, beat = 60 / bpm, bar = beat * 4, L = Math.ceil(bar * 4 * sr), out = new Float32Array(L);
+  const ks = (f, t0, amp, dur, dec, br) => { const N = Math.max(2, Math.round(sr / f)), b = new Float32Array(N); for (let i = 0; i < N; i++) b[i] = (Math.random() * 2 - 1) * (br ? 1 : .7); const s0 = Math.floor(t0 * sr), n = Math.min(L - s0, Math.floor(dur * sr)); if (n <= 0) return; let j = 0; for (let i = 0; i < n; i++) { const k2 = (j + 1) % N, v = b[j]; b[j] = (v + b[k2]) * dec; out[s0 + i] += v * amp * (i < 30 ? i / 30 : 1) * (i > n - 600 ? (n - i) / 600 : 1); j = k2; } };
+  if (!girl) {
+    const CH = [[82.41, 123.47, 164.81, 196, 246.94, 329.63], [130.81, 164.81, 196, 261.63, 329.63], [98, 123.47, 146.83, 196, 246.94, 392], [146.83, 220, 293.66, 369.99]];
+    const PAT = [[0, 1, 1], [.5, 1, .55], [1, -1, .45], [1.5, 1, .75], [2, -1, .45], [2.5, 1, .9], [3, -1, .5], [3.5, -1, .55]];
+    CH.forEach((ch, ci) => { PAT.forEach(p => { const t = ci * bar + p[0] * beat, st = p[1] > 0 ? ch : ch.slice().reverse().slice(0, 4); st.forEach((f, si) => ks(f, t + si * (p[1] > 0 ? 0.009 : 0.007), 0.15 * p[2], beat * 1.1, 0.4975, 1)); });
+      for (let e = 0; e < 8; e++) ks(ch[0] < 100 ? ch[0] : ch[0] / 2, ci * bar + e * beat / 2, e % 4 === 0 ? 0.3 : 0.18, beat * .35, 0.492, 1); });
+    for (let i = 0; i < L; i++) out[i] = Math.tanh(out[i] * 2.4);   // خشونة روك خفيفة
+  } else {
+    const CH = [[130.81, 196, 261.63, 329.63, 392], [110, 164.81, 220, 261.63, 329.63], [87.31, 174.61, 220, 261.63, 349.23], [98, 146.83, 196, 246.94, 293.66]];
+    const PK = [0, 2, 3, 4, 1, 3, 2, 4];
+    CH.forEach((ch, ci) => { for (let r = 0; r < 2; r++) PK.forEach((k, i) => { const tt = ci * bar + (r * 2 + i / 4) * beat; ks(ch[k], tt, k === 0 ? 0.24 : 0.16, beat * 3, 0.4993, 0); });
+      const mel = [ch[4] * 2, ch[3] * 2, ch[4] * 2]; [0, 1.5, 3].forEach((b, i) => ks(mel[i], ci * bar + b * beat, 0.07, beat * 2.5, 0.4995, 0)); });
+  }
   let mx = 0; for (let i = 0; i < L; i++) mx = Math.max(mx, Math.abs(out[i])); const k = mx ? 0.9 / mx : 1; for (let i = 0; i < L; i++) out[i] *= k;
-  const B = actx.createBuffer(1, L, sr); B.copyToChannel ? B.copyToChannel(out, 0) : B.getChannelData(0).set(out); return B;
+  const B = actx.createBuffer(1, L, sr); B.getChannelData(0).set(out); return B;
 }
 function rmGtrTick() {
-  let best = 0; if (RM.on) { const me = RM.me; const who = [me].concat(Object.values(RM.others || {})); who.forEach(o => { if (!o || !o.gtr || !o.av || o.av.rig !== 'rock') return; const d = o === me ? 0 : Math.hypot((o.x || 0) - (me.x || 0), (o.y || 0) - (me.y || 0)); best = Math.max(best, Math.max(0, 1 - d / 650)); }); }
+  let best = 0; if (RM.on) { const me = RM.me; const who = [me].concat(Object.values(RM.others || {})); who.forEach(o => { if (!o || !o.gtr || !o.av || o.av.rig !== 'rock') return; const d = o === me ? 0 : Math.hypot((o.x || 0) - (me.x || 0), (o.y || 0) - (me.y || 0)); const v = Math.max(0, 1 - d / 650); if (v > best) { best = v; GTR.kind = o.av.g === 'f' ? 'girl' : 'boy'; } }); }
+  if (GTR.src && GTR.on !== GTR.kind) { try { GTR.src.stop(); } catch (e) {} GTR.src = null; GTR.g = null; GTR.v = 0; }
   const want = best * 0.6;
-  if (want > 0.01 && !GTR.src) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); if (!GTR.buf) GTR.buf = gtrBuild(); const s = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 3600; s.buffer = GTR.buf; s.loop = true; g.gain.value = 0; s.connect(f); f.connect(g); g.connect(actx.destination); s.start(); GTR.src = s; GTR.g = g; } catch (e) { return; } }
+  if (want > 0.01 && !GTR.src) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); GTR.bufs = GTR.bufs || {}; if (!GTR.bufs[GTR.kind]) GTR.bufs[GTR.kind] = gtrBuild(GTR.kind); const s = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 3600; s.buffer = GTR.bufs[GTR.kind]; s.loop = true; GTR.on = GTR.kind; g.gain.value = 0; s.connect(f); f.connect(g); g.connect(actx.destination); s.start(); GTR.src = s; GTR.g = g; } catch (e) { return; } }
   if (GTR.src) { if (Math.abs(want - GTR.v) > 0.005) { GTR.v = want; GTR.g.gain.setTargetAtTime(want, actx.currentTime, 0.25); } if (want <= 0.01) { GTR.off = (GTR.off || 0) + 1; if (GTR.off > 90) { try { GTR.src.stop(); } catch (e) {} GTR.src = null; GTR.g = null; GTR.v = 0; GTR.off = 0; } } else GTR.off = 0; }
 }
 $('rmUmbBtn').onclick = () => { RM.me.umbOn = RM.me.umbOn === false; rmSend({ t: 'rm_umb', on: RM.me.umbOn ? 1 : 0 }); rmUmbBtn(); showToast(RM.me.umbOn ? '☂️ طلعت الشمسية' : '💧 شلت الشمسية... ملابسك رح تتبلل'); };
