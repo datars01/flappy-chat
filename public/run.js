@@ -24,7 +24,8 @@
     { n: 'قوس قزح', k: 'cat', skin: '#ffe0c4', hair: '#ff7ad9', p: 1000, fx: 'rainbow', tr: 'mix' },
     { n: 'المجرّة', k: 'astro', skin: '#f0c8a0', hair: '#eef2f8', p: 1400, fx: 'galaxy', tr: 'mix' },
     { n: 'الملك بابي', k: 'boy', skin: '#f2c49b', hair: '#1a120c', p: 99999, adm: 1, fx: 'royal', tr: 'royal' },
-    { n: 'الملكة بابيتو', k: 'girl', skin: '#f6d0b0', hair: '#5a2a14', p: 99999, adm: 1, fx: 'royalG', tr: 'royal' }];
+    { n: 'الملكة بابيتو', k: 'girl', skin: '#f6d0b0', hair: '#5a2a14', p: 99999, adm: 1, fx: 'royalG', tr: 'royal' },
+    { n: 'منتظر', k: 'boy', skin: '#f2c49b', hair: '#fff1b8', p: 99999, mun: 1, fx: 'munA', tr: 'royal' }];   // 👼 لحساب «منتظر» بس
   const COLS = ['#ff4a6a', '#3a8bff', '#2ee48d', '#ffd23a', '#a24aff', '#ff8a2a', '#22d3ee', '#2a2a3a', '#ff7ad9', '#ffffff'];
   const HATS = [{ n: 'بدون', e: '', p: 0 }, { n: 'كاب', e: '🧢', p: 80 }, { n: 'تاج', e: '👑', p: 300 }, { n: 'قبعة ساحر', e: '🎩', p: 200 }, { n: 'فيونكة', e: '🎀', p: 120 }, { n: 'هالة', e: '😇', p: 500 }, { n: 'قرون', e: '😈', p: 500 }, { n: 'زهرة', e: '🌸', p: 150 }];
   /* الزلاجات الطايرة 🛹: تفعّلها بدوسة دبل أو بالزر، تدوم 30 ثانية وتحميك من ضربة وحدة (تنكسر بدالك) */
@@ -70,10 +71,11 @@
   document.addEventListener('gs-ready', () => { synced = ''; runSync(); });
   const isAdm = () => { try { return !!(typeof auth !== 'undefined' && auth && (auth.admin || auth.rich || auth.name === 'بابي' || auth.name === 'بابيتو')); } catch (e) { return false; } };
   /* المشرفين (بابي وبابيتو): عملات لانهائية ♾️ */
+  const isMun = () => { try { return !!(typeof auth !== 'undefined' && auth && auth.name === 'منتظر'); } catch (e) { return false; } };   // 💎 منتظر: «كمّل من وين وكفت» بلا حد + شخصيته الملائكية
   const CN = () => isAdm() ? Infinity : S.coins;
   const CT = () => isAdm() ? '♾️' : String(S.coins);
   const spend = c => { if (!isAdm()) S.coins -= c; };
-  const ownC = i => CH[i].adm ? isAdm() : (isAdm() || CH[i].p === 0 || S.own.c.includes(i));
+  const ownC = i => CH[i].mun ? isMun() : CH[i].adm ? isAdm() : (isAdm() || CH[i].p === 0 || S.own.c.includes(i));
   const ownH = i => isAdm() || HATS[i].p === 0 || S.own.h.includes(i);
   const ownB = i => isAdm() || BOARDS[i].p === 0 || S.own.b.includes(i);
   const BDN = () => isAdm() ? Infinity : S.boards;
@@ -215,10 +217,10 @@
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function shade(hex, a) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; r = Math.max(0, Math.min(255, r + a)); g = Math.max(0, Math.min(255, g + a)); b = Math.max(0, Math.min(255, b + a)); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
   /* ===================== تأثيرات الشخصيات ✨ (هالة، نار، برق، ثلج، أجنحة، عباءة ملكية...) + حركات القفز (شقلبة، لفّة، رقصات) ===================== */
-  const AUR = { fire: '255,120,30', bolt: '90,200,255', frost: '160,225,255', wings: '255,228,150', shadow: '150,50,220', rainbow: '255,120,220', galaxy: '130,95,255', notes: '255,200,80', royal: '255,205,70', royalG: '255,110,200' };
+  const AUR = { fire: '255,120,30', bolt: '90,200,255', frost: '160,225,255', wings: '255,228,150', shadow: '150,50,220', rainbow: '255,120,220', galaxy: '130,95,255', notes: '255,200,80', royal: '255,205,70', royalG: '255,110,200', munA: '255,214,110' };
   const TRK = { flip: ['flip'], spin: ['spin'], wheel: ['wheel'], dance: ['dab', 'floss', 'disco', 'wave'], mix: ['flip', 'spin', 'dab', 'wheel', 'disco'], royal: ['cork', 'flip', 'dab', 'dflip', 'spin', 'floss', 'wheel', 'wave', 'disco'] };
   const TRN = { flip: 'شقلبة', spin: 'لفّة', wheel: 'دولاب', dance: 'رقصات', mix: 'حركات منوّعة', royal: 'كل الحركات' };
-  const FXN = { fire: '🔥 نار', bolt: '⚡ برق', frost: '❄️ ثلج', wings: '😇 أجنحة', shadow: '🌑 ظل', rainbow: '🌈 قوس قزح', galaxy: '🌌 مجرّة', notes: '🎵 موسيقى', royal: '👑 ملكي', royalG: '👑 ملكي' };
+  const FXN = { fire: '🔥 نار', bolt: '⚡ برق', frost: '❄️ ثلج', wings: '😇 أجنحة', shadow: '🌑 ظل', rainbow: '🌈 قوس قزح', galaxy: '🌌 مجرّة', notes: '🎵 موسيقى', royal: '👑 ملكي', royalG: '👑 ملكي', munA: '👼 أجنحة ذهبية وقلوب' };
   const ADMC = () => !!(CH[S.sel.c] || {}).adm && isAdm();
   function gdot(g, x, y, r, c, a) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(' + c + ',' + a + ')'); gr.addColorStop(1, 'rgba(' + c + ',0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
   /* حركة القفزة: ترجع هل انقلبت الشخصية (تبين من القدّام) وأي وضعية رقص */
@@ -292,6 +294,60 @@
     C7.forEach((c, i) => { g.strokeStyle = c; g.lineWidth = 3; g.beginPath(); for (let k = 0; k <= 12; k++) { const y = -78 + k * 9, x = (i - 3) * 3 + Math.sin(t * 8 - k * 0.6) * (k * 1.4); if (k) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke(); });
     g.globalAlpha = 1;
   }
+  /* ===================== 👼 شخصية «منتظر» (لحساب منتظر بس) =====================
+     لون هولوغرافي لؤلؤي يتلوّن (أندر لون باللعبة) + جناحات ذهبية جبيرة ملائكية ترفرف + هالة + قلوب تتطاير + اسمه فوكه */
+  const MUNS = { run: false, air: false };
+  function munHolo(t, dark) { const h = ((t * 40) % 360 + 360) % 360 / 360, s = 0.85, l = dark ? 0.4 : 0.68;
+    const f = n => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l), v = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return Math.round(v * 255).toString(16).padStart(2, '0'); };
+    return '#' + f(0) + f(8) + f(4); }
+  let MUNW = null;   // الجناح مرسوم مرة وحدة بكانفس جانبي (أسرع، يحافظ على 120 فريم)
+  function munWingImg() {
+    if (MUNW) return MUNW; const SC = 2, W = 150, H = 150, OX = 8, OY = 80, c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC; const g = c.getContext('2d'); g.scale(SC, SC); g.translate(OX, OY); g.lineJoin = 'round';
+    const tip = [64, -50], arm = u => { const x = tip[0] * u, y = tip[1] * u - Math.sin(u * Math.PI) * 10; return [x, y]; };
+    const fea = (x, y, a, L, w, c0, c1, c2) => { g.save(); g.translate(x, y); g.rotate(a); const gr = g.createLinearGradient(0, 0, L, 0); gr.addColorStop(0, c0); gr.addColorStop(0.6, c1); gr.addColorStop(1, c2); g.fillStyle = gr;
+      g.beginPath(); g.moveTo(0, -w * 0.5); g.quadraticCurveTo(L * 0.55, -w * 0.75, L, 0); g.quadraticCurveTo(L * 0.55, w * 0.75, 0, w * 0.5); g.closePath(); g.fill(); g.strokeStyle = 'rgba(120,70,0,.45)'; g.lineWidth = 0.7; g.stroke();
+      g.strokeStyle = 'rgba(255,255,240,.55)'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(2, 0); g.lineTo(L * 0.92, 0); g.stroke(); g.restore(); };
+    // ريشات الطرف الملتفة لفوك
+    [[-0.55, 34], [-0.3, 42], [-0.06, 48]].forEach(([a, L]) => fea(tip[0] - 4, tip[1] + 4, a, L, 9, '#fff2b8', '#ffc928', '#b87a10'));
+    // ثلاث صفوف ريش نازلة من ذراع الجناح (الطويل ورا، القصير قدّام)
+    [{ n: 13, k: 1, w: 10, c: ['#ffe680', '#ffbf1f', '#a8700c'] }, { n: 11, k: 0.62, w: 10.5, c: ['#fff3b0', '#ffd23a', '#c8901a'] }, { n: 9, k: 0.36, w: 11, c: ['#fffbe6', '#ffe58a', '#e0b040'] }].forEach(r => {
+      for (let i = 0; i < r.n; i++) { const u = 0.05 + 0.95 * i / (r.n - 1), p = arm(u), a = 1.5 - 1.15 * Math.pow(u, 1.2), L = (34 + 52 * Math.pow(u, 1.1)) * r.k; fea(p[0], p[1], a, L, r.w, r.c[0], r.c[1], r.c[2]); } });
+    // عظمة الجناح الذهبية
+    g.strokeStyle = '#b87a10'; g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); for (let u = 0; u <= 1.001; u += 0.1) { const p = arm(u); if (u) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); } g.stroke();
+    g.strokeStyle = '#ffe27a'; g.lineWidth = 4.2; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.4; g.stroke();
+    // لمعة
+    g.globalCompositeOperation = 'lighter'; gdot(g, 40, -10, 52, '255,220,120', 0.22); gdot(g, tip[0], tip[1], 14, '255,250,220', 0.5);
+    MUNW = { c, W, H, OX, OY }; return MUNW;
+  }
+  function munWings(g, t) {
+    const I = munWingImg(), air = MUNS.air, run = MUNS.run, rate = air ? 14 : run ? 8.5 : 2.6, amp = air ? 0.38 : run ? 0.2 : 0.08;
+    const fl = Math.sin(t * rate) * amp + (air ? 0.12 : 0), sq = 1 - Math.max(0, Math.sin(t * rate)) * (air ? 0.12 : 0.05);
+    [-1, 1].forEach(s => { g.save(); g.translate(s * 6, -84); g.rotate(s * (-0.08 - fl)); g.scale(s * 1.18, 1.18 * sq); g.drawImage(I.c, -I.OX, -I.OY, I.W, I.H); g.restore(); });
+  }
+  function munAura(g, t) {
+    g.globalCompositeOperation = 'lighter'; gdot(g, 0, -78, 105, '255,220,130', 0.2 + 0.06 * Math.sin(t * 3) + (MUNS.air ? 0.1 : 0)); gdot(g, 0, -70, 55, '255,150,210', 0.14);
+    g.strokeStyle = 'rgba(255,214,110,.8)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(0, 2, 40, 10, 0, 0, 7); g.stroke(); g.setLineDash([5, 7]); g.lineDashOffset = -t * 30; g.strokeStyle = 'rgba(255,140,200,.75)'; g.beginPath(); g.ellipse(0, 2, 31, 7.5, 0, 0, 7); g.stroke(); g.setLineDash([]);
+    for (let i = 0; i < 8; i++) { const a = t * 1.6 + i * 0.785; gdot(g, Math.cos(a) * 40, 2 + Math.sin(a) * 10, 4, i % 2 ? '255,214,110' : '255,130,200', 0.95); }
+    g.globalCompositeOperation = 'source-over';
+  }
+  function munHearts(g, t) {
+    const air = MUNS.air, run = MUNS.run, n = air ? 14 : run ? 10 : 6, sp = air ? 0.95 : run ? 0.7 : 0.42, C3 = ['#ff4f8f', '#ffd23a', '#ff8ad0', '#ff2a5a', '#fff0a8'];
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < n; i++) { const s = i % 2 ? 1 : -1, q = (t * sp + i / n) % 1, lane = (i >> 1) % 3, x0 = s * (78 - lane * 16), y0 = -124 + lane * 22;
+      const x = x0 + s * q * 34 + Math.sin(t * 3 + i) * 6, y = y0 - q * 72, a = Math.min(1, q * 5) * (1 - q);
+      g.globalAlpha = a; g.fillStyle = C3[i % C3.length]; g.font = '900 ' + (12 + (i % 3) * 4) + 'px system-ui'; g.fillText('❤', x, y); }
+    g.globalAlpha = 1;
+  }
+  function munHalo(g, t) {
+    g.save(); g.translate(0, -30 + Math.sin(t * 2.4) * 1.5); g.globalCompositeOperation = 'lighter'; gdot(g, 0, 0, 22, '255,225,130', 0.55);
+    g.strokeStyle = '#ffe27a'; g.lineWidth = 3; g.beginPath(); g.ellipse(0, 0, 13, 4, 0, 0, 7); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 1; g.stroke(); g.restore();
+  }
+  function munName(g, t) {
+    g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 17px Cairo, system-ui'; const y = -166 + Math.sin(t * 2) * 1.5;
+    const gr = g.createLinearGradient(-30, y - 8, 30, y + 8); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.5, '#ffd23a'); gr.addColorStop(1, '#ff8ad0');
+    g.lineWidth = 4; g.strokeStyle = 'rgba(60,30,0,.85)'; g.strokeText('💖 منتظر 💖', 0, y); g.fillStyle = gr; g.fillText('💖 منتظر 💖', 0, y); g.restore();
+  }
+  function munBurst(n, y0) { for (let i = 0; i < n; i++) R.fx.push({ x: R.x + rnd(-0.7, 0.7), y: R.y + y0 + rnd(0, 0.7), z: rnd(-0.3, 0.3), vx: rnd(-3, 3), vy: rnd(1.5, 4.5), vz: rnd(-1, 1), t: 0.9, e: pick(['💖', '💛', '💗', '✨', '💫']), sm: 1 }); }
   /* pass: 0 = ورا الشخصية، 1 = على الظهر (بعد الجسم)، 3 = فوك كلشي */
   function chFx(g, C, t, front, pass) {
     const f = C.fx; if (!f) return; g.save(); const onBack = front ? pass === 0 : pass === 1;
@@ -299,10 +355,12 @@
       if (f === 'royal' || f === 'royalG') { const cc = f === 'royal' ? '255,210,80' : '255,130,210'; g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(' + cc + ',.75)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(0, 2, 38, 9, 0, 0, 7); g.stroke(); g.setLineDash([5, 7]); g.lineDashOffset = -t * 30; g.beginPath(); g.ellipse(0, 2, 30, 7, 0, 0, 7); g.stroke(); g.setLineDash([]); for (let i = 0; i < 8; i++) { const a = t * 1.5 + i * 0.785; gdot(g, Math.cos(a) * 38, 2 + Math.sin(a) * 9, 4, cc, 0.9); } g.globalCompositeOperation = 'source-over'; }
       if (f === 'galaxy' || f === 'frost') orbit(g, t, 0, f);
       if (f === 'shadow') smoke(g, t, 7);
+      if (f === 'munA') munAura(g, t);
     }
     if (onBack) {
       if (f === 'fire') flames(g, t, 10, 12, 78, -58, ['255,250,200', '255,140,30', '200,30,10'], 1.7);
       else if (f === 'wings') wings(g, t, 'angel');
+      else if (f === 'munA') munWings(g, t);
       else if (f === 'rainbow') rainbowTrail(g, t);
       else if (f === 'royal') { cape(g, t, '#4a1a8a', '#ffd23a', front); flames(g, t, 6, 8, 50, -70, ['255,250,210', '255,200,60', '200,120,0'], 1.2); }
       else if (f === 'royalG') { wings(g, t, 'fly'); cape(g, t, '#b0206e', '#ffd6f0', front); }
@@ -311,6 +369,7 @@
     if (pass === 3) {
       if (f === 'bolt') bolts(g, t, AUR.bolt);
       else if (f === 'galaxy' || f === 'frost') orbit(g, t, 1, f);
+      else if (f === 'munA') munHearts(g, t);
       else if (f === 'notes') floaters(g, t, ['♪', '♫', '♬', '♩'], ['#ffd23a', '#ff7ad9', '#3ab8ff', '#2ee48d'], 6);
       else if (f === 'royalG') floaters(g, t, ['❤', '✿', '❤', '✦'], ['#ff5a9a', '#ffd6f0', '#ff2a6a', '#ffffff'], 7);
       else if (f === 'royal') { floaters(g, t, ['✦', '✧', '♛', '✦'], ['#ffe27a', '#fff6c8', '#ffd23a', '#ffffff'], 6); if (Math.floor(t * 3) % 4 === 0) bolts(g, t, '255,210,80'); }
@@ -325,6 +384,7 @@
     FP.forEach((p, i) => {
       if (f === 'fire' || f === 'royal') flames(g, t + i * 0.3, 3, 4.5, 16, p[1] + 2, f === 'royal' ? ['255,250,210', '255,205,70', '200,120,0'] : ['255,250,200', '255,140,30', '200,30,10'], 2.4);
       else if (f === 'royalG') { gdot(g, p[0], p[1], 12, c, 0.65); gdot(g, p[0], p[1] - 2, 5, '255,255,255', 0.6); }
+      else if (f === 'munA') { gdot(g, p[0], p[1], 14, c, 0.75); gdot(g, p[0], p[1] - 2, 6, '255,255,255', 0.7); if (gait) for (let k = 0; k < 3; k++) { const q = (t * 2.2 + k / 3 + i * 0.5) % 1; gdot(g, p[0] - 6 + k * 6, p[1] - q * 26, 3.2, k === 1 ? '255,120,190' : '255,225,120', 1 - q); } }
       else gdot(g, p[0], p[1], 10, c, 0.55);
       if (gait) { const q = ((t * 11 / 6.283) + (i ? 0.5 : 0) + 0.2) % 1; g.strokeStyle = 'rgba(' + c + ',' + (0.75 * (1 - q)).toFixed(2) + ')'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(p[0], 2, 4 + q * 20, (4 + q * 20) * 0.28, 0, 0, 7); g.stroke(); }
     });
@@ -406,15 +466,16 @@
   }
   function hairStrands(g, hc, n, r) { g.strokeStyle = shade(hc, 55); g.globalAlpha = 0.35; g.lineWidth = 0.8; for (let i = 0; i < n; i++) { const a = -2.6 + i * (2.2 / n); g.beginPath(); g.moveTo(Math.cos(a) * 2, -r + 1); g.quadraticCurveTo(Math.cos(a) * r * 0.9, Math.sin(a) * r * 0.5 - 4, Math.cos(a) * r * 0.98, Math.sin(a) * r * 0.2 + 4); g.stroke(); } g.globalAlpha = 1; }
   function drawChar(g, id, o) {
-    const C = CH[id] || CH[0], col = COLS[o.col] || COLS[0], front = !!o.front, t = o.t || 0, run = o.run !== false;
+    const C = CH[id] || CH[0], t = o.t || 0, col = C.mun ? munHolo(t, 0) : (COLS[o.col] || COLS[0]), front = !!o.front, run = o.run !== false;
     const sw = run ? Math.sin(t * 11) : 0, air = o.air, sl = o.slide, onB = o.board != null && !sl, gait = run && !air && !sl && !onB, ph = t * 11;
+    MUNS.run = gait || onB; MUNS.air = !!air;
     const k = C.k, metal = k === 'robot' || k === 'knight', mat = metal ? 'metal' : null;
     g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
     if (sl) g.translate(0, 42);
     else if (onB) g.translate(0, 5 + Math.sin(t * 3) * 1.5);
     else if (run && !air) g.translate(0, -Math.abs(Math.cos(ph)) * 5 + 1);
     chFx(g, C, t, front, 0); const FP = [];
-    const legC = k === 'robot' ? '#8a96a8' : k === 'knight' ? '#9aa2b0' : k === 'dino' ? C.hair : k === 'astro' ? '#dfe4ec' : k === 'ninja' ? '#262833' : '#34466e';
+    const legC = k === 'robot' ? '#8a96a8' : k === 'knight' ? '#9aa2b0' : k === 'dino' ? C.hair : k === 'astro' ? '#dfe4ec' : k === 'ninja' ? '#262833' : C.mun ? munHolo(t, 1) : '#34466e';
     // الرجلين
     if (gait) [-1, 1].forEach(s => { const lp = ph + (s > 0 ? 0 : Math.PI), sn = Math.sin(lp);
       const knee = Math.max(0, Math.sin(lp + 0.55)), kick = sn > -0.15 ? Math.max(0, Math.sin(lp - 0.75)) : 0;
@@ -434,7 +495,7 @@
     if (sl) { g.translate(0, -46); g.rotate(0.1); g.translate(0, 46); }
     const body = k === 'robot' ? '#9aa8bc' : k === 'knight' ? '#c9ced8' : k === 'astro' ? '#eef2f8' : k === 'dino' ? C.hair : k === 'ninja' ? '#2a2c38' : col;
     const handC = metal ? '#7a8496' : k === 'astro' ? '#dfe6f0' : k === 'ninja' ? '#2a2c38' : C.skin, sleeve = body;
-    const hand = (x, y) => { ball(g, x, y, 5, handC, mat); if (C.adm) { g.save(); g.globalCompositeOperation = 'lighter'; gdot(g, x, y, 12, AUR[C.fx], 0.75); g.restore(); } };
+    const hand = (x, y) => { ball(g, x, y, 5, handC, mat); if (C.adm || C.mun) { g.save(); g.globalCompositeOperation = 'lighter'; gdot(g, x, y, 12, AUR[C.fx], 0.75); g.restore(); } };
     const poseArms = (p, pp) => { const A = (x1, y1, x2, y2, x3, y3) => { limb(g, x1, y1, x2, y2, 9.5, sleeve, mat); limb(g, x2, y2, x3, y3, 8.5, sleeve, mat); hand(x3, y3); };
       if (p === 'dab') { A(15, -82, 30, -96, 44, -112); A(-15, -82, -4, -90, 8, -100); }
       else if (p === 'floss') { const w = Math.sin(pp * 22) * 13; A(15, -82, 17 + w, -68, 19 + w * 1.4, -55); A(-15, -82, -17 + w, -68, -19 + w * 1.4, -55); }
@@ -507,8 +568,8 @@
         if (front) face(g, C);
       }
     }
-    const H = C.adm ? null : HATS[o.hat || 0]; if (C.adm) crown(g, t, k === 'girl'); if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
-    g.restore(); chFx(g, C, t, front, 3); g.restore();
+    const H = C.adm || C.mun ? null : HATS[o.hat || 0]; if (C.adm) crown(g, t, k === 'girl'); if (C.mun) munHalo(g, t); if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
+    g.restore(); chFx(g, C, t, front, 3); if (C.mun) munName(g, t); g.restore();
   }
 
   /* زلاجة طايرة احترافية (Hoverboard): لوح كاربون بحافة كروم ونيون، محركين مضاد للجاذبية بأعمدة ضو وحلقات بلازما، وضواية خلفية */
@@ -603,13 +664,13 @@
     for (let i = 0; i < n; i++) { const zz = z - (n - 1) * 0.8 + i * 1.6 - (arc ? 0 : 3); const y = arc ? 0.7 + Math.max(0, 1.6 - Math.abs(zz - z) * 0.35) : 0.7; R.coinsA.push({ l, z: zz, y, x: LX[l] }); }
   }
   function start() {
-    if ((CH[S.sel.c] || {}).adm && !isAdm()) S.sel.c = 0;
+    if ((CH[S.sel.c] || {}).adm && !isAdm()) S.sel.c = 0; if ((CH[S.sel.c] || {}).mun && !isMun()) S.sel.c = 0;
     reset(); R.ph = 'count'; R.cnt = performance.now(); sfx('go'); hideOv(); hud();
   }
 
   /* ---------- الحركة ---------- */
   const JV = () => R.pw.jump > 0 ? 13.2 : 10.2;
-  function doJump(air) { { const Cc = CH[S.sel.c]; if (Cc && Cc.tr) { const L = TRK[Cc.tr]; R.trN = (R.trN || 0) + 1; R.trk = { t0: R.t, k: L[R.trN % L.length] }; } } R.vy = air ? JV() * 0.92 : JV(); R.slide = 0; R.jb = 0; R.sq = -0.18; sfx('jump'); if (air) { R.djUsed = true; for (let i = 0; i < 8; i++) R.fx.push({ x: R.x + rnd(-0.4, 0.4), y: R.y + 0.2, z: 0, vx: rnd(-2, 2), vy: rnd(-2, 0), vz: rnd(-1, 1), t: 0.5, e: '✨' }); } }
+  function doJump(air) { { const Cc = CH[S.sel.c]; if (Cc && Cc.tr) { const L = TRK[Cc.tr]; R.trN = (R.trN || 0) + 1; R.trk = { t0: R.t, k: L[R.trN % L.length] }; } } R.vy = air ? JV() * 0.92 : JV(); R.slide = 0; R.jb = 0; R.sq = -0.18; sfx('jump'); if ((CH[S.sel.c] || {}).mun) munBurst(14, 0.9); if (air) { R.djUsed = true; for (let i = 0; i < 8; i++) R.fx.push({ x: R.x + rnd(-0.4, 0.4), y: R.y + 0.2, z: 0, vx: rnd(-2, 2), vy: rnd(-2, 0), vz: rnd(-1, 1), t: 0.5, e: '✨' }); } }
   function act(k) {
     if (R.ph !== 'play' || R.pause) return;
     if (k === 'left' && R.lane > 0) { R.plane = R.lane; R.lane--; R.tilt = -1; sfx('left'); }
@@ -670,7 +731,7 @@
     R.sp = Math.min(31, 13 + R.dist / 110); const d = R.sp * dt * slow; R.dist += d;
     // تبديل السكة بنعومة + ميلان الجسم
     R.gt += dt * slow * (0.9 + (R.sp - 13) * 0.02);
-    { const sN = Math.floor(R.gt * 11 / Math.PI); if (sN !== R.stepN) { R.stepN = sN; if (R.y < 0.05 && !(R.board > 0) && !(R.slide > 0) && !(R.pw.jet > 0)) { sfx('step'); R.fx.push({ x: R.x + (sN % 2 ? 0.2 : -0.2), y: 0.08, z: 0.05, vx: rnd(-0.6, 0.6), vy: rnd(0.3, 0.9), vz: 0, t: 0.3, e: '💨', sm: 1 }); } } }
+    { const sN = Math.floor(R.gt * 11 / Math.PI); if (sN !== R.stepN) { R.stepN = sN; if (R.y < 0.05 && !(R.board > 0) && !(R.slide > 0) && !(R.pw.jet > 0)) { sfx('step'); R.fx.push({ x: R.x + (sN % 2 ? 0.2 : -0.2), y: 0.08, z: 0.05, vx: rnd(-0.6, 0.6), vy: rnd(0.3, 0.9), vz: 0, t: 0.3, e: '💨', sm: 1 }); } if ((CH[S.sel.c] || {}).mun && !(R.pw.jet > 0)) { R.fx.push({ x: R.x + rnd(-0.5, 0.5), y: R.y + rnd(0.9, 1.8), z: rnd(-0.3, 0.1), vx: rnd(-1.2, 1.2), vy: rnd(0.8, 1.8), vz: -1.2, t: 0.9, e: pick(['💖', '💛', '💗', '✨']), sm: 1 }); } } }
     if (R.board > 0) { R.board -= dt; if (Math.random() < 0.4) R.fx.push({ x: R.x + rnd(-0.35, 0.35), y: R.y + 0.15, z: -0.1, vx: 0, vy: rnd(-0.4, 0.2), vz: -2, t: 0.35, e: '✨', sm: 1 }); if (R.board <= 0) { R.board = 0; showToastR('🛹 خلص وقت الزلاجة'); } }
     const tx = LX[R.lane]; R.x += (tx - R.x) * Math.min(1, dt * 15); R.tilt += (0 - R.tilt) * Math.min(1, dt * 7);
     R.cx += (R.x - R.cx) * Math.min(1, dt * 7);
@@ -679,7 +740,7 @@
     // القفز: نزول أسرع من الصعود ولحظة تعليق فوك حتى تحس بيه
     else if (R.y > 0 || R.vy > 0) {
       const gv = R.vy > 0 ? (Math.abs(R.vy) < 2.2 ? 17 : 30) : 44; R.vy -= gv * dt; R.y += R.vy * dt;
-      if (R.y <= 0) { R.y = 0; if ((CH[S.sel.c] || {}).fx) R.ring = 0.45; R.trk = null; const hard = R.vy < -14; R.vy = 0; R.djUsed = false; R.sq = hard ? 0.28 : 0.18; sfx('land'); for (let i = 0; i < (hard ? 8 : 4); i++) R.fx.push({ x: R.x + rnd(-0.5, 0.5), y: 0.15, z: rnd(-0.2, 0.3), vx: rnd(-2.2, 2.2), vy: rnd(0.5, 1.6), vz: 0, t: 0.35, e: '💨', sm: 1 }); if (R.jb > 0) doJump(false); }
+      if (R.y <= 0) { R.y = 0; if ((CH[S.sel.c] || {}).fx) R.ring = 0.45; R.trk = null; const hard = R.vy < -14; R.vy = 0; R.djUsed = false; R.sq = hard ? 0.28 : 0.18; sfx('land'); if ((CH[S.sel.c] || {}).mun) munBurst(8, 0.15); for (let i = 0; i < (hard ? 8 : 4); i++) R.fx.push({ x: R.x + rnd(-0.5, 0.5), y: 0.15, z: rnd(-0.2, 0.3), vx: rnd(-2.2, 2.2), vy: rnd(0.5, 1.6), vz: 0, t: 0.35, e: '💨', sm: 1 }); if (R.jb > 0) doJump(false); }
     }
     if (R.jb > 0) R.jb -= dt; R.sq += (0 - R.sq) * Math.min(1, dt * 10);
     R.cy += ((R.pw.jet > 0 ? R.y * 0.55 : Math.max(0, R.y) * 0.18) - R.cy) * Math.min(1, dt * 5);
@@ -725,7 +786,6 @@
     for (let i = 0; i < 18; i++) R.fx.push({ x: R.x, y: 1 + R.y, z: 0.2, vx: rnd(-4, 4), vy: rnd(2, 8), vz: rnd(-2, 2), t: 0.9, e: ['💥', '⭐', '💫'][i % 3] });
     const nb = R.score > S.best; S.best = Math.max(S.best, R.score); S.coins += R.coins - R.banked; R.banked = R.coins; if (!R.revived) S.runs++; R.newBest = nb || R.newBest; save();
   }
-  const isMun = () => { try { return !!(typeof auth !== 'undefined' && auth && auth.name === 'منتظر'); } catch (e) { return false; } };   // 💎 منتظر: «كمّل من وين وكفت» بلا حد
   const REV = () => 60 + R.revived * 60;
   function revive() {
     if (!isMun() && R.revived >= 3) return;
@@ -931,10 +991,10 @@
     if (R.pw.ph > 0 || (R.inv > 0 && Math.floor(R.t * 14) % 2)) g.globalAlpha = 0.55;
     const onB = R.board > 0 && !(R.pw.jet > 0) && R.ph !== 'dead';
     if (onB) { const hv = 13 + Math.sin(R.t * 5) * 3; g.save(); g.translate(0, -hv); drawBoard(g, S.bsel, R.t, R.y < 0.1 ? hv : 0); }
-    const Cc = CH[S.sel.c] || CH[0], tDur = Cc.adm ? 0.74 : 0.62, act = Cc.tr && R.trk && R.y > 0.05 && R.ph === 'play' && !onB, tq = act ? Math.min(1, (R.t - R.trk.t0) / tDur) : 1;
+    const Cc = CH[S.sel.c] || CH[0], tDur = Cc.adm || Cc.mun ? 0.74 : 0.62, act = Cc.tr && R.trk && R.y > 0.05 && R.ph === 'play' && !onB, tq = act ? Math.min(1, (R.t - R.trk.t0) / tDur) : 1;
     const opt = (tf2, tk) => ({ col: S.sel.col, hat: S.sel.h, t: R.ph === 'play' ? R.gt : R.t, front: !!(tf2 && tf2.fl), pose: tf2 && tf2.pose, pp: R.trk ? R.t - R.trk.t0 : 0, tuck: tk, air: R.y > 0.05, slide: R.slide > 0 && R.y < 0.3, run: R.ph === 'play' || R.ph === 'count', board: onB ? S.bsel : null });
     const tuck = act && /flip|cork/.test(R.trk.k) ? Math.sin(tq * Math.PI) : 0;
-    if (act && Cc.adm && tq < 1) {   // المشرفين: ظلال ضوئية تلحك الحركة + قوس ضو حوالين الشقلبة
+    if (act && (Cc.adm || Cc.mun) && tq < 1) {   // المشرفين: ظلال ضوئية تلحك الحركة + قوس ضو حوالين الشقلبة
       g.save(); g.globalCompositeOperation = 'lighter'; const ac = AUR[Cc.fx], a0 = tq * Math.PI * 2, sw = g.createLinearGradient(-80, -140, 80, 20); sw.addColorStop(0, 'rgba(' + ac + ',0)'); sw.addColorStop(1, 'rgba(' + ac + ',.85)'); g.strokeStyle = sw; g.lineCap = 'round';
       [[78, 7], [64, 3.5]].forEach(q => { g.lineWidth = q[1]; g.beginPath(); g.arc(0, -62, q[0], a0 - Math.PI / 2 - 1.8, a0 - Math.PI / 2); g.stroke(); });
       for (let k = 0; k < 10; k++) { const a = a0 - Math.PI / 2 - k * 0.2; gdot(g, Math.cos(a) * 78, -62 + Math.sin(a) * 78, 6 - k * 0.4, '255,255,255', 0.8 - k * 0.07); }
@@ -1199,9 +1259,10 @@
       const cv = mk('canvas'); cv.dataset.i = i; b.appendChild(cv);
       b.appendChild(mk('b', '', pickTab === 'col' ? '🎨' : it.n));
       if (pickTab === 'c' && (it.fx || it.tr)) b.appendChild(mk('small', 'fxB', (it.fx ? FXN[it.fx] : '') + (it.tr ? ' • ' + TRN[it.tr] : '')));
-      if (pickTab === 'c' && it.adm) b.classList.add('adm');
-      if (!own) b.appendChild(mk('small', 'pr', it.adm ? '👑 للمشرفين بس' : '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
+      if (pickTab === 'c' && (it.adm || it.mun)) b.classList.add('adm');
+      if (!own) b.appendChild(mk('small', 'pr', it.mun ? '💎 لحساب منتظر بس' : it.adm ? '👑 للمشرفين بس' : '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
       b.onclick = () => {
+        if (!own && it.mun) { sfx('click'); showToastR('💎 هاي الشخصية بس لحساب منتظر'); return; }
         if (!own && it.adm) { sfx('click'); showToastR('👑 هاي الشخصية بس للمشرفين بابي وبابيتو'); return; }
         if (!own) { if (CN() < it.p) { sfx('click'); showToastR('😅 ينقصك ' + (it.p - S.coins) + ' 🪙 — اركض واجمع أكثر!'); return; } if (!confirm('تشتري «' + it.n + '» بـ ' + it.p + ' عملة ركض؟')) return; spend(it.p); (pickTab === 'c' ? S.own.c : pickTab === 'b' ? S.own.b : S.own.h).push(i); sfx('buy'); showToastR('🎉 صار عندك «' + it.n + '»!'); }
         else sfx('click');
