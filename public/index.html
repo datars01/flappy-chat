@@ -6381,9 +6381,10 @@ function rot(c,x,y,a){c.translate(x,y);c.rotate(a);c.translate(-x,-y);}
 function draw(c,S){const t=S.t,mv=S.mv,ph=S.ph||0,md=mv?'walk':S.mode;
  let bob=0,head=0,hip=0,legA=0,legB=0,strum=0,blink=(t%220)<7,eyesClosed=false,armSw=0;
  let GT=null,drop=0,lean=0;
- if(md==='walk'){const A=.36,K=1.05,g=p=>{const th=-A*Math.sin(p),sw=Math.max(0,Math.cos(p)),kn=K*Math.pow(sw,1.6)+.1*Math.max(0,-Math.sin(p*2))*(1-sw),ft=-.45*kn+.18*Math.max(0,Math.sin(p))*(1-sw);return {th,kn,ft};};
-  GT=[g(ph),g(ph+Math.PI)];const ext=G=>62*Math.cos(G.th)+95*Math.cos(G.th+G.kn);drop=157-Math.max(ext(GT[0]),ext(GT[1]));
-  bob=drop+Math.sin(ph*2+.6)*.8;lean=.035;hip=Math.sin(ph)*2.2;head=Math.sin(ph*2)*.015;armSw=Math.sin(ph)*.32;}
+ if(md==='walk'){   // مشي بستايل الشخصيات الأمامية: كل رجل ترتفع لفوك وتنزل بخطوة صغيرة، والجسم يتمايل بهدوء
+  const g=p=>{const up=Math.max(0,Math.cos(p));return {th:-.14*Math.sin(p),lift:15*Math.pow(up,1.4),ft:-.12*Math.pow(up,1.4)*(Math.sin(p)<0?1:-.4)};};
+  GT=[g(ph),g(ph+Math.PI)];drop=157*(1-Math.cos(.14*Math.abs(Math.sin(ph))));
+  bob=drop-3.2*Math.pow(Math.abs(Math.cos(ph)),2);lean=Math.sin(ph)*.022;hip=Math.sin(ph)*2.6;head=-Math.sin(ph)*.03;armSw=Math.sin(ph)*.28;}
  else if(md==='play'){bob=Math.abs(Math.sin(t/14))*5;head=Math.sin(t/14)*.07;strum=Math.sin(t/4);eyesClosed=true;}
  else if(md==='dance'){const w=Math.sin(t/9);hip=w*10;bob=-Math.abs(w)*7;head=-w*.08;legA=Math.max(0,w)*.18;legB=-Math.max(0,-w)*.18;armSw=-.35-Math.abs(w)*.25;}
  else{bob=Math.sin(t/30)*2;}
@@ -6392,9 +6393,8 @@ function draw(c,S){const t=S.t,mv=S.mv,ph=S.ph||0,md=mv?'walk':S.mode;
  /* ظل */
  c.save();c.globalAlpha=.3;E(c,190+hip*.3,490,90,10,'#444441');c.restore();
  /* رجلين: فخذ + ساق + قدم، الساق تنثني من الركبة */
- const LEG=(L,li,ART)=>{const hx=L[3]+hip*.3,G=GT?GT[li]:{th:L[4],kn:0,ft:0};c.save();if(GT)c.translate(0,drop);rot(c,hx,330,G.th);
-  c.save();rot(c,hx,392,G.kn);rot(c,hx,470,G.ft);c.beginPath();c.rect(0,389,380,140);c.clip();ART();c.restore();
-  if(G.kn>.02){c.fillStyle='#1f5fa8';c.beginPath();c.arc(hx+(li?2:-2),392,21.5,0,7);c.fill();}
+ const LEG=(L,li,ART)=>{const hx=L[3]+hip*.3,G=GT?GT[li]:{th:L[4],lift:0,ft:0};c.save();if(GT)c.translate(0,drop);rot(c,hx,330,G.th);
+  c.save();c.translate(0,-G.lift);rot(c,hx,470,G.ft);c.beginPath();c.rect(0,380-G.lift*0,380,160);c.clip();ART();c.restore();
   c.save();c.beginPath();c.rect(0,300,380,94);c.clip();ART();c.restore();c.restore();};
  [['legL','bootL','ripL',165,legA],['legR','bootR','ripR',215,legB]].forEach((L,li)=>{const ART=()=>{F(c,L[0],LG(c,L[3]-30,0,L[3]+30,0,'#2a74c0','#154f8c'),1.4);SH(c,L[0],()=>{c.strokeStyle='#0e3a6a';c.globalAlpha=.5;c.lineWidth=1.2;c.setLineDash([3,3]);c.beginPath();c.moveTo(L[3]+(L[3]<190?14:-14),334);c.lineTo(L[3]+(L[3]<190?12:-10),450);c.stroke();c.setLineDash([]);c.globalAlpha=.25;c.fillStyle='#fff';c.fillRect(L[3]-6,340,4,100);c.globalAlpha=1;c.strokeStyle='#d8e8f8';c.lineWidth=.8;for(let y=388;y<398;y+=3){c.beginPath();c.moveTo(L[3]-16,y);c.lineTo(L[3]+(L[3]<190?2:20),y-2);c.stroke();}});F(c,L[2],'#cfe2f6');
 F(c,L[1],LG(c,0,445,0,486,'#8a5a1e','#4a2808'),1.4);SH(c,L[1],()=>{c.strokeStyle='#d8b880';c.lineWidth=1.2;for(let i=0;i<3;i++){const bx=L[3]<190?150:206;c.beginPath();c.moveTo(bx+i*6,452);c.lineTo(bx+6+i*6,458);c.moveTo(bx+6+i*6,452);c.lineTo(bx+i*6,458);c.stroke();}c.fillStyle='#ffffff22';c.fillRect(L[3]<190?128:200,466,40,4);});c.fillStyle='#2C2C2A';c.fillRect(L[3]<190?124:194,480,62,7);};LEG(L,li,ART);});
@@ -6950,7 +6950,7 @@ var AVT = (function () {
   function drawAt(c, av, x, y, h, Pp) {
     if (av && av.rig === 'rock' && av.g === 'm' && typeof RIG !== 'undefined' && !(Pp && (Pp.sit || Pp.swim))) {   // شخصية العازف: تمشي وتعزف وترقص، وبالجلوس والسباحة ترجع الشخصية العادية
       Pp = Pp || {}; const d = Pp.dance || 0; c.save(); c.translate(x, y); const s = h / RIG.H * 1.08; c.scale(s, s);
-      RIG.draw(c, { t: Pp.t || 0, mv: !!Pp.mv, ph: (Pp.ph || 0) * 0.34, mode: d === 2 ? 'dance' : d ? 'play' : 'idle', guitar: true }); c.restore(); return; }
+      RIG.draw(c, { t: Pp.t || 0, mv: !!Pp.mv, ph: (Pp.ph || 0) * 0.2, mode: d === 2 ? 'dance' : d ? 'play' : 'idle', guitar: true }); c.restore(); return; }
     c.save(); c.translate(x, y); const k = h / 137; KLW = Math.max(1, Math.min(2.4, 1.15 / k)); c.scale(k, k); draw(c, av, Pp); c.restore(); KLW = 1; }
   return { draw, drawAt, drinkArm, norm, DEF, HAIRL, HAIRB, HAIRADM, SKINL, SKINS, EYES, EYE_ADM, ES, EW, LIPS, SHADOWS, BLUSHC, LINER, LASH, GLIT, DECO, MKLOOKS, HS, HSL, OUTFITS, CATS, TOPS, BOTS, PATS, hex };
 })();
