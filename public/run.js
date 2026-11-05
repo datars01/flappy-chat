@@ -25,7 +25,7 @@
     { n: 'المجرّة', k: 'astro', skin: '#f0c8a0', hair: '#eef2f8', p: 1400, fx: 'galaxy', tr: 'mix' },
     { n: 'الملك بابي', k: 'boy', skin: '#f2c49b', hair: '#1a120c', p: 99999, adm: 1, fx: 'royal', tr: 'royal' },
     { n: 'الملكة بابيتو', k: 'girl', skin: '#f6d0b0', hair: '#5a2a14', p: 99999, adm: 1, fx: 'royalG', tr: 'royal' },
-    { n: 'منتظر', k: 'boy', skin: '#f2c49b', hair: '#fff1b8', p: 99999, mun: 1, fx: 'munA', tr: 'royal' }];   // 👼 لحساب «منتظر» بس
+    { n: 'الملك منتظر', k: 'boy', skin: '#f2c49b', hair: '#ffe9a0', p: 99999, mun: 1, fx: 'munA', tr: 'royal' }];   // 👼 لحساب «منتظر» بس
   const COLS = ['#ff4a6a', '#3a8bff', '#2ee48d', '#ffd23a', '#a24aff', '#ff8a2a', '#22d3ee', '#2a2a3a', '#ff7ad9', '#ffffff'];
   const HATS = [{ n: 'بدون', e: '', p: 0 }, { n: 'كاب', e: '🧢', p: 80 }, { n: 'تاج', e: '👑', p: 300 }, { n: 'قبعة ساحر', e: '🎩', p: 200 }, { n: 'فيونكة', e: '🎀', p: 120 }, { n: 'هالة', e: '😇', p: 500 }, { n: 'قرون', e: '😈', p: 500 }, { n: 'زهرة', e: '🌸', p: 150 }];
   /* الزلاجات الطايرة 🛹: تفعّلها بدوسة دبل أو بالزر، تدوم 30 ثانية وتحميك من ضربة وحدة (تنكسر بدالك) */
@@ -339,13 +339,28 @@
     g.globalAlpha = 1;
   }
   function munHalo(g, t) {
-    g.save(); g.translate(0, -30 + Math.sin(t * 2.4) * 1.5); g.globalCompositeOperation = 'lighter'; gdot(g, 0, 0, 22, '255,225,130', 0.55);
+    g.save(); g.translate(0, -40 + Math.sin(t * 2.4) * 1.5); g.globalCompositeOperation = 'lighter'; gdot(g, 0, 0, 22, '255,225,130', 0.55);
     g.strokeStyle = '#ffe27a'; g.lineWidth = 3; g.beginPath(); g.ellipse(0, 0, 13, 4, 0, 0, 7); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 1; g.stroke(); g.restore();
   }
   function munName(g, t) {
-    g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 17px Cairo, system-ui'; const y = -166 + Math.sin(t * 2) * 1.5;
+    g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 16px Cairo, system-ui'; const y = -170 + Math.sin(t * 2) * 1.5;
     const gr = g.createLinearGradient(-30, y - 8, 30, y + 8); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.5, '#ffd23a'); gr.addColorStop(1, '#ff8ad0');
-    g.lineWidth = 4; g.strokeStyle = 'rgba(60,30,0,.85)'; g.strokeText('💖 منتظر 💖', 0, y); g.fillStyle = gr; g.fillText('💖 منتظر 💖', 0, y); g.restore();
+    g.lineWidth = 4; g.strokeStyle = 'rgba(60,30,0,.85)'; g.strokeText('💖 الملك منتظر 💖', 0, y); g.fillStyle = gr; g.fillText('💖 الملك منتظر 💖', 0, y); g.restore();
+  }
+  /* شعر طويل للملك منتظر: ينزل لورا الكتوف ويتطاير ويه الركض */
+  function munHair(g, t, hg, hc, front) {
+    const sp = MUNS.air ? 12 : MUNS.run ? 9 : 2.5, sw = Math.sin(t * sp) * (MUNS.run || MUNS.air ? 4 : 2), lift = MUNS.air ? -6 : 0;
+    g.save(); g.fillStyle = hg; g.strokeStyle = OUT; g.lineWidth = 1.1;
+    if (!front) {
+      g.beginPath(); g.moveTo(-14, -4); g.quadraticCurveTo(-20, 14, -17 + sw, 36 + lift);
+      for (let i = 0; i <= 6; i++) { const x = -17 + i * (34 / 6) + sw, y = 36 + lift + (i % 2 ? 5 : 0) + Math.sin(t * sp + i) * 1.5; g.lineTo(x, y); }
+      g.quadraticCurveTo(20, 14, 14, -4); g.closePath(); g.fill(); g.stroke();
+      g.save(); g.clip(); g.strokeStyle = shade(hc, 60); g.globalAlpha = 0.45; g.lineWidth = 0.9; for (let i = 0; i < 9; i++) { const x = -12 + i * 3; g.beginPath(); g.moveTo(x * 0.8, -2); g.quadraticCurveTo(x * 1.25 + sw * 0.5, 16, x * 1.15 + sw, 38 + lift); g.stroke(); } g.restore();
+    } else {
+      [-1, 1].forEach(s => { g.beginPath(); g.moveTo(s * 12.6, -7); g.quadraticCurveTo(s * 19.5, 8, s * 16.5 + sw, 30 + lift); g.quadraticCurveTo(s * 13.5 + sw * 0.5, 31 + lift, s * 12, 27 + lift); g.quadraticCurveTo(s * 13.5, 12, s * 10.6, 0); g.closePath(); g.fill(); g.stroke();
+        g.strokeStyle = shade(hc, 60); g.globalAlpha = 0.5; g.lineWidth = 0.8; g.beginPath(); g.moveTo(s * 13.5, -3); g.quadraticCurveTo(s * 17, 12, s * 15 + sw, 28 + lift); g.stroke(); g.globalAlpha = 1; g.strokeStyle = OUT; });
+    }
+    g.restore();
   }
   function munBurst(n, y0) { for (let i = 0; i < n; i++) R.fx.push({ x: R.x + rnd(-0.7, 0.7), y: R.y + y0 + rnd(0, 0.7), z: rnd(-0.3, 0.3), vx: rnd(-3, 3), vy: rnd(1.5, 4.5), vz: rnd(-1, 1), t: 0.9, e: pick(['💖', '💛', '💗', '✨', '💫']), sm: 1 }); }
   /* pass: 0 = ورا الشخصية، 1 = على الظهر (بعد الجسم)، 3 = فوك كلشي */
@@ -560,6 +575,7 @@
           if (!front) { g.fillStyle = hg; g.beginPath(); g.moveTo(-13.6, -2); g.quadraticCurveTo(-15, 14, -9, 20); g.lineTo(9, 20); g.quadraticCurveTo(15, 14, 13.6, -2); g.closePath(); g.fill(); }
           g.save(); const pt = Math.sin(t * 10) * 0.35; g.translate(front ? 12 : 0, -9); g.rotate(front ? 0.7 + pt : pt); const pg = g.createLinearGradient(-6, 0, 6, 0); pg.addColorStop(0, shade(hc, 40)); pg.addColorStop(0.5, hc); pg.addColorStop(1, shade(hc, -45)); g.fillStyle = pg; g.beginPath(); g.moveTo(-4, 2); g.quadraticCurveTo(-8, 16, 0, 28); g.quadraticCurveTo(7, 16, 4, 2); g.closePath(); g.fill(); g.lineWidth = 1; g.strokeStyle = OUT; g.stroke(); g.strokeStyle = shade(hc, 55); g.globalAlpha = 0.4; g.lineWidth = 0.7; [-2, 0, 2].forEach(x => { g.beginPath(); g.moveTo(x, 3); g.quadraticCurveTo(x * 2 - 1, 15, x * 0.5, 26); g.stroke(); }); g.globalAlpha = 1; g.fillStyle = col; g.beginPath(); g.ellipse(0, 2, 4, 2.6, 0, 0, 7); g.fill(); g.restore();
         }
+        if (C.mun) munHair(g, t, hg, hc, front);
         g.fillStyle = hg; g.beginPath();
         if (front) { g.arc(0, -1, 13.8, Math.PI * 1.02, Math.PI * 1.98); g.quadraticCurveTo(13.5, -6, 12, -3); g.quadraticCurveTo(6, -10, -2, -8.5); g.quadraticCurveTo(-9, -8, -12.5, -3); g.quadraticCurveTo(-14, -6, -13.6, -2); }
         else { g.arc(0, -1, 14, Math.PI * 0.82, Math.PI * 2.18); g.quadraticCurveTo(8, 12, 0, 11); g.quadraticCurveTo(-8, 12, -13, 7); }
@@ -568,7 +584,7 @@
         if (front) face(g, C);
       }
     }
-    const H = C.adm || C.mun ? null : HATS[o.hat || 0]; if (C.adm) crown(g, t, k === 'girl'); if (C.mun) munHalo(g, t); if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
+    const H = C.adm || C.mun ? null : HATS[o.hat || 0]; if (C.adm || C.mun) crown(g, t, k === 'girl'); if (C.mun) munHalo(g, t); if (H && H.e) { g.font = (k === 'astro' ? 28 : 25) + 'px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(H.e, 0, k === 'robot' ? -26 : k === 'astro' ? -22 : k === 'cat' || k === 'dino' ? -21 : -17); }
     g.restore(); chFx(g, C, t, front, 3); if (C.mun) munName(g, t); g.restore();
   }
 
@@ -1262,7 +1278,7 @@
       if (pickTab === 'c' && (it.adm || it.mun)) b.classList.add('adm');
       if (!own) b.appendChild(mk('small', 'pr', it.mun ? '💎 لحساب منتظر بس' : it.adm ? '👑 للمشرفين بس' : '🔒 ' + it.p + ' 🪙')); else if (sel) b.appendChild(mk('small', 'ok', '✔ مختار'));
       b.onclick = () => {
-        if (!own && it.mun) { sfx('click'); showToastR('💎 هاي الشخصية بس لحساب منتظر'); return; }
+        if (!own && it.mun) { sfx('click'); showToastR('💎 «الملك منتظر» بس لحساب منتظر'); return; }
         if (!own && it.adm) { sfx('click'); showToastR('👑 هاي الشخصية بس للمشرفين بابي وبابيتو'); return; }
         if (!own) { if (CN() < it.p) { sfx('click'); showToastR('😅 ينقصك ' + (it.p - S.coins) + ' 🪙 — اركض واجمع أكثر!'); return; } if (!confirm('تشتري «' + it.n + '» بـ ' + it.p + ' عملة ركض؟')) return; spend(it.p); (pickTab === 'c' ? S.own.c : pickTab === 'b' ? S.own.b : S.own.h).push(i); sfx('buy'); showToastR('🎉 صار عندك «' + it.n + '»!'); }
         else sfx('click');
